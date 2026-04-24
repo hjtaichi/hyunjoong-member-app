@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "766548294351",
+    "project_id": "hyunjoong-taichi",
+    "storage_bucket": "hyunjoong-taichi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:766548294351:android:c4ed71d904e81a5c0a15ba",
+        "android_client_info": {
+          "package_name": "com.anonymous.memberapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEh1YbqCkZmD8sK47JY9kuCF3ytF1Jz0k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
