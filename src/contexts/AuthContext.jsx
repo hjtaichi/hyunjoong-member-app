@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { loginApi } from "../api/auth";
+import { loginApi, getMeApi } from "../api/auth";
 import {
   clearAuthStorage,
   getAccessToken,
@@ -22,18 +22,59 @@ function AuthProvider({ children }) {
 
   async function bootstrap() {
   try {
-
     const savedToken = await getAccessToken();
     const savedUser = await getUser();
 
-    if (savedToken) {
-      setToken(savedToken);
+    if (!savedToken || !savedUser) {
+      return;
     }
-    if (savedUser) {
-      setUserState(savedUser);
+
+    // 저장 토큰 임시 적용
+    setToken(savedToken);
+    setUserState(savedUser);
+
+    // 🔥 현재 회원 상태 다시 조회
+    const meResult = await getMeApi(savedToken);
+
+    const me =
+      meResult?.data ||
+      meResult?.user ||
+      meResult;
+
+    const memberStatus =
+      me?.memberStatus ||
+      me?.status;
+
+    // 🔥 종료회원 → 강제 로그아웃
+    if (memberStatus === "ended") {
+      console.log("⛔ 종료회원 자동 로그아웃");
+
+      await clearAuthStorage();
+
+      setToken(null);
+      setUserState(null);
+
+      return;
     }
+
+    // 🔥 휴식회원 → 상태 갱신
+    const refreshedUser = {
+      ...savedUser,
+      status: memberStatus,
+      memberStatus: memberStatus,
+    };
+
+    await setUser(refreshedUser);
+
+    setUserState(refreshedUser);
   } catch (e) {
     console.error("bootstrap auth error:", e);
+
+    // 토큰 오류 시 로그아웃
+    await clearAuthStorage();
+
+    setToken(null);
+    setUserState(null);
   } finally {
     setIsBootLoading(false);
   }
@@ -57,14 +98,16 @@ function AuthProvider({ children }) {
     }
 
     const nextUser = rawUser
-      ? {
-          id: rawUser.userId || rawUser.id,
-          userId: rawUser.userId || rawUser.id,
-          email: rawUser.email,
-          role: rawUser.role,
-          name: rawUser.name,
-        }
-      : null;
+  ? {
+      id: rawUser.userId || rawUser.id,
+      userId: rawUser.userId || rawUser.id,
+      email: rawUser.email,
+      role: rawUser.role,
+      name: rawUser.name,
+      status: rawUser.status || rawUser.memberStatus || null,
+      memberStatus: rawUser.memberStatus || rawUser.status || null,
+    }
+  : null;
 
     await setAccessToken(nextToken);
 
@@ -77,7 +120,7 @@ function AuthProvider({ children }) {
 
     return { ok: true };
   } catch (error) {
-    console.error("login error:", error?.response?.data || error.message);
+    console.log("login failed:", error?.response?.data || error.message);
 
     return {
       ok: false,
@@ -97,6 +140,54 @@ function AuthProvider({ children }) {
     setUserState(null);
   }
 
+
+  async function refreshMe() {
+  try {
+    const savedToken = token || (await getAccessToken());
+
+    if (!savedToken) {
+      return null;
+    }
+
+    const meResult = await getMeApi(savedToken);
+    const me = meResult?.data || meResult?.user || meResult;
+
+    const memberStatus = me?.memberStatus || me?.status;
+
+    if (memberStatus === "ended") {
+      await clearAuthStorage();
+      setToken(null);
+      setUserState(null);
+      return { status: "ended" };
+    }
+
+    const nextUser = {
+      ...(user || {}),
+      id: me?.id || user?.id,
+      userId: me?.id || user?.userId,
+      email: me?.email || user?.email,
+      role: me?.role || user?.role,
+      name: me?.name || user?.name,
+      status: memberStatus,
+      memberStatus,
+    };
+
+    await setUser(nextUser);
+    setToken(savedToken);
+    setUserState(nextUser);
+
+    return nextUser;
+  } catch (error) {
+    console.log("refreshMe error:", error?.response?.data || error.message);
+
+    await clearAuthStorage();
+    setToken(null);
+    setUserState(null);
+
+    return null;
+  }
+}
+
   const value = useMemo(
     () => ({
       token,
@@ -106,6 +197,7 @@ function AuthProvider({ children }) {
       isLoginLoading,
       login,
       logout,
+      refreshMe,
     }),
     [token, user, isBootLoading, isLoginLoading]
   );

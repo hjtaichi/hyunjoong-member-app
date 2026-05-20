@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -7,20 +7,46 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { colors } from "../theme/colors";
 import { useAuth } from "../contexts/AuthContext";
 import { getMemberNoticeList } from "../api/memberNotice";
 
+const PAGE_SIZE = 5;
+
 function formatDate(value) {
   if (!value) return "";
+
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("ko-KR");
+
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+
+  return `${y}.${m}.${d}`;
+}
+
+function openNotice(id) {
+  router.push({
+    pathname: "/notice/[noticeId]",
+    params: { noticeId: String(id) },
+  });
 }
 
 export default function RecentNoticesSection() {
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [notices, setNotices] = useState([]);
+  const [page, setPage] = useState(1);
+
+  const mainNotice = notices[0];
+
+  const totalPages = Math.max(1, Math.ceil(notices.length / PAGE_SIZE));
+
+  const pagedNotices = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return notices.slice(start, start + PAGE_SIZE);
+  }, [notices, page]);
 
   const loadNotices = useCallback(async () => {
     if (!token) return;
@@ -28,9 +54,10 @@ export default function RecentNoticesSection() {
     try {
       setLoading(true);
       const result = await getMemberNoticeList(token);
-      setNotices(Array.isArray(result) ? result.slice(0, 2) : []);
+      setNotices(Array.isArray(result) ? result : []);
+      setPage(1);
     } catch (error) {
-      console.log("최근 공지 조회 실패:", error?.message);
+      console.log("공지 조회 실패:", error?.message);
       setNotices([]);
     } finally {
       setLoading(false);
@@ -41,149 +68,339 @@ export default function RecentNoticesSection() {
     loadNotices();
   }, [loadNotices]);
 
-  return (
-    <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>최근 공지</Text>
-
-        <Pressable onPress={() => router.push("/notice")}>
-          <Text style={styles.moreText}>전체 보기</Text>
-        </Pressable>
-      </View>
-
-      {loading ? (
+  if (loading) {
+    return (
+      <View style={styles.noticeCard}>
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="small" />
           <Text style={styles.loadingText}>공지 불러오는 중...</Text>
         </View>
-      ) : notices.length === 0 ? (
+      </View>
+    );
+  }
+
+  if (!mainNotice) {
+    return (
+      <View style={styles.noticeCard}>
         <Text style={styles.emptyText}>등록된 공지가 없습니다.</Text>
-      ) : (
-        <View style={styles.listWrap}>
-          {notices.map((item, index) => (
-            <Pressable
-              key={item.id}
-              style={[
-                styles.noticeItem,
-                index !== notices.length - 1 && styles.noticeItemBorder,
-              ]}
-              onPress={() =>
-                router.push({
-                  pathname: "/notice/[noticeId]",
-                  params: { noticeId: String(item.id) },
-                })
-              }
-            >
-              <View style={styles.noticeTopRow}>
-                <Text style={styles.noticeTitle} numberOfLines={1}>
-                  {item.title}
-                </Text>
+      </View>
+    );
+  }
 
-                {item.isPopup ? (
-                  <View style={styles.popupBadge}>
-                    <Text style={styles.popupBadgeText}>팝업</Text>
-                  </View>
-                ) : null}
-              </View>
+  return (
+    <View>
+      <Pressable
+        style={styles.mainCard}
+        onPress={() => openNotice(mainNotice.id)}
+      >
+                {mainNotice.isPopup ? (
+          <View style={styles.popupBadge}>
+            <Text style={styles.popupBadgeText}>팝업</Text>
+          </View>
+        ) : null}
 
-              <Text style={styles.noticeContent} numberOfLines={2}>
-                {item.content}
-              </Text>
+        <Text style={styles.mainTitle} numberOfLines={1}>
+          {mainNotice.title}
+        </Text>
 
+        <Text style={styles.mainContent} numberOfLines={2}>
+          {mainNotice.content}
+        </Text>
+
+        <Text style={styles.mainDate}>
+          {formatDate(mainNotice.publishedAt)}
+        </Text>
+      </Pressable>
+
+      <View style={styles.noticeCard}>
+        <View style={styles.noticeHeader}>
+          <Text style={styles.noticeHeaderTitle}>전체 공지</Text>
+          <Text style={styles.noticeCount}>공지 {notices.length}개</Text>
+        </View>
+
+        <View style={styles.headerDivider} />
+
+        {pagedNotices.map((item, index) => (
+          <Pressable
+            key={item.id}
+            style={[
+              styles.noticeRow,
+              index !== pagedNotices.length - 1 && styles.noticeRowBorder,
+            ]}
+            onPress={() => openNotice(item.id)}
+          >
+            <Text style={styles.noticeTitle} numberOfLines={1}>
+              {item.title}
+            </Text>
+
+            <View style={styles.noticeRight}>
               <Text style={styles.noticeDate}>
                 {formatDate(item.publishedAt)}
               </Text>
+              <Text style={styles.arrow}>›</Text>
+            </View>
+          </Pressable>
+        ))}
+
+        {totalPages > 1 ? (
+          <View style={styles.pagination}>
+            <Pressable
+              style={styles.pageArrowButton}
+              onPress={() => setPage((prev) => Math.max(1, prev - 1))}
+              disabled={page === 1}
+            >
+              <Text
+                style={[
+                  styles.pageArrow,
+                  page === 1 && styles.pageArrowDisabled,
+                ]}
+              >
+                ‹
+              </Text>
             </Pressable>
-          ))}
-        </View>
-      )}
+
+            {Array.from({ length: totalPages }).map((_, index) => {
+              const pageNumber = index + 1;
+              const selected = pageNumber === page;
+
+              return (
+                <Pressable
+                  key={pageNumber}
+                  style={[styles.pageButton, selected && styles.pageActive]}
+                  onPress={() => setPage(pageNumber)}
+                >
+                  <Text
+                    style={[
+                      styles.pageText,
+                      selected && styles.pageTextActive,
+                    ]}
+                  >
+                    {pageNumber}
+                  </Text>
+                </Pressable>
+              );
+            })}
+
+            <Pressable
+              style={styles.pageArrowButton}
+              onPress={() =>
+                setPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={page === totalPages}
+            >
+              <Text
+                style={[
+                  styles.pageArrow,
+                  page === totalPages && styles.pageArrowDisabled,
+                ]}
+              >
+                ›
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#fffdf9",
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 18,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#ece4d8",
+  mainCard: {
+  position: "relative",
+  backgroundColor: colors.card,
+  borderRadius: 24,
+  paddingHorizontal: 20,
+  paddingTop: 18,
+  paddingBottom: 16,
+  borderWidth: 0.4,
+borderColor: colors.border,
+  marginBottom: 14,
+  minHeight: 150,
+
+  shadowColor: "#6B4F46",
+shadowOffset: { width: 0, height: 6 },
+shadowOpacity: 0.03,
+shadowRadius: 12,
+elevation: 3,
+},
+
+  popupBadge: {
+    position: "absolute",
+    top: 18,
+    right: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: colors.blushBeige,
   },
-  headerRow: {
+
+  popupBadgeText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.warmBrown,
+  },
+
+  mainTitle: {
+  paddingRight: 76,
+  fontSize: 20,
+  fontWeight: "800",
+  color: colors.textMain,
+  lineHeight: 28,
+  marginBottom: 10,
+},
+
+  mainContent: {
+  fontSize: 14,
+  lineHeight: 22,
+  color: colors.textSub,
+  marginBottom: 12,
+},
+
+  mainDate: {
+    fontSize: 14,
+    color: colors.textMuted,
+    letterSpacing: 1,
+  },
+
+  noticeCard: {
+  backgroundColor: colors.card,
+  borderRadius: 24,
+  paddingHorizontal: 20,
+  paddingTop: 18,
+  paddingBottom: 10,
+  borderWidth: 0.4,
+  borderColor: colors.border,
+
+  shadowColor: "#BFA79B",
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.05,
+  shadowRadius: 12,
+  elevation: 2,
+},
+
+  noticeHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 14,
   },
-  title: {
-    fontSize: 18,
+
+  noticeHeaderTitle: {
+    fontSize: 22,
     fontWeight: "800",
-    color: "#2f2a24",
+    color: colors.textMain,
   },
-  moreText: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#8c6330",
+
+  noticeCount: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.textSub,
   },
+
+  headerDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+
+  noticeRow: {
+  minHeight: 52,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+},
+
+  noticeRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+
+  noticeTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.textMain,
+  },
+
+  noticeRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  noticeDate: {
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+
+  arrow: {
+    fontSize: 10,
+    color: colors.softBrown,
+    marginTop: -2,
+  },
+
+  pagination: {
+    marginTop: 14,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 14,
+  },
+
+  pageArrowButton: {
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  pageArrow: {
+    fontSize: 30,
+    color: colors.warmBrown,
+  },
+
+  pageArrowDisabled: {
+    color: "#d1c5bb",
+  },
+
+  pageButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  pageActive: {
+    backgroundColor: colors.warmBrown,
+  },
+
+  pageText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.textSub,
+  },
+
+  pageTextActive: {
+    color: colors.white,
+  },
+
   loadingWrap: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingVertical: 10,
-  },
-  loadingText: {
-    fontSize: 13,
-    color: "#6b6257",
-  },
-  emptyText: {
-    fontSize: 14,
-    color: "#6b6257",
     paddingVertical: 8,
   },
-  listWrap: {
-    gap: 2,
+
+  loadingText: {
+    fontSize: 13,
+    color: "#7a6f66",
   },
-  noticeItem: {
-    paddingVertical: 14,
-  },
-  noticeItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ece4d8",
-  },
-  noticeTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
-  noticeTitle: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#2f2a24",
-  },
-  popupBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
-    backgroundColor: "#f3ecdf",
-  },
-  popupBadgeText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: "#8c6330",
-  },
-  noticeContent: {
+
+  emptyText: {
     fontSize: 14,
+    color: "#7a6f66",
     lineHeight: 21,
-    color: "#4c4339",
-    marginBottom: 8,
   },
-  noticeDate: {
-    fontSize: 12,
-    color: "#8a7f72",
-  },
-});
+  });

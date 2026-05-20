@@ -9,6 +9,31 @@ export default function InquiryLayout() {
           headerShown: false,
         }}
       />
+
+      <Stack.Screen
+        name="guide"
+        options={{
+          title: "수련 가이드",
+          headerBackTitle: "뒤로",
+        }}
+      />
+
+      <Stack.Screen
+        name="schedule"
+        options={{
+          title: "수련 시간표",
+          headerBackTitle: "뒤로",
+        }}
+      />
+
+      <Stack.Screen
+        name="faq"
+        options={{
+          title: "FAQ",
+          headerBackTitle: "뒤로",
+        }}
+      />
+
       <Stack.Screen
         name="[roomId]"
         options={{

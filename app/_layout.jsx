@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 
 import * as Notifications from "expo-notifications";
@@ -14,16 +16,24 @@ import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { savePushToken } from "../src/api/push.js";
 
 // 🔥 알림 표시 설정
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+if (Platform.OS !== "web") {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 // 🔥 푸시 토큰 얻기
 async function registerForPushNotificationsAsync() {
+  if (Platform.OS === "web") {
+    console.log("🌐 웹에서는 Expo Push 알림을 사용하지 않습니다.");
+    return null;
+  }
+
   if (!Device.isDevice) {
     console.log("❌ 실기기에서만 푸시 가능");
     return null;
@@ -103,13 +113,78 @@ function PushInitializer() {
     initPush();
   }, [accessToken]);
 
+  useEffect(() => {
+  if (Platform.OS === "web") {
+    console.log("🌐 웹에서는 알림 클릭 리스너를 등록하지 않습니다.");
+    return;
+  }
+
+  function handleNotificationResponse(response) {
+    const data = response?.notification?.request?.content?.data;
+
+    console.log("🔥 알림 클릭됨:", data);
+
+    if (data?.type === "notice" && data?.noticeId) {
+      setTimeout(() => {
+        router.push({
+          pathname: "/notice/[noticeId]",
+          params: {
+            noticeId: String(data.noticeId),
+          },
+        });
+      }, 300);
+
+      return;
+    }
+
+    if (data?.type === "inquiry" && data?.roomId) {
+      setTimeout(() => {
+        router.push({
+          pathname: "/(tabs)/inquiry/[roomId]",
+          params: {
+            roomId: String(data.roomId),
+          },
+        });
+      }, 300);
+
+      return;
+    }
+  }
+
+  const subscription =
+    Notifications.addNotificationResponseReceivedListener(
+      handleNotificationResponse
+    );
+
+  if (Notifications.getLastNotificationResponseAsync) {
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) {
+        handleNotificationResponse(response);
+      }
+    });
+  }
+
+  return () => {
+    subscription.remove();
+  };
+}, []);
   return null;
 }
-
+SplashScreen.preventAutoHideAsync();
 // 🔥 루트
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+const [fontsLoaded] = useFonts({
+    ChosunCentennial: require("../assets/fonts/ChosunCentennial.ttf"),
+  });
 
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
   return (
     <AuthProvider>
       <PushInitializer />

@@ -2,6 +2,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 async function parseJsonSafe(res) {
   const text = await res.text();
+
   try {
     return text ? JSON.parse(text) : {};
   } catch {
@@ -10,7 +11,7 @@ async function parseJsonSafe(res) {
 }
 
 export async function getMemberTaegukwon(token) {
-  const url = `${API_BASE_URL}/api/member/me/taegukwon`;
+  const url = `${API_BASE_URL}/api/member/me/taegukwon?t=${Date.now()}`;
 
   console.log("[getMemberTaegukwon] API_BASE_URL =", API_BASE_URL);
   console.log("[getMemberTaegukwon] url =", url);
@@ -21,6 +22,7 @@ export async function getMemberTaegukwon(token) {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      "ngrok-skip-browser-warning": "true",
     },
   });
 

@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -13,6 +14,8 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
+import { useAuth } from "../../src/contexts/AuthContext";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { getMemberHome } from "../../src/api/memberHome";
 import { getMemberCalendar } from "../../src/api/memberCalendar";
@@ -25,8 +28,11 @@ import {
   skipRecurringReservationOnce,
   undoSkipRecurringReservationOnce,
 } from "../../src/api/memberAttendance";
-import { getPopupNotice, hideNoticeToday } from "../../src/api/memberNotice";
-import { useAuth } from "../../src/contexts/AuthContext";
+import {
+  getPopupNotice,
+  hideNoticeToday,
+  getMemberNoticeList,
+} from "../../src/api/memberNotice";
 
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -52,15 +58,34 @@ function getDateDiffInDays(fromDateString, toDateStringValue) {
 
 function getSessionDisplayLabel(item) {
   const title = item?.title || item?.name || "";
+  const className = item?.className || "";
+
+  if (title.includes("유단자") || className.includes("유단자")) {
+    return "유단자수련";
+  }
+
+  const regularTitles = [
+    "오전 10시 태극권반",
+    "오후 4시 태극권반",
+    "오후 7시 태극권반",
+    "토요 1시 30분 태극권반",
+    "현중태극권 수업",
+  ];
+
+  const isRegularTitle = regularTitles.some((text) => title.includes(text));
+
+  if (title && !isRegularTitle) {
+    return title;
+  }
+
   const startText = item?.startTime || "";
 
-  if (title.includes("유단자")) return "유단자수련";
   if (startText.includes("오전 10:00")) return "오전 10시부";
   if (startText.includes("오후 4:00")) return "오후 4시부";
   if (startText.includes("오후 7:00")) return "오후 7시부";
   if (startText.includes("오후 1:30")) return "오후 1시 30분부";
 
-  return item?.timeLabel || "수업";
+  return item?.timeLabel || title || "수업";
 }
 
 function getSessionSubLabel(item) {
@@ -135,14 +160,15 @@ function getScheduleUiMeta(item, { isReservableDate }) {
     attendanceStatus === "reserved" && !hasMatchedRecurringRule;
 
   const canUndoSkip =
-    isReservableDate &&
-    hasRecurringException &&
-    item?.canReserve !== false;
+  isReservableDate &&
+  hasRecurringException &&
+  item?.canReserve !== false;
 
   const canSkipOnce =
-    isReservableDate &&
-    isRecurringReserved &&
-    !hasRecurringException;
+  isReservableDate &&
+  isRecurringReserved &&
+  !hasRecurringException &&
+  item?.canReserve !== false;
 
   const canCancelReserve =
     isReservableDate &&
@@ -158,15 +184,15 @@ function getScheduleUiMeta(item, { isReservableDate }) {
   const canCancelAttendance = item?.canCancelAttendance === true;
 
   if (hasRecurringException) {
-    return {
-      tone: "cancelled",
-      label: "이번만 쉬기",
-      helperText: "정기출석 예외가 적용된 날입니다.",
-      actionLabel: canUndoSkip ? "다시 예약" : null,
-      actionType: canUndoSkip ? "undoSkip" : null,
-      isRecurring: true,
-    };
-  }
+  return {
+    tone: "available",
+    label: "수업 예정",
+    helperText: null,
+    actionLabel: canUndoSkip ? "출석 예정" : null,
+    actionType: canUndoSkip ? "undoSkip" : null,
+    isRecurring: false,
+  };
+}
 
   if (attendanceStatus === "present") {
     return {
@@ -290,6 +316,10 @@ function StatusBadge({ label, tone = "default" }) {
 
 export default function HomeScreen() {
   const { token, user, logout } = useAuth();
+  const authUser = user || {};
+const memberStatus = authUser?.memberStatus || authUser?.status;
+const isPausedMember = memberStatus === "paused";
+
 
   const today = useMemo(() => new Date(), []);
   const todayString = useMemo(() => toDateString(today), [today]);
@@ -305,36 +335,77 @@ export default function HomeScreen() {
   const [homeData, setHomeData] = useState(null);
   const [calendarData, setCalendarData] = useState(null);
   const [attendanceData, setAttendanceData] = useState(null);
-
+  const [noticeList, setNoticeList] = useState([]);
   const [isScheduleSheetVisible, setIsScheduleSheetVisible] = useState(false);
   const [noticeVisible, setNoticeVisible] = useState(false);
   const [activeNotice, setActiveNotice] = useState(null);
+  const [hiddenNoticeIds, setHiddenNoticeIds] = useState([]);
+  const [hasUnreadNotice, setHasUnreadNotice] = useState(false);
+
+  const yudanjaEmblemFrame = require("../../assets/images/yudanja-emblem-frame.png");
+  const yudanjaProfileBg = require("../../assets/images/yudanja-profile-card-bg.png");
 
   const refreshScreenData = useCallback(async () => {
-    const [homeRes, calendarRes, attendanceRes] = await Promise.all([
-      getMemberHome(token),
-      getMemberCalendar(token, currentYear, currentMonth),
-      getMyAttendance(token, selectedDate),
-    ]);
+  if (!token) {
+    console.log("⏳ HOME token 아직 없음 - 요청 중단");
+    return;
+  }
 
-    setHomeData(homeRes);
-    setCalendarData(calendarRes);
-    setAttendanceData(attendanceRes);
-  }, [token, currentYear, currentMonth, selectedDate]);
+  const homeRes = await getMemberHome(token);
+  const calendarRes = await getMemberCalendar(token, currentYear, currentMonth);
+  const noticeRes = await getMemberNoticeList(token);
+
+  console.log("🔥 HOME homeRes =", JSON.stringify(homeRes, null, 2));
+  console.log("🔥 HOME member =", JSON.stringify(homeRes?.member, null, 2));
+  console.log("🔥 HOME groupProgress =", JSON.stringify(homeRes?.groupProgress, null, 2));
+  console.log("🔥 HOME todayClass =", JSON.stringify(homeRes?.todayClass, null, 2));
+  console.log("🔥 HOME calendarRes =", JSON.stringify(calendarRes, null, 2));
+
+  setHomeData(homeRes);
+  setCalendarData(calendarRes);
+  setNoticeList(noticeRes || []);
+
+  console.log("✅ HOME refreshScreenData 완료");
+}, [token, currentYear, currentMonth]);
 
   const loadAll = useCallback(
-    async ({ silent = false } = {}) => {
-      if (!token) return;
+  async ({ silent = false } = {}) => {
+  if (!token) {
+    console.log("⏳ HOME loadAll token 없음 - 대기");
+    setLoading(false);
+    setRefreshing(false);
+    return;
+  }
 
-      try {
-        if (!silent) setLoading(true);
+  if (isPausedMember) {
+    setLoading(false);
+    setRefreshing(false);
+    return;
+  }
+
+  try {
+if (!silent && !homeData && !calendarData) {
+  setLoading(true);
+}
         await refreshScreenData();
       } catch (error) {
-        if (error.message === "유효하지 않은 토큰입니다.") {
-          Alert.alert("세션 만료", "다시 로그인해주세요.");
-          await logout();
-          return;
-        }
+        const errorMessage =
+  error?.message ||
+  error?.response?.data?.message ||
+  "";
+
+if (
+  errorMessage.includes("유효하지 않은 토큰") ||
+  errorMessage.includes("인증 토큰") ||
+  errorMessage.includes("퇴관") ||
+  error?.response?.status === 401 ||
+  error?.response?.status === 403
+) {
+  Alert.alert("로그인이 필요합니다", "다시 로그인해주세요.");
+  await logout();
+  router.replace("/login");
+  return;
+}
 
         Alert.alert("오류", error.message || "홈 데이터를 불러오지 못했습니다.");
       } finally {
@@ -342,14 +413,10 @@ export default function HomeScreen() {
         setRefreshing(false);
       }
     },
-    [token, logout, refreshScreenData]
+    [token, logout, refreshScreenData, isPausedMember]
     
   );
-  useEffect(() => {
-  console.log("HOME homeData:", homeData);
-  console.log("HOME member:", homeData?.member);
-}, [homeData]);
-
+  
   useEffect(() => {
     loadAll();
   }, [loadAll]);
@@ -417,12 +484,71 @@ export default function HomeScreen() {
     [currentYear, currentMonth]
   );
 
-  const displayName =
-    homeData?.member?.name ||
-    user?.name ||
-    homeData?.user?.name ||
-    "회원님";
+  const miniCalendarWeeks = useMemo(() => {
+  const base = new Date(todayString + "T00:00:00");
+  const day = base.getDay();
 
+  const sunday = new Date(base);
+  sunday.setDate(base.getDate() - day);
+
+  const cells = Array.from({ length: 14 }).map((_, index) => {
+    const date = new Date(sunday);
+    date.setDate(sunday.getDate() + index);
+    return date;
+  });
+
+  return [cells.slice(0, 7), cells.slice(7, 14)];
+}, [todayString]);
+
+  const displayName =
+  homeData?.member?.name ||
+  user?.name ||
+  homeData?.user?.name ||
+  "회원님";
+
+  const joinDate = homeData?.member?.joinDate;
+
+const joinDateString = joinDate ? String(joinDate).slice(0, 10) : null;
+
+const joinDays = joinDateString
+  ? getDateDiffInDays(joinDateString, todayString) + 1
+  : null;
+
+const attendanceCount =
+  homeData?.member?.totalAttendanceCount || 0;
+
+const isYudanja = homeData?.member?.canAccessYudanjaClass === true;
+const trainingGoals = homeData?.trainingGoals || null;
+
+const promotionGoal = trainingGoals?.promotion || null;
+
+const promotionRemainingText =
+  promotionGoal && !promotionGoal.isEligible
+    ? String(promotionGoal.remainingCount).padStart(3, "0")
+    : null;
+
+const promotionBadgeText = promotionGoal
+  ? promotionGoal.isEligible
+    ? "승단심사 가능"
+    : `승단 D-${promotionRemainingText}일`
+  : null;
+
+const logoSource = isYudanja
+  ? require("../../assets/images/yudanja-logo.png")
+  : require("./logo-dojang.png");
+const avatarImages = {
+  avatar1: require("../../assets/images/avatar1.png"),
+  avatar2: require("../../assets/images/avatar2.png"),
+  avatar3: require("../../assets/images/avatar3.png"),
+  avatar4: require("../../assets/images/avatar4.png"),
+  avatar5: require("../../assets/images/avatar5.png"),
+  avatar6: require("../../assets/images/avatar6.png"),
+  avatar7: require("../../assets/images/avatar7.png"),
+  avatar8: require("../../assets/images/avatar8.png"),
+};
+
+const profileAvatarKey = homeData?.member?.profileAvatar || "avatar1";
+const profileImageSource = avatarImages[profileAvatarKey] || avatarImages.avatar1;
   const todaySchedules = useMemo(() => {
     return calendarData?.scheduleByDate?.[todayString] || [];
   }, [calendarData, todayString]);
@@ -449,8 +575,15 @@ export default function HomeScreen() {
   }, [todayPresentCount, todayReservedCount]);
 
   const todayReservableSessions = useMemo(() => {
-    return todaySchedules.filter((item) => item?.attendanceStatus === "reserved");
-  }, [todaySchedules]);
+  return todaySchedules
+    .filter((item) => item?.attendanceStatus === "reserved")
+    .filter((item) => item?.canReserve !== false)
+    .sort((a, b) => {
+      const aText = a?.startTime || "";
+      const bText = b?.startTime || "";
+      return aText.localeCompare(bText, "ko");
+    });
+}, [todaySchedules]);
 
   const todayPresentSessions = useMemo(() => {
     return todaySchedules.filter((item) => item?.canCancelAttendance === true);
@@ -458,38 +591,191 @@ export default function HomeScreen() {
 
   const hasTodayReserved = todayReservableSessions.length > 0;
 
+  function canCheckInTodaySession(item) {
+  const start = parseKoreanStartTimeToDate(todayString, item?.startTime);
+  if (!start) return false;
+
+  const now = new Date();
+
+  // 시작 1시간 전
+  const checkInStart = new Date(start);
+  checkInStart.setHours(checkInStart.getHours() - 1);
+
+  // 수업 종료 (1시간 30분 후)
+  const checkInEnd = new Date(start);
+  checkInEnd.setMinutes(checkInEnd.getMinutes() + 90);
+
+  return now >= checkInStart && now <= checkInEnd;
+}
+
+function canCancelAttendance(item) {
+  if (item?.attendanceStatus !== "present") return false;
+
+  if (!item?.checkedAt) return false;
+
+  const checkedAt = new Date(item.checkedAt);
+  const now = new Date();
+
+  const limit = new Date(checkedAt);
+  limit.setMinutes(limit.getMinutes() + 10);
+
+  return now <= limit;
+}
+
+const todayCheckInSessions = todaySchedules.filter((item) => {
+  if (item?.attendanceStatus === "present") return false;
+  return canCheckInTodaySession(item);
+});
+
+const hasTodayCheckInSession = todayCheckInSessions.length > 0;
+
+  function parseKoreanStartTimeToDate(dateString, startTimeText) {
+  if (!dateString || !startTimeText) return null;
+
+  const match = String(startTimeText).match(/(오전|오후)\s*(\d+):(\d+)/);
+  if (!match) return null;
+
+  const period = match[1];
+  let hour = Number(match[2]);
+  const minute = Number(match[3]);
+
+  if (period === "오후" && hour !== 12) hour += 12;
+  if (period === "오전" && hour === 12) hour = 0;
+
+  return new Date(`${dateString}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`);
+}
+
+function getNearestCheckInSession(sessions, todayString) {
+  const now = new Date();
+
+  const candidates = sessions
+    .map((item) => {
+      const start = parseKoreanStartTimeToDate(todayString, item?.startTime);
+      if (!start) return null;
+
+      const endLimit = new Date(start);
+      endLimit.setHours(endLimit.getHours() + 2);
+
+      const checkInStart = new Date(start);
+checkInStart.setHours(checkInStart.getHours() - 1);
+
+const checkInEnd = new Date(start);
+checkInEnd.setMinutes(checkInEnd.getMinutes() + 90);
+
+const isCheckInWindow =
+  now >= checkInStart && now <= checkInEnd;
+
+      if (!isCheckInWindow) return null;
+
+      return {
+        item,
+        diff: Math.abs(start.getTime() - now.getTime()),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.diff - b.diff);
+
+  return candidates[0]?.item || null;
+}
+
   const todayClass = homeData?.todayClass || null;
 
+const todayWeekday = today.getDay(); // 일 0, 월 1, 화 2...
+const isMondayToday = todayWeekday === 1;
+
+const isTodayYudanjaSession =
+  isYudanja &&
+  isMondayToday &&
+  todayClass?.isYudanjaSession === true;
+
+const yudanjaProgress =
+  isYudanja && isTodayYudanjaSession
+    ? todayClass?.yudanjaProgress || homeData?.yudanjaProgress || null
+    : null;
+
+const homeGroupProgress =
+  homeData?.homeGroupProgress ||
+  homeData?.groupProgress ||
+  homeData?.activeGroupTrack ||
+  homeData?.currentGroupProgress ||
+  null;
+
+console.log("🔥 [HOME homeData keys]", Object.keys(homeData || {}));
+console.log("🔥 [HOME homeGroupProgress]", homeGroupProgress);
 const todayClassTitle = useMemo(() => {
+  if (isTodayYudanjaSession) {
+    return yudanjaProgress?.title || "유단자회 수련";
+  }
+
   return (
-    todayClass?.groupProgress?.curriculumName ||
-    todayClass?.className ||
-    todayClass?.title ||
-    "현중태극권"
-  );
-}, [todayClass]);
+  homeGroupProgress?.curriculumName ||
+  homeGroupProgress?.curriculum?.name ||
+  homeGroupProgress?.curriculumTitle ||
+  todayClass?.groupProgress?.curriculumName ||
+  todayClass?.groupProgress?.curriculum?.name ||
+  homeData?.groupProgress?.curriculumName ||
+  homeData?.groupProgress?.curriculum?.name ||
+  homeData?.activeGroupTrack?.curriculum?.name ||
+  todayClass?.className ||
+  todayClass?.title ||
+  "현중태극권"
+);
+}, [
+  isTodayYudanjaSession,
+  yudanjaProgress,
+  homeGroupProgress,
+  todayClass,
+  homeData,
+]);
 
 const todayWeekProgressText = useMemo(() => {
-  if (todayClass?.isYudanjaSession) return null;
+  if (isTodayYudanjaSession) {
+    return yudanjaProgress?.memo || "";
+  }
 
-  if (!todayClass?.groupProgress) {
+  if (!homeGroupProgress) {
     return "아직 등록되지 않았어요.";
   }
 
-  return `${todayClass.groupProgress.startStep}식 ~ ${todayClass.groupProgress.endStep}식`;
-}, [todayClass]);
+  const startStep =
+  homeGroupProgress?.startStep ??
+  homeGroupProgress?.currentStartStep ??
+  homeGroupProgress?.fromStep ??
+  null;
 
-  
+const endStep =
+  homeGroupProgress?.endStep ??
+  homeGroupProgress?.currentEndStep ??
+  homeGroupProgress?.toStep ??
+  homeGroupProgress?.currentStep ??
+  null;
+
+if (startStep && endStep) {
+  return `이번 주 ${startStep}식 ~ ${endStep}식`;
+}
+
+if (homeGroupProgress?.currentStep) {
+  return `이번 주 ${homeGroupProgress.currentStep}식`;
+}
+
+return "아직 등록되지 않았어요.";
+}, [isTodayYudanjaSession, yudanjaProgress, homeGroupProgress]);
 
   const handleHideNoticeToday = useCallback(async () => {
   if (!activeNotice?.id) {
     setNoticeVisible(false);
+    setHasUnreadNotice(false);
     return;
   }
 
   try {
     await hideNoticeToday(token, activeNotice.id);
+
+    // 🔥 프론트에서도 막아버림
+    setHiddenNoticeIds((prev) => [...prev, activeNotice.id]);
+
     setNoticeVisible(false);
+    setActiveNotice(null);
   } catch (error) {
     Alert.alert("오류", error.message || "공지 숨김 처리 실패");
   }
@@ -500,27 +786,23 @@ const checkNoticePopup = useCallback(async () => {
   if (!token || !homeData) return;
 
   try {
-    console.log("🔥 token:", token);
-    console.log("🔥 homeData:", homeData);
-
     const notice = await getPopupNotice(token);
-    console.log("🔥 popup notice:", notice);
 
-    if (!notice?.id) {
+    // 🔥 추가: 프론트에서도 막기
+    if (!notice?.id || hiddenNoticeIds.includes(notice.id)) {
       setActiveNotice(null);
       setNoticeVisible(false);
       return;
     }
 
-    console.log("🔥 팝업 표시 시도");
     setActiveNotice(notice);
     setNoticeVisible(true);
+    setHasUnreadNotice(true);
   } catch (error) {
-    console.log("팝업 공지 조회 실패:", error?.message);
     setActiveNotice(null);
     setNoticeVisible(false);
   }
-}, [token, homeData]);
+}, [token, homeData, hiddenNoticeIds]);
 
 useEffect(() => {
   checkNoticePopup();
@@ -532,13 +814,20 @@ useFocusEffect(
   }, [checkNoticePopup])
 );
 
+const handleCloseNotice = useCallback(() => {
+  setNoticeVisible(false);
+  setHasUnreadNotice(false);
+}, []);
+
 const handleNoticeDetail = useCallback(() => {
   if (!activeNotice?.id) {
     setNoticeVisible(false);
+    setHasUnreadNotice(false);
     return;
   }
 
   setNoticeVisible(false);
+  setHasUnreadNotice(false);
 
   router.push({
     pathname: "/notice/[noticeId]",
@@ -548,31 +837,84 @@ const handleNoticeDetail = useCallback(() => {
   });
 }, [activeNotice]);
 
-const handleCloseNotice = useCallback(() => {
-  setNoticeVisible(false);
-}, []);
-
   const handlePressDate = useCallback(
-    async (dateObj) => {
-      if (!dateObj || !token) return;
+  async (dateObj) => {
+    if (!dateObj || !token) return;
 
-      const nextDate = toDateString(dateObj);
-      setSelectedDate(nextDate);
+    const nextDate = toDateString(dateObj);
+    setSelectedDate(nextDate);
 
-      try {
-        const attendanceRes = await getMyAttendance(token, nextDate);
-        setAttendanceData(attendanceRes);
-        setIsScheduleSheetVisible(true);
-      } catch (error) {
-        Alert.alert("오류", error.message || "출석 정보를 불러오지 못했습니다.");
-      }
-    },
-    [token]
-  );
+    const dayInfo = calendarMap[nextDate];
+
+    const hasSpecialDay =
+      !!dayInfo?.holidayName ||
+      dayInfo?.isHoliday === true ||
+      dayInfo?.isOpenHoliday === true;
+
+    if (!hasSpecialDay) {
+      return;
+    }
+
+    try {
+      const attendanceRes = await getMyAttendance(token, nextDate);
+      setAttendanceData(attendanceRes);
+      setIsScheduleSheetVisible(true);
+    } catch (error) {
+      Alert.alert("오류", error.message || "일정 정보를 불러오지 못했습니다.");
+    }
+  },
+  [token, calendarMap]
+);
 
   const closeScheduleSheet = useCallback(() => {
     setIsScheduleSheetVisible(false);
   }, []);
+
+  const updateScheduleItemLocally = useCallback((date, sessionId, updater) => {
+  setCalendarData((prev) => {
+    if (!prev?.scheduleByDate?.[date]) return prev;
+
+    const nextScheduleByDate = {
+      ...prev.scheduleByDate,
+      [date]: prev.scheduleByDate[date].map((item) => {
+        const itemSessionId = item?.sessionId || item?.id;
+
+        if (String(itemSessionId) !== String(sessionId)) {
+          return item;
+        }
+
+        return updater(item);
+      }),
+    };
+
+    const nextDays = (prev.days || []).map((day) => {
+      if (day.date !== date) return day;
+
+      const daySchedules = nextScheduleByDate[date] || [];
+      const hasReserved = daySchedules.some(
+        (item) => item?.attendanceStatus === "reserved"
+      );
+      const hasPresent = daySchedules.some(
+        (item) => item?.attendanceStatus === "present"
+      );
+      const hasException = daySchedules.some(
+        (item) => item?.recurringMeta?.hasRecurringException === true
+      );
+
+      return {
+        ...day,
+        attendanceStatus: hasPresent ? "present" : hasReserved ? "reserved" : null,
+        hasRecurringException: hasException,
+      };
+    });
+
+    return {
+      ...prev,
+      scheduleByDate: nextScheduleByDate,
+      days: nextDays,
+    };
+  });
+}, []);
 
   const handleAttendance = useCallback(
     async (item) => {
@@ -639,14 +981,28 @@ const handleCloseNotice = useCallback(() => {
           return;
         }
 
-        await skipRecurringReservationOnce(token, {
-          memberRecurringReservationId,
-          date: selectedDate,
-          reason: "",
-        });
+        const sessionId = item?.sessionId || item?.id;
 
-        Alert.alert("완료", "이번만 쉬기로 처리되었습니다.");
-        await refreshScreenData();
+await skipRecurringReservationOnce(token, {
+  memberRecurringReservationId,
+  date: selectedDate,
+  reason: "",
+});
+
+updateScheduleItemLocally(selectedDate, sessionId, (prevItem) => ({
+  ...prevItem,
+  attendanceStatus: null,
+  recurringMeta: {
+    ...(prevItem.recurringMeta || {}),
+    hasRecurringException: true,
+    exceptionType: "skip",
+    matchedRecurringRule: true,
+    memberRecurringReservationId,
+  },
+}));
+
+Alert.alert("완료", "이번만 쉬기로 처리되었습니다.");
+
       } catch (error) {
         Alert.alert("오류", error.message || "이번만 쉬기 처리에 실패했습니다.");
       } finally {
@@ -670,13 +1026,27 @@ const handleCloseNotice = useCallback(() => {
           return;
         }
 
-        await undoSkipRecurringReservationOnce(token, {
-          memberRecurringReservationId,
-          date: selectedDate,
-        });
+        const sessionId = item?.sessionId || item?.id;
 
-        Alert.alert("완료", "이번 쉬기 취소가 완료되었습니다.");
-        await refreshScreenData();
+await undoSkipRecurringReservationOnce(token, {
+  memberRecurringReservationId,
+  date: selectedDate,
+});
+
+updateScheduleItemLocally(selectedDate, sessionId, (prevItem) => ({
+  ...prevItem,
+  attendanceStatus: "reserved",
+  recurringMeta: {
+    ...(prevItem.recurringMeta || {}),
+    hasRecurringException: false,
+    exceptionType: null,
+    matchedRecurringRule: true,
+    memberRecurringReservationId,
+  },
+}));
+
+Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
+
       } catch (error) {
         Alert.alert("오류", error.message || "이번 쉬기 취소에 실패했습니다.");
       } finally {
@@ -737,6 +1107,10 @@ const handleCloseNotice = useCallback(() => {
   const handleScheduleAction = useCallback(
     (item, actionType) => {
       switch (actionType) {
+        case "attendance":
+          return handleAttendance(item);
+        case "qrAttendance":
+          return router.push("/qr-attendance");
         case "reserve":
           return handleReserve(item);
         case "cancelReserve":
@@ -768,22 +1142,7 @@ const handleCloseNotice = useCallback(() => {
       </View>
     );
   }
-function handleCancelReservation(item) {
-  Alert.alert(
-    "예약 취소",
-    `${getSessionDisplayLabel(item)} 예약을 취소하시겠습니까?`,
-    [
-      { text: "아니오", style: "cancel" },
-      {
-        text: "취소하기",
-        style: "destructive",
-        onPress: () => {
-          console.log("예약 취소 대상:", item);
-        },
-      },
-    ]
-  );
-}
+
   return (
     <>
       <ScrollView
@@ -793,140 +1152,160 @@ function handleCancelReservation(item) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.heroCard}>
- <View style={styles.heroHeaderRow}>
+  <View style={styles.homeHeader}>
+    <Image
+  source={require("../../assets/images/home-mountain-bg.png")}
+  style={styles.homeMountainBg}
+  resizeMode="cover"
+/>
+
+<Pressable
+  style={styles.homeNoticeBell}
+  onPress={() => router.push("/(tabs)/inquiry")}
+>
+<Image
+  source={require("../../assets/images/bell-line.png")}
+  style={styles.homeNoticeBellIcon}
+  resizeMode="contain"
+/>
+
+{hasUnreadNotice ? <View style={styles.homeNoticeDot} /> : null}
+</Pressable>
+
+<LinearGradient
+  colors={["rgba(255,249,246,0)", "#FFF9F6"]}
+  style={styles.homeMountainFade}
+/>
+    <View style={styles.homeHeaderTextBlock}>
+  <Text style={styles.homeGreeting}>안녕하세요!</Text>
+    <Text style={styles.homeName}>{displayName}님</Text>
+
+    <View style={styles.homeBadgeRow}>
+      <View style={styles.homeBadge}>
+        <Text style={styles.homeBadgeText}>
+          {homeData?.member?.levelLabel || homeData?.member?.level || "일반회원"}
+        </Text>
+      </View>
+
+      {isYudanja ? (
+        <View style={[styles.homeBadge, styles.homeBadgeYudanja]}>
+          <Text style={[styles.homeBadgeText, styles.homeBadgeTextYudanja]}>
+            유단자회
+          </Text>
+        </View>
+      ) : null}
+    </View>
+  </View>
+
+  <View style={[styles.homeProfileWrap, isYudanja && styles.homeProfileWrapYudanja]}>
+  <View style={[styles.homeProfileCircle, isYudanja && styles.homeProfileCircleYudanja]}>
+    <Image
+      source={profileImageSource}
+      style={styles.homeProfileImage}
+      resizeMode="cover"
+    />
+  </View>
+
+  {isYudanja ? (
   <Image
-    source={require("./logo-dojang.png")}
-    style={styles.heroLogo}
+    source={yudanjaEmblemFrame}
+    style={[styles.homeYudanjaEmblemFrame, { pointerEvents: "none" }]}
+    resizeMode="contain"
+  />
+) : null}
+</View>
+</View>
+
+<LinearGradient
+  colors={
+    isYudanja
+      ? ["#FFFDF7", "#FFF8E8", "#FFFFFF"]
+      : [colors.card, colors.card]
+  }
+  start={{ x: 0, y: 0 }}
+  end={{ x: 1, y: 1 }}
+  style={[
+    styles.todayTrainingCard,
+    isYudanja && styles.todayTrainingCardYudanja,
+  ]}
+>
+  {isYudanja ? (
+  <>
+    <Image
+      source={yudanjaProfileBg}
+      style={[styles.todayYudanjaBgImage, { pointerEvents: "none" }]}
+      resizeMode="cover"
+    />
+
+    <View
+      style={[styles.yudanjaGoldBorderOuter, { pointerEvents: "none" }]}
+    />
+
+    <View
+      style={[styles.yudanjaGoldBorderInner, { pointerEvents: "none" }]}
+    />
+  </>
+) : null}
+
+  <View style={styles.todayTrainingHeader}>
+    <Text style={styles.todayTrainingLabel}>오늘의 수련</Text>
+
+    <Pressable onPress={() => router.push("/(tabs)/taegukwon")}>
+      <View style={styles.moreLinkRow}>
+        <Text style={styles.todayTrainingMore}>자세히 보기</Text>
+      </View>
+    </Pressable>
+  </View>
+
+  <Text style={styles.todayTrainingTitle}>{todayClassTitle}</Text>
+  <Text
+    style={[
+      styles.todayTrainingStep,
+      isYudanja && styles.todayTrainingStepYudanja,
+    ]}
+  >
+    {todayWeekProgressText}
+  </Text>
+
+  <Image
+    source={require("../../assets/images/taichi-silhouette.png")}
+    style={[
+      styles.todaySilhouette,
+      isYudanja && styles.todaySilhouetteYudanja,
+    ]}
     resizeMode="contain"
   />
 
-  <View style={styles.heroHeaderTextWrap}>
-    <View style={styles.heroNameRow}>
-      <Text style={styles.heroNameText}>{displayName}님</Text>
-
-      <View
-        style={[
-          styles.headerStatusPill,
-          todayStatusLabel === "출석 완료" && styles.statusPillDone,
-          todayStatusLabel === "출석 예정" && styles.statusPillReserved,
-          todayStatusLabel === "오늘 예약 없음" && styles.statusPillIdle,
-        ]}
-      >
-        <Text
-          style={[
-            styles.headerStatusPillText,
-            todayStatusLabel === "출석 완료" && styles.statusPillTextDone,
-            todayStatusLabel === "출석 예정" && styles.statusPillTextReserved,
-            todayStatusLabel === "오늘 예약 없음" && styles.statusPillTextIdle,
-          ]}
-        >
-          {todayStatusLabel}
-        </Text>
-      </View>
-    </View>
-
-    <View style={styles.heroBadgeRow}>
-      <View style={styles.heroMiniBadge}>
-  <Text style={styles.heroMiniBadgeText}>
-    {homeData?.member?.levelLabel || homeData?.member?.level || "일반회원"}
-  </Text>
-</View>
-
-      {homeData?.member?.canAccessYudanjaClass ? (
-  <View style={styles.heroMiniBadge}>
-    <Text style={styles.heroMiniBadgeText}>유단자회</Text>
-  </View>
-) : null}
-    </View>
-  </View>
-</View>
-
-  <View style={styles.todayClassCard}>
-  
-  <View style={styles.todayClassContent}>
-    <Text style={styles.todayClassLabel}>오늘 수업</Text>
-    <Text style={styles.todayClassTitle}>{todayClassTitle}</Text>
-
-{!todayClass?.isYudanjaSession ? (
-  <View style={styles.weekProgressWrap}>
-    <Text style={styles.weekProgressLabel}>이번 주 수련</Text>
-    <Text style={styles.weekProgressValue}>
-      {todayWeekProgressText}
+  <Pressable
+    style={[
+      styles.todayTrainingButton,
+      isYudanja && styles.todayTrainingButtonYudanja,
+    ]}
+    onPress={() => router.push("/qr-attendance")}
+  >
+    <Text
+      style={[
+        styles.todayTrainingButtonText,
+        isYudanja && styles.todayTrainingButtonTextYudanja,
+      ]}
+    >
+      ☑  오늘 출석하기
     </Text>
-  </View>
-) : null}
-  </View>
-
-  <View style={styles.todayClassActionWrap}>
-    {isSelectedToday && hasTodayReserved ? (
-      <Pressable
-        style={styles.heroPrimaryButton}
-        onPress={() => {
-          if (todayReservableSessions.length === 0) {
-            Alert.alert("안내", "출석 예정된 수업이 없습니다.");
-            return;
-          }
-
-          if (todayReservableSessions.length === 1) {
-            handleAttendance(todayReservableSessions[0]);
-            return;
-          }
-
-          Alert.alert(
-            "오늘 출석",
-            "출석 처리할 시간대를 선택해주세요.",
-            todayReservableSessions.map((item) => ({
-              text: getSessionDisplayLabel(item),
-              onPress: () => handleAttendance(item),
-            }))
-          );
-        }}
-      >
-        <Text style={styles.heroPrimaryButtonText}>오늘 출석</Text>
-      </Pressable>
-    ) : isSelectedToday && todayPresentSessions.length > 0 ? (
-      <Pressable
-        style={styles.heroSecondaryButton}
-        onPress={() => {
-          if (todayPresentSessions.length === 1) {
-            handleCancelAttendance(todayPresentSessions[0]);
-            return;
-          }
-
-          Alert.alert(
-            "오늘 출석 취소",
-            "취소할 시간대를 선택해주세요.",
-            todayPresentSessions.map((item) => ({
-              text: getSessionDisplayLabel(item),
-              onPress: () => handleCancelAttendance(item),
-            }))
-          );
-        }}
-      >
-        <Text style={styles.heroSecondaryButtonText}>출석 취소</Text>
-      </Pressable>
-    ) : (
-      <View style={styles.heroActionPlaceholder} />
-    )}
-  </View>
-</View>
-</View>
+  </Pressable>
+</LinearGradient>
 
         <View style={styles.card}>
-          <View style={styles.calendarHeader}>
-            <Pressable style={styles.monthButton} onPress={() => moveMonth(-1)}>
-              <Text style={styles.monthButtonText}>‹</Text>
-            </Pressable>
+          <View style={styles.miniCalendarHeader}>
+  <Text style={styles.miniCalendarTitle}>
+    {today.getMonth() + 1}월 출석 현황
+  </Text>
 
-            <Text style={styles.monthTitle}>
-              {currentYear}년 {currentMonth}월
-            </Text>
-
-            <Pressable style={styles.monthButton} onPress={() => moveMonth(1)}>
-              <Text style={styles.monthButtonText}>›</Text>
-            </Pressable>
-          </View>
+  <Pressable onPress={() => router.push("/(tabs)/schedule")}>
+    <View style={styles.moreLinkRow}>
+  <Text style={styles.miniCalendarMore}>더보기</Text>
+</View>
+  </Pressable>
+</View>
 
           <View style={styles.weekHeader}>
             {["일", "월", "화", "수", "목", "금", "토"].map((d, idx) => (
@@ -942,7 +1321,7 @@ function handleCancelReservation(item) {
 ))}
           </View>
 
-          {weeks.map((week, rowIndex) => (
+          {miniCalendarWeeks.map((week, rowIndex) => (
             <View key={`week-${rowIndex}`} style={styles.weekRow}>
               {week.map((dateObj, colIndex) => {
                 if (!dateObj) {
@@ -956,11 +1335,18 @@ function handleCancelReservation(item) {
 
                 const dateString = toDateString(dateObj);
                 const dayInfo = calendarMap[dateString];
+                const attendanceCountForDay =
+                      dayInfo?.presentCount ||
+                      dayInfo?.attendanceCount ||
+                      dayInfo?.presentSessionCount ||
+                      (dayInfo?.attendanceStatus === "present" ? 1 : 0);
                 const selected = selectedDate === dateString;
                 const todayFlag = dateString === todayString;
                 const statusMeta = getStatusMeta(dayInfo);
                 const isSunday = dateObj.getDay() === 0;
                 const isHoliday = dayInfo?.isHoliday === true;
+                const isOpenEvent = dayInfo?.isOpenHoliday === true;
+                const isClosedHoliday = dayInfo?.isHoliday === true && !isOpenEvent;
 
                 let dayCellBackgroundColor = "#FCFAF6";
 
@@ -974,44 +1360,94 @@ function handleCancelReservation(item) {
     ]}
     onPress={() => handlePressDate(dateObj)}
   >
+  {dayInfo?.attendanceStatus === "present" ? (
+  <View
+    style={[
+      styles.dayStampPresent,
+      attendanceCountForDay >= 2 && styles.dayStampPresentTwo,
+      attendanceCountForDay >= 3 && styles.dayStampPresentThree,
+    ]}
+  >
+    <Text style={styles.dayStampTextPresent}>{dateObj.getDate()}</Text>
+  </View>
+) : dayInfo?.attendanceStatus === "reserved" &&
+  dayInfo?.isHoliday !== true &&
+  dayInfo?.hasRecurringException !== true ? (
+  <View style={styles.dayStampReserved}>
+    <Text style={styles.dayStampTextReserved}>{dateObj.getDate()}</Text>
+  </View>
+) : (
   <Text
-  style={[
-    styles.dayNumber,
-    (isSunday || isHoliday) && styles.dayNumberSunday,
-    selected && styles.dayNumberSelected,
-  ]}
->
-  {dateObj.getDate()}
-</Text>
-
-    <View style={styles.dayStampWrapper}>
-      {dayInfo?.attendanceStatus === "present" && (
-        <Image
-          source={require("./stamp-dark.png")}
-          style={styles.dayStampImagePresent}
-          resizeMode="contain"
-        />
-      )}
-
-      {dayInfo?.attendanceStatus === "reserved" && (
-        <Image
-          source={require("./stamp-light.png")}
-          style={styles.dayStampImageReserved}
-          resizeMode="contain"
-        />
-      )}
-    </View>
+    style={[
+      styles.dayNumber,
+      (isSunday || isClosedHoliday) && styles.dayNumberSunday,
+      isOpenEvent && styles.dayNumberEvent,
+      selected && styles.dayNumberSelected,
+    ]}
+  >
+    {dateObj.getDate()}
+  </Text>
+)}
   </Pressable>
 );
-              })}
-            </View>
-          ))}
+})}
+ </View>
+ ))}
+
+<View style={styles.calendarLegend}>
+  <View style={styles.legendItem}>
+    <View style={styles.legendDotPresent} />
+    <Text style={styles.legendText}>출석</Text>
+  </View>
+
+  <View style={styles.legendItem}>
+    <View style={styles.legendDotReserved} />
+    <Text style={styles.legendText}>예약</Text>
+  </View>
+</View>
         </View>
 
-        <Text style={styles.calendarHintText}>
-          날짜를 선택하면 2주간의 출석 계획을 세울 수 있습니다.
-        </Text>
-      </ScrollView>
+        
+
+<View style={styles.noticeSummaryCard}>
+  <View style={styles.noticeSummaryHeader}>
+    <Text style={styles.noticeSummaryTitle}>도장 소식</Text>
+
+    <Pressable onPress={() => router.push("/(tabs)/inquiry")}>
+      <Text style={styles.noticeSummaryMore}>더보기 </Text>
+    </Pressable>
+  </View>
+
+  {noticeList.slice(0, 2).length === 0 ? (
+  <Text style={styles.noticeSummaryEmpty}>등록된 소식이 없습니다.</Text>
+) : (
+  noticeList.slice(0, 2).map((notice) => (
+    <Pressable
+      key={notice.id}
+      style={styles.noticeSummaryItem}
+      onPress={() =>
+        router.push({
+          pathname: "/notice/[noticeId]",
+          params: { noticeId: String(notice.id) },
+        })
+      }
+    >
+      <Text style={styles.noticeSummaryBullet}>•</Text>
+
+      <Text style={styles.noticeSummaryText} numberOfLines={1}>
+        {notice.title}
+      </Text>
+
+      <Text style={styles.noticeSummaryDate}>
+        {String(notice.publishedAt || notice.createdAt || "")
+          .slice(5, 10)
+          .replace("-", ".")}
+      </Text>
+    </Pressable>
+  ))
+)}
+</View>
+</ScrollView>
 
       <Modal
         visible={isScheduleSheetVisible}
@@ -1027,12 +1463,12 @@ function handleCancelReservation(item) {
 
             <View style={styles.sheetHeaderRow}>
               <Text style={styles.sheetTitle}>
-                {selectedDate
-                  ? `${Number(selectedDate.slice(5, 7))}월 ${Number(
-                      selectedDate.slice(8, 10)
-                    )}일 수업`
-                  : "수업"}
-              </Text>
+  {selectedDate
+    ? `${Number(selectedDate.slice(5, 7))}월 ${Number(
+        selectedDate.slice(8, 10)
+      )}일 안내`
+    : "일정 안내"}
+</Text>
 
               <Pressable
                 onPress={closeScheduleSheet}
@@ -1041,6 +1477,37 @@ function handleCancelReservation(item) {
                 <Text style={styles.sheetCloseButtonText}>닫기</Text>
               </Pressable>
             </View>
+            {calendarMap[selectedDate]?.holidayName ? (
+  <View
+    style={[
+      styles.selectedEventNotice,
+      calendarMap[selectedDate]?.isOpenHoliday
+        ? styles.selectedEventNoticeOpen
+        : styles.selectedEventNoticeClosed,
+    ]}
+  >
+    <Text
+      style={[
+        styles.selectedEventNoticeTitle,
+        calendarMap[selectedDate]?.isOpenHoliday
+          ? styles.selectedEventNoticeTitleOpen
+          : styles.selectedEventNoticeTitleClosed,
+      ]}
+    >
+      {calendarMap[selectedDate]?.isOpenHoliday ? "도장 일정" : "휴관 안내"}
+    </Text>
+
+    <Text style={styles.selectedEventNoticeText}>
+      {calendarMap[selectedDate]?.holidayName}
+    </Text>
+
+    {!calendarMap[selectedDate]?.isOpenHoliday ? (
+      <Text style={styles.selectedEventNoticeSubText}>
+        이 날은 예약이 제한될 수 있습니다.
+      </Text>
+    ) : null}
+  </View>
+) : null}
 
             <ScrollView
               contentContainerStyle={styles.sheetContent}
@@ -1049,84 +1516,90 @@ function handleCancelReservation(item) {
               {selectedSchedules.length === 0 ? (
                 <View style={styles.emptySheetBox}>
                   <Text style={styles.emptySheetText}>
-                    일요일은 도장 휴관일 입니다.
-                  </Text>
+  {calendarMap[selectedDate]?.holidayName
+    ? calendarMap[selectedDate]?.isOpenHoliday
+      ? "등록된 수업은 없지만 도장 일정이 있는 날입니다."
+      : "이 날은 도장 휴관일입니다."
+    : "등록된 수업이 없습니다."}
+</Text>
                 </View>
               ) : (
                 selectedSchedules.map((item, index) => {
   const sessionId = item?.sessionId || item?.id || `session-${index}`;
   const uiMeta = getScheduleUiMeta(item, { isReservableDate });
-  const toneStyles = getScheduleCardStyle(uiMeta.tone);
-  const canCancelReservation =
-  item?.attendanceStatus === "reserved" ||
-  uiMeta?.tone === "reserved" ||
-  uiMeta?.tone === "waiting";
+  let finalUiMeta = uiMeta;
 
+if (isSelectedToday) {
+  // 1️⃣ 이미 출석한 경우
+  if (item?.attendanceStatus === "present") {
+    if (canCancelAttendance(item)) {
+      finalUiMeta = {
+        ...uiMeta,
+        tone: "done",
+        label: "출석 완료",
+        actionLabel: "출석 취소",
+        actionType: "cancelAttendance",
+      };
+    } else {
+      finalUiMeta = {
+        ...uiMeta,
+        tone: "done",
+        label: "출석 완료",
+        actionLabel: null,
+        helperText: "출석 후 10분이 지나 취소할 수 없습니다.",
+      };
+    }
+  }
+
+  // 2️⃣ 출석 가능한 수업
+  else if (
+  item?.attendanceStatus !== "present" &&
+  canCheckInTodaySession(item)
+) {
+  finalUiMeta = {
+    ...uiMeta,
+    tone: "available",
+    label: "출석 가능",
+    actionLabel: "QR 출석",
+    actionType: "qrAttendance",
+  };
+}
+}
+  const toneStyles = getScheduleCardStyle(finalUiMeta.tone);
+  
   const showHelperText =
-    uiMeta.tone === "disabled" || uiMeta.tone === "cancelled";
+  finalUiMeta.tone === "disabled" || finalUiMeta.tone === "cancelled";
 
-  return (
-    <View
-      key={sessionId}
-      style={[styles.compactScheduleCard, toneStyles.container]}
-    >
-      <View style={styles.compactScheduleRow}>
-        <View style={styles.compactScheduleLeft}>
-          <Text style={styles.compactScheduleTitle}>
-            {getSessionDisplayLabel(item)}
-          </Text>
-
-          {uiMeta.isRecurring ? (
-            <View style={styles.compactRecurringBadge}>
-              <Text style={styles.compactRecurringBadgeText}>정기</Text>
-            </View>
-          ) : null}
-
-          <View style={[styles.compactStatusChip, toneStyles.chip]}>
-            <Text style={[styles.compactStatusChipText, toneStyles.chipText]}>
-              {uiMeta.label}
-            </Text>
-          </View>
-        </View>
-
-        {uiMeta.actionLabel ? (
-          <Pressable
-            style={[
-              styles.compactActionButton,
-              (uiMeta.tone === "reserved" || uiMeta.tone === "done") &&
-                styles.compactActionButtonSecondary,
-              uiMeta.tone === "cancelled" &&
-                styles.compactActionButtonPrimary,
-            ]}
-            onPress={() => handleScheduleAction(item, uiMeta.actionType)}
-            disabled={submittingAttendance}
-          >
-            <Text
-              style={[
-                styles.compactActionButtonText,
-                (uiMeta.tone === "reserved" || uiMeta.tone === "done") &&
-                  styles.compactActionButtonTextSecondary,
-              ]}
-            >
-              {submittingAttendance ? "처리 중..." : uiMeta.actionLabel}
-            </Text>
-          </Pressable>
-        ) : null}
-      </View>
-
-      {showHelperText && uiMeta.helperText ? (
-        <Text style={styles.compactHelperText}>{uiMeta.helperText}</Text>
-      ) : null}
-      {canCancelReservation ? (
-  <Pressable
-    style={styles.compactCancelButton}
-    onPress={() => handleCancelReservation(item)}
+return (
+  <View
+    key={sessionId}
+    style={[styles.compactScheduleCard, toneStyles.container]}
   >
-    <Text style={styles.compactCancelButtonText}>예약 취소</Text>
-  </Pressable>
-) : null}
+    <View style={styles.compactScheduleRow}>
+      <View style={styles.compactScheduleLeft}>
+        <Text style={styles.compactScheduleTitle}>
+          {getSessionDisplayLabel(item)}
+        </Text>
+
+        {finalUiMeta.isRecurring ? (
+          <View style={styles.compactRecurringBadge}>
+            <Text style={styles.compactRecurringBadgeText}>정기</Text>
+          </View>
+        ) : null}
+
+        <View style={[styles.compactStatusChip, toneStyles.chip]}>
+          <Text style={[styles.compactStatusChipText, toneStyles.chipText]}>
+            {finalUiMeta.label}
+          </Text>
+        </View>
+      </View>
     </View>
-  );
+
+    {showHelperText && finalUiMeta.helperText ? (
+      <Text style={styles.compactHelperText}>{finalUiMeta.helperText}</Text>
+    ) : null}
+  </View>
+);
 })
               )}
             </ScrollView>
@@ -1182,227 +1655,413 @@ function handleCancelReservation(item) {
   );
 }
 
+const colors = {
+  background: "#FFFCFA",
+  card: "#FFFFFF",
+  blushBeige: "#F5EAE4",
+  roseTaupe: "#DCC6BE",
+  warmBrown: "#76564B",
+  softBrown: "#A78D83",
+  bronzeGold: "#C89E6A",
+  textMain: "#3A2C27",
+  textSub: "#8A7A72",
+  textMuted: "#A99F98",
+  border: "#EFE5DE",
+  reserved: "#F4E4C8",
+  present: "#6B4F46",
+  absent: "#D9D2CD",
+  closed: "#E9E1DB",
+  white: "#FFFFFF",
+  danger: "#C46A5A",
+};
+const isWeb = Platform.OS === "web";
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f6f7fb",
+    backgroundColor: colors.background,
   },
+
   content: {
-  paddingHorizontal: 16,
-  paddingTop: 36,
-  paddingBottom: 28,
-  gap: 18,
+  paddingHorizontal: isWeb ? 12 : 16,
+  paddingTop: isWeb ? 28 : 48,
+  paddingBottom: isWeb ? 88 : 24,
+  gap: isWeb ? 12 : 15,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
 },
+
   center: {
     flex: 1,
-    backgroundColor: "#f6f7fb",
+    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
+
   loadingText: {
     marginTop: 10,
     fontSize: 14,
-    color: "#666",
+    fontWeight: "600",
+    color: colors.textSub,
   },
 
-  heroCard: {
-  backgroundColor: "#F8F5EF",
-  borderRadius: 30,
-  paddingHorizontal: 18,
-  paddingTop: 18,
-  paddingBottom: 16,
-  borderWidth: 1,
-  borderColor: "#E8E1D6",
-  position: "relative",
-},
-
-heroMarkWrap: {
-  marginBottom: 10,
-},
-
-heroLogo: {
-  width: 52,
-  height: 52,
-},
-
-heroGreeting: {
-  fontSize: 30,
-  fontWeight: "800",
-  color: "#161311",
-  marginBottom: 14,
-},
-  
-  heroStatusRow: {
-    marginTop: 18,
-    flexDirection: "row",
-  },
-
-  statusPill: {
-  paddingHorizontal: 14,
-  paddingVertical: 8,
-  borderRadius: 999,
-  alignSelf: "flex-start",
-},
-  statusPillIdle: {
-    backgroundColor: "#F3F4F6",
-  },
-  statusPillReserved: {
-    backgroundColor: "#DCFCE7",
-  },
-  statusPillDone: {
-    backgroundColor: "#DBEAFE",
-  },
-  statusPillText: {
-    fontSize: 13,
-    fontWeight: "800",
-  },
-  statusPillTextIdle: {
-    color: "#4B5563",
-  },
-  statusPillTextReserved: {
-    color: "#166534",
-  },
-  statusPillTextDone: {
-    color: "#1D4ED8",
-  },
-
-  card: {
-  backgroundColor: "#FFFEFC",
-  borderRadius: 28,
-  paddingHorizontal: 18,
-  paddingTop: 18,
-  paddingBottom: 18,
-  borderWidth: 1,
-  borderColor: "#ECE7DE",
-},
-
-calendarHeader: {
+  homeHeader: {
+  minHeight: isWeb ? 112 : 140,
+  paddingHorizontal: 4,
+  paddingTop: isWeb ? 0 : 8,
+  paddingBottom: isWeb ? 28 : 45,
   flexDirection: "row",
-  alignItems: "center",
   justifyContent: "space-between",
-  marginBottom: 10,
+  alignItems: "flex-start",
+  position: "relative",
+  overflow: "visible",
 },
 
-monthButton: {
-  width: 42,
-  height: 42,
-  borderRadius: 21,
-  backgroundColor: "#F6F1E8",
+homeHeaderTextBlock: {
+  paddingLeft: 9,
+},
+  homeMountainBg: {
+  position: "absolute",
+  left: -100,
+  right: -40,
+  bottom: -75,
+  height: 175,
+  opacity: 0.55,
+  transform: [{ scale: 0.75}],
+},
+
+  homeGreeting: {
+  fontSize: isWeb ? 13 : 14,
+  fontWeight: "700",
+  lineHeight: isWeb ? 18 : 20,
+  color: colors.textSub,
+  marginTop: 10,
+  marginBottom: -3,
+},
+
+  homeName: {
+  fontSize: isWeb ? 28 : 34,
+  fontWeight: "700",
+  marginBottom: -5,
+},
+
+  homeBadgeRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    gap: 7,
+    flexWrap: "wrap",
+  },
+
+  homeBadge: {
+  minHeight: isWeb ? 26 : 30,
+  paddingHorizontal: isWeb ? 9 : 11,
+  paddingVertical: isWeb ? 4 : 5,
+  borderRadius: 999,
+  backgroundColor: colors.blushBeige,
   alignItems: "center",
   justifyContent: "center",
 },
 
-monthButtonText: {
-  fontSize: 24,
-  fontWeight: "500",
-  color: "#7B7164",
-},
 
-monthTitle: {
-  fontSize: 20,
-  fontWeight: "800",
-  color: "#1F1A17",
-},
+  homeBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: colors.warmBrown,
+  },
 
-weekHeader: {
-  marginTop: 8,
-  marginBottom: 8,
-  flexDirection: "row",
-},
+  homeBadgeYudanja: {
+    backgroundColor: colors.warmBrown,
+  },
 
-weekHeaderText: {
-  flex: 1,
-  textAlign: "center",
-  fontSize: 13,
-  fontWeight: "700",
-  color: "#9A8F81",
-},
+  homeBadgeTextYudanja: {
+    color: "#E3B66F",
+  },
 
-weekRow: {
-  flexDirection: "row",
-  marginTop: 8,
-},
-
-dayCell: {
-  flex: 1,
-  aspectRatio: 1,
-  marginHorizontal: 3,
-  borderRadius: 16,
-  backgroundColor: "#FCFAF6",
-  alignItems: "center",
-  justifyContent: "flex-start",
-  paddingTop: 8,
-  position: "relative",
+  todayTrainingCard: {
+  marginTop: isWeb ? -14 : -25,
+  backgroundColor: colors.card,
+  borderRadius: isWeb ? 20 : 22,
+  borderWidth: 0.3,
+  borderColor: colors.border,
+  paddingTop: isWeb ? 13 : 15,
+  paddingBottom: isWeb ? 13 : 15,
+  paddingHorizontal: isWeb ? 15 : 18,
   overflow: "hidden",
+  shadowColor: "#BFA79B",
+  shadowOpacity: 0.08,
+  shadowRadius: 14,
+  shadowOffset: { width: 0, height: 6 },
+  elevation: 3,
 },
 
-dayCellSelected: {
-  borderWidth: 2,
-  borderColor: "#6FA3C8",
-  backgroundColor: "#F7FBFF",
+todayTrainingHeader: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: isWeb ? 14 : 20,
+  zIndex: 5,
 },
 
-dayCellToday: {
-  borderWidth: 1,
-  borderColor: "#C8BFB1",
-  backgroundColor: "#FFFDF9",
+todayTrainingLabel: {
+  marginTop: 3,
+  fontSize: isWeb ? 16 : 17,
+  fontWeight: "800",
+  lineHeight: 22,
+  color: colors.textMain,
 },
 
-dayNumber: {
-  fontSize: 17,
-  fontWeight: "700",
-  color: "#1F1A17",
-  zIndex: 2,
-},
-
-dayNumberSelected: {
-  color: "#325B7A",
-},
-
-  badge: {
-    marginTop: 6,
-    minWidth: 34,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 999,
-    backgroundColor: "#f3f4f6",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgePresent: {
-    backgroundColor: "#dcfce7",
-  },
-  badgeReserved: {
-    backgroundColor: "#dbeafe",
-  },
-  badgeAbsent: {
-    backgroundColor: "#fee2e2",
-  },
-  badgeText: {
-    fontSize: 10,
+  todayTrainingMore: {
+    fontSize: 12,
     fontWeight: "700",
-    color: "#6b7280",
+    color: colors.textSub,
   },
-  badgeTextPresent: {
-    color: "#15803d",
+
+  todayTrainingTitle: {
+  fontSize: isWeb ? 24 : 27,
+  fontWeight: "700",
+  lineHeight: isWeb ? 28 : 30,
+  color: colors.textMain,
+  marginBottom: 6,
+  maxWidth: "76%",
+  zIndex: 5,
+},
+
+todayTrainingStep: {
+  fontSize: isWeb ? 15 : 17,
+  fontWeight: "600",
+  lineHeight: isWeb ? 19 : 21,
+  color: colors.warmBrown,
+  marginBottom: isWeb ? 28 : 40,
+  maxWidth: "76%",
+  zIndex: 5,
+},
+
+todayTrainingButton: {
+  height: isWeb ? 43 : 47,
+  borderRadius: 14,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+  marginTop: -5,
+  zIndex: 5,
+},
+
+todayTrainingButtonText: {
+  fontSize: isWeb ? 15 : 17,
+  fontWeight: "800",
+  color: colors.white,
+},
+
+card: {
+  backgroundColor: colors.card,
+  borderRadius: isWeb ? 20 : 22,
+  paddingHorizontal: isWeb ? 14 : 16,
+  paddingTop: isWeb ? 14 : 16,
+  paddingBottom: isWeb ? 14 : 16,
+  borderWidth: 0.3,
+  borderColor: colors.border,
+  shadowColor: "#BFA79B",
+  shadowOpacity: 0.05,
+  shadowRadius: 12,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 2,
+},
+
+  miniCalendarHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
   },
-  badgeTextReserved: {
-    color: "#1d4ed8",
+
+  miniCalendarTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    lineHeight: 24,
+    color: colors.textMain,
   },
-  badgeTextAbsent: {
-    color: "#b91c1c",
+
+  miniCalendarMore: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: colors.textSub,
+  },
+
+  weekHeader: {
+    flexDirection: "row",
+    marginTop: 2,
+    marginBottom: 4,
+  },
+
+  weekHeaderText: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#B7AAA2",
+  },
+
+  weekHeaderTextSunday: {
+    color: "#C45A2A",
+  },
+
+  weekRow: {
+    flexDirection: "row",
+    marginTop: 1,
+  },
+
+  dayCell: {
+  flex: 1,
+  height: 34,
+  marginHorizontal: 2,
+  borderRadius: 999,
+  backgroundColor: "transparent",
+  alignItems: "center",
+  justifyContent: "center",
+  position: "relative",
+  overflow: "visible",
+},
+
+  dayCellSelected: {
+    borderWidth: 0.8,
+    borderColor: colors.roseTaupe,
+    backgroundColor: "#FFFDF9",
+  },
+
+  dayCellToday: {
+    borderWidth: 1,
+    borderColor: colors.roseTaupe,
+    backgroundColor: "#FFFDF9",
+  },
+
+  dayNumber: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.textMain,
+    zIndex: 5,
+  },
+
+  dayNumberSelected: {
+    color: "#325B7A",
+  },
+
+  dayNumberSunday: {
+    color: "#C45A2A",
+  },
+
+  dayNumberEvent: {
+    color: "#059669",
+  },
+
+  dayStatusDotPresent: {
+    position: "absolute",
+    bottom: 4,
+    width: 5,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: colors.present,
+  },
+
+  dayStatusDotReserved: {
+    position: "absolute",
+    bottom: 4,
+    width: 5,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: colors.bronzeGold,
+  },
+
+  eventDot: {
+    position: "absolute",
+    bottom: 4,
+    width: 5,
+    height: 5,
+    borderRadius: 999,
+    zIndex: 20,
+  },
+
+  eventDotClosed: {
+    backgroundColor: colors.danger,
+  },
+
+  eventDotOpen: {
+    backgroundColor: "#10B981",
+  },
+
+  noticeSummaryCard: {
+    backgroundColor: colors.card,
+    borderRadius: 22,
+    borderWidth: 0.4,
+    borderColor: colors.border,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+  },
+
+  noticeSummaryHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  noticeSummaryTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: colors.textMain,
+  },
+
+  noticeSummaryMore: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.textSub,
+  },
+
+  noticeSummaryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+
+  noticeSummaryBullet: {
+    width: 16,
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.warmBrown,
+  },
+
+  noticeSummaryText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.textMain,
+  },
+
+  noticeSummaryDate: {
+    marginLeft: 10,
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.textSub,
+  },
+
+  noticeSummaryEmpty: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textSub,
+    paddingVertical: 6,
   },
 
   sheetOverlay: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.18)",
+    backgroundColor: "rgba(43,37,34,0.25)",
   },
+
   sheetBackdrop: {
     flex: 1,
   },
+
   sheetContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.card,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     maxHeight: "72%",
@@ -1410,593 +2069,650 @@ dayNumberSelected: {
     paddingHorizontal: 18,
     paddingBottom: 22,
   },
+
   sheetHandle: {
     alignSelf: "center",
-    width: 44,
+    width: 48,
     height: 5,
     borderRadius: 999,
-    backgroundColor: "#D1D5DB",
+    backgroundColor: colors.roseTaupe,
     marginBottom: 14,
   },
+
   sheetHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 14,
   },
+
   sheetTitle: {
-    fontSize: 22,
+    fontSize: 23,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.textMain,
   },
+
   sheetCloseButton: {
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
+
   sheetCloseButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#6B7280",
+    fontSize: 15,
+    fontWeight: "800",
+    color: colors.textSub,
   },
+
   sheetContent: {
-    paddingBottom: 20,
-    gap: 12,
+    paddingBottom: 45,
+    gap: 0,
   },
+
   emptySheetBox: {
     paddingVertical: 28,
     alignItems: "center",
   },
+
   emptySheetText: {
     fontSize: 15,
-    color: "#6B7280",
+    fontWeight: "600",
+    color: colors.textSub,
   },
 
-  recurringBadgeCompact: {
-    backgroundColor: "#EEF2FF",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  recurringBadgeCompactText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: "#4338CA",
-  },
-
-  scheduleCard: {
+  selectedEventNotice: {
+    marginBottom: 12,
     borderRadius: 16,
-    padding: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+  },
+
+  selectedEventNoticeOpen: {
+    backgroundColor: "#FFF7ED",
+    borderColor: "#FED7AA",
+  },
+
+  selectedEventNoticeClosed: {
+    backgroundColor: "#FEF2F2",
+    borderColor: "#FECACA",
+  },
+
+  selectedEventNoticeTitle: {
+    fontSize: 12,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+
+  selectedEventNoticeTitleOpen: {
+    color: "#C2410C",
+  },
+
+  selectedEventNoticeTitleClosed: {
+    color: "#B91C1C",
+  },
+
+  selectedEventNoticeText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: colors.textMain,
+  },
+
+  selectedEventNoticeSubText: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#7F1D1D",
+  },
+
+  compactScheduleCard: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.card,
+  },
+
+  compactScheduleRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
-    borderWidth: 1,
-  },
-  
-  scheduleCardAvailable: {
-    backgroundColor: "#F0FDF4",
-    borderColor: "#BBF7D0",
-  },
-  scheduleCardReserved: {
-    backgroundColor: "#EFF6FF",
-    borderColor: "#BFDBFE",
-  },
-  scheduleCardDone: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#A7F3D0",
-  },
-  scheduleCardCancelled: {
-    backgroundColor: "#FFF7ED",
-    borderColor: "#FED7AA",
-  },
-  scheduleCardDisabled: {
-    backgroundColor: "#F9FAFB",
-    borderColor: "#E5E7EB",
   },
 
-  scheduleStatusChip: {
+  compactScheduleLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 7,
+  },
+
+  compactScheduleTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: colors.textMain,
+  },
+
+  compactRecurringBadge: {
+    backgroundColor: colors.blushBeige,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+
+  compactRecurringBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: colors.warmBrown,
+  },
+
+  compactStatusChip: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
   },
-  scheduleStatusChipText: {
-    fontSize: 12,
-    fontWeight: "700",
+
+  compactStatusChipText: {
+    fontSize: 11,
+    fontWeight: "800",
   },
+
+  compactHelperText: {
+    marginTop: 10,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "600",
+    color: colors.textSub,
+  },
+
+  compactActionButton: {
+    minWidth: 96,
+    height: 46,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.warmBrown,
+  },
+
+  compactActionButtonPrimary: {
+    backgroundColor: colors.warmBrown,
+  },
+
+  compactActionButtonSecondary: {
+    backgroundColor: colors.blushBeige,
+  },
+
+  compactActionButtonText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.white,
+  },
+
+  compactActionButtonTextSecondary: {
+    color: colors.warmBrown,
+  },
+
+  scheduleCardAvailable: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+  },
+
+  scheduleCardReserved: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+  },
+
+  scheduleCardDone: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+  },
+
+  scheduleCardCancelled: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+  },
+
+  scheduleCardDisabled: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+  },
+
   scheduleStatusChipAvailable: {
-    backgroundColor: "#DCFCE7",
+    backgroundColor: colors.blushBeige,
   },
+
   scheduleStatusChipReserved: {
-    backgroundColor: "#DBEAFE",
+    backgroundColor: colors.reserved,
   },
+
   scheduleStatusChipDone: {
-    backgroundColor: "#D1FAE5",
+    backgroundColor: colors.closed,
   },
+
   scheduleStatusChipCancelled: {
-    backgroundColor: "#FFEDD5",
+    backgroundColor: colors.closed,
   },
+
   scheduleStatusChipDisabled: {
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.closed,
   },
+
   scheduleStatusChipTextAvailable: {
-    color: "#166534",
+    color: colors.warmBrown,
   },
+
   scheduleStatusChipTextReserved: {
-    color: "#1D4ED8",
+    color: "#9A7448",
   },
+
   scheduleStatusChipTextDone: {
-    color: "#047857",
+    color: colors.warmBrown,
   },
+
   scheduleStatusChipTextCancelled: {
-    color: "#C2410C",
+    color: colors.textSub,
   },
+
   scheduleStatusChipTextDisabled: {
-    color: "#4B5563",
+    color: colors.textSub,
   },
-
-  compactScheduleCard: {
-  borderRadius: 14,
-  paddingHorizontal: 14,
-  paddingVertical: 12,
-  borderWidth: 1,
-},
-
-compactScheduleRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 10,
-},
-
-compactScheduleLeft: {
-  flex: 1,
-  flexDirection: "row",
-  alignItems: "center",
-  flexWrap: "wrap",
-  gap: 6,
-},
-
-compactScheduleTitle: {
-  fontSize: 15,
-  fontWeight: "800",
-  color: "#111827",
-},
-
-compactRecurringBadge: {
-  backgroundColor: "#EEF2FF",
-  paddingHorizontal: 8,
-  paddingVertical: 3,
-  borderRadius: 999,
-},
-
-compactRecurringBadgeText: {
-  fontSize: 11,
-  fontWeight: "800",
-  color: "#4338CA",
-},
-
-compactStatusChip: {
-  paddingHorizontal: 9,
-  paddingVertical: 4,
-  borderRadius: 999,
-},
-
-compactStatusChipText: {
-  fontSize: 11,
-  fontWeight: "800",
-},
-
-compactHelperText: {
-  marginTop: 8,
-  fontSize: 12,
-  lineHeight: 17,
-  color: "#6B7280",
-},
-
-compactActionButton: {
-  minWidth: 74,
-  paddingHorizontal: 10,
-  paddingVertical: 8,
-  borderRadius: 10,
-  alignItems: "center",
-  justifyContent: "center",
-  backgroundColor: "#2563EB",
-},
-
-compactActionButtonPrimary: {
-  backgroundColor: "#2563EB",
-},
-
-compactActionButtonSecondary: {
-  backgroundColor: "#E5E7EB",
-},
-
-compactActionButtonText: {
-  fontSize: 12,
-  fontWeight: "700",
-  color: "#FFFFFF",
-},
-
-compactActionButtonTextSecondary: {
-  color: "#111827",
-},
 
   modalOverlay: {
-  flex: 1,
-  backgroundColor: "rgba(17, 24, 39, 0.38)",
-  justifyContent: "center",
-  padding: 20,
-},
-noticeModalCard: {
-  backgroundColor: "#fffdf9",
-  borderRadius: 24,
-  padding: 20,
-  maxHeight: "72%",
-  borderWidth: 1,
-  borderColor: "#ece4d8",
-},
-noticeModalLabel: {
-  fontSize: 12,
-  fontWeight: "700",
-  color: "#8a7f72",
-},
-noticeModalTitle: {
-  marginTop: 8,
-  fontSize: 22,
-  fontWeight: "800",
-  color: "#2f2a24",
-},
-noticeModalBody: {
-  marginTop: 14,
-  maxHeight: 260,
-},
-noticeModalContent: {
-  fontSize: 15,
-  lineHeight: 24,
-  color: "#4c4339",
-},
-noticeButtonRow: {
-  flexDirection: "row",
-  marginTop: 18,
-  gap: 8,
-},
-noticeButton: {
-  flex: 1,
-  minHeight: 48,
-  borderRadius: 14,
-  alignItems: "center",
-  justifyContent: "center",
-  paddingHorizontal: 8,
-},
-noticeButtonPrimary: {
-  backgroundColor: "#8c6330",
-},
-noticeButtonSecondary: {
-  backgroundColor: "#f3ecdf",
-  borderWidth: 1,
-  borderColor: "#e2d7c6",
-},
-noticeButtonPrimaryText: {
-  fontSize: 14,
-  fontWeight: "800",
-  color: "#fffdf9",
-},
-noticeButtonSecondaryText: {
-  fontSize: 13,
-  fontWeight: "700",
-  color: "#7c4f21",
-},
-noticeDetailButton: {
-  marginTop: 10,
-  minHeight: 46,
-  borderRadius: 14,
-  alignItems: "center",
-  justifyContent: "center",
-  backgroundColor: "#fffdf9",
-  borderWidth: 1,
-  borderColor: "#ece4d8",
-},
-noticeDetailButtonText: {
-  fontSize: 14,
-  fontWeight: "800",
-  color: "#8c6330",
-},
-  content: {
-  paddingHorizontal: 16,
-  paddingTop: 36,
-  paddingBottom: 28,
-  gap: 18,
-},
+    flex: 1,
+    backgroundColor: "rgba(43,37,34,0.35)",
+    justifyContent: "center",
+    padding: 20,
+  },
 
-heroHeaderRow: {
-  flexDirection: "row",
-  alignItems: "flex-start",
-  marginBottom: 18,
-},
+  noticeModalCard: {
+    backgroundColor: colors.card,
+    borderRadius: 24,
+    padding: 20,
+    maxHeight: "72%",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
 
-heroLogo: {
-  width: 56,
-  height: 56,
-  marginTop: 8,
-},
+  noticeModalLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.textSub,
+  },
 
-heroHeaderTextWrap: {
-  marginLeft: 10,
-  flex: 1,
-  paddingTop: 12,
-},
+  noticeModalTitle: {
+    marginTop: 8,
+    fontSize: 22,
+    fontWeight: "800",
+    color: colors.textMain,
+  },
 
-heroNameRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  flexWrap: "wrap",
-  gap: 4,
-},
+  noticeModalBody: {
+    marginTop: 14,
+    maxHeight: 260,
+  },
 
-heroNameText: {
-  fontSize: 22,
-  fontWeight: "800",
-  color: "#161311",
-},
+  noticeModalContent: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: colors.textSub,
+  },
 
-heroBadgeRow: {
-  marginTop: 3,
-  flexDirection: "row",
-  flexWrap: "wrap",
-  gap: 6,
-},
+  noticeButtonRow: {
+    flexDirection: "row",
+    marginTop: 18,
+    gap: 8,
+  },
 
-heroMiniBadge: {
-  paddingHorizontal: 9,
-  paddingVertical: 4,
-  borderRadius: 999,
-  backgroundColor: "#F1ECE3",
-  borderWidth: 1,
-  borderColor: "#DED4C7",
-},
+  noticeButton: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
 
-heroMiniBadgeText: {
-  fontSize: 10,
-  fontWeight: "700",
-  color: "#5F554B",
-},
+  noticeButtonPrimary: {
+    backgroundColor: colors.warmBrown,
+  },
 
-headerStatusPill: {
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-  borderRadius: 999,
-},
+  noticeButtonSecondary: {
+    backgroundColor: colors.blushBeige,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
 
-headerStatusPillText: {
-  fontSize: 12,
-  fontWeight: "800",
-},
+  noticeButtonPrimaryText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.white,
+  },
 
-todayClassCard: {
-  borderRadius: 28,
-  borderWidth: 1,
-  borderColor: "#DDD4C8",
-  backgroundColor: "#FBF8F2",
-  paddingHorizontal: 16,
-  paddingVertical: 14,
-  flexDirection: "row",
-  alignItems: "center",
-  overflow: "hidden",
-},
+  noticeButtonSecondaryText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.warmBrown,
+  },
 
-todayClassContent: {
-  flex: 1,
-  paddingRight: 12,
-  paddingLeft: 4,
-},
+  noticeDetailButton: {
+    marginTop: 10,
+    minHeight: 46,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
 
-todayClassLabel: {
-  fontSize: 14,
-  fontWeight: "700",
-  color: "#6E675D",
-  marginBottom: 8,
-},
-
-todayClassTitle: {
-  fontSize: 21,
-  fontWeight: "800",
-  color: "#181411",
-  marginBottom: 8,
-},
-
-todayClassDesc: {
-  fontSize: 14,
-  lineHeight: 20,
-  color: "#4E4841",
-},
-
-todayClassActionWrap: {
-  width: 118,
-  alignItems: "flex-end",
-  justifyContent: "center",
-  paddingTop: 45,
-},
-
-heroPrimaryButton: {
-  minWidth: 108,
-  height: 48,
-  borderRadius: 24,
-  backgroundColor: "#314E67",
-  alignItems: "center",
-  justifyContent: "center",
-  paddingHorizontal: 18,
-},
-
-heroPrimaryButtonText: {
-  color: "#FFFFFF",
-  fontSize: 16,
-  fontWeight: "700",
-},
-
-heroSecondaryButton: {
-  minWidth: 108,
-  height: 48,
-  borderRadius: 24,
-  backgroundColor: "#F1ECE3",
-  borderWidth: 1,
-  borderColor: "#D9D0C2",
-  alignItems: "center",
-  justifyContent: "center",
-  paddingHorizontal: 18,
-},
-
-heroSecondaryButtonText: {
-  color: "#2A2624",
-  fontSize: 15,
-  fontWeight: "700",
-},
-
-heroActionPlaceholder: {
-  width: 108,
-  height: 48,
-},
-
-heroHeaderRow: {
-  flexDirection: "row",
-  alignItems: "flex-start",
-  marginBottom: 18,
-},
-
-heroLogo: {
-  width: 58,
-  height: 58,
-  marginTop: 15,
-},
-
-heroHeaderTextWrap: {
-  marginLeft: 6,
-  flex: 1,
-  paddingTop: 12,
-},
-
-heroBadgeRow: {
-  marginTop: 6,
-  flexDirection: "row",
-  flexWrap: "wrap",
-  gap: 5,
-},
-
-heroNameText: {
-  fontSize: 26,
-  fontWeight: "800",
-  color: "#161311",
-},
-
-heroBadgeRow: {
-  marginTop: 2,
-  flexDirection: "row",
-  flexWrap: "wrap",
-  gap: 6,
-},
-
-heroMiniBadge: {
-  paddingHorizontal: 10,
-  paddingVertical: 5,
-  borderRadius: 999,
-  backgroundColor: "#F1ECE3",
-  borderWidth: 1,
-  borderColor: "#DED4C7",
-},
-
-heroMiniBadgeText: {
-  fontSize: 11,
-  fontWeight: "700",
-  color: "#5F554B",
-},
-headerStatusPill: {
-  paddingHorizontal: 10,
-  paddingVertical: 5,
-  borderRadius: 999,
-},
-
-headerStatusPillText: {
-  fontSize: 11,
-  fontWeight: "800",
-},
-
-todayClassTopRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginBottom: 10,
-},
-
-todayClassLabel: {
-  fontSize: 14,
-  fontWeight: "700",
-  color: "#6E675D",
-},
-
-statusPill: {
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-  borderRadius: 999,
-  alignSelf: "flex-start",
-},
-
-statusPillText: {
-  fontSize: 12,
-  fontWeight: "800",
-},
-dayStampWrapper: {
+  noticeDetailButtonText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.warmBrown,
+  },
+  homeMountainFade: {
   position: "absolute",
   left: 0,
   right: 0,
-  top: -3,
+  bottom: -70,
+  height: 90,
+},
+
+homeNoticeBell: {
+  position: "absolute",
+  top: 12,
+  right: 8,
+  width: 34,
+  height: 34,
+  borderRadius: 17,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "rgba(255,255,255,0.65)",
+  zIndex: 10,
+},
+calendarLegend: {
+  flexDirection: "row",
+  justifyContent: "center",
+  gap: 18,
+  marginTop: 14,
+},
+
+legendItem: {
+  flexDirection: "row",
   alignItems: "center",
 },
 
-dayStampImagePresent: {
-  width: 48,
-  height: 48,
-},
-
-dayStampImageReserved: {
-  width: 48,
-  height: 48,
-  opacity: 0.65,
-},
-weekHeaderTextSunday: {
-  color: "#C2410C",
-},
-dayNumberSunday: {
-  color: "#C2410C",
-},
-compactCancelButton: {
-  marginTop: 10,
-  alignSelf: "flex-start",
-  paddingHorizontal: 12,
-  paddingVertical: 8,
+legendDotPresent: {
+  width: 7,
+  height: 7,
   borderRadius: 999,
-  backgroundColor: "#F3F1EC",
+  backgroundColor: colors.present,
+  marginRight: 6,
+},
+
+legendDotReserved: {
+  width: 7,
+  height: 7,
+  borderRadius: 999,
+  backgroundColor: colors.bronzeGold,
+  marginRight: 6,
+},
+
+legendText: {
+  fontSize: 11,
+  fontWeight: "600",
+  color: colors.textSub,
+},
+todaySilhouette: {
+  position: "absolute",
+  right: -20,
+  top: 25,
+  width: 190,
+  height: 150,
+  opacity: 1,
+  zIndex: 1,
+},
+dayStampPresent: {
+  width: 28,
+  height: 28,
+  borderRadius: 14,
+  backgroundColor: "#8B6A5E",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+dayStampPresentTwo: {
+  backgroundColor: "#76564B",
+},
+
+dayStampPresentThree: {
+  backgroundColor: "#4A332C",
+},
+
+dayStampReserved: {
+  width: 28,
+  height: 28,
+  borderRadius: 14,
+  backgroundColor: "#F2E1C4",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+dayStampTextPresent: {
+  fontSize: 14,
+  fontWeight: "700",
+  color: colors.white,
+},
+
+dayStampTextReserved: {
+  fontSize: 14,
+  fontWeight: "700",
+  color: "#8A6B44",
+},
+moreLinkRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 3,
+},
+
+moreLinkArrow: {
+  fontSize: 6,
+  fontWeight: "700",
+  color: colors.textSub,
+  marginTop: -1,
+},
+homeNoticeBell: {
+  position: "absolute",
+  top: -5,
+  right: -10,
+  width: 38,
+  height: 38,
+  borderRadius: 17,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "transparent",
+  zIndex: 10,
+},
+
+homeNoticeBellIcon: {
+  width: 24,
+  height: 24,
+  opacity: 0.9,
+},
+
+homeNoticeDot: {
+  position: "absolute",
+  top: 9,
+  right: 11,
+  width: 8,
+  height: 8,
+  borderRadius: 999,
+  backgroundColor: "#D9534F",
+},
+todayTrainingCardYudanja: {
+  borderWidth: 0,
+  shadowColor: "#D7A63D",
+  shadowOpacity: 0.2,
+  shadowRadius: 20,
+  shadowOffset: {
+    width: 0,
+    height: 8,
+  },
+  elevation: 5,
+},
+
+todayTrainingStepYudanja: {
+  color: "#7A5737",
+},
+
+todayTrainingButtonYudanja: {
+  backgroundColor: "#25211C",
   borderWidth: 1,
-  borderColor: "#DDD4C8",
+  borderColor: "#D6A84E",
+  shadowColor: "#D6A84E",
+  shadowOpacity: 0.35,
+  shadowRadius: 10,
+  shadowOffset: {
+    width: 0,
+    height: 4,
+  },
+  elevation: 5,
 },
 
-compactCancelButtonText: {
-  fontSize: 12,
-  fontWeight: "700",
-  color: "#5F554B",
-},
-weekProgressWrap: {
-  marginTop: 6,
+todayTrainingButtonTextYudanja: {
+  color: "#F4D27A",
 },
 
-weekProgressLabel: {
-  fontSize: 13,
-  fontWeight: "700",
-  color: "#7a6f61",
-  marginBottom: 2,
+todaySilhouetteYudanja: {
+  opacity: 0.22,
 },
 
-weekProgressValue: {
-  fontSize: 16,
-  fontWeight: "700",
-  color: "#7c4f21",
+yudanjaGoldGlow: {
+  position: "absolute",
+  left: -20,
+  right: -20,
+  bottom: -32,
+  height: 95,
+  backgroundColor: "rgba(231, 195, 106, 0.13)",
+  borderTopLeftRadius: 999,
+  borderTopRightRadius: 999,
+  zIndex: 1,
+},
+
+yudanjaFlowLine: {
+  position: "absolute",
+  left: 16,
+  right: 16,
+  bottom: 68,
+  height: 1.2,
+  backgroundColor: "rgba(214, 168, 78, 0.5)",
+  zIndex: 3,
+},
+homeProfileWrap: {
+  width: 118,
+  height: 118,
+  marginTop: 22,
+  marginRight: -2,
+  alignItems: "center",
+  justifyContent: "center",
+  position: "relative",
+},
+
+homeProfileWrapYudanja: {
+  width: 138,
+  height: 138,
+  marginTop: 4,
+  marginRight: -12,
+},
+homeProfileCircle: {
+  width: 96,
+  height: 96,
+  borderRadius: 999,
+  backgroundColor: colors.blushBeige,
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+  borderWidth: 1,
+  borderColor: colors.border,
+  zIndex: 2,
+},
+homeProfileCircleYudanja: {
+  width: 93,
+  height: 93,
+  borderRadius: 999,
+  backgroundColor: "rgba(255, 250, 237, 0.85)",
+  borderWidth: 0,
+  marginTop: -19,
+  zIndex: 3,
+},
+homeProfileInnerCircle: {
+  width: 105,
+  height: 105,
+  borderRadius: 56,
+  backgroundColor: colors.blushBeige,
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+  borderWidth: 1,
+  borderColor: colors.border,
+},
+
+homeProfileImage: {
+  width: "100%",
+  height: "100%",
+},
+
+homeYudanjaEmblemFrame: {
+  position: "absolute",
+  width: 138,
+  height: 138,
+  top: 0,
+  left: 0,
+  zIndex: 5,
+},
+yudanjaGoldBorderOuter: {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0,
+  borderRadius: 22,
+  borderWidth: 1.2,
+  borderColor: "rgba(222, 177, 83, 0.75)",
+  zIndex: 2,
+},
+
+yudanjaGoldBorderInner: {
+  position: "absolute",
+  left: 3,
+  right: 3,
+  top: 3,
+  bottom: 3,
+  borderRadius: 19,
+  borderWidth: 0.7,
+  borderColor: "rgba(255, 236, 180, 0.55)",
+  zIndex: 2,
+},
+
+yudanjaSoftLight: {
+  position: "absolute",
+  right: -45,
+  bottom: -45,
+  width: 150,
+  height: 150,
+  borderRadius: 999,
+  backgroundColor: "rgba(255, 218, 120, 0.18)",
+  zIndex: 1,
+},
+todayYudanjaBgImage: {
+  position: "absolute",
+  left: -15,
+  right: -7,
+  top: 3,
+  bottom: -8,
+  width: "123%",
+  height: "120%",
+  opacity: 0.5,
+  zIndex: 0,
 },
 });

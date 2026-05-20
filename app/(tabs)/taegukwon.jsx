@@ -2,26 +2,90 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  Modal,
   TextInput,
   TouchableOpacity,
   View,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { getMemberTaegukwon } from "../../src/api/memberTaegukwon";
 import { API_BASE_URL } from "../../src/config/env";
+import Svg, { Circle } from "react-native-svg";
+import { colors } from "../../src/theme/colors";
+
 
 function getStatusLabel(status) {
   if (status === "done") return "완료";
   if (status === "current") return "진행중";
   if (status === "locked") return "잠금";
   return "예정";
+}
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+function AnimatedPercentCircle({ percent, color = "#9b7650" }) {
+  const animatedValue = useRef(new Animated.Value(0)).current;
+
+  const size = 42;
+  const strokeWidth = 6;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  useEffect(() => {
+    animatedValue.setValue(0);
+
+    Animated.timing(animatedValue, {
+      toValue: percent,
+      duration: 900,
+      useNativeDriver: false,
+    }).start();
+  }, [percent, animatedValue]);
+
+  const strokeDashoffset = animatedValue.interpolate({
+    inputRange: [0, 100],
+    outputRange: [circumference, 0],
+  });
+
+  return (
+    <View style={styles.animatedCircleWrap}>
+      <Svg width={size} height={size}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="rgba(226,216,201,0.8)"
+          strokeWidth={strokeWidth}
+          fill="rgba(255,253,249,0.55)"
+        />
+
+        <AnimatedCircle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          rotation="-90"
+          originX={size / 2}
+          originY={size / 2}
+        />
+      </Svg>
+
+      <Text style={styles.recordPercentText}>{percent}%</Text>
+    </View>
+  );
 }
 
 export default function TaegukwonScreen() {
@@ -40,17 +104,30 @@ export default function TaegukwonScreen() {
 
   const [memoEditMode, setMemoEditMode] = useState(false);
   const [savingMemo, setSavingMemo] = useState(false);
+  const [memoEditModalVisible, setMemoEditModalVisible] = useState(false);
   const [editMemberMemo, setEditMemberMemo] = useState("");
   const memberTracks = taegukwonData?.memberTracks || [];
   const memberTrackMap = useMemo(() => {
   return new Map(memberTracks.map((track) => [track.curriculumId, track]));
 }, [memberTracks]);
 
+const [recordModalVisible, setRecordModalVisible] = useState(false);
+const [goalModalVisible, setGoalModalVisible] = useState(false);
+const [memoHistoryModalVisible, setMemoHistoryModalVisible] = useState(false);
+
+const [todayRecord, setTodayRecord] = useState({
+  ilsimyangui: "",
+  yobujeonsa: "",
+  duyoMinutes: "",
+  ohaengjeonsa: "",
+});
+
+const [lastRecordDate, setLastRecordDate] = useState(null);
+
 const [showGongbeopInfo, setShowGongbeopInfo] = useState(false);
 const [gongbeopEditMode, setGongbeopEditMode] = useState(false);
 const [gongbeopUpdatedAt, setGongbeopUpdatedAt] = useState(null);
-const [gongbeopMemo, setGongbeopMemo] = useState("");
-const [gongbeopMemoEditMode, setGongbeopMemoEditMode] = useState(false);
+
 
 const [gongbeopRecord, setGongbeopRecord] = useState({
   ilsimyangui: "",
@@ -64,6 +141,8 @@ const scrollRef = useRef(null);
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [showRecentAdminMemos, setShowRecentAdminMemos] = useState(false);
   const [showCurriculumOptions, setShowCurriculumOptions] = useState(false);
+  const [showMemoHistory, setShowMemoHistory] = useState(false);
+  const [activeTab, setActiveTab] = useState("training");
 
   const loadData = useCallback(
     async ({ silent = false } = {}) => {
@@ -117,6 +196,27 @@ const payload = taegukwonResult?.data ? taegukwonResult.data : taegukwonResult;
   return Object.values(gongbeopRecord).some((value) => String(value).trim() !== "");
 }, [gongbeopRecord]);
 
+const [gongbeopGoals, setGongbeopGoals] = useState({
+  ilsimyangui: "50",
+  yobujeonsa: "30",
+  duyoMinutes: "10",
+  ohaengjeonsa: "20",
+});
+
+const handleChangeGongbeopGoal = useCallback((key, value) => {
+  const numericOnly = value.replace(/[^0-9]/g, "");
+  setGongbeopGoals((prev) => ({
+    ...prev,
+    [key]: numericOnly,
+  }));
+}, []);
+
+function getGongbeopPercent(value, goal) {
+  const current = Number(value || 0);
+  if (!goal) return 0;
+  return Math.min(Math.round((current / goal) * 100), 100);
+}
+
 const handleChangeGongbeop = useCallback((key, value) => {
   const numericOnly = value.replace(/[^0-9]/g, "");
   setGongbeopRecord((prev) => ({
@@ -127,21 +227,22 @@ const handleChangeGongbeop = useCallback((key, value) => {
 
 const handleSaveGongbeopRecord = useCallback(async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/member/me/gongbeop`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        date: new Date().toISOString().slice(0, 10),
-        ilsimyangui: Number(gongbeopRecord.ilsimyangui || 0),
-        yobujeonsa: Number(gongbeopRecord.yobujeonsa || 0),
-        duyoMinutes: Number(gongbeopRecord.duyoMinutes || 0),
-        ohaengjeonsa: Number(gongbeopRecord.ohaengjeonsa || 0),
-        note: "",
-      }),
-    });
+    const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop`, {
+  method: "PATCH",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+    "ngrok-skip-browser-warning": "true",
+  },
+  body: JSON.stringify({
+    date: new Date().toISOString().slice(0, 10),
+    ilsimyangui: Number(gongbeopRecord.ilsimyangui || 0),
+    yobujeonsa: Number(gongbeopRecord.yobujeonsa || 0),
+    duyoMinutes: Number(gongbeopRecord.duyoMinutes || 0),
+    ohaengjeonsa: Number(gongbeopRecord.ohaengjeonsa || 0),
+    note: "",
+  }),
+});
 
     const result = await response.json();
 
@@ -160,9 +261,12 @@ const handleSaveGongbeopRecord = useCallback(async () => {
 }, [token, gongbeopRecord]);
 
 const loadGongbeopRecord = useCallback(async () => {
-  const response = await fetch(`${API_BASE_URL}/member/me/gongbeop`, {
+  const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop?t=${Date.now()}`, {
+    method: "GET",
     headers: {
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      "ngrok-skip-browser-warning": "true",
     },
   });
 
@@ -185,7 +289,7 @@ const loadGongbeopRecord = useCallback(async () => {
   const scrollToEditSection = useCallback(() => {
   setTimeout(() => {
     scrollRef.current?.scrollTo({
-      y: 1150,
+      y: 500,
       animated: true,
     });
   }, 250);
@@ -194,6 +298,8 @@ const loadGongbeopRecord = useCallback(async () => {
   const member = taegukwonData?.member || null;
   const groupProgress = taegukwonData?.groupProgress || null;
   const personalProgress = taegukwonData?.personalProgress || null;
+  const memoHistory = personalProgress?.memoHistory || [];
+  const previousMemoHistory = memoHistory.slice(1);
   const roadmap = taegukwonData?.roadmap || [];
   const editableCurriculums = taegukwonData?.editableCurriculums || [];
 
@@ -259,7 +365,7 @@ const loadGongbeopRecord = useCallback(async () => {
 
       setSaving(true);
 
-      const response = await fetch(`${API_BASE_URL}/member/me/personal-progress`, {
+      const response = await fetch(`${API_BASE_URL}/api/member/me/personal-progress`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -291,6 +397,34 @@ const loadGongbeopRecord = useCallback(async () => {
     }
   }, [editCurriculumId, editCurrentStep, editLastLessonNote, token, loadData]);
 
+  const riverGlowAnim = useRef(new Animated.Value(0)).current;
+
+useEffect(() => {
+  const loop = Animated.loop(
+    Animated.sequence([
+      Animated.timing(riverGlowAnim, {
+        toValue: 1,
+        duration: 8000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(riverGlowAnim, {
+        toValue: 0,
+        duration: 0,
+        useNativeDriver: true,
+      }),
+    ])
+  );
+
+  loop.start();
+
+  return () => loop.stop();
+}, [riverGlowAnim]);
+
+const riverGlowTranslateY = riverGlowAnim.interpolate({
+  inputRange: [0, 1],
+  outputRange: [0, 230],
+});
+
   const handleSaveMemberMemo = useCallback(async () => {
     try {
       const targetCurriculumId =
@@ -303,7 +437,7 @@ const loadGongbeopRecord = useCallback(async () => {
 
       setSavingMemo(true);
 
-      const response = await fetch(`${API_BASE_URL}/member/me/personal-memo`, {
+      const response = await fetch(`${API_BASE_URL}/api/member/me/personal-memo`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -318,16 +452,16 @@ const loadGongbeopRecord = useCallback(async () => {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || "내 메모 저장 실패");
+        throw new Error(result.message || "내 수련 메모 저장 실패");
       }
 
-      Alert.alert("완료", "내 메모가 저장되었습니다.");
+      Alert.alert("완료", "수련 메모가 저장되었습니다.");
       setMemoEditMode(false);
       await loadData({ silent: true });
     } catch (error) {
       Alert.alert(
         "오류",
-        error.message || "내 메모 저장 중 오류가 발생했습니다."
+        error.message || "수련 메모 저장 중 오류가 발생했습니다."
       );
     } finally {
       setSavingMemo(false);
@@ -359,379 +493,422 @@ const loadGongbeopRecord = useCallback(async () => {
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
     >
-      <Text style={styles.title}>태극권 수련</Text>
 
-{personalProgress?.recentAdminMemos?.[0]?.content ? (
-  <View style={styles.topCoachingBanner}>
-    <Text style={styles.topCoachingLabel}>지도 포인트</Text>
-    <Text style={styles.topCoachingText}>
-      {personalProgress.recentAdminMemos[0].content}
-    </Text>
-  </View>
-) : (
-  <Text style={styles.subtitle}>내 진도와 공법 기록을 확인해요.</Text>
-)}
-
-      <View style={styles.card}>
-  <View style={styles.gongbeopHeaderRow}>
-    <View style={styles.gongbeopHeaderTextWrap}>
-      <Text style={styles.cardTitle}>내 공법 기록</Text>
-
-<Text style={styles.cardSubText}>
-  공법 기록과 메모를 함께 정리해요.
-</Text>
-    </View>
-
-    {gongbeopUpdatedAt ? (
-  <Text style={styles.gongbeopDate}>
-    최근 갱신: {new Date(gongbeopUpdatedAt).toLocaleDateString("ko-KR")}
-  </Text>
-) : null}
-
-    {!gongbeopEditMode ? (
-      <TouchableOpacity
-        style={styles.gongbeopActionButton}
-        onPress={() => {
-          setGongbeopEditMode(true);
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: 120, animated: true });
-          }, 200);
-        }}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.gongbeopActionButtonText}>수정</Text>
-      </TouchableOpacity>
-    ) : (
-      <TouchableOpacity
-        style={styles.gongbeopActionButton}
-        onPress={() => setGongbeopEditMode(false)}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.gongbeopActionButtonText}>취소</Text>
-      </TouchableOpacity>
-    )}
-  </View>
-
-  {!gongbeopEditMode ? (
-    <>
-      <View style={styles.gongbeopSummaryWrap}>
-        <View style={styles.gongbeopSummaryRow}>
-          <Text style={styles.gongbeopName}>일심양의</Text>
-          <Text style={styles.gongbeopValue}>
-            {gongbeopRecord.ilsimyangui ? `${gongbeopRecord.ilsimyangui}회` : "기록 없음"}
-          </Text>
-        </View>
-
-        <View style={styles.gongbeopSummaryRow}>
-          <Text style={styles.gongbeopName}>요부전사</Text>
-          <Text style={styles.gongbeopValue}>
-            {gongbeopRecord.yobujeonsa ? `${gongbeopRecord.yobujeonsa}회` : "기록 없음"}
-          </Text>
-        </View>
-
-        <View style={styles.gongbeopSummaryRow}>
-          <Text style={styles.gongbeopName}>두요</Text>
-          <Text style={styles.gongbeopValue}>
-            {gongbeopRecord.duyoMinutes ? `${gongbeopRecord.duyoMinutes}분` : "기록 없음"}
-          </Text>
-        </View>
-
-        <View style={styles.gongbeopSummaryRow}>
-          <Text style={styles.gongbeopName}>오행전사</Text>
-          <Text style={styles.gongbeopValue}>
-            {gongbeopRecord.ohaengjeonsa ? `${gongbeopRecord.ohaengjeonsa}회` : "기록 없음"}
-          </Text>
-        </View>
-      </View>
-
-      {!hasAnyGongbeopRecord ? (
-        <Text style={styles.gongbeopEmptyText}>
-          아직 기록한 공법 내용이 없습니다.
-        </Text>
-      ) : null}
-    </>
-  ) : (
-    <View style={styles.gongbeopEditWrap}>
-      <Text style={styles.inputLabel}>일심양의 (횟수)</Text>
-      <TextInput
-        value={gongbeopRecord.ilsimyangui}
-        onChangeText={(value) => handleChangeGongbeop("ilsimyangui", value)}
-        keyboardType="number-pad"
-        style={styles.input}
-        placeholder="횟수 입력"
-        onFocus={() => {
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: 260, animated: true });
-          }, 250);
-        }}
-      />
-
-      <Text style={styles.inputLabel}>요부전사 (횟수)</Text>
-      <TextInput
-        value={gongbeopRecord.yobujeonsa}
-        onChangeText={(value) => handleChangeGongbeop("yobujeonsa", value)}
-        keyboardType="number-pad"
-        style={styles.input}
-        placeholder="횟수 입력"
-        onFocus={() => {
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: 320, animated: true });
-          }, 250);
-        }}
-      />
-
-      <Text style={styles.inputLabel}>두요 (분)</Text>
-      <TextInput
-        value={gongbeopRecord.duyoMinutes}
-        onChangeText={(value) => handleChangeGongbeop("duyoMinutes", value)}
-        keyboardType="number-pad"
-        style={styles.input}
-        placeholder="분 입력"
-        onFocus={() => {
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: 380, animated: true });
-          }, 250);
-        }}
-      />
-
-      <Text style={styles.inputLabel}>오행전사 (횟수)</Text>
-      <TextInput
-        value={gongbeopRecord.ohaengjeonsa}
-        onChangeText={(value) => handleChangeGongbeop("ohaengjeonsa", value)}
-        keyboardType="number-pad"
-        style={styles.input}
-        placeholder="횟수 입력"
-        onFocus={() => {
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: 440, animated: true });
-          }, 250);
-        }}
-      />
-
-      <TouchableOpacity
-        style={styles.gongbeopSaveButton}
-        onPress={handleSaveGongbeopRecord}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.gongbeopSaveButtonText}>저장</Text>
-      </TouchableOpacity>
-    </View>
-  )}
-
+      <View style={styles.topTabWrap}>
   <TouchableOpacity
-    style={styles.inlineToggleButton}
-    onPress={() => setShowGongbeopInfo((prev) => !prev)}
+    style={[
+      styles.topTabButton,
+      activeTab === "training" && styles.topTabButtonActive,
+    ]}
+    onPress={() => setActiveTab("training")}
     activeOpacity={0.85}
   >
-    <Text style={styles.inlineToggleButtonText}>
-      {showGongbeopInfo ? "공법 설명 닫기" : "공법 설명 보기"}
-    </Text>
-    <Text style={styles.inlineToggleArrow}>
-      {showGongbeopInfo ? "▲" : "▼"}
+    <Text
+      style={[
+        styles.topTabText,
+        activeTab === "training" && styles.topTabTextActive,
+      ]}
+    >
+      수련
     </Text>
   </TouchableOpacity>
 
-  {showGongbeopInfo ? (
-    <View style={styles.gongbeopInfoWrap}>
-      <View style={styles.gongbeopInfoItem}>
-        <Text style={styles.gongbeopInfoTitle}>일심양의 一心兩儀</Text>
-        <Text style={styles.gongbeopInfoDesc}>
-          한 마음(태극)에서 음과 양 두 가지의 기운이 나뉘어 조화를 이룸을 뜻합니다.
-        </Text>
-      </View>
-
-      <View style={styles.gongbeopInfoItem}>
-        <Text style={styles.gongbeopInfoTitle}>요부전사 腰部纏絲</Text>
-        <Text style={styles.gongbeopInfoDesc}>
-          허리 부위를 중심으로 비틀며 회전하는 나선형의 움직임입니다.
-        </Text>
-      </View>
-
-      <View style={styles.gongbeopInfoItem}>
-        <Text style={styles.gongbeopInfoTitle}>두요 抖腰</Text>
-        <Text style={styles.gongbeopInfoDesc}>
-          허리를 털어주어 경력을 발산하거나 긴장을 해소하는 동작입니다.
-        </Text>
-      </View>
-
-      <View style={styles.gongbeopInfoItem}>
-        <Text style={styles.gongbeopInfoTitle}>오행전사 五行纏絲</Text>
-        <Text style={styles.gongbeopInfoDesc}>
-          오행(금, 목, 수, 화, 토)의 원리를 전사경(나선경)에 결합하여 운용하는 공법입니다.
-        </Text>
-      </View>
-    </View>
-  ) : null}
-  <View style={styles.gongbeopMemoSection}>
-  <View style={styles.inlineSectionHeader}>
-    <Text style={styles.memoSectionTitle}>내 메모</Text>
-
-    {!gongbeopMemoEditMode ? (
-      <TouchableOpacity
-        style={styles.smallOutlineButton}
-        onPress={() => setGongbeopMemoEditMode(true)}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.smallOutlineButtonText}>수정</Text>
-      </TouchableOpacity>
-    ) : null}
-  </View>
-
-  {!gongbeopMemoEditMode ? (
-    <Text style={styles.memoText}>
-      {gongbeopMemo?.trim()
-        ? gongbeopMemo
-        : "아직 작성한 메모가 없습니다."}
-    </Text>
-  ) : (
-    <View style={styles.memoEditWrap}>
-      <TextInput
-        value={gongbeopMemo}
-        onChangeText={setGongbeopMemo}
-        style={styles.textAreaCompact}
-        placeholder="공법 관련 느낀 점이나 부족한 점을 적어보세요."
-        multiline
-        onFocus={() => {
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: 260, animated: true });
-          }, 250);
-        }}
-      />
-
-      <View style={styles.editButtonRow}>
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={() => setGongbeopMemoEditMode(false)}
-        >
-          <Text style={styles.secondaryButtonText}>취소</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.primaryButtonInline}
-          onPress={() => setGongbeopMemoEditMode(false)}
-        >
-          <Text style={styles.primaryButtonText}>저장</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  )}
-</View>
-</View>
-
-      <View style={styles.card}>
-        <View style={styles.overviewHeaderRow}>
-          <View style={styles.headerTitleInlineRow}>
-  <Text style={styles.cardTitleNoMargin}>내 현재 수련</Text>
-
-  <View style={styles.levelTextBadge}>
-    <Text style={styles.levelTextBadgeText}>
-  {member?.level || "일반회원"}
-</Text>
-  </View>
-</View>
-        </View>
-
-        {personalProgress ? (
-          <>
-            <View style={styles.curriculumRow}>
-              <Text style={styles.personalName}>
-                {personalProgress.curriculumName || "등록된 투로 없음"}
-              </Text>
-
-              {isPersonalCurriculumCompleted ? (
-                <View style={styles.completedBadgeInline}>
-                  <Text style={styles.completedBadgeText}>완료</Text>
-                </View>
-              ) : null}
-            </View>
-
-            <Text style={styles.bigProgressText}>
-  {personalProgress.currentStep || 0} / {personalProgress.totalSteps || 0}식
-</Text>
-
-<Text style={styles.progressSummaryText}>
-  {personalProgressPercent}% 진행
-</Text>
-
-<View style={styles.progressTrackCompact}>
-  <View
+  <TouchableOpacity
     style={[
-      styles.progressFillPersonal,
-      { width: `${personalProgressPercent}%` },
+      styles.topTabButton,
+      activeTab === "record" && styles.topTabButtonActive,
     ]}
-  />
+    onPress={() => setActiveTab("record")}
+    activeOpacity={0.85}
+  >
+    <Text
+      style={[
+        styles.topTabText,
+        activeTab === "record" && styles.topTabTextActive,
+      ]}
+    >
+      기록
+    </Text>
+  </TouchableOpacity>
 </View>
 
-            <View style={styles.memoHeaderRow}>
-  <Text style={styles.memoSectionTitleNoMargin}>내 메모</Text>
+{activeTab === "record" ? (
+  <View style={styles.flowSection}>
+   
+    <Image
+       source={require("../../assets/images/gongbeop-flow-full.png")}
+      style={styles.flowBackground}
+      resizeMode="contain"
+    />
+    <Animated.Image
+  source={require("../../assets/images/river-highlight.png")}
+  style={[
+    styles.riverHighlight,
+    { pointerEvents: "none" },
+    {
+      opacity: riverGlowAnim.interpolate({
+        inputRange: [0, 0.2, 0.65, 1],
+        outputRange: [0, 0.22, 0.12, 0],
+}),
 
-  {!memoEditMode ? (
-    <TouchableOpacity
-      style={styles.memoSmallActionButton}
-      onPress={() => {
-        setMemoEditMode(true);
-        setEditMemberMemo(personalProgress?.memberMemo || "");
-      }}
-      activeOpacity={0.85}
-    >
-      <Text style={styles.memoSmallActionButtonText}>수정</Text>
-    </TouchableOpacity>
-  ) : (
-    <TouchableOpacity
-      style={styles.memoSmallActionButton}
-      onPress={() => {
-        setMemoEditMode(false);
-        setEditMemberMemo(personalProgress?.memberMemo || "");
-      }}
-      activeOpacity={0.85}
-    >
-      <Text style={styles.memoSmallActionButtonText}>취소</Text>
-    </TouchableOpacity>
-  )}
-</View>
-
-{!memoEditMode ? (
-  <Text style={styles.memoText} numberOfLines={3}>
-    {personalProgress.memberMemo || "아직 작성한 메모가 없습니다."}
-  </Text>
-) : (
-  <View style={styles.memoInlineEditWrap}>
-    <TextInput
-  value={editMemberMemo}
-  onChangeText={setEditMemberMemo}
-  style={styles.textAreaCompact}
-  placeholder="복습 포인트나 기억할 점을 적어보세요."
-  multiline
-  onFocus={scrollToEditSection}
+      transform: [
+  {
+    translateY: riverGlowAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-8, 14],
+    }),
+  },
+],
+    },
+  ]}
 />
     <TouchableOpacity
-      style={[
-        styles.memoSaveButton,
-        !(editCurriculumId || personalProgress?.curriculumId) && {
-          opacity: 0.5,
-        },
-      ]}
-      onPress={handleSaveMemberMemo}
-      disabled={savingMemo || !(editCurriculumId || personalProgress?.curriculumId)}
-    >
-      <Text style={styles.memoSaveButtonText}>
-        {savingMemo ? "저장 중..." : "저장"}
-      </Text>
-    </TouchableOpacity>
-  </View>
-)}
-          </>
-        ) : (
-          <>
-            <Text style={styles.cardText}>아직 등록된 개인 진도 정보가 없습니다.</Text>
-            <Text style={styles.cardText}>
-              개인 진도가 입력되면 여기에 표시됩니다.
-            </Text>
-          </>
-        )}
-      </View>
+  style={styles.flowTodayRecord}
+  activeOpacity={0.85}
+  onPress={() => setRecordModalVisible(true)}
+>
+  <Text style={styles.flowTodayRecordText}>오늘 기록</Text>
+</TouchableOpacity>
 
-      <View style={styles.card}>
+{gongbeopUpdatedAt ? (
+  <Text style={styles.lastRecordText}>
+    updated {new Date(gongbeopUpdatedAt).toLocaleDateString("ko-KR")}
+  </Text>
+) : null}
+
+<View style={[styles.recordOverlay, styles.recordOverlayOne]}>
+  <AnimatedPercentCircle
+  percent={getGongbeopPercent(
+    gongbeopRecord.ilsimyangui,
+    gongbeopGoals.ilsimyangui
+  )}
+  color="#9b7650"
+/>
+  
+  <Text style={styles.recordOverlayValue}>
+    {gongbeopRecord.ilsimyangui || "0"}
+    <Text style={styles.recordOverlayGoal}> / {gongbeopGoals.ilsimyangui}회</Text>
+  </Text>
+</View>
+
+<View style={[styles.recordOverlay, styles.recordOverlayTwo]}>
+  <AnimatedPercentCircle
+  percent={getGongbeopPercent(
+    gongbeopRecord.yobujeonsa,
+    gongbeopGoals.yobujeonsa
+  )}
+  color="#6f805e"
+/>
+
+  <Text style={styles.recordOverlayValue}>
+    {gongbeopRecord.yobujeonsa || "0"}
+    <Text style={styles.recordOverlayGoal}> / {gongbeopGoals.yobujeonsa}회</Text>
+  </Text>
+</View>
+
+<View style={[styles.recordOverlay, styles.recordOverlayThree]}>
+  <AnimatedPercentCircle
+  percent={getGongbeopPercent(
+    gongbeopRecord.duyoMinutes,
+    gongbeopGoals.duyoMinutes
+  )}
+  color="#c48a42"
+/>
+
+  <Text style={styles.recordOverlayValue}>
+    {gongbeopRecord.duyoMinutes || "0"}
+    <Text style={styles.recordOverlayGoal}> / {gongbeopGoals.duyoMinutes}분</Text>
+  </Text>
+</View>
+
+<View style={[styles.recordOverlay, styles.recordOverlayFour]}>
+  <AnimatedPercentCircle
+  percent={getGongbeopPercent(
+    gongbeopRecord.ohaengjeonsa,
+    gongbeopGoals.ohaengjeonsa
+  )}
+  color="#5f8490"
+/>
+
+  <Text style={styles.recordOverlayValue}>
+    {gongbeopRecord.ohaengjeonsa || "0"}
+    <Text style={styles.recordOverlayGoal}> / {gongbeopGoals.ohaengjeonsa}회</Text>
+  </Text>
+ </View>
+</View>
+) : null}
+
+{activeTab === "record" ? (
+  <View style={styles.goalCard}>
+    <View style={styles.goalHeaderRow}>
+      <View style={styles.goalTitleRow}>
+  <Text style={styles.goalTitle}>내 목표</Text>
+  <Text style={styles.goalSubtitle}>설정한 목표를 향해 꾸준히 나아가세요.</Text>
+</View>
+
+      <TouchableOpacity 
+      
+      style={styles.goalSettingIconButton}
+  activeOpacity={0.85}
+  onPress={() => {
+    console.log("목표 설정 눌림");
+    setGoalModalVisible(true);
+  }}
+>
+  <Image
+    source={require("../../assets/images/goal-setting-icon.png")}
+    style={styles.goalSettingIconImage}
+    resizeMode="contain"
+  />
+</TouchableOpacity>
+    </View>
+
+    <View style={styles.goalGrid}>
+  <View style={styles.goalItem}>
+    <Text style={styles.goalItemTitle}>일심양의</Text>
+    <Text style={[styles.goalGoalValue, styles.goalValueBrown]}
+    numberOfLines={1}
+  adjustsFontSizeToFit
+  minimumFontScale={0.65}>    
+  {gongbeopGoals.ilsimyangui}<Text style={styles.goalUnit}>회</Text>
+</Text>
+  </View>
+
+  <View style={styles.goalItem}>
+    <Text style={styles.goalItemTitle}>요부전사</Text>
+    <Text style={[styles.goalGoalValue, styles.goalValueGreen]}
+    numberOfLines={1}
+  adjustsFontSizeToFit
+  minimumFontScale={0.65}
+  >
+  {gongbeopGoals.yobujeonsa}<Text style={styles.goalUnit}>회</Text>
+</Text>
+  </View>
+
+  <View style={styles.goalItem}>
+    <Text style={styles.goalItemTitle}>두요</Text>
+    <Text style={[styles.goalGoalValue, styles.goalValueGold]}
+    numberOfLines={1}
+  adjustsFontSizeToFit
+  minimumFontScale={0.65}
+  >
+  {gongbeopGoals.duyoMinutes}<Text style={styles.goalUnit}>분</Text>
+</Text>
+  </View>
+
+  <View style={styles.goalItem}>
+    <Text style={styles.goalItemTitle}>오행전사</Text>
+    <Text style={[styles.goalGoalValue, styles.goalValueBlue]}
+    numberOfLines={1}
+  adjustsFontSizeToFit
+  minimumFontScale={0.65}
+  >
+  {gongbeopGoals.ohaengjeonsa}<Text style={styles.goalUnit}>회</Text>
+</Text>
+  </View>
+</View>
+</View>
+) : null}
+
+{activeTab === "record" ? (
+  <View style={styles.memoImageCard}>
+    <Image
+      source={require("../../assets/images/memo-card-bg.png")}
+      style={styles.memoCardBg}
+      resizeMode="stretch"
+    />
+
+    <Text style={styles.memoPreviewText} numberOfLines={2}>
+      {personalProgress?.memberMemo || "아직 작성한 메모가 없습니다."}
+    </Text>
+
+    <TouchableOpacity
+  style={styles.memoEditHotspot}
+  onPress={() => {
+    setEditMemberMemo(personalProgress?.memberMemo || "");
+    setMemoEditModalVisible(true);
+  }}
+/>
+
+    <TouchableOpacity
+  style={styles.memoDetailButton}
+  onPress={() => setMemoHistoryModalVisible(true)}
+  activeOpacity={0.85}
+>
+  <Text style={styles.memoDetailButtonText}>이전 기록 보기</Text>
+</TouchableOpacity>
+  </View>
+) : null}
+      
+
+{activeTab === "training" ? (
+  <Text style={styles.sectionLabel}>현재 수련</Text>
+) : null}
+{activeTab === "training" ? (
+  <View style={styles.coachingInlineBox}>
+    <Text style={styles.coachingInlineLabel}>지도 포인트</Text>
+
+    <Text style={styles.coachingInlineText} numberOfLines={2}>
+      {personalProgress?.recentAdminMemos?.[0]?.content ||
+        "아직 등록된 지도 포인트가 없습니다."}
+    </Text>
+  </View>
+) : null}
+{activeTab === "training" ? (
+   <View style={[styles.card, styles.trainingCard]}>
+    <View style={styles.cardTopActionRow}>
+  <TouchableOpacity
+  activeOpacity={personalProgress ? 0.85 : 1}
+  disabled={!personalProgress}
+  onPress={() => {
+    if (!personalProgress?.curriculumId) {
+      Alert.alert("안내", "아직 등록된 개인 진도 정보가 없습니다.");
+      return;
+    }
+
+    router.push({
+      pathname: "/taegukwon/[curriculumId]",
+      params: {
+        curriculumId: personalProgress.curriculumId,
+        name: personalProgress.curriculumName || "수련 과정",
+        currentStep: String(personalProgress.currentStep || 0),
+        totalSteps: String(personalProgress.totalSteps || 0),
+        source: "personal",
+      },
+    });
+  }}
+>
+  <Text style={styles.detailTextButton}>자세히 보기 </Text>
+</TouchableOpacity>
+</View>
+    {personalProgress ? (
+      <>
+<View style={styles.trainingHeroRow}>
+  <View style={styles.trainingHeroLeft}>
+    <Text style={styles.personalName}>
+      {personalProgress.curriculumName || "등록된 투로 없음"}
+    </Text>
+
+    <Text style={styles.bigProgressText}>
+      {personalProgress.currentStep || 0} / {personalProgress.totalSteps || 0}식
+    </Text>
+
+<View style={styles.progressSection}>
+  <Text style={styles.progressLabel}>진행률</Text>
+
+  <View style={styles.progressBarRow}>
+    <View style={styles.progressTrackInline}>
+      <View
+        style={[
+          styles.progressFillPersonal,
+          { width: `${personalProgressPercent}%` },
+        ]}
+      />
+    </View>
+
+    <Text style={styles.progressPercentInline}>
+      {personalProgressPercent}%
+    </Text>
+  </View>
+</View>
+  </View>
+
+  <View style={styles.trainingSilhouetteWrap}>
+    <Image
+      source={require("../../assets/images/taichi-silhouette2.png")}
+      style={styles.trainingSilhouette}
+      resizeMode="contain"
+    />
+  </View>
+</View>
+      </>
+    ) : (
+      <>
+        <Text style={styles.cardText}>아직 등록된 개인 진도 정보가 없습니다.</Text>
+        <Text style={styles.cardText}>
+          개인 진도가 입력되면 여기에 표시됩니다.
+        </Text>
+      </>
+    )}
+  </View>
+) : null}
+
+{activeTab === "training" ? (
+  <View style={[styles.card, styles.menuCard]}>
+    <TouchableOpacity style={styles.menuRow} activeOpacity={0.85}>
+  <Image
+    source={require("../../assets/images/menu-curriculum.png")}
+    style={styles.menuIcon}
+    resizeMode="contain"
+  />
+
+  <View style={styles.menuTextWrap}>
+    <Text style={styles.menuTitle}>수련 과정</Text>
+    <Text style={styles.menuDesc}>커리큘럼 보기</Text>
+  </View>
+
+  <Text style={styles.menuArrow}>〉</Text>
+</TouchableOpacity>
+
+<TouchableOpacity style={styles.menuRow} activeOpacity={0.85}>
+  <Image
+    source={require("../../assets/images/menu-video.png")}
+    style={styles.menuIcon}
+    resizeMode="contain"
+  />
+
+  <View style={styles.menuTextWrap}>
+    <Text style={styles.menuTitle}>수련 영상</Text>
+    <Text style={styles.menuDesc}>내 수련 영상 올리기</Text>
+  </View>
+
+  <Text style={styles.menuArrow}>〉</Text>
+</TouchableOpacity>
+
+<TouchableOpacity style={styles.menuRow} activeOpacity={0.85}>
+  <Image
+    source={require("../../assets/images/menu-dictionary.png")}
+    style={styles.menuIcon}
+    resizeMode="contain"
+  />
+
+  <View style={styles.menuTextWrap}>
+    <Text style={styles.menuTitle}>동작 사전</Text>
+    <Text style={styles.menuDesc}>동작 설명 및 포인트</Text>
+  </View>
+
+  <Text style={styles.menuArrow}>〉</Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+  style={[styles.menuRow, styles.menuRowLast, !member?.isYudanja && styles.menuRowLocked]}
+  activeOpacity={0.85}
+>
+  <Image
+  source={require("../../assets/images/menu-yudanja.png")}
+  style={[styles.menuIcon, styles.menuYudanjaIcon]}
+  resizeMode="contain"
+/>
+  <View style={styles.menuTextWrap}>
+    <Text style={styles.menuTitle}>유단자 전용</Text>
+    <Text style={styles.menuDesc}>유단자 전용 콘텐츠</Text>
+  </View>
+
+ {member?.isYudanja ? (
+  <Text style={styles.menuArrow}>〉</Text>
+) : (
+  <Image
+    source={require("../../assets/images/menu-lock.png")}
+    style={styles.menuLockIcon}
+    resizeMode="contain"
+  />
+)}
+</TouchableOpacity>
+  </View>
+) : null}
+
+{false && (
+      <View style={[styles.card, styles.menuCard]}>
         <Text style={styles.cardTitle}>수련 과정 로드맵</Text>
         <Text style={styles.cardSubText}>
           전체 수련 흐름과 잠금된 과정을 함께 확인할 수 있어요.
@@ -898,10 +1075,13 @@ const loadGongbeopRecord = useCallback(async () => {
 </View>
               </TouchableOpacity>
             ) : null}
+            
           </>
         )}
-      </View>
+      </View> 
+      )}
 
+{false && (
       <View style={styles.card}>
         <Text style={styles.cardTitle}>내 진도 수정</Text>
         <Text style={styles.cardSubText}>
@@ -1032,27 +1212,230 @@ const loadGongbeopRecord = useCallback(async () => {
           </View>
         )}
       </View>
+      )}
     </ScrollView>
+    <Modal
+  visible={recordModalVisible}
+  transparent
+  animationType="fade"
+>
+  <View style={styles.recordModalOverlay}>
+    <View style={styles.imageModalCard}>
+  <Image
+    source={require("../../assets/images/modal-today-record.png")}
+    style={styles.imageModalBg}
+    resizeMode="stretch"
+  />
+
+  <TouchableOpacity
+    style={styles.modalCloseHotspot}
+    onPress={() => setRecordModalVisible(false)}
+  />
+
+  <TextInput
+    value={gongbeopRecord.ilsimyangui}
+    onChangeText={(value) => handleChangeGongbeop("ilsimyangui", value)}
+    keyboardType="numeric"
+    style={[styles.imageModalInput, styles.modalInputOne]}
+  />
+
+  <TextInput
+    value={gongbeopRecord.yobujeonsa}
+    onChangeText={(value) => handleChangeGongbeop("yobujeonsa", value)}
+    keyboardType="numeric"
+    style={[styles.imageModalInput, styles.modalInputTwo]}
+  />
+
+  <TextInput
+    value={gongbeopRecord.duyoMinutes}
+    onChangeText={(value) => handleChangeGongbeop("duyoMinutes", value)}
+    keyboardType="numeric"
+    style={[styles.imageModalInput, styles.modalInputThree]}
+  />
+
+  <TextInput
+    value={gongbeopRecord.ohaengjeonsa}
+    onChangeText={(value) => handleChangeGongbeop("ohaengjeonsa", value)}
+    keyboardType="numeric"
+    style={[styles.imageModalInput, styles.modalInputFour]}
+  />
+
+  <TouchableOpacity
+    style={styles.modalCancelHotspot}
+    onPress={() => setRecordModalVisible(false)}
+  />
+
+  <TouchableOpacity
+    style={styles.modalSaveHotspot}
+    onPress={async () => {
+      await handleSaveGongbeopRecord();
+      setRecordModalVisible(false);
+    }}
+  />
+</View>
+  </View>
+</Modal>
+<Modal
+  visible={goalModalVisible}
+  transparent
+  animationType="fade"
+>
+  <View style={styles.recordModalOverlay}>
+    <View style={styles.imageModalCard}>
+      <Image
+        source={require("../../assets/images/modal-goal-setting.png")}
+        style={styles.imageModalBg}
+        resizeMode="contain"
+      />
+
+      <TouchableOpacity
+        style={styles.modalCloseHotspot}
+        onPress={() => setGoalModalVisible(false)}
+      />
+
+      <TextInput
+  value={gongbeopGoals.ilsimyangui}
+  onChangeText={(value) => handleChangeGongbeopGoal("ilsimyangui", value)}
+  keyboardType="numeric"
+  style={[styles.imageModalInput, styles.modalInputOne]}
+/>
+
+<TextInput
+  value={gongbeopGoals.yobujeonsa}
+  onChangeText={(value) => handleChangeGongbeopGoal("yobujeonsa", value)}
+  keyboardType="numeric"
+  style={[styles.imageModalInput, styles.modalInputTwo]}
+/>
+
+<TextInput
+  value={gongbeopGoals.duyoMinutes}
+  onChangeText={(value) => handleChangeGongbeopGoal("duyoMinutes", value)}
+  keyboardType="numeric"
+  style={[styles.imageModalInput, styles.modalInputThree]}
+/>
+
+<TextInput
+  value={gongbeopGoals.ohaengjeonsa}
+  onChangeText={(value) => handleChangeGongbeopGoal("ohaengjeonsa", value)}
+  keyboardType="numeric"
+  style={[styles.imageModalInput, styles.modalInputFour]}
+/>
+
+      <TouchableOpacity
+        style={styles.modalCancelHotspot}
+        onPress={() => setGoalModalVisible(false)}
+      />
+
+      <TouchableOpacity
+        style={styles.modalSaveHotspot}
+        onPress={() => {
+          setGoalModalVisible(false);
+        }}
+      />
+    </View>
+  </View>
+</Modal>
+<Modal visible={memoHistoryModalVisible} transparent animationType="fade">
+  <View style={styles.recordModalOverlay}>
+    <View style={styles.memoHistoryModalCard}>
+      <Text style={styles.memoHistoryModalTitle}>지난 수련 메모</Text>
+
+      <TouchableOpacity
+        style={styles.memoHistoryCloseButton}
+        onPress={() => setMemoHistoryModalVisible(false)}
+      >
+        <Text style={styles.memoHistoryCloseText}>×</Text>
+      </TouchableOpacity>
+
+      <ScrollView
+  style={styles.memoHistoryScroll}
+  contentContainerStyle={styles.memoHistoryScrollContent}
+  showsVerticalScrollIndicator={false}
+  nestedScrollEnabled
+>
+        {[personalProgress?.memberMemo ? {
+          id: "current",
+          createdAt: new Date().toISOString(),
+          content: personalProgress.memberMemo,
+        } : null, ...previousMemoHistory]
+          .filter(Boolean)
+          .map((memo) => (
+            <View key={memo.id} style={styles.memoHistoryModalItem}>
+              <Text style={styles.memoHistoryDateText}>
+                {new Date(memo.createdAt).toLocaleDateString("ko-KR")}
+              </Text>
+              <Text style={styles.memoHistoryContentText}>
+                {memo.content}
+              </Text>
+            </View>
+          ))}
+      </ScrollView>
+    </View>
+  </View>
+</Modal>
+<Modal visible={memoEditModalVisible} transparent animationType="fade">
+  <View style={styles.recordModalOverlay}>
+    <View style={styles.memoEditModalCard}>
+      <Text style={styles.memoHistoryModalTitle}>내 수련 메모</Text>
+
+      <TouchableOpacity
+        style={styles.memoHistoryCloseButton}
+        onPress={() => setMemoEditModalVisible(false)}
+      >
+        <Text style={styles.memoHistoryCloseText}>×</Text>
+      </TouchableOpacity>
+
+      <TextInput
+        value={editMemberMemo}
+        onChangeText={setEditMemberMemo}
+        style={styles.memoEditModalInput}
+        placeholder="오늘 수련하며 느낀 점을 적어보세요."
+        placeholderTextColor="#a99585"
+        multiline
+        textAlignVertical="top"
+      />
+
+      <View style={styles.memoEditModalButtonRow}>
+        <TouchableOpacity
+          style={styles.memoEditCancelButton}
+          onPress={() => setMemoEditModalVisible(false)}
+        >
+          <Text style={styles.memoEditCancelText}>취소</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.memoEditSaveButton}
+          onPress={async () => {
+            await handleSaveMemberMemo();
+            setMemoEditModalVisible(false);
+          }}
+        >
+          <Text style={styles.memoEditSaveText}>저장</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#f6f3ee",
-  },
+  flex: 1,
+  backgroundColor: colors.background,
+},
   content: {
-  paddingHorizontal: 20,
-  paddingTop: 34,
+  paddingHorizontal: 16,
+  paddingTop: 52,
   paddingBottom: 10,
 },
   center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f6f3ee",
-  },
+  flex: 1,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: colors.background,
+},
   loadingText: {
     marginTop: 12,
     fontSize: 14,
@@ -1063,6 +1446,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#2f2a24",
     marginBottom: 8,
+    marginLeft: 4,
   },
   subtitle: {
     fontSize: 14,
@@ -1071,7 +1455,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    backgroundColor: "#fffdf9",
+    backgroundColor: colors.card,
     borderRadius: 20,
     padding: 18,
     marginBottom: 12,
@@ -1166,10 +1550,10 @@ levelTextBadgeText: {
   marginTop: 8,
 },
   progressFillPersonal: {
-    height: "100%",
-    backgroundColor: "#6f8a63",
-    borderRadius: 999,
-  },
+  height: "100%",
+  backgroundColor: "#c89e6a",
+  borderRadius: 999,
+},
   progressPercent: {
     marginTop: 8,
     fontSize: 13,
@@ -1589,7 +1973,7 @@ curriculumSelectValue: {
 },
 
 curriculumSelectArrow: {
-  fontSize: 12,
+  fontSize: 6,
   fontWeight: "700",
   color: "#7b6650",
 },
@@ -1700,11 +2084,25 @@ gongbeopSummaryRow: {
 },
 
 gongbeopName: {
-  fontSize: 14,
-  fontWeight: "700",
-  color: "#3f372f",
-},
+  fontSize: 17,
+  fontWeight: "800",
+  color: "#2f241d",
 
+  marginTop: 8,
+  marginBottom: 10,
+},
+gongbeopRecordText: {
+  fontSize: 13,
+  fontWeight: "700",
+  color: "#6b4f46",
+
+  marginBottom: 6,
+},
+gongbeopPercentText: {
+  fontSize: 11,
+  fontWeight: "700",
+  color: "#b19a83",
+},
 gongbeopValue: {
   fontSize: 14,
   fontWeight: "700",
@@ -1782,34 +2180,971 @@ topCoachingText: {
   color: "#4a3d31",
   fontWeight: "600",
 },
-
-gongbeopMemoSection: {
-  marginTop: 10,
-  paddingTop: 10,
-  borderTopWidth: 1,
-  borderTopColor: "#ece4d8",
+memoHistorySection: {
+  marginTop: 8,
 },
 
-inlineSectionHeader: {
+memoHistoryList: {
+  marginTop: 6,
+  gap: 8,
+},
+
+memoHistoryItemBox: {
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+  borderRadius: 12,
+  backgroundColor: "#f7efe2",
+  borderWidth: 1,
+  borderColor: "#eadcc8",
+},
+
+memoHistoryDateText: {
+  fontSize: 11,
+  fontWeight: "700",
+  color: "#8a7f72",
+  marginBottom: 4,
+},
+
+memoHistoryContentText: {
+  fontSize: 13,
+  lineHeight: 19,
+  color: "#4c4339",
+},
+topTabWrap: {
+  flexDirection: "row",
+  backgroundColor: "#FFFEFC",
+  borderWidth: 1,
+  borderColor: "#EFE5DE",
+  borderRadius: 12,
+  padding: 3,
+  marginTop: 6,
+  marginBottom: 12,
+},
+
+topTabButton: {
+  flex: 1,
+  height: 40,
+  borderRadius: 10,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+topTabButtonActive: {
+  backgroundColor: "#6B4F46",
+},
+
+topTabText: {
+  fontSize: 12,
+  fontWeight: "600",
+  color: "#A78D83",
+},
+
+topTabTextActive: {
+  color: "#FFFFFF",
+},
+
+menuRow: {
+  borderBottomWidth: 1,
+  paddingVertical: 16,
+  borderBottomColor: "#f0e8dc",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+menuRowLocked: {
+  opacity: 0.7,
+},
+
+menuTitle: {
+  fontSize: 15,
+  fontWeight: "700",
+  color: "#2f2a24",
+  marginBottom: 4,
+},
+
+menuDesc: {
+  fontSize: 12,
+  color: "#8a7f72",
+},
+
+menuLock: {
+  fontSize: 18,
+},
+currentTrainingLabel: {
+  fontSize: 11,
+  fontWeight: "800",
+  letterSpacing: 1.2,
+  color: "#9b866e",
+  marginBottom: 8,
+},
+
+currentStepDescription: {
+  marginTop: -2,
+  marginBottom: 12,
+  fontSize: 13,
+  color: "#7b7064",
+  fontWeight: "600",
+},
+trainingHeroRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 6,
+},
+
+trainingHeroLeft: {
+  flex: 1,
+  paddingRight: 12,
+},
+
+trainingSilhouetteWrap: {
+  width: 110,
+  height: 110,
+  alignItems: "center",
+  justifyContent: "center",
+  opacity: 0.9,
+},
+
+trainingSilhouette: {
+  width: 150,
+  height: 150,
+  marginTop: -10,
+  marginBottom: -20,
+},
+
+progressSection: {
+  marginTop: 8,
+  marginBottom: 6,
+},
+
+progressLabel: {
+  fontSize: 13,
+  fontWeight: "800",
+  color: "#3f372f",
+  marginBottom: 4,
+},
+
+progressBarRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+},
+
+progressTrackInline: {
+  flex: 1,
+  height: 9,
+  backgroundColor: "#eee8df",
+  borderRadius: 999,
+  overflow: "hidden",
+},
+
+progressPercentInline: {
+  width: 42,
+  fontSize: 13,
+  fontWeight: "800",
+  color: "#3f372f",
+},
+
+progressHeaderRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 8,
+},
+
+progressPercentText: {
+  fontSize: 13,
+  fontWeight: "800",
+  color: "#9b866e",
+},
+currentCardHeaderRow: {
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
   gap: 12,
+  marginBottom: 16,
+},
+
+detailTextButton: {
+  fontSize: 12,
+  fontWeight: "700",
+  color: "#8a7f72",
+  marginTop: 7,
+},
+sectionLabel: {
+  fontSize: 14,
+  fontWeight: "800",
+  color: "#4a3d31",
+  marginTop: 6,
+  marginBottom: 8,
+  marginLeft: 4,
+},
+
+cardTopActionRow: {
+  flexDirection: "row",
+  justifyContent: "flex-end",
+  marginBottom: 2,
+},
+coachingInlineBox: {
+  marginTop: -2,
+  marginBottom: 10,
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+  borderRadius: 14,
+  backgroundColor: "#f7efe2",
+  borderWidth: 1,
+  borderColor: "#eadcc8",
+},
+
+coachingInlineLabel: {
+  fontSize: 11,
+  fontWeight: "800",
+  color: "#8c6330",
+  marginBottom: 4,
+},
+
+coachingInlineText: {
+  fontSize: 13,
+  lineHeight: 19,
+  color: "#4a3d31",
+  fontWeight: "600",
+},
+trainingCard: {
+  paddingVertical: 4,
+  paddingHorizontal: 16,
+},
+menuCard: {
+  paddingTop: 4,
+  paddingBottom: 4,
+},
+
+menuRow: {
+  minHeight: 72,
+  paddingVertical: 12,
+  borderBottomWidth: 1,
+  borderBottomColor: "#f0e8dc",
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 14,
+},
+
+menuRowLast: {
+  borderBottomWidth: 0,
+},
+
+menuIcon: {
+  width: 28,
+  height: 28,
+  opacity: 0.82,
+},
+
+menuTextWrap: {
+  flex: 1,
+},
+
+menuTitle: {
+  fontSize: 16,
+  fontWeight: "800",
+  color: "#2f2a24",
+  marginBottom: 3,
+},
+
+menuDesc: {
+  fontSize: 12,
+  color: "#9b9085",
+},
+
+menuArrow: {
+  width: 18,
+  textAlign: "center",
+  fontSize: 13,
+  lineHeight: 18,
+  color: "#a08f7a",
+  fontWeight: "300",
+  marginRight: 2,
+},
+
+menuLock: {
+  fontSize: 20,
+  marginRight: 2,
+},
+
+menuRowLocked: {
+  opacity: 0.65,
+},
+menuLockIcon: {
+  width: 26,
+  height: 26,
+  marginRight: 2,
+  opacity: 0.9,
+},
+menuYudanjaIcon: {
+  width: 36,
+  height: 36,
+  marginLeft: -5,
+  marginRight: -5,
+},
+flowSection: {
+  position: "relative",
+  height: 480,
+  marginBottom: 15,
+  overflow: "hidden",
+},
+
+flowBackground: {
+  position: "absolute",
+  left: 0,
+  top: 0,
+  width: "100%",
+  height: "100%",
+  opacity: 0.96,
+},
+
+recordActionRow: {
+  flexDirection: "row",
+  justifyContent: "flex-end",
+  marginTop: -4,
+  marginBottom: 8,
+},
+
+todayRecordButton: {
+  paddingVertical: 4,
+  paddingHorizontal: 2,
+},
+
+todayRecordButtonText: {
+  fontSize: 12,
+  fontWeight: "800",
+  color: "#6b4f46",
+},
+flowTodayRecord: {
+  position: "absolute",
+  top: 0,
+  right: 10,
+  paddingHorizontal: 10,
+  paddingVertical: 5,
+  borderRadius: 15,
+  borderWidth: 1,
+  borderColor: "rgba(123, 86, 72, 0.24)",
+  backgroundColor: "rgba(255,248,240,0.42)",
+  alignItems: "center",
+  zIndex: 20,
+},
+
+flowTodayRecordText: {
+  fontSize: 11,
+  fontWeight: "800",
+  color: "#6F4D3F",
+  textAlign: "center",
+},
+
+recordOverlay: {
+  position: "absolute",
+  zIndex: 20,
+  elevation: 20,
+},
+
+recordOverlayValue: {
+  fontSize: 19,
+  fontWeight: "800",
+  color: "#5b3f30",
+},
+
+recordOverlayGoal: {
+  fontSize: 12,
+  fontWeight: "800",
+  color: "#8a7f72",
+},
+
+animatedCircleWrap: {
+  width: 42,
+  height: 42,
+  alignItems: "center",
+  justifyContent: "center",
+  marginBottom: 0,
+  position: "relative",
+  opacity: 0.8,
+},
+
+recordPercentText: {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  top: 13,
+  textAlign: "center",
+  fontSize: 9,
+  fontWeight: "900",
+  color: "#5b3f30",
+},
+
+recordOverlayOne: {
+  top: 80,
+  left: 120,
+},
+
+recordOverlayTwo: {
+  top: 190,
+  left: 180,
+},
+
+recordOverlayThree: {
+  top: 270,
+  left: 100,
+},
+
+recordOverlayFour: {
+  top: 360,
+  left: 146,
+},
+recordOverlayPercent: {
+  marginTop: 4,
+  fontSize: 12,
+  fontWeight: "800",
+  color: "#9b7650",
+},
+gongbeopEditCard: {
+  backgroundColor: "#fffdf9",
+  borderRadius: 20,
+  padding: 16,
+  marginBottom: 12,
+  borderWidth: 1,
+  borderColor: "#ece4d8",
+},
+
+gongbeopEditTitle: {
+  fontSize: 17,
+  fontWeight: "800",
+  color: "#2f2a24",
+  marginBottom: 12,
+},
+
+gongbeopInputGrid: {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  gap: 10,
+},
+
+gongbeopInputBox: {
+  width: "48%",
+},
+
+gongbeopInputLabel: {
+  fontSize: 12,
+  fontWeight: "800",
+  color: "#7c4f21",
   marginBottom: 6,
 },
 
-smallOutlineButton: {
+gongbeopInput: {
   borderWidth: 1,
-  borderColor: "#d7c9b3",
-  borderRadius: 999,
+  borderColor: "#e1d8ca",
+  borderRadius: 12,
+  backgroundColor: "#fff",
   paddingHorizontal: 12,
-  paddingVertical: 6,
-  backgroundColor: "#fffaf2",
+  paddingVertical: 10,
+  fontSize: 14,
+  color: "#2f2a24",
 },
 
-smallOutlineButtonText: {
-  fontSize: 12,
+gongbeopEditButtonRow: {
+  flexDirection: "row",
+  gap: 10,
+  marginTop: 14,
+},
+
+gongbeopCancelButton: {
+  flex: 1,
+  borderRadius: 12,
+  paddingVertical: 12,
+  alignItems: "center",
+  backgroundColor: "#e8e0d2",
+},
+
+gongbeopCancelButtonText: {
+  fontSize: 13,
+  fontWeight: "800",
+  color: "#5d5146",
+},
+
+gongbeopSaveButton: {
+  flex: 1,
+  borderRadius: 12,
+  paddingVertical: 12,
+  alignItems: "center",
+  backgroundColor: "#8c6330",
+},
+
+gongbeopSaveButtonText: {
+  fontSize: 13,
+  fontWeight: "800",
+  color: "#fffdf9",
+},
+recordModalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.28)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+recordCancelText: {
+  color: "#6B564C",
+  fontSize: 16,
   fontWeight: "700",
-  color: "#7c4f21",
+},
+
+recordSaveText: {
+  color: "#FFFFFF",
+  fontSize: 16,
+  fontWeight: "700",
+},
+
+lastRecordText: {
+  position: "absolute",
+  top: 30,
+  right: 10,
+  fontSize: 9,
+  color: "#9A867A",
+  textAlign: "right",
+  zIndex: 20,
+},
+
+recordModalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(47, 42, 36, 0.32)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+recordModalCard: {
+  width: "86%",
+  backgroundColor: "#fffdf8",
+  borderRadius: 26,
+  paddingHorizontal: 22,
+  paddingTop: 24,
+  paddingBottom: 20,
+  borderWidth: 1,
+  borderColor: "#eadfce",
+},
+
+recordModalTitle: {
+  fontSize: 24,
+  fontWeight: "800",
+  color: "#4A3427",
+  marginBottom: 18,
+  textAlign: "center",
+},
+
+recordInputGrid: {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  justifyContent: "space-between",
+  rowGap: 12,
+},
+
+recordInputBox: {
+  width: "48%",
+},
+
+recordInputLabel: {
+  fontSize: 12,
+  fontWeight: "800",
+  color: "#7c5a42",
+  marginBottom: 5,
+},
+
+recordInputLabel: {
+  fontSize: 12,
+  fontWeight: "800",
+  color: "#7c5a42",
+  marginBottom: 5,
+},
+
+recordInput: {
+  height: 44,
+  borderRadius: 14,
+  backgroundColor: "#fffaf2",
+  borderWidth: 1,
+  borderColor: "#eadfce",
+  paddingHorizontal: 14,
+  fontSize: 15,
+  color: "#4A3427",
+},
+
+recordButtonRow: {
+  flexDirection: "row",
+  marginTop: 18,
+  gap: 10,
+},
+
+recordCancelButton: {
+  flex: 1,
+  height: 46,
+  borderRadius: 15,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "#e9dfd2",
+},
+
+recordSaveButton: {
+  flex: 1,
+  height: 46,
+  borderRadius: 15,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "#7B5648",
+},
+goalCard: {
+  backgroundColor: "rgba(255,253,249,0.92)",
+  borderRadius: 20,
+  padding: 16,
+  marginBottom: 12,
+  borderWidth: 1,
+  borderColor: "#ece4d8",
+},
+
+goalHeaderRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  marginBottom: 12,
+},
+
+goalTitle: {
+  fontFamily: "ChosunCentennial",
+  fontSize: 15,
+  color: "#5b3f30",
+   transform: [{ scaleX: 0.9 }],
+},
+goalTitleRow: {
+  flexDirection: "row",
+  alignItems: "flex-end",
+  gap: 8,
+  flex: 1,
+},
+goalSubtitle: {
+  flex: 1,
+  fontSize: 11,
+  color: "#7a6f61",
+  marginBottom: 3,
+},
+
+goalValueBrown: {
+  color: "#9b7650",
+},
+
+goalValueGreen: {
+  color: "#6f805e",
+},
+
+goalValueGold: {
+  color: "#c48a42",
+},
+
+goalValueBlue: {
+  color: "#5f8490",
+},
+
+goalGrid: {
+  flexDirection: "row",
+  gap: 8,
+},
+
+goalItem: {
+  flex: 1,
+  paddingHorizontal: 8,
+  paddingVertical: 10,
+  borderRadius: 14,
+  borderWidth: 1,
+  borderColor: "#eee4d7",
+  backgroundColor: "rgba(255,255,255,0.55)",
+  alignItems: "center",
+},
+
+goalItemTitle: {
+  fontSize: 12,
+  fontWeight: "800",
+  color: "#4a3d31",
+  marginBottom: 0,
+},
+goalGoalValue: {
+  fontSize: 22,
+  fontWeight: "900",
+  color: "#3f3028",
+},
+
+goalUnit: {
+  fontSize: 11,
+  fontWeight: "800",
+  color: "#7a6f61",
+},
+
+goalSettingIconButton: {
+  width: 16,
+  height: 16,
+  borderRadius: 16,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "rgba(255,250,242,0.65)",
+},
+
+goalSettingIconImage: {
+  width: 23,
+  height: 23,
+  opacity: 0.9,
+},
+
+
+goalSettingIcon: {
+  fontSize: 17,
+  color: "#5b3f30",
+},
+
+goalUnit: {
+  fontSize: 12,
+  fontWeight: "800",
+  color: "#6f6258",
+},
+
+goalSubValue: {
+  marginTop: 2,
+  fontSize: 12,
+  color: "#5f5147",
+},
+imageModalCard: {
+  width: "92%",
+  aspectRatio: 1680 / 750,
+  position: "relative",
+},
+
+imageModalBg: {
+  position: "absolute",
+  width: "100%",
+  height: "115%",
+},
+
+imageModalInput: {
+  position: "absolute",
+  width: "18%",
+  height: 34,
+  textAlign: "center",
+  fontSize: 13,
+  color: "#5b3f30",
+  fontFamily: "ChosunCentennial",
+  backgroundColor: "transparent",
+  padding: 0,
+},
+
+modalInputOne: {
+  left: "7%",
+  top: "51%",
+},
+
+modalInputTwo: {
+  left: "30%",
+  top: "51%",
+},
+
+modalInputThree: {
+  left: "52%",
+  top: "51%",
+},
+
+modalInputFour: {
+  left: "75%",
+  top: "51%",
+},
+
+modalCloseHotspot: {
+  position: "absolute",
+  top: -4,
+  right: 20,
+  width: 45,
+  height: 45,
+},
+
+modalCancelHotspot: {
+  position: "absolute",
+  left: "33%",
+  bottom: -10,
+  width: "15%",
+  height: 35,
+},
+
+modalSaveHotspot: {
+  position: "absolute",
+  left: "51%",
+  bottom: -10,
+  width: "22%",
+  height: 35,
+},
+memoImageCard: {
+  position: "relative",
+  height: 130,
+  marginBottom: 12,
+},
+
+memoCardBg: {
+  position: "absolute",
+  width: "100%",
+  height: "100%",
+},
+
+memoPreviewText: {
+  position: "absolute",
+  left: 28,
+  right: 78,
+  top: 62,
+  fontSize: 17,
+  lineHeight: 20,
+  color: "#4c3a31",
+},
+
+memoEditHotspot: {
+  position: "absolute",
+  right: 26,
+  top: 28,
+  width: 54,
+  height: 54,
+},
+
+memoDetailButton: {
+  position: "absolute",
+  left: 130,
+  top: 25,
+},
+
+memoDetailButtonText: {
+  fontSize: 11,
+  fontWeight: "800",
+  color: "#7a6254",
+  fontFamily: "ChosunCentennial",
+},
+
+memoHistoryModalCard: {
+  width: "88%",
+  maxHeight: "72%",
+  backgroundColor: "#fffdf9",
+  borderRadius: 24,
+  padding: 20,
+  borderWidth: 1,
+  borderColor: "#eadfce",
+},
+
+memoHistoryModalTitle: {
+  fontSize: 24,
+  fontWeight: "800",
+  color: "#5b3f30",
+  marginBottom: 16,
+  fontFamily: "ChosunCentennial",
+},
+
+memoHistoryCloseButton: {
+  position: "absolute",
+  right: 18,
+  top: 14,
+  width: 36,
+  height: 36,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+memoHistoryCloseText: {
+  fontSize: 30,
+  color: "#8a7a6f",
+},
+
+memoHistoryScroll: {
+  marginTop: 8,
+  maxHeight: 300,
+},
+
+memoHistoryScrollContent: {
+  paddingBottom: 12,
+},
+
+memoHistoryModalItem: {
+  paddingVertical: 12,
+  borderBottomWidth: 1,
+  borderBottomColor: "#eee4d7",
+},
+memoEditModalCard: {
+  width: "88%",
+  backgroundColor: "#fffdf9",
+  borderRadius: 24,
+  padding: 20,
+  borderWidth: 1,
+  borderColor: "#eadfce",
+},
+
+memoEditModalInput: {
+  minHeight: 150,
+  marginTop: 10,
+  padding: 14,
+  borderRadius: 16,
+  borderWidth: 1,
+  borderColor: "#eadfce",
+  backgroundColor: "rgba(255,255,255,0.72)",
+  fontSize: 20,
+  lineHeight: 22,
+  color: "#4c3a31",
+},
+
+memoEditModalButtonRow: {
+  marginTop: 16,
+  flexDirection: "row",
+  justifyContent: "center",
+  alignItems: "center",
+  gap: 18,
+},
+
+memoEditCancelButton: {
+  paddingHorizontal: 18,
+  paddingVertical: 10,
+},
+
+memoEditCancelText: {
+  fontSize: 15,
+  fontWeight: "800",
+  color: "#5b3f30",
+  fontFamily: "ChosunCentennial",
+},
+
+memoEditSaveButton: {
+  paddingHorizontal: 28,
+  paddingVertical: 10,
+  borderRadius: 999,
+  backgroundColor: "#9b8676",
+},
+
+memoEditSaveText: {
+  fontSize: 15,
+  fontWeight: "800",
+  color: "#fffdf9",
+  fontFamily: "ChosunCentennial",
+},
+riverGlow: {
+  position: "absolute",
+  left: "39%",
+  top: 120,
+  width: "15%",
+  height: 190,
+  borderRadius: 999,
+  backgroundColor: "rgba(255, 244, 211, 0.22)",
+  zIndex: 6,
+  elevation: 6,
+},
+riverHighlight: {
+  position: "absolute",
+  left: -320,
+  top: 95,
+
+  width: 390,
+  height: 440,
+
+  zIndex: 4,
+  elevation: 4,
+
+  resizeMode: "stretch",
 },
 });

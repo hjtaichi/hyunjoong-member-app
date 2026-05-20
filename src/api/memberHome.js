@@ -1,28 +1,15 @@
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+// member-app/src/api/memberHome.js
 
-async function parseJsonSafe(res) {
-  const text = await res.text();
-  try {
-    return text ? JSON.parse(text) : {};
-  } catch {
-    return { message: text || "서버 응답을 읽지 못했습니다." };
-  }
-}
+import { apiFetch } from "./api";
 
 export async function getMemberHome(token) {
-  const res = await fetch(`${API_BASE_URL}/api/member/me/home?t=${Date.now()}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const result = await apiFetch(
+    `/member/me/home?t=${Date.now()}`,
+    {
+      method: "GET",
     },
-  });
+    token
+  );
 
-  const data = await parseJsonSafe(res);
-
-  if (!res.ok) {
-    throw new Error(data?.message || "홈 정보를 불러오지 못했습니다.");
-  }
-
-  return data.data;
+  return result.data;
 }

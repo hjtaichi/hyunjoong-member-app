@@ -1,37 +1,37 @@
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+// member-app/src/api/memberInquiryChat.js
 
-async function request(path, token, options = {}) {
-  const res = await fetch(`${API_BASE_URL}/api${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(options.headers || {}),
-    },
-  });
-
-  const result = await res.json();
-
-  if (!res.ok) {
-    throw new Error(result.message || "요청 실패");
-  }
-
-  return result;
-}
+import { apiRequest } from "./request";
 
 export async function getInquiryMessages(token, roomId) {
-  return request(`/member/inquiries/${roomId}/messages`, token);
+  const result = await apiRequest(
+    `/api/member/me/inquiries/${roomId}/messages`,
+    token
+  );
+
+  return result.data || result;
 }
 
 export async function sendInquiryMessage(token, roomId, message) {
-  return request(`/member/inquiries/${roomId}/messages`, token, {
-    method: "POST",
-    body: JSON.stringify({ message }),
-  });
+  const result = await apiRequest(
+    `/api/member/me/inquiries/${roomId}/messages`,
+    token,
+    {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    }
+  );
+
+  return result.data || result;
 }
 
 export async function markInquiryRead(token, roomId) {
-  return request(`/member/inquiries/${roomId}/read`, token, {
-    method: "POST",
-  });
+  const result = await apiRequest(
+    `/api/member/me/inquiries/${roomId}/read`,
+    token,
+    {
+      method: "POST",
+    }
+  );
+
+  return result.data || result;
 }

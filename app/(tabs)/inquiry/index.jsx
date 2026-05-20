@@ -1,7 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -10,10 +12,17 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { colors } from "../../../src/theme/colors";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { getMemberInquiries } from "../../../src/api/memberInquiry";
 import { createMemberInquiry } from "../../../src/api/memberInquiryCreate";
 import RecentNoticesSection from "../../../src/components/RecentNoticesSection";
+
+const TABS = [
+  { key: "notice", label: "공지" },
+  { key: "guide", label: "도장 안내" },
+  { key: "inquiry", label: "문의" },
+];
 
 function formatDateTime(value) {
   if (!value) return "";
@@ -25,12 +34,7 @@ function formatDateTime(value) {
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
 
-  let hours = date.getHours();
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const period = hours < 12 ? "오전" : "오후";
-  hours = hours % 12 === 0 ? 12 : hours % 12;
-
-  return `${y}.${m}.${d} ${period} ${hours}:${minutes}`;
+  return `${y}.${m}.${d}`;
 }
 
 function getStatusLabel(status) {
@@ -43,48 +47,51 @@ function getStatusLabel(status) {
 
 function getStatusStyle(status) {
   if (status === "answered") {
-    return {
-      badge: styles.badgeAnswered,
-      text: styles.badgeTextAnswered,
-    };
+    return { badge: styles.badgeAnswered, text: styles.badgeTextAnswered };
   }
 
   if (status === "open") {
-    return {
-      badge: styles.badgeOpen,
-      text: styles.badgeTextOpen,
-    };
+    return { badge: styles.badgeOpen, text: styles.badgeTextOpen };
   }
 
   if (status === "closed") {
-    return {
-      badge: styles.badgeClosed,
-      text: styles.badgeTextClosed,
-    };
+    return { badge: styles.badgeClosed, text: styles.badgeTextClosed };
   }
 
   if (status === "urgent") {
-    return {
-      badge: styles.badgeUrgent,
-      text: styles.badgeTextUrgent,
-    };
+    return { badge: styles.badgeUrgent, text: styles.badgeTextUrgent };
   }
 
-  return {
-    badge: styles.badgeDefault,
-    text: styles.badgeTextDefault,
-  };
+  return { badge: styles.badgeDefault, text: styles.badgeTextDefault };
 }
 
 export default function InquiryScreen() {
-  const { token } = useAuth();
+  const { token, user, logout } = useAuth();
+  const authUser = user || {};
+  const memberStatus = authUser?.memberStatus || authUser?.status;
+  const isPausedMember = memberStatus === "paused";
 
+  const [activeTab, setActiveTab] = useState("notice");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [starting, setStarting] = useState(false);
   const [rooms, setRooms] = useState([]);
-  const supportHoursText = "운영시간: 평일 오전 9시 ~ 오후 6시";
+
   const previewRooms = rooms.slice(0, 3);
+
+  async function handleLogout() {
+    Alert.alert("로그아웃", "로그아웃하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "로그아웃",
+        style: "destructive",
+        onPress: async () => {
+          await logout();
+          router.replace("/login");
+        },
+      },
+    ]);
+  }
 
   const loadInquiries = useCallback(
     async ({ silent = false } = {}) => {
@@ -105,9 +112,11 @@ export default function InquiryScreen() {
     [token]
   );
 
-  useEffect(() => {
-    loadInquiries();
-  }, [loadInquiries]);
+  useFocusEffect(
+    useCallback(() => {
+      loadInquiries({ silent: true });
+    }, [loadInquiries])
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -158,7 +167,7 @@ export default function InquiryScreen() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>문의 내역을 불러오는 중입니다.</Text>
+        <Text style={styles.loadingText}>공지와 문의를 불러오는 중입니다.</Text>
       </View>
     );
   }
@@ -171,152 +180,396 @@ export default function InquiryScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <Text style={styles.title}>1:1 문의</Text>
+      <View style={styles.segment}>
+        {TABS.map((tab) => {
+          const selected = activeTab === tab.key;
 
-<Text style={styles.subtitle}>
-  강사님 또는 관리자와 문의 내용을 주고받을 수 있어요.
-</Text>
+          return (
+            <Pressable
+              key={tab.key}
+              style={[styles.segmentButton, selected && styles.segmentActive]}
+              onPress={() => setActiveTab(tab.key)}
+            >
+              <Text
+                style={[
+                  styles.segmentText,
+                  selected && styles.segmentTextActive,
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
 
-<Text style={styles.meta}>
-  운영시간: 평일 오전 9시 ~ 오후 6시
-</Text>
+      {isPausedMember ? (
+        <View style={styles.pausedBox}>
+          <Text style={styles.pausedTitle}>휴식중 회원</Text>
+          <Text style={styles.pausedText}>
+            현재는 공지 확인 및 문의만 이용 가능합니다.
+          </Text>
 
-      <RecentNoticesSection />
+          <Pressable style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>로그아웃</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
-      <View style={styles.card}>
-        <View style={styles.rowBetween}>
-          <Text style={styles.cardTitle}>최근 문의</Text>
-          <Text style={styles.countText}>총 {rooms.length}건</Text>
+      {activeTab === "notice" ? (
+        <View style={styles.section}>
+          <View style={styles.noticeHero}>
+  <View style={styles.noticeHeroText}>
+    <View style={styles.noticeTitleBlock}>
+  <Text style={styles.sectionTitle}>최근 공지</Text>
+  <Text style={styles.sectionInlineDesc}>가장 최근 안내를 먼저 확인해요</Text>
+</View>
+  </View>
+
+  <Image
+    source={require("../../../assets/images/notice-bg.png")}
+    style={styles.noticeHeroImage}
+    resizeMode="contain"
+  />
+</View>
+
+<RecentNoticesSection />
+        </View>
+      ) : null}
+
+      {activeTab === "guide" ? (
+  <View style={styles.section}>
+    <View style={styles.noticeHero}>
+      <View style={styles.noticeTitleBlock}>
+        <Text style={styles.sectionTitle}>도장 안내</Text>
+        <Text style={styles.sectionInlineDesc}>
+          수련 전 자주 확인하는 안내를 모아두었어요.
+        </Text>
+      </View>
+
+      <Image
+        source={require("../../../assets/images/notice-bg.png")}
+        style={styles.noticeHeroImage}
+        resizeMode="contain"
+      />
+    </View>
+
+    <View style={styles.guideCard}>
+      <Pressable
+        style={styles.guideItem}
+        onPress={() => router.push("/(tabs)/inquiry/faq")}
+      >
+        <View style={styles.guideIconCircle}>
+  <Image
+    source={require("../../../assets/images/inquiry-faq-icon.png")}
+    style={styles.guideIconImage}
+    resizeMode="contain"
+  />
+</View>
+
+        <View style={styles.guideTextBlock}>
+          <Text style={styles.guideTitle}>FAQ</Text>
+          <Text style={styles.guideText}>자주 묻는 질문 모음</Text>
         </View>
 
-        {rooms.length === 0 ? (
-          <Text style={styles.emptyText}>아직 등록된 문의가 없습니다.</Text>
-        ) : (
-          previewRooms.map((room, index) => {
-            const statusStyle = getStatusStyle(room.status);
+        <Text style={styles.chevron}>›</Text>
+      </Pressable>
 
-            return (
-              <Pressable
-                key={room.roomId || index}
-                style={[
-                  styles.inquiryItem,
-                  index === previewRooms.length - 1 && styles.inquiryItemLast,
-                ]}
-                onPress={() =>
-                  router.push({
-                    pathname: "/(tabs)/inquiry/[roomId]",
-                    params: { roomId: String(room.roomId) },
-                  })
-                }
-              >
-                <View style={styles.rowBetween}>
-  <Text style={styles.inquiryTitle}>
-    {room.title || `문의 #${index + 1}`}
-  </Text>
+      <View style={styles.divider} />
 
-  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-    {/* 🔴 안읽음 뱃지 */}
-    {room.unreadCount > 0 && (
-      <View style={styles.unreadBadge}>
-        <Text style={styles.unreadText}>{room.unreadCount}</Text>
-      </View>
-    )}
+      <Pressable
+        style={styles.guideItem}
+        onPress={() => router.push("/(tabs)/inquiry/guide")}
+      >
+        <View style={styles.guideIconCircle}>
+  <Image
+    source={require("../../../assets/images/inquiry-guide-icon.png")}
+    style={styles.guideIconImage}
+    resizeMode="contain"
+  />
+</View>
 
-    {/* 상태 뱃지 */}
+        <View style={styles.guideTextBlock}>
+          <Text style={styles.guideTitle}>수련 가이드</Text>
+          <Text style={styles.guideText}>도장 이용과 수련 예절 안내</Text>
+        </View>
+
+        <Text style={styles.chevron}>›</Text>
+      </Pressable>
+
+      <View style={styles.divider} />
+
+      <Pressable
+        style={styles.guideItem}
+        onPress={() => router.push("/(tabs)/inquiry/schedule")}
+      >
+        <View style={styles.guideIconCircle}>
+  <Image
+    source={require("../../../assets/images/inquiry-schedule-icon.png")}
+    style={styles.guideIconImage}
+    resizeMode="contain"
+  />
+</View>
+
+        <View style={styles.guideTextBlock}>
+          <Text style={styles.guideTitle}>수련 시간표</Text>
+          <Text style={styles.guideText}>요일별 정규 수련 시간 확인</Text>
+        </View>
+
+        <Text style={styles.chevron}>›</Text>
+      </Pressable>
+    </View>
+  </View>
+) : null}
+
+      {activeTab === "inquiry" ? (
+        <View style={styles.section}>
+          <View style={styles.rowBetween}>
+            <View>
+              <Text style={styles.sectionTitle}>문의</Text>
+              <Text style={styles.sectionDesc}>
+                관리자와 주고받은 1:1 문의 기록입니다.
+              </Text>
+            </View>
+
+            <Text style={styles.countText}>{rooms.length}건</Text>
+          </View>
+
+          <View style={styles.inquiryCard}>
+            {rooms.length === 0 ? (
+              <Text style={styles.emptyText}>
+                아직 남긴 문의가 없습니다.{"\n"}
+                궁금한 점이 있다면 문답을 남겨주세요.
+              </Text>
+            ) : (
+              previewRooms.map((room, index) => {
+                const statusStyle = getStatusStyle(room.status);
+
+                return (
+                  <Pressable
+                    key={room.roomId || index}
+                    style={[
+                      styles.inquiryItem,
+                      index === previewRooms.length - 1 &&
+                        styles.inquiryItemLast,
+                    ]}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(tabs)/inquiry/[roomId]",
+                        params: { roomId: String(room.roomId) },
+                      })
+                    }
+                  >
+                    <View style={styles.inquiryItemContent}>
+  <View style={styles.inquiryLeft}>
+    <Text style={styles.inquiryTitle} numberOfLines={1}>
+      {room.title || `문의 #${index + 1}`}
+    </Text>
+
+    <Text style={styles.inquiryMessage} numberOfLines={2}>
+      {room.lastMessage || "최근 메시지가 없습니다."}
+    </Text>
+  </View>
+
+  <View style={styles.inquiryRightMeta}>
     <View style={[styles.badge, statusStyle.badge]}>
       <Text style={[styles.badgeText, statusStyle.text]}>
         {getStatusLabel(room.status)}
       </Text>
     </View>
+
+    {room.updatedAt ? (
+      <Text style={styles.inquiryRightDate}>
+        {formatDateTime(room.updatedAt)}
+      </Text>
+    ) : null}
   </View>
-</View>
+                    </View>
+                  </Pressable>
+                );
+              })
+            )}
+          </View>
 
-                <Text style={styles.inquiryMessage}>
-                  {room.lastMessage || "최근 메시지가 없습니다."}
-                </Text>
-
-                {room.updatedAt ? (
-                  <Text style={styles.inquiryMeta}>
-                    최근 업데이트: {formatDateTime(room.updatedAt)}
-                  </Text>
-                ) : null}
-              </Pressable>
-            );
-          })
-        )}
-      </View>
-
-      <Pressable
-        style={[styles.button, starting && styles.buttonDisabled]}
-        onPress={handleStartInquiry}
-        disabled={starting}
-      >
-        <Text style={styles.buttonText}>
-          {starting ? "여는 중..." : "1:1 문의하기"}
-        </Text>
-      </Pressable>
+          <Pressable
+            style={[styles.button, starting && styles.buttonDisabled]}
+            onPress={handleStartInquiry}
+            disabled={starting}
+          >
+            <Text style={styles.buttonText}>
+              {starting ? "여는 중..." : "문의 남기기"}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#f6f3ee",
-  },
+  flex: 1,
+  backgroundColor: colors.background,
+},
   content: {
   paddingHorizontal: 20,
-  paddingTop: 42,
-  paddingBottom: 24,
+  paddingTop: 46,
+  paddingBottom: 110,
 },
   center: {
-    flex: 1,
-    backgroundColor: "#f6f3ee",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  flex: 1,
+  backgroundColor: colors.background,
+  alignItems: "center",
+  justifyContent: "center",
+},
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: "#6b6257",
+    color: "#7a6f66",
   },
+
   title: {
-  fontSize: 28,
-  fontWeight: "800",
-  color: "#2f2a24",
-  marginBottom: 10,
-},
-subtitle: {
-  fontSize: 14,
-  lineHeight: 21,
-  color: "#6b6257",
-  marginBottom: 10,
-},
-meta: {
-  fontSize: 13,
-  color: "#8a7f72",
-  marginBottom: 18,
-},
-  card: {
-    backgroundColor: "#fffdf9",
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#ece4d8",
-  },
-  cardTitle: {
-    fontSize: 18,
+    fontSize: 28,
     fontWeight: "800",
-    color: "#2f2a24",
-    marginBottom: 10,
+    color: "#342a24",
+    marginBottom: 8,
   },
-  cardText: {
+  subtitle: {
     fontSize: 14,
     lineHeight: 21,
-    color: "#4c4339",
-    marginBottom: 4,
+    color: "#81756b",
+    marginBottom: 22,
   },
+
+  segment: {
+  flexDirection: "row",
+  backgroundColor: colors.card,
+  borderRadius: 12,
+  padding: 3,
+  borderWidth: 1,
+  borderColor: colors.border,
+  marginBottom: 24,
+},
+  segmentButton: {
+    flex: 1,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  segmentActive: {
+  backgroundColor: colors.warmBrown,
+},
+  segmentText: {
+  fontSize: 15,
+  fontWeight: "800",
+  color: colors.softBrown,
+},
+  segmentTextActive: {
+  color: colors.white,
+},
+
+  section: {
+    gap: 12,
+  },
+  sectionTitle: {
+    fontSize: 30,
+    fontWeight: "800",
+    color: "#342a24",
+  },
+  sectionDesc: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 19,
+    color: "#8b7f75",
+  },
+
+  guideCard: {
+  backgroundColor: colors.card,
+  borderRadius: 24,
+  paddingHorizontal: 20,
+  paddingVertical: 10,
+  borderWidth: 0.4,
+  borderColor: colors.border,
+
+  shadowColor: "#BFA79B",
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.05,
+  shadowRadius: 12,
+  elevation: 2,
+},
+
+guideItem: {
+  minHeight: 82,
+  flexDirection: "row",
+  alignItems: "center",
+},
+guideIconCircle: {
+  width: 50,
+  height: 50,
+  borderRadius: 32,
+  backgroundColor: "transparent",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 18,
+},
+
+guideIconText: {
+  fontSize: 20,
+  fontWeight: "800",
+  color: colors.warmBrown,
+},
+guideTextBlock: {
+  flex: 1,
+},
+  guideTitle: {
+  fontSize: 20,
+  fontWeight: "700",
+  color: colors.textMain,
+},
+
+guideText: {
+  marginTop: 5,
+  fontSize: 13,
+  fontWeight: "500",
+  lineHeight: 18,
+  color: colors.textSub,
+},
+
+chevron: {
+  fontSize: 13,
+  color: colors.softBrown,
+  marginLeft: 12,
+  marginTop: -2,
+},
+
+divider: {
+  height: 1,
+  backgroundColor: colors.border,
+},
+
+  inquiryCard: {
+    backgroundColor: "#fffdf9",
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    borderWidth: 1,
+    borderColor: "#eadfd4",
+  },
+  inquiryItem: {
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee3d6",
+  },
+  inquiryItemLast: {
+    borderBottomWidth: 0,
+  },
+  
+  inquiryMeta: {
+    marginTop: 8,
+    fontSize: 12,
+    color: "#9b8c80",
+  },
+
   rowBetween: {
     flexDirection: "row",
     alignItems: "center",
@@ -324,85 +577,65 @@ meta: {
   },
   countText: {
     fontSize: 13,
-    color: "#8a7f72",
-    fontWeight: "700",
+    fontWeight: "800",
+    color: "#9a6f3a",
   },
   emptyText: {
+    paddingVertical: 24,
     fontSize: 14,
-    color: "#6b6257",
-    lineHeight: 21,
-  },
-  inquiryItem: {
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ece4d8",
-  },
-  inquiryItemLast: {
-    borderBottomWidth: 0,
-    paddingBottom: 0,
-  },
-  inquiryTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#2f2a24",
-  },
-  inquiryMessage: {
-    marginTop: 8,
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#4c4339",
-  },
-  inquiryMeta: {
-    marginTop: 8,
-    fontSize: 12,
-    color: "#8a7f72",
+    lineHeight: 22,
+    color: "#7a6f66",
   },
 
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
   },
   badgeDefault: {
-    backgroundColor: "#f0ece5",
+    backgroundColor: "#f0ebe3",
   },
   badgeAnswered: {
-    backgroundColor: "#e8e0d2",
+    backgroundColor: "#efe3d2",
   },
   badgeOpen: {
-    backgroundColor: "#f3ecdf",
+    backgroundColor: "#f5eddf",
   },
   badgeClosed: {
-    backgroundColor: "#ededed",
+    backgroundColor: "#ece8e2",
   },
   badgeUrgent: {
-    backgroundColor: "#f3ddd5",
+    backgroundColor: "#f1dcd3",
   },
   badgeText: {
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 11,
+    fontWeight: "800",
   },
   badgeTextDefault: {
-    color: "#6b6257",
+    color: "#7a6f66",
   },
   badgeTextAnswered: {
-    color: "#7c4f21",
+    color: "#8a5f27",
   },
   badgeTextOpen: {
-    color: "#8c6330",
+    color: "#8a5f27",
   },
   badgeTextClosed: {
-    color: "#7a6f61",
+    color: "#7a6f66",
   },
   badgeTextUrgent: {
-    color: "#9f3f28",
+    color: "#9b4a38",
   },
-
   unreadBadge: {
     minWidth: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#c95f4a",
+    backgroundColor: "#9b4a38",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 6,
@@ -410,22 +643,133 @@ meta: {
   unreadText: {
     color: "#fffdf9",
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 
   button: {
-    backgroundColor: "#8c6330",
+    marginTop: 6,
+    height: 56,
     borderRadius: 20,
-    paddingVertical: 16,
+    backgroundColor: "#735247",
     alignItems: "center",
-    marginTop: 10,
+    justifyContent: "center",
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
     color: "#fffdf9",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
   },
+
+  pausedBox: {
+    backgroundColor: "#fff7ed",
+    borderWidth: 1,
+    borderColor: "#ead2ba",
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 18,
+  },
+  pausedTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#8a4a24",
+  },
+  pausedText: {
+    marginTop: 6,
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#7c4d30",
+  },
+  logoutButton: {
+    marginTop: 12,
+    alignSelf: "flex-start",
+    backgroundColor: "#8a4a24",
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  logoutButtonText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  sectionTitleRow: {
+  flexDirection: "row",
+  alignItems: "flex-end",
+  gap: 10,
+},
+noticeTitleBlock: {
+  zIndex: 2,
+},
+
+sectionInlineDesc: {
+  marginBottom: 3,
+  fontSize: 13,
+  fontWeight: "500",
+  color: "#8b7f75",
+},
+noticeHero: {
+  position: "relative",
+  minHeight: 78,
+  marginBottom: -8,
+  justifyContent: "flex-start",
+},
+
+noticeHeroText: {
+  zIndex: 2,
+},
+
+noticeHeroImage: {
+  position: "absolute",
+  right: -20,
+  top: -30,
+
+  width: 200,
+  height: 130,
+
+  opacity: 0.7,
+},
+guideIconImage: {
+  width: 50,
+  height: 50,
+},
+
+inquiryItemContent: {
+  flexDirection: "row",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: 14,
+},
+
+inquiryLeft: {
+  flex: 1,
+  paddingTop: 2,
+},
+
+inquiryRightMeta: {
+  width: 92,
+  alignItems: "flex-end",
+  gap: 8,
+},
+
+inquiryTitle: {
+  fontSize: 18,
+  fontWeight: "800",
+  color: colors.textMain,
+},
+
+inquiryMessage: {
+  marginTop: 18,
+  fontSize: 14,
+  lineHeight: 21,
+  color: colors.textSub,
+},
+
+inquiryRightDate: {
+  fontSize: 12,
+  fontWeight: "600",
+  color: colors.textMuted,
+},
 });

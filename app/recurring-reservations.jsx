@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,6 +14,7 @@ import {
   getRecurringReservations,
   saveRecurringReservations,
 } from "../src/api/memberRecurringReservations";
+import { getMemberHome } from "../src/api/memberHome";
 
 const WEEKDAY_ROWS = [
   { value: 2, label: "화요일", shortLabel: "화" },
@@ -80,7 +82,8 @@ export default function RecurringReservationsScreen() {
   const [selectedRecurringMap, setSelectedRecurringMap] = useState({});
   const [isYudanjaEnabled, setIsYudanjaEnabled] = useState(false);
 
-  const canUseYudanja = true;
+  const [canUseYudanja, setCanUseYudanja] = useState(false);
+  const [activeDay, setActiveDay] = useState(null);
 
   const loadData = useCallback(async () => {
     if (!token) return;
@@ -89,6 +92,8 @@ export default function RecurringReservationsScreen() {
       setLoading(true);
 
       const result = await getRecurringReservations(token);
+      const homeResult = await getMemberHome(token);
+       setCanUseYudanja(homeResult?.member?.canAccessYudanjaClass === true);
       const items = Array.isArray(result?.items) ? result.items : [];
 
       const normalItems = items.filter(
@@ -152,6 +157,26 @@ export default function RecurringReservationsScreen() {
       return next;
     });
   }, []);
+  
+  const getSelectedLabelsForDay = useCallback(
+  (weekday) => {
+    const selectedTimeKeys = Array.isArray(selectedRecurringMap[weekday])
+      ? selectedRecurringMap[weekday]
+      : [];
+
+    if (selectedTimeKeys.length === 0) {
+      return "선택 안 함";
+    }
+
+    const options = TIME_OPTIONS_BY_WEEKDAY[weekday] || [];
+
+    return selectedTimeKeys
+      .map((key) => options.find((option) => option.value === key)?.label)
+      .filter(Boolean)
+      .join(" · ");
+  },
+  [selectedRecurringMap]
+);
 
   const handleSave = useCallback(async () => {
     try {
@@ -222,74 +247,55 @@ export default function RecurringReservationsScreen() {
         </Text>
       </View>
 
-      {WEEKDAY_ROWS.map((day) => {
-        const selectedTimeKeys = Array.isArray(selectedRecurringMap[day.value])
-          ? selectedRecurringMap[day.value]
-          : [];
-        const timeOptions = TIME_OPTIONS_BY_WEEKDAY[day.value] || [];
+      <View style={styles.card}>
+  <Text style={styles.cardTitle}>요일별 설정</Text>
 
-        return (
-          <View key={day.value} style={styles.card}>
-            <View style={styles.dayHeaderRow}>
-              <Text style={styles.cardTitle}>{day.label}</Text>
-              <View style={styles.dayBadge}>
-                <Text style={styles.dayBadgeText}>{day.shortLabel}</Text>
-              </View>
-            </View>
+  {WEEKDAY_ROWS.map((day, index) => {
+    const selectedTimeKeys = Array.isArray(selectedRecurringMap[day.value])
+      ? selectedRecurringMap[day.value]
+      : [];
 
-            <Text style={styles.helperText}>
-              {day.value === 6
-                ? "토요일은 오전 10시부 / 오후 1시 30분부를 선택할 수 있어요."
-                : "평일은 오전 10시부 / 오후 4시부 / 오후 7시부를 여러 개 선택할 수 있어요."}
-            </Text>
+    const selectedText =
+      selectedTimeKeys.length === 0
+        ? "선택 안 함"
+        : selectedTimeKeys
+            .map((key) => {
+              const option = TIME_OPTIONS_BY_WEEKDAY[day.value].find(
+                (item) => item.value === key
+              );
+              return option?.label;
+            })
+            .filter(Boolean)
+            .join(", ");
 
-            <View style={styles.chipGroup}>
-              <Pressable
-                style={[
-                  styles.choiceChip,
-                  styles.clearChip,
-                  selectedTimeKeys.length === 0 && styles.choiceChipActive,
-                ]}
-                onPress={() => clearWeekdayTime(day.value)}
-              >
-                <Text
-                  style={[
-                    styles.choiceChipText,
-                    selectedTimeKeys.length === 0 &&
-                      styles.choiceChipTextActive,
-                  ]}
-                >
-                  선택 안 함
-                </Text>
-              </Pressable>
+    return (
+      <Pressable
+        key={day.value}
+        style={[
+          styles.dayRow,
+          index !== WEEKDAY_ROWS.length - 1 && styles.dayRowBorder,
+        ]}
+        onPress={() => setActiveDay(day)}
+      >
+        <View style={styles.dayRowMain}>
+  <Text style={styles.dayRowTitle}>{day.label}</Text>
 
-              {timeOptions.map((option) => {
-                const active = selectedTimeKeys.includes(option.value);
+  <Text
+    numberOfLines={1}
+    style={[
+      styles.dayRowValue,
+      selectedTimeKeys.length > 0 && styles.dayRowValueActive,
+    ]}
+  >
+    {selectedText}
+  </Text>
+</View>
 
-                return (
-                  <Pressable
-                    key={`${day.value}-${option.value}`}
-                    style={[
-                      styles.choiceChip,
-                      active && styles.choiceChipActive,
-                    ]}
-                    onPress={() => toggleWeekdayTime(day.value, option.value)}
-                  >
-                    <Text
-                      style={[
-                        styles.choiceChipText,
-                        active && styles.choiceChipTextActive,
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        );
-      })}
+<Text style={styles.dayRowArrow}>›</Text>
+      </Pressable>
+    );
+  })}
+</View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>월요일 유단자수련</Text>
@@ -332,6 +338,94 @@ export default function RecurringReservationsScreen() {
           {saving ? "저장 중..." : "저장"}
         </Text>
       </Pressable>
+      <Modal
+  visible={!!activeDay}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setActiveDay(null)}
+>
+  <View style={styles.sheetOverlay}>
+    <Pressable
+      style={styles.sheetBackdrop}
+      onPress={() => setActiveDay(null)}
+    />
+
+    <View style={styles.sheetContainer}>
+      <View style={styles.sheetHandle} />
+
+      <View style={styles.sheetHeaderRow}>
+        <Text style={styles.sheetTitle}>
+          {activeDay?.label || "요일"} 정기출석
+        </Text>
+
+        <Pressable onPress={() => setActiveDay(null)}>
+          <Text style={styles.sheetCloseText}>닫기</Text>
+        </Pressable>
+      </View>
+
+      <Text style={styles.sheetDesc}>
+        같은 요일에 여러 시간대를 선택할 수 있어요.
+      </Text>
+
+      {activeDay ? (
+        <>
+          <Pressable
+            style={[
+              styles.sheetOption,
+              !(selectedRecurringMap[activeDay.value]?.length > 0) &&
+                styles.sheetOptionActive,
+            ]}
+            onPress={() => clearWeekdayTime(activeDay.value)}
+          >
+            <Text
+              style={[
+                styles.sheetOptionText,
+                !(selectedRecurringMap[activeDay.value]?.length > 0) &&
+                  styles.sheetOptionTextActive,
+              ]}
+            >
+              선택 안 함
+            </Text>
+          </Pressable>
+
+          {(TIME_OPTIONS_BY_WEEKDAY[activeDay.value] || []).map((option) => {
+            const selectedTimeKeys = Array.isArray(
+              selectedRecurringMap[activeDay.value]
+            )
+              ? selectedRecurringMap[activeDay.value]
+              : [];
+
+            const active = selectedTimeKeys.includes(option.value);
+
+            return (
+              <Pressable
+                key={option.value}
+                style={[
+                  styles.sheetOption,
+                  active && styles.sheetOptionActive,
+                ]}
+                onPress={() =>
+                  toggleWeekdayTime(activeDay.value, option.value)
+                }
+              >
+                <Text
+                  style={[
+                    styles.sheetOptionText,
+                    active && styles.sheetOptionTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+
+                {active ? <Text style={styles.sheetCheckText}>✓</Text> : null}
+              </Pressable>
+            );
+          })}
+        </>
+      ) : null}
+    </View>
+  </View>
+</Modal>
     </ScrollView>
   );
 }
@@ -339,18 +433,19 @@ export default function RecurringReservationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F7F8FA",
+    backgroundColor: "#f6f3ee",
   },
   content: {
-    padding: 20,
-    paddingBottom: 40,
-  },
+  paddingHorizontal: 20,
+  paddingTop: 50,
+  paddingBottom: 90,
+},
   center: {
-    flex: 1,
-    backgroundColor: "#F7F8FA",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  flex: 1,
+  backgroundColor: "#f6f3ee",
+  alignItems: "center",
+  justifyContent: "center",
+},
   loadingText: {
     marginTop: 10,
     fontSize: 14,
@@ -369,38 +464,46 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   summaryCard: {
-    backgroundColor: "#EEF2FF",
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#C7D2FE",
-  },
-  summaryTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#312E81",
-    marginBottom: 6,
-  },
-  summaryText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#3730A3",
-    marginBottom: 4,
-  },
-  summarySubText: {
-    fontSize: 13,
-    color: "#4338CA",
-    lineHeight: 19,
-  },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
+  backgroundColor: "#F8F5EF",
+  borderRadius: 24,
+  padding: 18,
+  marginBottom: 14,
+  borderWidth: 1,
+  borderColor: "#E8E1D6",
+},
+summaryTitle: {
+  fontSize: 17,
+  fontWeight: "800",
+  color: "#1F1A17",
+  marginBottom: 6,
+},
+summaryText: {
+  fontSize: 14,
+  fontWeight: "800",
+  color: "#8C6330",
+  marginBottom: 4,
+},
+summarySubText: {
+  fontSize: 13,
+  color: "#7A7168",
+  lineHeight: 19,
+},
+card: {
+  backgroundColor: "#FFFEFC",
+  borderRadius: 26,
+  paddingHorizontal: 16,
+  paddingVertical: 18,
+  marginBottom: 18,
+  borderWidth: 1,
+  borderColor: "#ECE7DE",
+},
+saveButton: {
+  marginTop: 6,
+  backgroundColor: "#2A2624",
+  borderRadius: 18,
+  paddingVertical: 16,
+  alignItems: "center",
+},
   dayHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -434,7 +537,7 @@ const styles = StyleSheet.create({
   chipGroup: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    gap: 6,
   },
   choiceChip: {
     minHeight: 42,
@@ -484,13 +587,7 @@ const styles = StyleSheet.create({
     color: "#B91C1C",
     lineHeight: 20,
   },
-  saveButton: {
-    marginTop: 6,
-    backgroundColor: "#111827",
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
+
   saveButtonDisabled: {
     opacity: 0.6,
   },
@@ -499,4 +596,160 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#FFFFFF",
   },
+  rowItem: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  paddingVertical: 14,
+  borderBottomWidth: 1,
+  borderBottomColor: "#eee",
+},
+
+rowTitle: {
+  fontSize: 15,
+  fontWeight: "600",
+},
+
+rowValue: {
+  fontSize: 14,
+  color: "#6B7280",
+},
+dayRow: {
+  minHeight: 62,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  paddingVertical: 10,
+},
+
+dayRowMain: {
+  flex: 1,
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 18,
+},
+
+dayRowValue: {
+  flexShrink: 1,
+  fontSize: 14,
+  color: "#9A8F81",
+},
+
+dayRowBorder: {
+  borderBottomWidth: 1,
+  borderBottomColor: "#ECE7DE",
+},
+dayRowTitle: {
+  fontSize: 16,
+  fontWeight: "800",
+  color: "#1F1A17",
+},
+
+dayRowValue: {
+  marginTop: 5,
+  fontSize: 13,
+  lineHeight: 18,
+  color: "#9A8F81",
+},
+
+dayRowValueActive: {
+  color: "#8C6330",
+  fontWeight: "800",
+},
+
+dayRowArrow: {
+  fontSize: 12,
+  fontWeight: "300",
+  color: "#B7ADA1",
+  marginLeft: 10,
+},
+sheetOverlay: {
+  flex: 1,
+  justifyContent: "flex-end",
+  backgroundColor: "rgba(17, 24, 39, 0.25)",
+},
+
+sheetBackdrop: {
+  flex: 1,
+},
+
+sheetContainer: {
+  backgroundColor: "#FFFDF9",
+  borderTopLeftRadius: 28,
+  borderTopRightRadius: 28,
+  paddingTop: 10,
+  paddingHorizontal: 18,
+  paddingBottom: 50,
+  borderWidth: 1,
+  borderColor: "#ECE7DE",
+},
+
+sheetHandle: {
+  alignSelf: "center",
+  width: 44,
+  height: 5,
+  borderRadius: 999,
+  backgroundColor: "#D8D0C5",
+  marginBottom: 14,
+},
+
+sheetHeaderRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 8,
+},
+
+sheetTitle: {
+  fontSize: 22,
+  fontWeight: "800",
+  color: "#1F1A17",
+},
+
+sheetCloseText: {
+  fontSize: 14,
+  fontWeight: "800",
+  color: "#8C6330",
+},
+
+sheetDesc: {
+  fontSize: 13,
+  lineHeight: 19,
+  color: "#7A7168",
+  marginBottom: 14,
+},
+
+sheetOption: {
+  minHeight: 50,
+  borderRadius: 16,
+  paddingHorizontal: 14,
+  marginBottom: 8,
+  backgroundColor: "#F8F5EF",
+  borderWidth: 1,
+  borderColor: "#E8E1D6",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+sheetOptionActive: {
+  backgroundColor: "#F6EFE3",
+  borderColor: "#8C6330",
+},
+
+sheetOptionText: {
+  fontSize: 15,
+  fontWeight: "800",
+  color: "#5F554B",
+},
+
+sheetOptionTextActive: {
+  color: "#8C6330",
+},
+
+sheetCheckText: {
+  fontSize: 18,
+  fontWeight: "900",
+  color: "#8C6330",
+},
 });

@@ -41,3 +41,17 @@ export async function setNoticeHiddenToday(key) {
 export async function getNoticeHiddenToday(key) {
   return AsyncStorage.getItem(key);
 }
+
+const SAVED_LOGIN_ID_KEY = "member_saved_login_id";
+
+export async function setSavedLoginId(loginId) {
+  await AsyncStorage.setItem(SAVED_LOGIN_ID_KEY, loginId);
+}
+
+export async function getSavedLoginId() {
+  return AsyncStorage.getItem(SAVED_LOGIN_ID_KEY);
+}
+
+export async function removeSavedLoginId() {
+  await AsyncStorage.removeItem(SAVED_LOGIN_ID_KEY);
+}

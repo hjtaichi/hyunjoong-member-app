@@ -1,4 +1,17 @@
-import { apiRequest } from './client';
+import client from "./client";
+
+async function apiRequest<T = any>(path: string, options: any = {}): Promise<T> {
+  const method = options.method || "GET";
+  const body = options.body ? JSON.parse(options.body) : undefined;
+
+  const res = await client.request({
+    url: path,
+    method,
+    data: body,
+  });
+
+  return res.data?.data ?? res.data;
+}
 
 export type HomeClassItem = {
   id: string;
@@ -103,4 +116,39 @@ export async function markInquiryAsRead(roomId: string) {
   return apiRequest(`/api/inquiries/${roomId}/read`, {
     method: 'POST',
   });
+}
+
+export async function changeMyPassword(payload: {
+  currentPassword: string;
+  newPassword: string;
+  newPasswordConfirm: string;
+}) {
+  const res = await client.patch("/api/member/me/password", payload);
+  return res.data;
+}
+
+export async function changeMyPhone(phone: string) {
+  const res = await client.patch("/api/member/me/phone", { phone });
+  return res.data;
+}
+
+export async function verifyMyPassword(password: string) {
+  const res = await client.post("/api/member/me/verify-password", {
+    password,
+  });
+
+  return res.data;
+}
+
+export async function getMyProfile() {
+  const res = await client.get("/api/member/me/profile");
+  return res.data;
+}
+
+export async function updateMyProfileAvatar(profileAvatar: string) {
+  const res = await client.patch("/api/member/me/profile-avatar", {
+    profileAvatar,
+  });
+
+  return res.data;
 }

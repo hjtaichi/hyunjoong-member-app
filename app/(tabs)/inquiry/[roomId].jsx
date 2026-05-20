@@ -1,8 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Alert,
   Keyboard,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   RefreshControl,
@@ -17,7 +24,7 @@ import {
   getMemberInquiryDetail,
   sendMemberInquiryMessage,
 } from "../../../src/api/memberInquiryDetail";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 
 
 function formatDateTime(value) {
@@ -73,6 +80,8 @@ export default function InquiryDetailScreen() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const scrollRef = useRef(null);
+ 
 
   const loadDetail = useCallback(
     async ({ silent = false } = {}) => {
@@ -99,16 +108,15 @@ export default function InquiryDetailScreen() {
   }, [loadDetail]);
 
   useEffect(() => {
-  const showEvent =
-    Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-  const hideEvent =
-    Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-
-  const showSub = Keyboard.addListener(showEvent, (e) => {
+  const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
     setKeyboardHeight(e.endCoordinates?.height || 0);
+
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: false });
+    }, 100);
   });
 
-  const hideSub = Keyboard.addListener(hideEvent, () => {
+  const hideSub = Keyboard.addListener("keyboardDidHide", () => {
     setKeyboardHeight(0);
   });
 
@@ -118,6 +126,7 @@ export default function InquiryDetailScreen() {
   };
 }, []);
 
+  
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadDetail({ silent: true });
@@ -144,6 +153,10 @@ export default function InquiryDetailScreen() {
     await sendMemberInquiryMessage(token, roomId, trimmed);
     setInput("");
     await loadDetail({ silent: true });
+    setTimeout(() => {
+  scrollRef.current?.scrollToEnd({ animated: true });
+}, 100);
+
   } catch (error) {
     Alert.alert("오류", error.message || "메시지 전송에 실패했습니다.");
   } finally {
@@ -163,19 +176,32 @@ export default function InquiryDetailScreen() {
   return (
   <>
     <Stack.Screen
-      options={{
-        title: "1:1 문의",
-        headerRight: () => (
-          <View style={styles.headerStatusBadge}>
-            <Text style={styles.headerStatusBadgeText}>
-              {roomStatusLabel}
-            </Text>
-          </View>
-        ),
-      }}
-    />
+  options={{
+    title: "1:1 문의",
+    headerLeft: () => (
+      <Pressable
+        onPress={() => router.replace("/(tabs)/inquiry")}
+        style={{ paddingHorizontal: 8 }}
+      >
+        <Text style={{ fontSize: 24 }}>‹</Text>
+      </Pressable>
+    ),
+    headerRight: () => (
+      <View style={styles.headerStatusBadge}>
+        <Text style={styles.headerStatusBadgeText}>
+          {roomStatusLabel}
+        </Text>
+      </View>
+    ),
+  }}
+/>
 
-    <View style={styles.keyboard}>
+    <KeyboardAvoidingView
+  style={styles.keyboard}
+  behavior={Platform.OS === "ios" ? "padding" : "height"}
+  keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+>
+  
   <View style={styles.container}>
         <View style={styles.headerBlock}>
           <View style={styles.infoCard}>
@@ -190,13 +216,15 @@ export default function InquiryDetailScreen() {
         </View>
 
         <ScrollView
-          style={styles.messageArea}
-          contentContainerStyle={styles.messageContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          keyboardShouldPersistTaps="handled"
-        >
+  ref={scrollRef}
+  style={styles.messageArea}
+  contentContainerStyle={styles.messageContent}
+  refreshControl={
+    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+  }
+  keyboardShouldPersistTaps="handled"
+>
+  
           {sortedMessages.length === 0 ? (
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyText}>
@@ -251,13 +279,13 @@ export default function InquiryDetailScreen() {
               );
             })
           )}
-        </ScrollView>
+        </ScrollView> 
 
         <View
   style={[
     styles.inputBar,
     {
-      bottom: keyboardHeight > 0 ? keyboardHeight + 45: 0
+      bottom: keyboardHeight > 0 ? keyboardHeight - 220 : 0,
     },
   ]}
 >
@@ -283,7 +311,7 @@ export default function InquiryDetailScreen() {
           </Pressable>
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   </>
 );
 }
@@ -360,7 +388,7 @@ messageArea: {
  messageContent: {
   paddingHorizontal: 20,
   paddingTop: 14,
-  paddingBottom: 120,
+  paddingBottom: 170,
   gap: 12,
 },
   emptyText: {

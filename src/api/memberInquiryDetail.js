@@ -11,7 +11,7 @@ async function parseJsonSafe(res) {
 
 export async function getMemberInquiryDetail(token, roomId) {
   const res = await fetch(
-    `${API_BASE_URL}/api/member/inquiries/${roomId}/messages`,
+    `${API_BASE_URL}/api/member/me/inquiries/${roomId}`,
     {
       method: "GET",
       headers: {
@@ -27,12 +27,12 @@ export async function getMemberInquiryDetail(token, roomId) {
     throw new Error(data?.message || "문의 상세를 불러오지 못했습니다.");
   }
 
-  return data;
+  return data.data;
 }
 
 export async function sendMemberInquiryMessage(token, roomId, message) {
   const res = await fetch(
-    `${API_BASE_URL}/api/member/inquiries/${roomId}/messages`,
+    `${API_BASE_URL}/api/member/me/inquiries/${roomId}/messages`,
     {
       method: "POST",
       headers: {
@@ -49,26 +49,9 @@ export async function sendMemberInquiryMessage(token, roomId, message) {
     throw new Error(data?.message || "메시지 전송에 실패했습니다.");
   }
 
-  return data;
+  return data.data || data;
 }
 
 export async function markMemberInquiryRead(token, roomId) {
-  const res = await fetch(
-    `${API_BASE_URL}/api/member/inquiries/${roomId}/read`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  const data = await parseJsonSafe(res);
-
-  if (!res.ok) {
-    throw new Error(data?.message || "읽음 처리에 실패했습니다.");
-  }
-
-  return data;
+  return { ok: true };
 }

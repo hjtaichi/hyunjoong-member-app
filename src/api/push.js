@@ -1,20 +1,12 @@
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+// member-app/src/api/push.js
+
+import { apiRequest } from "./request";
 
 export async function savePushToken(pushToken, accessToken) {
-  const res = await fetch(`${API_BASE_URL}/api/member/push-token`, {
+  const data = await apiRequest("/api/member/push-token", accessToken, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
     body: JSON.stringify({ token: pushToken }),
   });
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data?.message || "푸시 토큰 저장 실패");
-  }
-
-  return data;
+  return data.data || data;
 }
