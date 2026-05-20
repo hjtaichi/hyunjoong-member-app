@@ -26,7 +26,7 @@
     },
     "web": {
   "output": "static",
-  "favicon": "./assets/images/favicon.png",
+  "favicon": "./public/icon.png",
   "name": "현중태극권",
   "shortName": "현중태극권",
   "backgroundColor": "#F6F2EC",
