@@ -95,7 +95,11 @@ export default function InquiryScreen() {
 
   const loadInquiries = useCallback(
     async ({ silent = false } = {}) => {
-      if (!token) return;
+      if (!token) {
+  setLoading(false);
+  setRefreshing(false);
+  return;
+}
 
       try {
         if (!silent) setLoading(true);

@@ -4,7 +4,7 @@
     "slug": "member-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/app-icon.png",
     "scheme": "memberapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -25,9 +25,14 @@
       "googleServicesFile": "./google-services.json"
     },
     "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
+  "output": "static",
+  "favicon": "./assets/images/favicon.png",
+  "name": "현중태극권",
+  "shortName": "현중태극권",
+  "backgroundColor": "#F6F2EC",
+  "themeColor": "#2B221D",
+  "display": "standalone"
+},
     "plugins": [
       "expo-router",
       [
