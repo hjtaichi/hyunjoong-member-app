@@ -175,9 +175,13 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 const [fontsLoaded] = useFonts({
-    ChosunCentennial: require("../assets/fonts/ChosunCentennial.ttf"),
-  });
+  ChosunCentennial: require("../assets/fonts/ChosunCentennial.ttf"),
 
+  PretendardRegular: require("../assets/fonts/Pretendard-Regular.otf"),
+  PretendardMedium: require("../assets/fonts/Pretendard-Medium.otf"),
+  PretendardSemiBold: require("../assets/fonts/Pretendard-SemiBold.otf"),
+  PretendardBold: require("../assets/fonts/Pretendard-Bold.otf"),
+});
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();

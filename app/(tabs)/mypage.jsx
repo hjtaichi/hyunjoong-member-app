@@ -8,6 +8,7 @@ import {
   LayoutAnimation,
   Linking,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -172,24 +173,33 @@ setHomeData(result);
     loadProfile({ silent: true });
   }, [loadProfile]);
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
+  try {
+    if (Platform.OS === "web") {
+      const ok = window.confirm("로그아웃 하시겠습니까?");
+      if (!ok) return;
+
+      await logout();
+      router.replace("/login");
+      return;
+    }
+
     Alert.alert("로그아웃", "로그아웃 하시겠습니까?", [
       { text: "취소", style: "cancel" },
       {
         text: "로그아웃",
         style: "destructive",
         onPress: async () => {
-          try {
-            await logout();
-            router.replace("/login");
-          } catch (error) {
-            console.error("logout error:", error);
-            Alert.alert("오류", "로그아웃 중 문제가 발생했습니다.");
-          }
+          await logout();
+          router.replace("/login");
         },
       },
     ]);
-  }, [logout]);
+  } catch (error) {
+    console.error("logout error:", error);
+    Alert.alert("오류", "로그아웃 중 문제가 발생했습니다.");
+  }
+}, [logout]);
 
   function onlyNumbers(value) {
   return String(value || "").replace(/[^0-9]/g, "");
@@ -1277,7 +1287,7 @@ function MenuDivider() {
 </ScrollView>
   );
 }
-
+const isWeb = Platform.OS === "web";
 const styles = StyleSheet.create({
   screen: {
   flex: 1,
@@ -1286,7 +1296,7 @@ const styles = StyleSheet.create({
 content: {
   paddingHorizontal: 16,
   paddingTop: 42,
-  paddingBottom: 10,
+  paddingBottom: isWeb ? 130 : 120,
   gap: 14,
 },
 center: {
@@ -1411,6 +1421,8 @@ center: {
   },
   logoutButton: {
     marginTop: 2,
+    marginBottom: 20,
+    zIndex: 5,
     minHeight: 52,
     borderRadius: 18,
     backgroundColor: "#2A2624",

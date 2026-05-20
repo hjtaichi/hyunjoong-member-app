@@ -1675,6 +1675,12 @@ const colors = {
   danger: "#C46A5A",
 };
 const isWeb = Platform.OS === "web";
+const fonts = {
+  regular: "PretendardRegular",
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+};
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -1684,7 +1690,7 @@ const styles = StyleSheet.create({
   content: {
   paddingHorizontal: isWeb ? 12 : 16,
   paddingTop: isWeb ? 28 : 48,
-  paddingBottom: isWeb ? 88 : 24,
+  paddingBottom: isWeb ? 30 : 18,
   gap: isWeb ? 12 : 15,
   width: "100%",
   maxWidth: 430,
@@ -1732,16 +1738,18 @@ homeHeaderTextBlock: {
 
   homeGreeting: {
   fontSize: isWeb ? 13 : 14,
-  fontWeight: "700",
+  fontFamily: fonts.semiBold,
   lineHeight: isWeb ? 18 : 20,
   color: colors.textSub,
   marginTop: 10,
   marginBottom: -3,
 },
 
-  homeName: {
-  fontSize: isWeb ? 28 : 34,
-  fontWeight: "700",
+homeName: {
+  fontSize: isWeb ? 30 : 36,
+  fontFamily: fonts.bold,
+  letterSpacing: -1.2,
+  color: "#161311",
   marginBottom: -5,
 },
 
@@ -1764,10 +1772,10 @@ homeHeaderTextBlock: {
 
 
   homeBadgeText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: colors.warmBrown,
-  },
+  fontSize: 11,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+},
 
   homeBadgeYudanja: {
     backgroundColor: colors.warmBrown,
@@ -1805,31 +1813,32 @@ todayTrainingHeader: {
 todayTrainingLabel: {
   marginTop: 3,
   fontSize: isWeb ? 16 : 17,
-  fontWeight: "800",
+  fontFamily: fonts.bold,
   lineHeight: 22,
   color: colors.textMain,
 },
 
-  todayTrainingMore: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: colors.textSub,
-  },
+todayTrainingMore: {
+  fontSize: 12,
+  fontFamily: fonts.semiBold,
+  color: colors.textSub,
+},
 
-  todayTrainingTitle: {
-  fontSize: isWeb ? 24 : 27,
-  fontWeight: "700",
-  lineHeight: isWeb ? 28 : 30,
+todayTrainingTitle: {
+  fontSize: isWeb ? 25 : 28,
+  fontFamily: fonts.bold,
+  letterSpacing: -0.8,
+  lineHeight: isWeb ? 30 : 33,
   color: colors.textMain,
-  marginBottom: 6,
+  marginBottom: 5,
   maxWidth: "76%",
   zIndex: 5,
 },
 
 todayTrainingStep: {
   fontSize: isWeb ? 15 : 17,
-  fontWeight: "600",
-  lineHeight: isWeb ? 19 : 21,
+  fontFamily: fonts.semiBold,
+  lineHeight: isWeb ? 20 : 22,
   color: colors.warmBrown,
   marginBottom: isWeb ? 28 : 40,
   maxWidth: "76%",
@@ -1848,7 +1857,7 @@ todayTrainingButton: {
 
 todayTrainingButtonText: {
   fontSize: isWeb ? 15 : 17,
-  fontWeight: "800",
+  fontFamily: fonts.bold,
   color: colors.white,
 },
 
@@ -1875,17 +1884,18 @@ card: {
   },
 
   miniCalendarTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    lineHeight: 24,
-    color: colors.textMain,
-  },
+  fontSize: 17,
+  fontFamily: fonts.bold,
+  letterSpacing: -0.4,
+  lineHeight: 24,
+  color: colors.textMain,
+},
 
-  miniCalendarMore: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: colors.textSub,
-  },
+miniCalendarMore: {
+  fontSize: 11,
+  fontFamily: fonts.semiBold,
+  color: colors.textSub,
+},
 
   weekHeader: {
     flexDirection: "row",
@@ -1894,12 +1904,12 @@ card: {
   },
 
   weekHeaderText: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#B7AAA2",
-  },
+  flex: 1,
+  textAlign: "center",
+  fontSize: 13,
+  fontFamily: fonts.bold,
+  color: "#B7AAA2",
+},
 
   weekHeaderTextSunday: {
     color: "#C45A2A",
@@ -1935,11 +1945,11 @@ card: {
   },
 
   dayNumber: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: colors.textMain,
-    zIndex: 5,
-  },
+  fontSize: 14,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+  zIndex: 5,
+},
 
   dayNumberSelected: {
     color: "#325B7A",
@@ -1995,6 +2005,7 @@ card: {
     borderColor: colors.border,
     paddingHorizontal: 18,
     paddingVertical: 16,
+    marginBottom: -8,
   },
 
   noticeSummaryHeader: {
@@ -2005,16 +2016,16 @@ card: {
   },
 
   noticeSummaryTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: colors.textMain,
-  },
+  fontSize: 17,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
 
-  noticeSummaryMore: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: colors.textSub,
-  },
+noticeSummaryMore: {
+  fontSize: 12,
+  fontFamily: fonts.bold,
+  color: colors.textSub,
+},
 
   noticeSummaryItem: {
     flexDirection: "row",
@@ -2030,18 +2041,18 @@ card: {
   },
 
   noticeSummaryText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: "700",
-    color: colors.textMain,
-  },
+  flex: 1,
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
 
-  noticeSummaryDate: {
-    marginLeft: 10,
-    fontSize: 12,
-    fontWeight: "700",
-    color: colors.textSub,
-  },
+noticeSummaryDate: {
+  marginLeft: 10,
+  fontSize: 12,
+  fontFamily: fonts.semiBold,
+  color: colors.textSub,
+},
 
   noticeSummaryEmpty: {
     fontSize: 13,
@@ -2418,18 +2429,6 @@ card: {
   height: 90,
 },
 
-homeNoticeBell: {
-  position: "absolute",
-  top: 12,
-  right: 8,
-  width: 34,
-  height: 34,
-  borderRadius: 17,
-  alignItems: "center",
-  justifyContent: "center",
-  backgroundColor: "rgba(255,255,255,0.65)",
-  zIndex: 10,
-},
 calendarLegend: {
   flexDirection: "row",
   justifyContent: "center",
@@ -2460,7 +2459,7 @@ legendDotReserved: {
 
 legendText: {
   fontSize: 11,
-  fontWeight: "600",
+  fontFamily: fonts.medium,
   color: colors.textSub,
 },
 todaySilhouette: {
@@ -2500,13 +2499,13 @@ dayStampReserved: {
 
 dayStampTextPresent: {
   fontSize: 14,
-  fontWeight: "700",
+  fontFamily: fonts.bold,
   color: colors.white,
 },
 
 dayStampTextReserved: {
   fontSize: 14,
-  fontWeight: "700",
+  fontFamily: fonts.bold,
   color: "#8A6B44",
 },
 moreLinkRow: {
@@ -2523,11 +2522,11 @@ moreLinkArrow: {
 },
 homeNoticeBell: {
   position: "absolute",
-  top: -5,
-  right: -10,
-  width: 38,
-  height: 38,
-  borderRadius: 17,
+  top: -18,
+  right: -1,
+  width: 28,
+  height: 28,
+  borderRadius: 14,
   alignItems: "center",
   justifyContent: "center",
   backgroundColor: "transparent",
@@ -2535,30 +2534,32 @@ homeNoticeBell: {
 },
 
 homeNoticeBellIcon: {
-  width: 24,
-  height: 24,
+  width: 22,
+  height: 22,
   opacity: 0.9,
 },
 
 homeNoticeDot: {
   position: "absolute",
-  top: 9,
-  right: 11,
-  width: 8,
-  height: 8,
+  top: 5,
+  right: 6,
+  width: 6,
+  height: 6,
   borderRadius: 999,
   backgroundColor: "#D9534F",
 },
 todayTrainingCardYudanja: {
-  borderWidth: 0,
+  borderWidth: 1,
+  borderColor: "rgba(214, 168, 78, 0.75)",
+  backgroundColor: "#FFFDF7",
   shadowColor: "#D7A63D",
-  shadowOpacity: 0.2,
-  shadowRadius: 20,
+  shadowOpacity: 0.12,
+  shadowRadius: 14,
   shadowOffset: {
     width: 0,
-    height: 8,
+    height: 5,
   },
-  elevation: 5,
+  elevation: 3,
 },
 
 todayTrainingStepYudanja: {
@@ -2568,15 +2569,15 @@ todayTrainingStepYudanja: {
 todayTrainingButtonYudanja: {
   backgroundColor: "#25211C",
   borderWidth: 1,
-  borderColor: "#D6A84E",
+  borderColor: "rgba(214, 168, 78, 0.75)",
   shadowColor: "#D6A84E",
-  shadowOpacity: 0.35,
-  shadowRadius: 10,
+  shadowOpacity: 0.18,
+  shadowRadius: 7,
   shadowOffset: {
     width: 0,
-    height: 4,
+    height: 3,
   },
-  elevation: 5,
+  elevation: 3,
 },
 
 todayTrainingButtonTextYudanja: {
@@ -2584,29 +2585,19 @@ todayTrainingButtonTextYudanja: {
 },
 
 todaySilhouetteYudanja: {
-  opacity: 0.22,
+  opacity: 0.12,
+  right: -28,
+  top: 42,
+  width: 155,
+  height: 125,
 },
 
 yudanjaGoldGlow: {
-  position: "absolute",
-  left: -20,
-  right: -20,
-  bottom: -32,
-  height: 95,
-  backgroundColor: "rgba(231, 195, 106, 0.13)",
-  borderTopLeftRadius: 999,
-  borderTopRightRadius: 999,
-  zIndex: 1,
+  display: "none",
 },
 
 yudanjaFlowLine: {
-  position: "absolute",
-  left: 16,
-  right: 16,
-  bottom: 68,
-  height: 1.2,
-  backgroundColor: "rgba(214, 168, 78, 0.5)",
-  zIndex: 3,
+  display: "none",
 },
 homeProfileWrap: {
   width: 118,
@@ -2676,22 +2667,14 @@ yudanjaGoldBorderOuter: {
   right: 0,
   top: 0,
   bottom: 0,
-  borderRadius: 22,
-  borderWidth: 1.2,
-  borderColor: "rgba(222, 177, 83, 0.75)",
+  borderRadius: isWeb ? 20 : 22,
+  borderWidth: 1,
+  borderColor: "rgba(214, 168, 78, 0.42)",
   zIndex: 2,
 },
 
 yudanjaGoldBorderInner: {
-  position: "absolute",
-  left: 3,
-  right: 3,
-  top: 3,
-  bottom: 3,
-  borderRadius: 19,
-  borderWidth: 0.7,
-  borderColor: "rgba(255, 236, 180, 0.55)",
-  zIndex: 2,
+  display: "none",
 },
 
 yudanjaSoftLight: {
@@ -2706,13 +2689,11 @@ yudanjaSoftLight: {
 },
 todayYudanjaBgImage: {
   position: "absolute",
-  left: -15,
-  right: -7,
-  top: 3,
-  bottom: -8,
-  width: "123%",
-  height: "120%",
-  opacity: 0.5,
+  right: -35,
+  bottom: -28,
+  width: 180,
+  height: 130,
+  opacity: 0.08,
   zIndex: 0,
 },
 });
