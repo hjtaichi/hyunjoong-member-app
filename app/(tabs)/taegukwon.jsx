@@ -151,10 +151,13 @@ const scrollRef = useRef(null);
       try {
         if (!silent) setLoading(true);
 
-        const [taegukwonResult] = await Promise.all([
-  getMemberTaegukwon(token),
-  loadGongbeopRecord(),
-]);
+        const taegukwonResult = await getMemberTaegukwon(token);
+
+try {
+  await loadGongbeopRecord();
+} catch (gongbeopError) {
+  console.log("공법 기록 불러오기 실패:", gongbeopError);
+}
 
 const payload = taegukwonResult?.data ? taegukwonResult.data : taegukwonResult;
         console.log("TAEGUKWON payload:", payload);

@@ -15,30 +15,38 @@ async function parseJsonSafe(res) {
 export async function apiFetch(path, options = {}, token) {
   const url = `${API_BASE_URL}/api${path}`;
 
-  const res = await fetch(url, {
-    ...options,
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    // ✅ 웹앱 캐시 방지
-    cache: "no-store",
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers || {}),
+      },
+    });
 
-    headers: {
-      "Content-Type": "application/json",
-      "ngrok-skip-browser-warning": "true",
+    const data = await parseJsonSafe(res);
 
-      // ✅ 웹 캐시 방지
-      "Cache-Control": "no-cache",
-      Pragma: "no-cache",
+    if (!res.ok) {
+      throw new Error(data?.message || "요청 실패");
+    }
 
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {}),
-    },
-  });
+    return data;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.");
+    }
 
-  const data = await parseJsonSafe(res);
-
-  if (!res.ok) {
-    throw new Error(data?.message || "요청 실패");
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return data;
 }
