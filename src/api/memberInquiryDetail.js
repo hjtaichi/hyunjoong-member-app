@@ -2,6 +2,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 async function parseJsonSafe(res) {
   const text = await res.text();
+
   try {
     return text ? JSON.parse(text) : {};
   } catch {
@@ -11,13 +12,17 @@ async function parseJsonSafe(res) {
 
 export async function getMemberInquiryDetail(token, roomId) {
   const res = await fetch(
-    `${API_BASE_URL}/api/member/me/inquiries/${roomId}`,
+    `${API_BASE_URL}/api/member/me/inquiries/${roomId}?t=${Date.now()}`,
     {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
       },
+      cache: "no-store",
     }
   );
 
@@ -27,7 +32,7 @@ export async function getMemberInquiryDetail(token, roomId) {
     throw new Error(data?.message || "문의 상세를 불러오지 못했습니다.");
   }
 
-  return data.data;
+  return data.data || data;
 }
 
 export async function sendMemberInquiryMessage(token, roomId, message) {
@@ -38,6 +43,7 @@ export async function sendMemberInquiryMessage(token, roomId, message) {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
       },
       body: JSON.stringify({ message }),
     }

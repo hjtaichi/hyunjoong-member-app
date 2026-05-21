@@ -10,11 +10,19 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
+import { VideoView, useVideoPlayer } from "expo-video";
 
 export default function CoachingDetailScreen() {
   const params = useLocalSearchParams();
   const { token } = useAuth();
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+const videoUrl = params.videoUrl
+  ? `${API_BASE_URL}${params.videoUrl}`
+  : "";
+
+const player = useVideoPlayer(videoUrl, (player) => {
+  player.loop = false;
+});
 
 const uploadedDate = params.createdAt
   ? new Date(String(params.createdAt)).toLocaleDateString("ko-KR")
@@ -104,16 +112,28 @@ loadComments();
         </Pressable>
 
         <View style={styles.videoBox}>
-          <Text style={styles.videoFileName}>
-  {params.originalName || "training-video.mp4"}
-</Text>
-          <Image
-            source={require("../assets/images/taichi-silhouette.png")}
-            style={styles.videoImage}
-            resizeMode="contain"
-          />
-          <Text style={styles.playIcon}>▶</Text>
-        </View>
+  {videoUrl ? (
+    <VideoView
+      style={styles.video}
+      player={player}
+      nativeControls
+      allowsFullscreen
+      allowsPictureInPicture
+    />
+  ) : (
+    <>
+      <Text style={styles.videoFileName}>
+        {params.originalName || "training-video.mp4"}
+      </Text>
+      <Image
+        source={require("../assets/images/taichi-silhouette.png")}
+        style={styles.videoImage}
+        resizeMode="contain"
+      />
+      <Text style={styles.playIcon}>▶</Text>
+    </>
+  )}
+</View>
 
         <Text style={styles.title}>
   {(params.curriculum || "수련")}{" "}
@@ -439,5 +459,10 @@ emptyCommentText: {
   fontWeight: "700",
   color: "#9B8D84",
   textAlign: "center",
+},
+video: {
+  width: "100%",
+  height: "100%",
+  backgroundColor: "#000000",
 },
 });

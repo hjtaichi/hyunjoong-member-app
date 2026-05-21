@@ -130,10 +130,15 @@ useEffect(() => {
   key={video.id}
   video={video}
   title={video.title || video.curriculum || "수련 영상"}
-  move={video.movement || "세부 동작 미선택"}
+  move={
+    video.curriculum
+      ? `${video.trainingType || "수련"} · ${video.curriculum}`
+      : "수련 항목 미선택"
+  }
   date={new Date(video.createdAt).toLocaleDateString("ko-KR")}
-  count={0}
+  count={video.commentCount || 0}
   durationText={formatDuration(video.durationSeconds)}
+  apiBaseUrl={API_BASE_URL}
   onOpenMenu={() => {
     setSelectedVideo(video);
     setMenuVisible(true);
@@ -172,7 +177,16 @@ useEffect(() => {
   );
 }
 
-function VideoItem({ video, title, move, date, count, durationText, onOpenMenu }) {
+function VideoItem({
+  video,
+  title,
+  move,
+  date,
+  count,
+  durationText,
+  apiBaseUrl,
+  onOpenMenu,
+}) {
   return (
     <Pressable
       style={styles.videoCard}
@@ -203,11 +217,26 @@ function VideoItem({ video, title, move, date, count, durationText, onOpenMenu }
       </Pressable>
 
       <View style={styles.thumbnail}>
-        <Text style={styles.playIcon}>▶</Text>
-        <View style={styles.durationBadge}>
-          <Text style={styles.durationText}>{durationText || "00:00"}</Text>
-        </View>
-      </View>
+  {video.thumbnailUrl ? (
+    <Image
+      source={{ uri: `${apiBaseUrl}${video.thumbnailUrl}` }}
+      style={styles.thumbnailImage}
+      resizeMode="cover"
+    />
+  ) : (
+    <Image
+      source={require("../assets/images/taichi-silhouette.png")}
+      style={styles.thumbnailFallback}
+      resizeMode="contain"
+    />
+  )}
+
+  <Text style={styles.playIcon}>▶</Text>
+
+  <View style={styles.durationBadge}>
+    <Text style={styles.durationText}>{durationText || "00:00"}</Text>
+  </View>
+</View>
 
       <View style={styles.videoInfo}>
         <Text style={styles.videoTitle}>{title}</Text>
@@ -337,7 +366,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
+thumbnailImage: {
+  width: "100%",
+  height: "100%",
+},
 
+thumbnailFallback: {
+  width: "74%",
+  height: "74%",
+  opacity: 0.35,
+},
   playIcon: {
     fontSize: 26,
     color: "#FFFFFF",

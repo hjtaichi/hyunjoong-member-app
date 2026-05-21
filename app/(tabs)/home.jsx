@@ -341,9 +341,37 @@ const isPausedMember = memberStatus === "paused";
   const [activeNotice, setActiveNotice] = useState(null);
   const [hiddenNoticeIds, setHiddenNoticeIds] = useState([]);
   const [hasUnreadNotice, setHasUnreadNotice] = useState(false);
+  const [memberNotifications, setMemberNotifications] = useState([]);
 
   const yudanjaEmblemFrame = require("../../assets/images/yudanja-emblem-frame.png");
   const yudanjaProfileBg = require("../../assets/images/yudanja-profile-card-bg.png");
+
+const loadMemberNotifications = useCallback(async () => {
+  if (!token) return;
+
+  try {
+    const response = await fetch(
+      `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/me/notifications?t=${Date.now()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      }
+    );
+
+    const result = await response.json();
+
+    if (response.ok) {
+      setMemberNotifications(result.data || []);
+    } else {
+      console.log("회원 알림 조회 실패:", result);
+    }
+  } catch (error) {
+    console.log("회원 알림 조회 실패:", error);
+  }
+}, [token]);
+
 
   const refreshScreenData = useCallback(async () => {
   if (!token) {
@@ -388,6 +416,7 @@ if (!silent && !homeData && !calendarData) {
   setLoading(true);
 }
         await refreshScreenData();
+        await loadMemberNotifications();
       } catch (error) {
         const errorMessage =
   error?.message ||
@@ -413,7 +442,7 @@ if (
         setRefreshing(false);
       }
     },
-    [token, logout, refreshScreenData, isPausedMember]
+[token, logout, refreshScreenData, loadMemberNotifications, isPausedMember]
     
   );
   
@@ -424,6 +453,7 @@ if (
   useFocusEffect(
     useCallback(() => {
       loadAll({ silent: true });
+      loadMemberNotifications();
     }, [loadAll])
   );
 
@@ -431,6 +461,7 @@ if (
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadAll({ silent: true });
+    loadMemberNotifications();
   }, [loadAll]);
 
   const moveMonth = useCallback(
@@ -552,6 +583,12 @@ const profileImageSource = avatarImages[profileAvatarKey] || avatarImages.avatar
   const todaySchedules = useMemo(() => {
     return calendarData?.scheduleByDate?.[todayString] || [];
   }, [calendarData, todayString]);
+
+  const unreadMemberNotificationCount = memberNotifications.filter(
+  (item) => !item.isRead
+).length;
+
+const hasUnreadMemberNotification = unreadMemberNotificationCount > 0;
 
   const todayReservedCount = useMemo(() => {
     return todaySchedules.filter(
@@ -1161,7 +1198,7 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
 
 <Pressable
   style={styles.homeNoticeBell}
-  onPress={() => router.push("/(tabs)/inquiry")}
+  onPress={() => router.push("/member-notifications")}
 >
 <Image
   source={require("../../assets/images/bell-line.png")}
@@ -1169,7 +1206,9 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
   resizeMode="contain"
 />
 
-{hasUnreadNotice ? <View style={styles.homeNoticeDot} /> : null}
+{hasUnreadNotice || hasUnreadMemberNotification ? (
+  <View style={styles.homeNoticeDot} />
+) : null}
 </Pressable>
 
 <LinearGradient

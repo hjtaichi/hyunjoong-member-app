@@ -16,14 +16,33 @@ import { useAuth } from "../src/contexts/AuthContext";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 export default function CoachingUploadScreen() {
-  const [curriculum, setCurriculum] = useState("현중태극권 29식");
-  const [movement, setMovement] = useState("");
+  const [trainingType, setTrainingType] = useState("투로");
+  const [curriculum, setCurriculum] = useState("");
   const [title, setTitle] = useState("");
   const [question, setQuestion] = useState("");
   const [pickerType, setPickerType] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const { token } = useAuth();
   const [videoDuration, setVideoDuration] = useState(null);
+  const TRAINING_OPTIONS = {
+  공법: [
+    "일심양의",
+    "요부전사",
+    "두요",
+    "오행전사",
+    "기타",
+  ],
+
+  투로: [
+    "현중태극권 29식",
+    "현중태극선 29식",
+    "현중태극검 52식",
+    "현중태극권 대가1로 79식",
+    "현중태극단도",
+    "현중용형편간",
+    "기타",
+  ],
+};
 
   function formatDuration(seconds) {
   if (!seconds && seconds !== 0) return "00:00";
@@ -45,6 +64,47 @@ function readVideoDuration(file) {
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(url);
       resolve(Math.floor(video.duration || 0));
+    };
+
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+
+    video.src = url;
+  });
+}
+
+function captureVideoThumbnail(file) {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    const canvas = document.createElement("canvas");
+    const url = URL.createObjectURL(file);
+
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+
+    video.onloadedmetadata = () => {
+      video.currentTime = Math.min(1, video.duration || 1);
+    };
+
+    video.onseeked = () => {
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 360;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      URL.revokeObjectURL(url);
+
+      canvas.toBlob(
+        (blob) => {
+          resolve(blob);
+        },
+        "image/jpeg",
+        0.82
+      );
     };
 
     video.onerror = () => {
@@ -91,17 +151,38 @@ function handlePickFile() {
 
   async function handleUpload() {
   try {
+    console.log("🔥 업로드 버튼 클릭", {
+      selectedFile,
+      trainingType,
+      curriculum,
+      title,
+      question,
+      token: !!token,
+    });
+
     if (!selectedFile) {
       Alert.alert("안내", "업로드할 영상을 먼저 선택해주세요.");
       return;
     }
-
+if (!curriculum) {
+  Alert.alert("안내", "수련 항목을 선택해주세요.");
+  return;
+}
     const formData = new FormData();
 
     formData.append("video", selectedFile);
+    const thumbnailBlob = await captureVideoThumbnail(selectedFile);
 
+if (thumbnailBlob) {
+  formData.append(
+    "thumbnail",
+    thumbnailBlob,
+    `thumbnail-${Date.now()}.jpg`
+  );
+}
+
+    formData.append("trainingType", trainingType);
     formData.append("curriculum", curriculum);
-    formData.append("movement", movement);
     formData.append("title", title);
     formData.append("question", question);
     const durationForUpload =
@@ -114,8 +195,9 @@ formData.append("durationSeconds", String(durationForUpload));
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
-        },
+  Authorization: `Bearer ${token}`,
+  "ngrok-skip-browser-warning": "true",
+},
         body: formData,
       }
     );
@@ -128,21 +210,32 @@ formData.append("durationSeconds", String(durationForUpload));
 
     console.log("업로드 성공:", result);
 
-router.push({
-  pathname: "/coaching-upload-complete",
-  params: {
-    curriculum,
-    movement,
-    title,
-    question,
-    originalName: result?.data?.originalName || selectedFile?.name || "",
-    videoUrl: result?.data?.videoUrl || "",
-    size: String(result?.data?.size || selectedFile?.size || ""),
-    uploadedAt: new Date().toISOString(),
-    durationSeconds: String(result?.data?.durationSeconds || durationForUpload || 0),
-durationText: formatDuration(result?.data?.durationSeconds || durationForUpload || 0),
-  },
-});
+const uploadedVideo = result?.data || {};
+
+const completeParams = {
+  curriculum: String(curriculum || ""),
+  movement: String(curriculum || ""),
+  trainingType: String(trainingType || ""),
+  title: String(title || ""),
+  question: String(question || ""),
+  originalName: String(uploadedVideo.originalName || selectedFile?.name || ""),
+  videoUrl: String(uploadedVideo.videoUrl || ""),
+  size: String(uploadedVideo.size || selectedFile?.size || ""),
+  uploadedAt: String(uploadedVideo.createdAt || new Date().toISOString()),
+  durationSeconds: String(uploadedVideo.durationSeconds || durationForUpload || 0),
+  durationText: String(
+    formatDuration(uploadedVideo.durationSeconds || durationForUpload || 0)
+  ),
+};
+
+console.log("업로드 완료 이동 params:", completeParams);
+
+setTimeout(() => {
+  router.push({
+    pathname: "/coaching-upload-complete",
+    params: completeParams,
+  });
+}, 100);
   } catch (error) {
     console.error(error);
 
@@ -186,23 +279,23 @@ durationText: formatDuration(result?.data?.durationSeconds || durationForUpload 
 
       <Text style={styles.stepTitle}>2. 영상 정보 입력</Text>
 
-      <InputLabel label="수련 과정" />
+      <InputLabel label="수련 종류" />
+      <Pressable
+  style={styles.selectBox}
+  onPress={() => setPickerType("trainingType")}
+>
+        <Text style={styles.selectText}>{trainingType}</Text>
+        <Text style={styles.selectArrow}>⌄</Text>
+      </Pressable>
+
+      <InputLabel label="수련 항목" />
       <Pressable
   style={styles.selectBox}
   onPress={() => setPickerType("curriculum")}
 >
-        <Text style={styles.selectText}>{curriculum}</Text>
-        <Text style={styles.selectArrow}>⌄</Text>
-      </Pressable>
-
-      <InputLabel label="세부 동작" />
-      <Pressable
-  style={styles.selectBox}
-  onPress={() => setPickerType("movement")}
->
-        <Text style={[styles.selectText, !movement && styles.placeholder]}>
-          {movement || "동작을 선택해주세요"}
-        </Text>
+        <Text style={[styles.selectText, !curriculum && styles.placeholder]}>
+  {curriculum || "수련 항목을 선택해주세요"}
+</Text>
         <Text style={styles.selectArrow}>⌄</Text>
       </Pressable>
 
@@ -239,25 +332,33 @@ durationText: formatDuration(result?.data?.durationSeconds || durationForUpload 
   <View style={styles.modalOverlay}>
     <View style={styles.modalCard}>
       <Text style={styles.modalTitle}>
-        {pickerType === "curriculum" ? "수련 과정 선택" : "세부 동작 선택"}
+        {pickerType === "trainingType"
+  ? "수련 종류 선택"
+  : "수련 항목 선택"}
       </Text>
 
-      {(pickerType === "curriculum"
-        ? ["현중태극권 29식", "현중태극선 29식", "현중태극검 52식"]
-        : ["태극기세", "금강도추", "나찰의", "육봉사폐", "단편"]
-      ).map((item) => (
-        <Pressable
-          key={item}
-          style={styles.optionRow}
-          onPress={() => {
-            if (pickerType === "curriculum") setCurriculum(item);
-            if (pickerType === "movement") setMovement(item);
-            setPickerType(null);
-          }}
-        >
-          <Text style={styles.optionText}>{item}</Text>
-        </Pressable>
-      ))}
+      {(
+  pickerType === "trainingType"
+    ? ["공법", "투로"]
+    : TRAINING_OPTIONS[trainingType] || []
+).map((item) => (
+  <Pressable
+    key={item}
+    style={styles.optionRow}
+    onPress={() => {
+      if (pickerType === "trainingType") {
+        setTrainingType(item);
+        setCurriculum("");
+      } else {
+        setCurriculum(item);
+      }
+
+      setPickerType(null);
+    }}
+  >
+    <Text style={styles.optionText}>{item}</Text>
+  </Pressable>
+))}
 
       <Pressable
         style={styles.modalCloseButton}
