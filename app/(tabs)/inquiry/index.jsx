@@ -229,8 +229,8 @@ export default function InquiryScreen() {
           <View style={styles.noticeHero}>
   <View style={styles.noticeHeroText}>
     <View style={styles.noticeTitleBlock}>
-  <Text style={styles.sectionTitle}>최근 공지</Text>
-  <Text style={styles.sectionInlineDesc}>가장 최근 안내를 먼저 확인해요</Text>
+  <Text style={styles.sectionTitle}>중요 공지</Text>
+  <Text style={styles.sectionInlineDesc}>중요 공지를 먼저 확인해요</Text>
 </View>
   </View>
 
@@ -457,6 +457,7 @@ const styles = StyleSheet.create({
   borderWidth: 1,
   borderColor: colors.border,
   marginBottom: 24,
+  marginTop: -19,
 },
   segmentButton: {
     flex: 1,
@@ -464,13 +465,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    
   },
   segmentActive: {
   backgroundColor: colors.warmBrown,
 },
   segmentText: {
-  fontSize: 15,
-  fontWeight: "800",
+  fontSize: 14,
+  fontWeight: "500",
   color: colors.softBrown,
 },
   segmentTextActive: {
@@ -481,9 +483,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionTitle: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: "800",
     color: "#342a24",
+    marginLeft: 4,
+    marginbottom: 2,
   },
   sectionDesc: {
     marginTop: 4,
@@ -713,10 +717,11 @@ noticeTitleBlock: {
 },
 
 sectionInlineDesc: {
-  marginBottom: 3,
+  marginBottom: 1,
   fontSize: 13,
   fontWeight: "500",
   color: "#8b7f75",
+  marginLeft: 4,
 },
 noticeHero: {
   position: "relative",

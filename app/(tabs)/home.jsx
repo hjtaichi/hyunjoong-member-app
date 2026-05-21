@@ -1186,6 +1186,7 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
           {homeData?.member?.levelLabel || homeData?.member?.level || "일반회원"}
         </Text>
       </View>
+      
 
       {isYudanja ? (
         <View style={[styles.homeBadge, styles.homeBadgeYudanja]}>
@@ -1195,6 +1196,11 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
         </View>
       ) : null}
     </View>
+    {joinDays ? (
+  <Text style={styles.homeAttendanceSummary}>
+    입관 {joinDays}일째 · 누적 출석 {attendanceCount}일
+  </Text>
+) : null}
   </View>
 
   <View style={[styles.homeProfileWrap, isYudanja && styles.homeProfileWrapYudanja]}>
@@ -1289,7 +1295,7 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
         isYudanja && styles.todayTrainingButtonTextYudanja,
       ]}
     >
-      ☑  오늘 출석하기
+      ☑  출석하기
     </Text>
   </Pressable>
 </LinearGradient>
@@ -1737,12 +1743,12 @@ homeHeaderTextBlock: {
 },
 
   homeGreeting: {
-  fontSize: isWeb ? 13 : 14,
+  fontSize: isWeb ? 14 : 14,
   fontFamily: fonts.semiBold,
   lineHeight: isWeb ? 18 : 20,
   color: colors.textSub,
   marginTop: 10,
-  marginBottom: -3,
+  marginBottom: 3,
 },
 
 homeName: {
@@ -1750,7 +1756,7 @@ homeName: {
   fontFamily: fonts.bold,
   letterSpacing: -1.2,
   color: "#161311",
-  marginBottom: -5,
+  marginBottom: 1,
 },
 
   homeBadgeRow: {
@@ -1807,30 +1813,33 @@ todayTrainingHeader: {
   justifyContent: "space-between",
   alignItems: "center",
   marginBottom: isWeb ? 14 : 20,
+  marginLeft: isWeb ? 2 : 8,
   zIndex: 5,
 },
 
 todayTrainingLabel: {
   marginTop: 3,
-  fontSize: isWeb ? 16 : 17,
+  fontSize: isWeb ? 15 : 17,
   fontFamily: fonts.bold,
   lineHeight: 22,
   color: colors.textMain,
 },
 
 todayTrainingMore: {
-  fontSize: 12,
-  fontFamily: fonts.semiBold,
+  fontSize: 11,
+  fontFamily: fonts.Medium,
+  marginTop: isWeb ? -10 : -10,
   color: colors.textSub,
 },
 
 todayTrainingTitle: {
-  fontSize: isWeb ? 25 : 28,
+  fontSize: isWeb ? 24 : 28,
   fontFamily: fonts.bold,
   letterSpacing: -0.8,
   lineHeight: isWeb ? 30 : 33,
   color: colors.textMain,
-  marginBottom: 5,
+  marginTop: 10,
+  marginLeft: isWeb ? 2 : 8,
   maxWidth: "76%",
   zIndex: 5,
 },
@@ -1840,7 +1849,8 @@ todayTrainingStep: {
   fontFamily: fonts.semiBold,
   lineHeight: isWeb ? 20 : 22,
   color: colors.warmBrown,
-  marginBottom: isWeb ? 28 : 40,
+  marginBottom: isWeb ? 30 : 40,
+  marginLeft: isWeb ? 2 : 8,
   maxWidth: "76%",
   zIndex: 5,
 },
@@ -1851,7 +1861,7 @@ todayTrainingButton: {
   backgroundColor: colors.warmBrown,
   alignItems: "center",
   justifyContent: "center",
-  marginTop: -5,
+  marginTop: 3,
   zIndex: 5,
 },
 
@@ -2585,10 +2595,10 @@ todayTrainingButtonTextYudanja: {
 },
 
 todaySilhouetteYudanja: {
-  opacity: 0.12,
-  right: -28,
-  top: 42,
-  width: 155,
+  opacity: 0.45,
+  right: -16,
+  top: 25,
+  width: 180,
   height: 125,
 },
 
@@ -2600,41 +2610,38 @@ yudanjaFlowLine: {
   display: "none",
 },
 homeProfileWrap: {
-  width: 118,
-  height: 118,
-  marginTop: 22,
-  marginRight: -2,
+  width: isWeb ? 88 : 104,
+  height: isWeb ? 88 : 104,
+  marginTop: isWeb ? 10 : 28,
+  marginRight: isWeb ? 20 : 8,
   alignItems: "center",
   justifyContent: "center",
   position: "relative",
 },
 
 homeProfileWrapYudanja: {
-  width: 138,
-  height: 138,
-  marginTop: 4,
-  marginRight: -12,
+  width: isWeb ? 132 : 132,
+  height: isWeb ? 132 : 132,
+  marginTop: isWeb ? 10 : 18,
+  marginRight: isWeb ? -3 : -2,
+  marginBottom: isWeb ? -10 : 18,
 },
+
 homeProfileCircle: {
-  width: 96,
-  height: 96,
+  width: isWeb ? 76 : 90,
+  height: isWeb ? 76 : 90,
   borderRadius: 999,
-  backgroundColor: colors.blushBeige,
-  alignItems: "center",
-  justifyContent: "center",
   overflow: "hidden",
-  borderWidth: 1,
-  borderColor: colors.border,
-  zIndex: 2,
+  backgroundColor: "#F7EFE8",
 },
+
 homeProfileCircleYudanja: {
-  width: 93,
-  height: 93,
-  borderRadius: 999,
-  backgroundColor: "rgba(255, 250, 237, 0.85)",
-  borderWidth: 0,
-  marginTop: -19,
-  zIndex: 3,
+  width: isWeb ? 88 : 98,
+  height: isWeb ? 88 : 98,
+   transform: [
+    { translateX: isWeb ? -17 : 0 },
+    { translateY: isWeb ? -23 : 0 },
+  ],
 },
 homeProfileInnerCircle: {
   width: 105,
@@ -2655,11 +2662,10 @@ homeProfileImage: {
 
 homeYudanjaEmblemFrame: {
   position: "absolute",
-  width: 138,
-  height: 138,
-  top: 0,
-  left: 0,
-  zIndex: 5,
+  width: isWeb ? 130 : 138,
+  height: isWeb ? 130 : 138,
+  top: isWeb ? -14 : -20,
+  left: isWeb ? -16 : -20,
 },
 yudanjaGoldBorderOuter: {
   position: "absolute",
@@ -2695,5 +2701,17 @@ todayYudanjaBgImage: {
   height: 130,
   opacity: 0.08,
   zIndex: 0,
+},
+homeAttendanceSummary: {
+  marginTop: 8,
+  marginLeft: 2,
+
+  fontSize: isWeb ? 12 : 14,
+  lineHeight: isWeb ? 18 : 20,
+
+  fontFamily: fonts.medium,
+  color: "#8E8178",
+
+  letterSpacing: -0.3,
 },
 });

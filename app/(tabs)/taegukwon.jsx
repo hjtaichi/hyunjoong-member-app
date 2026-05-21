@@ -144,6 +144,32 @@ const scrollRef = useRef(null);
   const [showMemoHistory, setShowMemoHistory] = useState(false);
   const [activeTab, setActiveTab] = useState("training");
 
+const loadGongbeopRecord = useCallback(async () => {
+  const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop?t=${Date.now()}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "ngrok-skip-browser-warning": "true",
+    },
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) throw new Error(result.message);
+
+  const record = result.data;
+
+  setGongbeopRecord({
+    ilsimyangui: record?.ilsimyangui ? String(record.ilsimyangui) : "",
+    yobujeonsa: record?.yobujeonsa ? String(record.yobujeonsa) : "",
+    duyoMinutes: record?.duyoMinutes ? String(record.duyoMinutes) : "",
+    ohaengjeonsa: record?.ohaengjeonsa ? String(record.ohaengjeonsa) : "",
+  });
+
+  setGongbeopUpdatedAt(record?.updatedAt || null);
+}, [token]);
+
   const loadData = useCallback(
     async ({ silent = false } = {}) => {
       if (!token) return;
@@ -263,31 +289,7 @@ const handleSaveGongbeopRecord = useCallback(async () => {
   }
 }, [token, gongbeopRecord]);
 
-const loadGongbeopRecord = useCallback(async () => {
-  const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop?t=${Date.now()}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      "ngrok-skip-browser-warning": "true",
-    },
-  });
 
-  const result = await response.json();
-
-  if (!response.ok) throw new Error(result.message);
-
-  const record = result.data;
-
-  setGongbeopRecord({
-    ilsimyangui: record?.ilsimyangui ? String(record.ilsimyangui) : "",
-    yobujeonsa: record?.yobujeonsa ? String(record.yobujeonsa) : "",
-    duyoMinutes: record?.duyoMinutes ? String(record.duyoMinutes) : "",
-    ohaengjeonsa: record?.ohaengjeonsa ? String(record.ohaengjeonsa) : "",
-  });
-
-  setGongbeopUpdatedAt(record?.updatedAt || null);
-}, [token]);
 
   const scrollToEditSection = useCallback(() => {
   setTimeout(() => {
@@ -530,7 +532,7 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
         activeTab === "record" && styles.topTabTextActive,
       ]}
     >
-      기록
+      공력 증진 기록
     </Text>
   </TouchableOpacity>
 </View>
@@ -749,11 +751,11 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 ) : null}
 {activeTab === "training" ? (
   <View style={styles.coachingInlineBox}>
-    <Text style={styles.coachingInlineLabel}>지도 포인트</Text>
+    <Text style={styles.coachingInlineLabel}>수련 Tip ☆</Text>
 
     <Text style={styles.coachingInlineText} numberOfLines={2}>
       {personalProgress?.recentAdminMemos?.[0]?.content ||
-        "아직 등록된 지도 포인트가 없습니다."}
+        "아직 등록된 수련 Tip이 없습니다."}
     </Text>
   </View>
 ) : null}
@@ -853,7 +855,12 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
   <Text style={styles.menuArrow}>〉</Text>
 </TouchableOpacity>
 
-<TouchableOpacity style={styles.menuRow} activeOpacity={0.85}>
+
+<TouchableOpacity
+  style={styles.menuRow}
+  activeOpacity={0.85}
+  onPress={() => router.push("/coaching-videos")}
+>
   <Image
     source={require("../../assets/images/menu-video.png")}
     style={styles.menuIcon}
@@ -861,8 +868,8 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
   />
 
   <View style={styles.menuTextWrap}>
-    <Text style={styles.menuTitle}>수련 영상</Text>
-    <Text style={styles.menuDesc}>내 수련 영상 올리기</Text>
+    <Text style={styles.menuTitle}>내 수련 영상 올리기</Text>
+    <Text style={styles.menuDesc}>실전 코칭</Text>
   </View>
 
   <Text style={styles.menuArrow}>〉</Text>
@@ -876,7 +883,7 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
   />
 
   <View style={styles.menuTextWrap}>
-    <Text style={styles.menuTitle}>동작 사전</Text>
+    <Text style={styles.menuTitle}>투로명이 궁금해요</Text>
     <Text style={styles.menuDesc}>동작 설명 및 포인트</Text>
   </View>
 
@@ -2220,7 +2227,7 @@ topTabWrap: {
   borderColor: "#EFE5DE",
   borderRadius: 12,
   padding: 3,
-  marginTop: 6,
+  marginTop: -30,
   marginBottom: 12,
 },
 
@@ -2237,8 +2244,8 @@ topTabButtonActive: {
 },
 
 topTabText: {
-  fontSize: 12,
-  fontWeight: "600",
+  fontSize: 14,
+  fontWeight: "500",
   color: "#A78D83",
 },
 
@@ -2401,8 +2408,8 @@ coachingInlineBox: {
 },
 
 coachingInlineLabel: {
-  fontSize: 11,
-  fontWeight: "800",
+  fontSize: 12,
+  fontWeight: "700",
   color: "#8c6330",
   marginBottom: 4,
 },
@@ -2525,7 +2532,7 @@ flowTodayRecord: {
   position: "absolute",
   top: 0,
   right: 10,
-  paddingHorizontal: 10,
+  paddingHorizontal: 8,
   paddingVertical: 5,
   borderRadius: 15,
   borderWidth: 1,
@@ -2549,8 +2556,8 @@ recordOverlay: {
 },
 
 recordOverlayValue: {
-  fontSize: 19,
-  fontWeight: "800",
+  fontSize: 18,
+  fontWeight: "700",
   color: "#5b3f30",
 },
 
@@ -2572,33 +2579,33 @@ animatedCircleWrap: {
 
 recordPercentText: {
   position: "absolute",
-  left: 0,
+  left: 2,
   right: 0,
-  top: 13,
+  top: 15,
   textAlign: "center",
-  fontSize: 9,
-  fontWeight: "900",
+  fontSize: 9.5,
+  fontWeight: "800",
   color: "#5b3f30",
 },
 
 recordOverlayOne: {
   top: 80,
-  left: 120,
+  left: 140,
 },
 
 recordOverlayTwo: {
-  top: 190,
-  left: 180,
+  top: 200,
+  left: 210,
 },
 
 recordOverlayThree: {
-  top: 270,
-  left: 100,
+  top: 267,
+  left: 120,
 },
 
 recordOverlayFour: {
-  top: 360,
-  left: 146,
+  top: 350,
+  left: 168,
 },
 recordOverlayPercent: {
   marginTop: 4,
@@ -2872,7 +2879,7 @@ goalItemTitle: {
 },
 goalGoalValue: {
   fontSize: 22,
-  fontWeight: "900",
+  fontWeight: "700",
   color: "#3f3028",
 },
 
@@ -2897,16 +2904,9 @@ goalSettingIconImage: {
   opacity: 0.9,
 },
 
-
 goalSettingIcon: {
   fontSize: 17,
   color: "#5b3f30",
-},
-
-goalUnit: {
-  fontSize: 12,
-  fontWeight: "800",
-  color: "#6f6258",
 },
 
 goalSubValue: {
@@ -2998,7 +2998,7 @@ memoPreviewText: {
   left: 28,
   right: 78,
   top: 62,
-  fontSize: 17,
+  fontSize: 13,
   lineHeight: 20,
   color: "#4c3a31",
 },
@@ -3019,9 +3019,11 @@ memoDetailButton: {
 
 memoDetailButtonText: {
   fontSize: 11,
-  fontWeight: "800",
+  fontWeight: "600",
   color: "#7a6254",
+  top: 5,
   fontFamily: "ChosunCentennial",
+  opacity:0.7,
 },
 
 memoHistoryModalCard: {
@@ -3035,8 +3037,8 @@ memoHistoryModalCard: {
 },
 
 memoHistoryModalTitle: {
-  fontSize: 24,
-  fontWeight: "800",
+  fontSize: 20,
+  fontWeight: "700",
   color: "#5b3f30",
   marginBottom: 16,
   fontFamily: "ChosunCentennial",

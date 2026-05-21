@@ -791,7 +791,7 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
         scheduleViewMode === "calendar" && styles.scheduleToggleTextActive,
       ]}
     >
-      캘린더
+      달력
     </Text>
   </Pressable>
 
@@ -1345,7 +1345,7 @@ scheduleViewToggle: {
   borderColor: "#EFE5DE",
   borderRadius: 12,
   padding: 3,
-  marginTop: 6,
+  marginTop: -30,
   marginBottom: 12,
 },
 
@@ -1358,8 +1358,8 @@ scheduleToggleButton: {
 },
 
 scheduleToggleText: {
-  fontSize: 13,
-  fontWeight: "600",
+  fontSize: 14,
+  fontWeight: "500",
   color: "#A78D83",
 },
 
@@ -1418,12 +1418,6 @@ center: {
   },
   scheduleToggleActive: {
   backgroundColor: "#6B4F46",
-},
-
-scheduleToggleText: {
-  fontSize: 12,
-  fontWeight: "600",
-  color: "#A78D83",
 },
 
 scheduleToggleTextActive: {
