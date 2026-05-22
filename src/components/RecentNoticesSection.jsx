@@ -39,7 +39,12 @@ export default function RecentNoticesSection() {
   const [notices, setNotices] = useState([]);
   const [page, setPage] = useState(1);
 
-  const mainNotice = notices[0];
+  const mainNotice = notices.find(
+  (notice) =>
+    notice.isImportant === true ||
+    notice.isImportant === "true" ||
+    notice.isImportant === 1
+);
 
   const totalPages = Math.max(1, Math.ceil(notices.length / PAGE_SIZE));
 
@@ -49,20 +54,24 @@ export default function RecentNoticesSection() {
   }, [notices, page]);
 
   const loadNotices = useCallback(async () => {
-    if (!token) return;
+  if (!token) return;
 
-    try {
-      setLoading(true);
-      const result = await getMemberNoticeList(token);
-      setNotices(Array.isArray(result) ? result : []);
-      setPage(1);
-    } catch (error) {
-      console.log("공지 조회 실패:", error?.message);
-      setNotices([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  try {
+    setLoading(true);
+
+    const result = await getMemberNoticeList(token);
+
+    console.log("🔥 notices =", JSON.stringify(result, null, 2));
+
+    setNotices(Array.isArray(result) ? result : []);
+    setPage(1);
+  } catch (error) {
+    console.log("공지 조회 실패:", error?.message);
+    setNotices([]);
+  } finally {
+    setLoading(false);
+  }
+}, [token]);
 
   useEffect(() => {
     loadNotices();
@@ -79,25 +88,17 @@ export default function RecentNoticesSection() {
     );
   }
 
-  if (!mainNotice) {
-    return (
-      <View style={styles.noticeCard}>
-        <Text style={styles.emptyText}>등록된 공지가 없습니다.</Text>
-      </View>
-    );
-  }
 
   return (
-    <View>
+  <View>
+    {mainNotice ? (
       <Pressable
         style={styles.mainCard}
         onPress={() => openNotice(mainNotice.id)}
       >
-                {mainNotice.isPopup ? (
-          <View style={styles.popupBadge}>
-            <Text style={styles.popupBadgeText}>팝업</Text>
-          </View>
-        ) : null}
+        <View style={styles.popupBadge}>
+          <Text style={styles.popupBadgeText}>중요</Text>
+        </View>
 
         <Text style={styles.mainTitle} numberOfLines={1}>
           {mainNotice.title}
@@ -111,6 +112,14 @@ export default function RecentNoticesSection() {
           {formatDate(mainNotice.publishedAt)}
         </Text>
       </Pressable>
+    ) : (
+      <View style={styles.mainCard}>
+        <Text style={styles.mainTitle}>중요 공지가 없습니다</Text>
+        <Text style={styles.mainContent}>
+          현재 꼭 확인해야 할 중요 공지는 없습니다.
+        </Text>
+      </View>
+    )}
 
       <View style={styles.noticeCard}>
         <View style={styles.noticeHeader}>

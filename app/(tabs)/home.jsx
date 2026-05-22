@@ -342,6 +342,7 @@ const isPausedMember = memberStatus === "paused";
   const [hiddenNoticeIds, setHiddenNoticeIds] = useState([]);
   const [hasUnreadNotice, setHasUnreadNotice] = useState(false);
   const [memberNotifications, setMemberNotifications] = useState([]);
+  const [closedNoticeIds, setClosedNoticeIds] = useState([]);
 
   const yudanjaEmblemFrame = require("../../assets/images/yudanja-emblem-frame.png");
   const yudanjaProfileBg = require("../../assets/images/yudanja-profile-card-bg.png");
@@ -826,7 +827,11 @@ const checkNoticePopup = useCallback(async () => {
     const notice = await getPopupNotice(token);
 
     // 🔥 추가: 프론트에서도 막기
-    if (!notice?.id || hiddenNoticeIds.includes(notice.id)) {
+    if (
+  !notice?.id ||
+  hiddenNoticeIds.includes(notice.id) ||
+  closedNoticeIds.includes(notice.id)
+) {
       setActiveNotice(null);
       setNoticeVisible(false);
       return;
@@ -839,7 +844,7 @@ const checkNoticePopup = useCallback(async () => {
     setActiveNotice(null);
     setNoticeVisible(false);
   }
-}, [token, homeData, hiddenNoticeIds]);
+}, [token, homeData, hiddenNoticeIds, closedNoticeIds]);
 
 useEffect(() => {
   checkNoticePopup();
@@ -852,9 +857,15 @@ useFocusEffect(
 );
 
 const handleCloseNotice = useCallback(() => {
+  if (activeNotice?.id) {
+    setClosedNoticeIds((prev) =>
+      prev.includes(activeNotice.id) ? prev : [...prev, activeNotice.id]
+    );
+  }
+
   setNoticeVisible(false);
   setHasUnreadNotice(false);
-}, []);
+}, [activeNotice]);
 
 const handleNoticeDetail = useCallback(() => {
   if (!activeNotice?.id) {

@@ -840,7 +840,11 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 
 {activeTab === "training" ? (
   <View style={[styles.card, styles.menuCard]}>
-    <TouchableOpacity style={styles.menuRow} activeOpacity={0.85}>
+    <TouchableOpacity
+  style={styles.menuRow}
+  activeOpacity={0.85}
+  onPress={() => router.push("/training-journey")}
+>
   <Image
     source={require("../../assets/images/menu-curriculum.png")}
     style={styles.menuIcon}
