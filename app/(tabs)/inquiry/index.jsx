@@ -263,70 +263,88 @@ export default function InquiryScreen() {
     </View>
 
     <View style={styles.guideCard}>
-      <Pressable
-        style={styles.guideItem}
-        onPress={() => router.push("/(tabs)/inquiry/faq")}
-      >
-        <View style={styles.guideIconCircle}>
-  <Image
-    source={require("../../../assets/images/inquiry-faq-icon.png")}
-    style={styles.guideIconImage}
-    resizeMode="contain"
-  />
-</View>
-
-        <View style={styles.guideTextBlock}>
-          <Text style={styles.guideTitle}>FAQ</Text>
-          <Text style={styles.guideText}>자주 묻는 질문 모음</Text>
-        </View>
-
-        <Text style={styles.chevron}>›</Text>
-      </Pressable>
-
-      <View style={styles.divider} />
-
-      <Pressable
-        style={styles.guideItem}
-        onPress={() => router.push("/(tabs)/inquiry/guide")}
-      >
-        <View style={styles.guideIconCircle}>
-  <Image
-    source={require("../../../assets/images/inquiry-guide-icon.png")}
-    style={styles.guideIconImage}
-    resizeMode="contain"
-  />
-</View>
-
-        <View style={styles.guideTextBlock}>
-          <Text style={styles.guideTitle}>수련 가이드</Text>
-          <Text style={styles.guideText}>도장 이용과 수련 예절 안내</Text>
-        </View>
-
-        <Text style={styles.chevron}>›</Text>
-      </Pressable>
-
-      <View style={styles.divider} />
-
-      <Pressable
-        style={styles.guideItem}
-        onPress={() => router.push("/(tabs)/inquiry/schedule")}
-      >
-        <View style={styles.guideIconCircle}>
-  <Image
-    source={require("../../../assets/images/inquiry-schedule-icon.png")}
-    style={styles.guideIconImage}
-    resizeMode="contain"
-  />
-</View>
-
-        <View style={styles.guideTextBlock}>
-          <Text style={styles.guideTitle}>수련 시간표</Text>
-          <Text style={styles.guideText}>요일별 정규 수련 시간 확인</Text>
-        </View>
-
-        <Text style={styles.chevron}>›</Text>
-      </Pressable>
+  <Pressable
+    style={styles.guideItem}
+    onPress={() => router.push("/(tabs)/inquiry/guide")}
+  >
+    <View style={styles.guideIconCircle}>
+      <Image
+        source={require("../../../assets/images/inquiry-guide-icon.png")}
+        style={styles.guideIconImage}
+        resizeMode="contain"
+      />
     </View>
+
+    <View style={styles.guideTextBlock}>
+      <Text style={styles.guideTitle}>수련 가이드</Text>
+      <Text style={styles.guideText}>도장 이용과 수련 예절 안내</Text>
+    </View>
+
+    <Text style={styles.chevron}>›</Text>
+  </Pressable>
+
+  <View style={styles.divider} />
+
+  <Pressable
+    style={styles.guideItem}
+    onPress={() => router.push("/(tabs)/inquiry/schedule")}
+  >
+    <View style={styles.guideIconCircle}>
+      <Image
+        source={require("../../../assets/images/inquiry-schedule-icon.png")}
+        style={styles.guideIconImage}
+        resizeMode="contain"
+      />
+    </View>
+
+    <View style={styles.guideTextBlock}>
+      <Text style={styles.guideTitle}>수련 시간표</Text>
+      <Text style={styles.guideText}>요일별 정규 수련 시간 확인</Text>
+    </View>
+
+    <Text style={styles.chevron}>›</Text>
+  </Pressable>
+
+  <View style={styles.divider} />
+
+  <Pressable
+    style={styles.guideItem}
+    onPress={() => router.push("/(tabs)/inquiry/faq")}
+  >
+    <View style={styles.guideIconCircle}>
+      <Image
+        source={require("../../../assets/images/inquiry-faq-icon.png")}
+        style={styles.guideIconImage}
+        resizeMode="contain"
+      />
+    </View>
+
+    <View style={styles.guideTextBlock}>
+      <Text style={styles.guideTitle}>FAQ</Text>
+      <Text style={styles.guideText}>자주 묻는 질문 모음</Text>
+    </View>
+
+    <Text style={styles.chevron}>›</Text>
+  </Pressable>
+
+  <View style={styles.divider} />
+
+  <Pressable
+    style={styles.guideItem}
+    onPress={() => router.push("/shop")}
+  >
+    <View style={styles.guideIconCircle}>
+      <Text style={styles.guideIconText}>玄</Text>
+    </View>
+
+    <View style={styles.guideTextBlock}>
+      <Text style={styles.guideTitle}>현중 Shop</Text>
+      <Text style={styles.guideText}>도장 물품과 수련 용품 안내</Text>
+    </View>
+
+    <Text style={styles.chevron}>›</Text>
+  </Pressable>
+</View>
   </View>
 ) : null}
 

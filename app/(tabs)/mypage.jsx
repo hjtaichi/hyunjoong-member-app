@@ -1239,7 +1239,7 @@ function MenuDivider() {
                 서울Pay+ 비대면 결제
               </Text>
               <Text style={styles.paymentMethodText}>
-                서울Pay+ 앱에서 비대면 결제  →  현중태극권 검색  → {"\n"}
+                서울Pay+ 앱에서 비대면 결제 {"\n"} →  현중태극권 검색  → {"\n"}
                 금액 입력 후 결제해주세요.                
               </Text>
 
@@ -2136,6 +2136,8 @@ yudanjaCard: {
 },
 
 yudanjaCardBgImage: {
+  width: "110%",
+  height: "110%",
   borderRadius: 26,
 },
 

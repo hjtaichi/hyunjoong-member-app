@@ -5,6 +5,8 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
+import { CartProvider } from "../src/contexts/CartContext";
+
 
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
@@ -190,7 +192,8 @@ const [fontsLoaded] = useFonts({
 
   if (!fontsLoaded) return null;
   return (
-    <AuthProvider>
+  <AuthProvider>
+    <CartProvider>
       <PushInitializer />
 
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
@@ -206,6 +209,7 @@ const [fontsLoaded] = useFonts({
 
         <StatusBar style="auto" />
       </ThemeProvider>
-    </AuthProvider>
-  );
+    </CartProvider>
+  </AuthProvider>
+);
 }
