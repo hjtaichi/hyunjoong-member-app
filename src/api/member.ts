@@ -152,3 +152,29 @@ export async function updateMyProfileAvatar(profileAvatar: string) {
 
   return res.data;
 }
+
+export async function submitTrialApplication(payload: {
+  name: string;
+  gender: string;
+  phone: string;
+  hopeDate: string;
+  shoeSize?: string;
+  height?: string;
+  memo?: string;
+}) {
+  const res = await client.post(
+    "/api/member/me/trial-applications",
+    payload
+  );
+
+  return res.data;
+}
+
+export async function changeMyLoginId(newLoginId: string) {
+  return apiRequest("/api/member/me/login-id", {
+    method: "PATCH",
+    body: JSON.stringify({
+      newLoginId,
+    }),
+  });
+}

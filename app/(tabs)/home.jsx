@@ -2525,10 +2525,10 @@ legendText: {
 todaySilhouette: {
   position: "absolute",
   right: -20,
-  top: 25,
+  top: 18,
   width: 190,
   height: 150,
-  opacity: 1,
+  opacity: 0.65,
   zIndex: 1,
 },
 dayStampPresent: {

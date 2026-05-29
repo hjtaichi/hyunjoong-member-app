@@ -99,7 +99,11 @@ export default function ShopScreen() {
         <Text style={styles.headerTitle}>현중 Shop</Text>
 
         <Pressable style={styles.cartIcon} onPress={() => router.push("/cart")}>
-  <Text style={styles.cartText}>🛒</Text>
+  <Image
+    source={require("../assets/images/icon-shop-cart.png")}
+    style={styles.cartImage}
+    resizeMode="contain"
+  />
 </Pressable>
       </View>
 
@@ -498,4 +502,8 @@ stockBadgeTextOrder: {
     textAlign: "center",
     lineHeight: 20,
   },
+  cartImage: {
+  width: 26,
+  height: 26,
+},
 });

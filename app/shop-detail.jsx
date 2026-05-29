@@ -114,7 +114,11 @@ export default function ShopDetailScreen() {
         <Text style={styles.headerTitle}>상품 상세</Text>
 
         <Pressable style={styles.cartIcon} onPress={() => router.push("/cart")}>
-  <Text style={styles.cartText}>🛒</Text>
+  <Image
+    source={require("../assets/images/icon-shop-cart.png")}
+    style={styles.cartImage}
+    resizeMode="contain"
+  />
 </Pressable>
       </View>
 
@@ -691,4 +695,8 @@ grayDot: {
     fontSize: 15,
     fontWeight: "800",
   },
+  cartImage: {
+  width: 26,
+  height: 26,
+},
 });

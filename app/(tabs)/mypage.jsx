@@ -24,6 +24,7 @@ import {
   changeMyPhone,
   verifyMyPassword,
   updateMyProfileAvatar,
+  changeMyLoginId,
 } from "../../src/api/member";
 
 import { useAuth } from "../../src/contexts/AuthContext";
@@ -49,6 +50,8 @@ const [currentPassword, setCurrentPassword] = useState("");
 const [newPassword, setNewPassword] = useState("");
 const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
 const [newPhone, setNewPhone] = useState("");
+const [loginIdModalVisible, setLoginIdModalVisible] = useState(false);
+const [newLoginId, setNewLoginId] = useState("");
 const [verifyModalVisible, setVerifyModalVisible] = useState(false);
 const [verifyPassword, setVerifyPassword] = useState("");
 const avatarImages = {
@@ -280,6 +283,50 @@ async function handleChangePhone() {
   }
 }
 
+async function handleChangeLoginId() {
+  const cleanLoginId = String(newLoginId || "")
+    .trim()
+    .toLowerCase();
+
+  if (
+    cleanLoginId.length < 4 ||
+    cleanLoginId.length > 20 ||
+    !/^[a-z0-9_]+$/.test(cleanLoginId)
+  ) {
+    Alert.alert(
+      "안내",
+      "아이디는 4~20자의 영문 소문자, 숫자, _만 사용할 수 있습니다."
+    );
+    return;
+  }
+
+  try {
+    setSubmittingAccount(true);
+
+    await changeMyLoginId(cleanLoginId);
+
+    Alert.alert(
+      "완료",
+      "아이디가 변경되었습니다.\n다음 로그인부터 새 아이디를 사용해주세요."
+    );
+
+    setNewLoginId("");
+    setLoginIdModalVisible(false);
+
+    await logout();
+    router.replace("/login");
+  } catch (error) {
+    Alert.alert(
+      "오류",
+      error?.response?.data?.message ||
+        error?.message ||
+        "아이디 변경에 실패했습니다."
+    );
+  } finally {
+    setSubmittingAccount(false);
+  }
+}
+
 async function handleVerifyPasswordForEdit() {
   if (!verifyPassword.trim()) {
     Alert.alert("안내", "비밀번호를 입력해주세요.");
@@ -294,7 +341,12 @@ async function handleVerifyPasswordForEdit() {
     setVerifyPassword("");
     setVerifyModalVisible(false);
 
-    router.push("/profile-edit");
+    if (homeData?.member?.canChangeLoginId) {
+  setLoginIdModalVisible(true);
+}
+
+router.push("/profile-edit");
+
   } catch (error) {
     Alert.alert(
       "오류",
@@ -875,26 +927,25 @@ function MenuDivider() {
 ) : null}
 
 <View style={[styles.menuSection, isYudanja && styles.menuSectionYudanja]}>
-  <MenuRow
-    title="수련 목표"
-    description={promotionSummary}
-    onPress={() => Alert.alert("안내", "수련 목표 상세 화면은 추후 연결할 예정입니다.")}
-  />
+<MenuRow
+  title="수련 History"
+  description={promotionSummary}
+  onPress={() => router.push("/training-history")}
+/>
 
-  <MenuDivider />
+<MenuDivider />
 
-  <MenuRow
+<MenuRow
+  title="함께 수련하기"
+  description="지인에게 현중태극권 무료 체험을 추천해보세요"
+  onPress={() => router.push("/trial-application")}
+/>
+
+<MenuDivider />
+   <MenuRow
     title="정기 출석 설정"
     description={recurringMenuSummary}
     onPress={() => router.push("/recurring-reservations")}
-  />
-
-  <MenuDivider />
-
-  <MenuRow
-    title="출석 통계"
-    description="출석 현황과 기록을 확인할 수 있어요"
-    onPress={() => Alert.alert("안내", "출석 통계 화면은 추후 연결할 예정입니다.")}
   />
 
   <MenuDivider />
@@ -905,13 +956,6 @@ function MenuDivider() {
     onPress={() => Alert.alert("안내", "알림 설정은 준비 중입니다.")}
   />
 
-  <MenuDivider />
-
-  <MenuRow
-    title="계정 설정"
-    description="비밀번호와 연락처 관리"
-    onPress={() => setVerifyModalVisible(true)}
-  />
 </View>
       <Pressable style={styles.logoutButton} onPress={handleLogout}>
   <Text style={styles.logoutButtonText}>로그아웃</Text>
@@ -1282,8 +1326,56 @@ function MenuDivider() {
         </Pressable>
       </ScrollView>
     </View>
+      </View>
+</Modal>
+
+    <Modal
+  visible={loginIdModalVisible}
+  transparent
+  animationType="fade"
+  onRequestClose={() => setLoginIdModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalCard}>
+      <Text style={styles.modalTitle}>최초 아이디 변경</Text>
+
+      <Text style={styles.modalDesc}>
+        정회원 전환 후 1회에 한하여{"\n"}
+        원하는 로그인 아이디로 변경할 수 있습니다.
+      </Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="새 로그인 아이디"
+        autoCapitalize="none"
+        autoCorrect={false}
+        value={newLoginId}
+        onChangeText={setNewLoginId}
+      />
+
+      <View style={styles.modalButtonRow}>
+        <Pressable
+          style={[styles.modalButton, styles.modalCancelButton]}
+          onPress={() => setLoginIdModalVisible(false)}
+          disabled={submittingAccount}
+        >
+          <Text style={styles.modalCancelButtonText}>취소</Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.modalButton, styles.modalPrimaryButton]}
+          onPress={handleChangeLoginId}
+          disabled={submittingAccount}
+        >
+          <Text style={styles.modalPrimaryButtonText}>
+            {submittingAccount ? "변경 중..." : "변경하기"}
+          </Text>
+        </Pressable>
+      </View>
+    </View>
   </View>
 </Modal>
+
 </ScrollView>
   );
 }
@@ -1694,7 +1786,7 @@ paymentButtonText: {
   fontWeight: "900",
   color: colors.white,
 },
-aymentModalCard: {
+paymentModalCard: {
   width: "100%",
   maxHeight: "82%",
   backgroundColor: colors.card,
@@ -2627,4 +2719,66 @@ paymentIconImage: {
   width: 34,
   height: 34,
 },
+
+historyTopRow: {
+  flexDirection: "row",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: 12,
+},
+
+historyLabel: {
+  fontSize: 13,
+  fontWeight: "900",
+  color: "#9A6A33",
+  marginBottom: 6,
+},
+
+
+historyDdayBadge: {
+  minWidth: 58,
+  height: 58,
+  borderRadius: 29,
+  backgroundColor: "#F6EFE5",
+  borderWidth: 1,
+  borderColor: "#E5D5C2",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+historyDdayText: {
+  fontSize: 14,
+  fontWeight: "900",
+  color: "#8C6330",
+},
+
+historyStatRow: {
+  marginTop: 15,
+  flexDirection: "row",
+  gap: 10,
+},
+
+historyStatBox: {
+  flex: 1,
+  borderRadius: 18,
+  backgroundColor: "#F8F3EA",
+  borderWidth: 1,
+  borderColor: "#ECE1D3",
+  paddingVertical: 12,
+  alignItems: "center",
+},
+
+historyStatValue: {
+  fontSize: 18,
+  fontWeight: "900",
+  color: "#2B2522",
+},
+
+historyStatLabel: {
+  marginTop: 4,
+  fontSize: 12,
+  fontWeight: "700",
+  color: "#8A8177",
+},
+
 });

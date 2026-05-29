@@ -327,24 +327,29 @@ export default function InquiryScreen() {
     <Text style={styles.chevron}>›</Text>
   </Pressable>
 
-  <View style={styles.divider} />
 
-  <Pressable
-    style={styles.guideItem}
-    onPress={() => router.push("/shop")}
-  >
-    <View style={styles.guideIconCircle}>
-      <Text style={styles.guideIconText}>玄</Text>
-    </View>
-
-    <View style={styles.guideTextBlock}>
-      <Text style={styles.guideTitle}>현중 Shop</Text>
-      <Text style={styles.guideText}>도장 물품과 수련 용품 안내</Text>
-    </View>
-
-    <Text style={styles.chevron}>›</Text>
-  </Pressable>
 </View>
+<Pressable
+  style={styles.shopMiniCard}
+  onPress={() => router.push("/shop")}
+>
+  <Image
+    source={require("../../../assets/images/shop-mini-card.png")}
+    style={styles.shopMiniBg}
+    resizeMode="cover"
+  />
+
+  <View style={styles.shopMiniOverlay}>
+  <View style={styles.shopMiniTextBox}>
+    <Text style={styles.shopMiniTitle}>현중 Shop</Text>
+    <Text style={styles.shopMiniDesc}>도장 물품과 수련 용품 안내</Text>
+  </View>
+
+  <View style={styles.shopMiniTopButton}>
+    <Text style={styles.shopMiniTopButtonText}>바로가기 →</Text>
+  </View>
+</View>
+</Pressable>
   </View>
 ) : null}
 
@@ -802,5 +807,64 @@ inquiryRightDate: {
   fontSize: 12,
   fontWeight: "600",
   color: colors.textMuted,
+},
+shopMiniCard: {
+  height: 118,
+  borderRadius: 22,
+  overflow: "hidden",
+  marginTop: 14,
+  marginBottom: 8,
+  borderWidth: 1,
+  borderColor: "#E6D7CB",
+},
+
+shopMiniBg: {
+  position: "absolute",
+  marginTop: 0,
+  width: "100%",
+  height: "100%",
+},
+
+shopMiniOverlay: {
+  flex: 1,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+shopMiniTextBox: {
+  alignItems: "center",
+  marginLeft: 58,
+},
+
+shopMiniTitle: {
+  fontSize: 25,
+  fontWeight: "800",
+  color: "#2F2119",
+  marginTop: 20,
+  marginLeft: -30,
+  letterSpacing: -0.4,
+},
+
+shopMiniDesc: {
+  marginTop: 5,
+  fontSize: 13,
+  lineHeight: 16,
+  color: "#4F4037",
+  fontWeight: "500",
+},
+shopMiniTopButton: {
+  position: "absolute",
+  right: 14,
+  top: 12,
+  borderRadius: 999,
+  backgroundColor: "rgba(122,47,37,0.9)",
+  paddingHorizontal: 10,
+  paddingVertical: 5,
+},
+
+shopMiniTopButtonText: {
+  color: "#F7E5C3",
+  fontSize: 11,
+  fontWeight: "800",
 },
 });

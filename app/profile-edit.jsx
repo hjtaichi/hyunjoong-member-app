@@ -15,7 +15,9 @@ import {
   getMyProfile,
   changeMyPassword,
   changeMyPhone,
+  changeMyLoginId,
 } from "../src/api/member";
+
 import { colors } from "../src/theme/colors";
 
 function onlyNumbers(value) {
@@ -33,6 +35,8 @@ export default function ProfileEditScreen() {
 
   const [submittingPhone, setSubmittingPhone] = useState(false);
   const [submittingPassword, setSubmittingPassword] = useState(false);
+  const [newLoginId, setNewLoginId] = useState("");
+  const [submittingLoginId, setSubmittingLoginId] = useState(false);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -83,6 +87,48 @@ export default function ProfileEditScreen() {
       setSubmittingPhone(false);
     }
   }
+
+  async function handleChangeLoginId() {
+  const cleanLoginId = String(newLoginId || "")
+    .trim()
+    .toLowerCase();
+
+  if (
+    cleanLoginId.length < 4 ||
+    cleanLoginId.length > 20 ||
+    !/^[a-z0-9_]+$/.test(cleanLoginId)
+  ) {
+    Alert.alert(
+      "안내",
+      "아이디는 4~20자의 영문 소문자, 숫자, _만 사용할 수 있습니다."
+    );
+    return;
+  }
+
+  try {
+    setSubmittingLoginId(true);
+
+    await changeMyLoginId(cleanLoginId);
+
+    Alert.alert(
+      "완료",
+      "아이디가 변경되었습니다.\n다음 로그인부터 새 아이디를 사용해주세요."
+    );
+
+    await loadProfile();
+
+    router.replace("/login");
+  } catch (error) {
+    Alert.alert(
+      "오류",
+      error?.response?.data?.message ||
+        error?.message ||
+        "아이디 변경에 실패했습니다."
+    );
+  } finally {
+    setSubmittingLoginId(false);
+  }
+}
 
   async function handleChangePassword() {
     if (!currentPassword || !newPassword || !newPasswordConfirm) {
@@ -156,7 +202,41 @@ export default function ProfileEditScreen() {
         <Text style={styles.cardTitle}>기본 정보</Text>
 
         <InfoRow label="아이디" value={profile?.loginId || "-"} />
-        <Text style={styles.helpText}>아이디 변경은 관리자에게 문의해주세요.</Text>
+        {profile?.canChangeLoginId ? (
+  <View style={styles.loginIdChangeBox}>
+    <Text style={styles.loginIdTitle}>최초 아이디 변경</Text>
+
+    <Text style={styles.loginIdDesc}>
+      정회원 전환 후 1회에 한하여 원하는 아이디로 변경할 수 있습니다.
+    </Text>
+
+    <TextInput
+      style={styles.input}
+      placeholder="새 로그인 아이디"
+      autoCapitalize="none"
+      autoCorrect={false}
+      value={newLoginId}
+      onChangeText={setNewLoginId}
+    />
+
+    <Pressable
+      style={[
+        styles.button,
+        submittingLoginId && styles.buttonDisabled,
+      ]}
+      onPress={handleChangeLoginId}
+      disabled={submittingLoginId}
+    >
+      <Text style={styles.buttonText}>
+        {submittingLoginId ? "변경 중..." : "아이디 변경"}
+      </Text>
+    </Pressable>
+  </View>
+) : (
+  <Text style={styles.helpText}>
+    아이디 변경은 관리자에게 문의해주세요.
+  </Text>
+)}
 
         <View style={styles.divider} />
 
@@ -385,5 +465,21 @@ buttonText: {
   fontSize: 17,
   fontWeight: "900",
   color: colors.white,
+},
+loginIdChangeBox: {
+  marginTop: 10,
+},
+
+loginIdTitle: {
+  fontSize: 15,
+  fontWeight: "900",
+  color: colors.textMain,
+},
+
+loginIdDesc: {
+  marginTop: 6,
+  fontSize: 13,
+  lineHeight: 19,
+  color: colors.textSub,
 },
 });
