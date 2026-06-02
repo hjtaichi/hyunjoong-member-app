@@ -895,6 +895,25 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 </TouchableOpacity>
 
 <TouchableOpacity
+  style={styles.menuRow}
+  activeOpacity={0.85}
+  onPress={() => router.push("/private-training-guide")}
+>
+  <Image
+    source={require("../../assets/images/menu-private-training.png")}
+    style={styles.menuIcon}
+    resizeMode="contain"
+  />
+
+  <View style={styles.menuTextWrap}>
+    <Text style={styles.menuTitle}>개별 수련 지도</Text>
+    <Text style={styles.menuDesc}>정리부터 심화 수련까지</Text>
+  </View>
+
+  <Text style={styles.menuArrow}>〉</Text>
+</TouchableOpacity>
+
+<TouchableOpacity
   style={[styles.menuRow, styles.menuRowLast, !member?.isYudanja && styles.menuRowLocked]}
   activeOpacity={0.85}
 >

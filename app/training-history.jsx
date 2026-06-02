@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Text,
   View,
+  PanResponder,
+  Animated,
 } from "react-native";
 import { router } from "expo-router";
 import { getMemberHome } from "../src/api/memberHome";
@@ -21,16 +23,46 @@ import { LinearGradient } from "expo-linear-gradient";
 
 const fogLayer = require("../assets/images/fog-layer.png");
 const goldPath = require("../assets/images/gold-path.png");
-const walkerStage1 = require("../assets/images/walker-stage-1.png");
-const walkerStage2 = require("../assets/images/walker-stage-2.png");
-const walkerStage3 = require("../assets/images/walker-stage-3.png");
-const walkerStage4 = require("../assets/images/walker-stage-4.png");
-const walkerStage5 = require("../assets/images/walker-stage-5.png");
-const walkerStage6 = require("../assets/images/walker-stage-6.png");
-const walkerStage7 = require("../assets/images/walker-stage-7.png");
-const walkerStage8 = require("../assets/images/walker-stage-8.png");
-const walkerStage9 = require("../assets/images/walker-stage-9.png");
+const WALKER_IMAGES = [
+  require("../assets/images/walker-stage-0.png"),
+  require("../assets/images/walker-stage-1.png"),
+  require("../assets/images/walker-stage-2.png"),
+  require("../assets/images/walker-stage-3.png"),
+  require("../assets/images/walker-stage-4.png"),
+  require("../assets/images/walker-stage-5.png"),
+  require("../assets/images/walker-stage-6.png"),
+  require("../assets/images/walker-stage-7.png"),
+  require("../assets/images/walker-stage-8.png"),
+  require("../assets/images/walker-stage-9.png"),
+  require("../assets/images/walker-stage-10.png"),
+  require("../assets/images/walker-stage-11.png"),
+  require("../assets/images/walker-stage-12.png"),
+  require("../assets/images/walker-stage-13.png"),
+  require("../assets/images/walker-stage-14.png"),
+  require("../assets/images/walker-stage-15.png"),
+  require("../assets/images/walker-stage-16.png"),
+  require("../assets/images/walker-stage-17.png"),
+  require("../assets/images/walker-stage-18.png"),
+  require("../assets/images/walker-stage-19.png"),
+  require("../assets/images/walker-stage-20.png"),
+  require("../assets/images/walker-stage-21.png"),
+  require("../assets/images/walker-stage-22.png"),
+  require("../assets/images/walker-stage-23.png"),
+  require("../assets/images/walker-stage-24.png"),
+  require("../assets/images/walker-stage-25.png"),
+  require("../assets/images/walker-stage-26.png"),
+  require("../assets/images/walker-stage-27.png"),
+  require("../assets/images/walker-stage-28.png"),
+  require("../assets/images/walker-stage-29.png"),
+  require("../assets/images/walker-stage-30.png"),
+  require("../assets/images/walker-stage-31.png"),
+  require("../assets/images/walker-stage-32.png"),
+  require("../assets/images/walker-stage-33.png"),
+  require("../assets/images/walker-stage-34.png"),
+  require("../assets/images/walker-stage-35.png"),
+];
 const statsIcon = require("../assets/images/stats-icon.png");
+const backIcon = require("../assets/images/back.png");
 const JOURNEY_IMAGES = {
   spring: {
     start: require("../assets/journey/spring/spring-start.png"),
@@ -38,6 +70,10 @@ const JOURNEY_IMAGES = {
     2: require("../assets/journey/spring/spring-2.png"),
     3: require("../assets/journey/spring/spring-3.png"),
     4: require("../assets/journey/spring/spring-4.png"),
+    5: require("../assets/journey/spring/spring-5.png"),
+    6: require("../assets/journey/spring/spring-6.png"),
+    7: require("../assets/journey/spring/spring-7.png"),
+    8: require("../assets/journey/spring/spring-8.png"),
     end: require("../assets/journey/spring/spring-end.png"),
   },
   summer: {
@@ -46,6 +82,10 @@ const JOURNEY_IMAGES = {
     2: require("../assets/journey/summer/summer-2.png"),
     3: require("../assets/journey/summer/summer-3.png"),
     4: require("../assets/journey/summer/summer-4.png"),
+    5: require("../assets/journey/summer/summer-5.png"),
+    6: require("../assets/journey/summer/summer-6.png"),
+    7: require("../assets/journey/summer/summer-7.png"),
+    8: require("../assets/journey/summer/summer-8.png"),
     end: require("../assets/journey/summer/summer-end.png"),
   },
   autumn: {
@@ -54,6 +94,10 @@ const JOURNEY_IMAGES = {
     2: require("../assets/journey/autumn/autumn-2.png"),
     3: require("../assets/journey/autumn/autumn-3.png"),
     4: require("../assets/journey/autumn/autumn-4.png"),
+    5: require("../assets/journey/autumn/autumn-5.png"),
+    6: require("../assets/journey/autumn/autumn-6.png"),
+    7: require("../assets/journey/autumn/autumn-7.png"),
+    8: require("../assets/journey/autumn/autumn-8.png"),
     end: require("../assets/journey/autumn/autumn-end.png"),
   },
   winter: {
@@ -62,33 +106,28 @@ const JOURNEY_IMAGES = {
     2: require("../assets/journey/winter/winter-2.png"),
     3: require("../assets/journey/winter/winter-3.png"),
     4: require("../assets/journey/winter/winter-4.png"),
+     5: require("../assets/journey/winter/winter-5.png"),
+    6: require("../assets/journey/winter/winter-6.png"),
+    7: require("../assets/journey/winter/winter-7.png"),
+    8: require("../assets/journey/winter/winter-8.png"),
     end: require("../assets/journey/winter/winter-end.png"),
   },
 };
 
-const WALKER_IMAGES = [
-  walkerStage1,
-  walkerStage2,
-  walkerStage3,
-  walkerStage4,
-  walkerStage5,
-  walkerStage6,
-  walkerStage7,
-  walkerStage8,
-  walkerStage9,
-];
+
 
 const JOURNEY_PATH_POINTS = {
   start: [
-    { progress: 0, x: 0.361, y: 0.671, scale: 1.4 },
-    { progress: 0.5, x: 0.375, y: 0.585, scale: 1.2 },
-    { progress: 0.8, x: 0.373, y: 0.530, scale: 0.9 },
+    { progress: 0, x: 0.4, y: 0.671, scale: 1.4 }, //0
+    { progress: 0.5, x: 0.4, y: 0.585, scale: 1.2 }, //25
+    { progress: 0.8, x: 0.42, y: 0.530, scale: 0.9 }, //40
     { progress: 1, x: 0.361, y: 0.512, scale: 0.7 },
   ],
   1: [
-    { progress: 0, x: 0.403, y: 0.780, scale: 2 },
-    { progress: 0.5, x: 0.35, y: 0.598, scale: 1.6 },
-    { progress: 1, x: 0.37, y: 0.415, scale: 0.8 },
+    { progress: 0, x: 0.403, y: 0.74, scale: 2 }, //50
+    { progress: 0.5, x: 0.35, y: 0.57, scale: 1.3 },//175
+    { progress: 0.803, x: 0.34, y: 0.46, scale: 1 },//250
+    { progress: 1, x: 0.38, y: 0.40, scale: 0.6 }, //300
   ],
   2: [
     { progress: 0, x: 0.597, y: 0.780, scale: 2 }, //300
@@ -98,32 +137,63 @@ const JOURNEY_PATH_POINTS = {
     { progress: 1, x: 0.5, y: 0.376, scale: 0.6 },
   ],
   3: [
-    { progress: 0, x: 0.278, y: 0.768, scale: 2 },
-    { progress: 0.25, x: 0.292, y: 0.622, scale: 1.7 },
+    { progress: 0, x: 0.35, y: 0.74, scale: 2 }, //550
+    { progress: 0.25, x: 0.36, y: 0.622, scale: 1.7 },
     { progress: 0.5, x: 0.472, y: 0.494, scale: 1.4 },
-    { progress: 0.76, x: 0.79, y: 0.350, scale: 1 },
+    { progress: 0.76, x: 0.64, y: 0.350, scale: 1 },
     { progress: 0.92, x: 0.63, y: 0.256, scale: 0.7 },
-    { progress: 1, x: 0.67, y: 0.220, scale: 0.6 },
+    { progress: 1, x: 0.62, y: 0.220, scale: 0.6 }, //799
   ],
   4: [
-    { progress: 0, x: 0.35, y: 0.768, scale: 2 },
+    { progress: 0, x: 0.35, y: 0.74, scale: 2 },  //800
     { progress: 0.25, x: 0.3, y: 0.622, scale: 1.7 },
     { progress: 0.5, x: 0.444, y: 0.494, scale: 1.4 },
-    { progress: 0.73, x: 0.71, y: 0.311, scale: 1 },
-    { progress: 0.92, x: 0.67, y: 0.256, scale: 0.7 },
-    { progress: 1, x: 0.67, y: 0.220, scale: 0.6 },
+    { progress: 0.73, x: 0.68, y: 0.311, scale: 1 },
+    { progress: 0.92, x: 0.63, y: 0.256, scale: 0.7 },
+    { progress: 1, x: 0.65, y: 0.220, scale: 0.6 }, //1049
+  ],
+  5: [
+    { progress: 0, x: 0.42, y: 0.74, scale: 2 },  //1050
+    { progress: 0.48, x: 0.444, y: 0.494, scale: 1.4 },
+    { progress: 0.68, x: 0.62, y: 0.36, scale: 1.4 },
+    { progress: 0.84, x: 0.49, y: 0.26, scale: 1 },
+    { progress: 0.92, x: 0.56, y: 0.21, scale: 0.8},
+    { progress: 1, x: 0.5, y: 0.16, scale: 0.6 }, // 1299
+  ],
+6: [
+    { progress: 0, x: 0.47, y: 0.74, scale: 2 }, //1300
+    { progress: 0.44, x: 0.64, y: 0.44, scale: 1.5 },
+    { progress: 0.64, x: 0.51, y: 0.34, scale: 1 }, //1410
+    { progress: 0.752, x: 0.605, y: 0.27, scale: 0.9 }, //1438
+    { progress: 0.9, x: 0.655, y: 0.18, scale: 0.8 }, //1475
+    { progress: 1, x: 0.57, y: 0.115, scale: 0.6 }, //1549
+  ],
+7: [
+  { progress: 0,    x: 0.4,  y: 0.74,  scale: 2 },    // 1550
+  { progress: 0.32, x: 0.5,  y: 0.45,  scale: 1.35 }, // 1630
+  { progress: 0.48, x: 0.48, y: 0.36,  scale: 1.15 }, // 1670
+  { progress: 0.68, x: 0.57, y: 0.25,  scale: 0.8 },  // 1720
+  { progress: 0.84, x: 0.64,  y: 0.198, scale: 0.65 }, // 1760
+  { progress: 1,    x: 0.71, y: 0.165, scale: 0.6 },  // 1799~1800
+],
+8:  [ 
+    { progress: 0, x: 0.45, y: 0.74, scale: 2 }, //1800
+    { progress: 0.4, x: 0.6, y: 0.5, scale: 1.6 }, //1900
+    { progress: 0.6, x: 0.51, y: 0.4, scale: 1.2 }, //1950
+    { progress: 0.88, x: 0.7, y: 0.24, scale: 0.9 }, //2020
+    { progress: 1, x: 0.55, y: 0.18, scale: 0.6 }, //2049 
   ],
   end: [
-    { progress: 0, x: 0.389, y: 0.768, scale: 2 }, //1050
-    { progress: 0.3, x: 0.35, y: 0.64, scale: 1.7 }, //1095 
-    { progress: 0.45, x: 0.1, y: 0.58, scale: 1.55 }, //1118
-    { progress: 0.5, x: 0.38, y: 0.46, scale: 1.4 },  //1125
-    { progress: 0.6, x: 0.13, y: 0.35, scale: 1.1 }, //1140
-    { progress: 0.82, x: 0.4, y: 0.238, scale: 1 }, //1173
-    { progress: 0.87, x: 0.35, y: 0.220, scale: 0.8 }, //1180.5
-    { progress: 0.94, x: 0.406, y: 0.18, scale: 0.7 }, //1191
-    { progress: 1, x: 0.45, y: 0.159, scale: 0.6 }, //1200
+    { progress: 0, x: 0.389, y: 0.74, scale: 2 }, //2050
+    { progress: 0.2, x: 0.395, y: 0.63, scale: 1.7 }, //2080
+    { progress: 0.3667, x: 0.175, y: 0.55, scale: 1.6 }, //2105
+    { progress: 0.533, x: 0.39, y: 0.43, scale: 1.5 }, //2130
+    { progress: 0.733, x: 0.19, y: 0.31, scale: 1.1 }, //2130
+    { progress: 0.87, x: 0.43, y: 0.232, scale: 0.8 }, //2180
+    { progress: 0.92, x: 0.35, y: 0.2, scale: 0.72 }, //2188
+    { progress: 1, x: 0.45, y: 0.15, scale: 0.6 }, //2200
   ],
+  
 };
 const JOURNEY_CARD_POINTS = {
   start: {
@@ -146,6 +216,22 @@ const JOURNEY_CARD_POINTS = {
     current: { top: 500, right: 16 },
     next: { top: 190, left: 28 },
   },
+  5: {
+  current: { top: 500, right: 16 },
+  next: { top: 190, left: 28 },
+},
+6: {
+  current: { top: 500, right: 16 },
+  next: { top: 190, left: 28 },
+},
+7: {
+  current: { top: 500, right: 16 },
+  next: { top: 190, left: 28 },
+},
+8: {
+  current: { top: 500, right: 16 },
+  next: { top: 190, left: 28 },
+},
   end: {
     current: { top: 500, right: 16 },
     next: { top: 190, left: 28 },
@@ -165,6 +251,68 @@ const STAGES = [
   }),
 ];
 
+const JOURNEY_QUOTES = {
+  50: "좋아, 첫걸음을 내디뎠어.",
+  100: "잘하고 있어. 계속 가보자.",
+  150: "조금씩 몸이 길을 기억하고 있어.",
+  200: "오늘의 한 걸음이 내일을 만든다.",
+  250: "포기하지 않은 것만으로도 대단해.",
+  300: "이제 수련이 일상이 되어가고 있어.",
+  350: "급할 필요 없어. 꾸준함이 답이야.",
+  400: "천천히 가도 괜찮아.",
+  450: "여기까지 온 너를 칭찬해.",
+  500: "벌써 이렇게 멀리 왔구나.",
+  550: "몸이 먼저 움직이기 시작했어.",
+  600: "반복은 실력을 만든다.",
+  650: "익숙함 속에서도 배움은 있다.",
+  700: "흔들려도 다시 중심을 잡으면 돼.",
+  750: "수련은 경쟁이 아니라 성장이다.",
+  800: "길은 아직도 계속 이어진다.",
+  850: "조금씩 깊이가 생기고 있어.",
+  900: "지금까지의 노력이 쌓이고 있다.",
+  950: "꾸준함은 재능을 이긴다.",
+  1000: "천 일을 걸어온 사람은 다르다.",
+  1050: "높은 산도 한 걸음부터였다.",
+  1100: "익숙함 속에서도 기본을 잊지 마.",
+  1150: "정체된 것 같아도 앞으로 가고 있어.",
+  1200: "조용히 계속 가는 사람이 결국 도착한다.",
+  1250: "마음이 흔들릴수록 호흡을 돌아봐.",
+  1300: "기술보다 중요한 건 지속함이다.",
+  1350: "어제의 나보다 조금 더 나아지면 충분해.",
+  1400: "수련은 몸과 마음을 함께 다듬는다.",
+  1450: "길이 보이지 않아도 길 위에 있다.",
+  1500: "벌써 많은 이들의 본보기가 되었어.",
+  1550: "이제는 배움보다 체화의 시간이다.",
+  1600: "조급함은 내려놓고 흐름을 따라가자.",
+  1650: "진짜 실력은 보이지 않는 곳에서 자란다.",
+  1700: "산 정상은 아직 멀지만 길은 분명하다.",
+  1750: "수련은 결국 자신을 만나는 과정이다.",
+  1800: "고요함 속에서 더 많은 것을 본다.",
+  1850: "강함은 부드러움 속에 숨어있다.",
+  1900: "중심을 잃지 않는 사람이 멀리 간다.",
+  1950: "조용히 쌓인 시간이 힘이 된다.",
+  2000: "이천 일을 걸어온 발걸음은 결코 가볍지 않다.",
+  2050: "이제 길을 걷는 사람이 아니라 길이 되어간다.",
+  2100: "몸과 마음이 하나로 이어지고 있다.",
+  2150: "수련은 끝이 아니라 평생의 여정이다.",
+  2200: "고수를 향한 길은 오늘도 계속된다.",
+};
+
+function getJourneyQuote(days) {
+  const quoteDay = Math.max(50, Math.min(2200, Math.floor(days / 50) * 50));
+  return JOURNEY_QUOTES[quoteDay] || "오늘도 한 걸음이면 충분해.";
+}
+
+function shouldShowJourneyQuote(days) {
+  const nearestQuoteDay = Math.round(days / 50) * 50;
+
+  if (nearestQuoteDay < 50 || nearestQuoteDay > 2200) {
+    return false;
+  }
+
+  return Math.abs(days - nearestQuoteDay) <= 3;
+}
+
 function getCurrentSeason(date = new Date()) {
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -182,7 +330,11 @@ function getJourneyRange(days) {
   if (days < 550) return { start: 300, end: 550 };
   if (days < 800) return { start: 550, end: 800 };
   if (days < 1050) return { start: 800, end: 1050 };
-  return { start: 1050, end: 1200 };
+  if (days < 1300) return { start: 1050, end: 1300 };
+  if (days < 1550) return { start: 1300, end: 1550 };
+  if (days < 1800) return { start: 1550, end: 1800 };
+  if (days < 2050) return { start: 1800, end: 2050 };
+  return { start: 2050, end: 2200 };
 }
 
 function getJourneySegment(days) {
@@ -191,20 +343,18 @@ function getJourneySegment(days) {
   if (days < 550) return "2";
   if (days < 800) return "3";
   if (days < 1050) return "4";
-  if (days < 1200) return "end";
+  if (days < 1300) return "5";
+  if (days < 1550) return "6";
+  if (days < 1800) return "7";
+  if (days < 2050) return "8";
   return "end";
 }
 
 function getWalkerStageIndex(attendanceCount) {
-  if (attendanceCount >= 800) return 8;
-  if (attendanceCount >= 700) return 7;
-  if (attendanceCount >= 600) return 6;
-  if (attendanceCount >= 500) return 5;
-  if (attendanceCount >= 400) return 4;
-  if (attendanceCount >= 300) return 3;
-  if (attendanceCount >= 200) return 2;
-  if (attendanceCount >= 100) return 1;
-  return 0;
+  return Math.min(
+    35,
+    Math.max(0, Math.floor(attendanceCount / 100))
+  );
 }
 
 function getJoinedPeriodLabel(joinedAt) {
@@ -271,10 +421,88 @@ export default function TrainingHistoryScreen() {
   const [historyEvents, setHistoryEvents] = useState([]);
   const [commonMilestones, setCommonMilestones] = useState([]);
   const { token } = useAuth();
+
+  const handleBack = () => {
+    if (router.canGoBack?.()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
   const [sceneSize, setSceneSize] = useState({
   width: 360,
   height: 820,
 });
+const SHEET_CLOSED_Y = 0;
+const SHEET_OPEN_Y = -230;
+
+const sheetTranslateY = useMemo(
+  () => new Animated.Value(SHEET_CLOSED_Y),
+  []
+);
+
+const openSheet = () => {
+  setStatsExpanded(true);
+  Animated.spring(sheetTranslateY, {
+    toValue: SHEET_OPEN_Y,
+    useNativeDriver: true,
+  }).start();
+};
+
+const closeSheet = () => {
+  Animated.spring(sheetTranslateY, {
+    toValue: SHEET_CLOSED_Y,
+    useNativeDriver: true,
+  }).start(() => setStatsExpanded(false));
+};
+
+const [statsExpanded, setStatsExpanded] = useState(false);
+const sheetPanResponder = useMemo(
+  () =>
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 6;
+      },
+
+      onPanResponderMove: (_, gestureState) => {
+        if (!statsExpanded && gestureState.dy < 0) {
+          sheetTranslateY.setValue(Math.max(SHEET_OPEN_Y, gestureState.dy));
+        }
+
+        if (statsExpanded && gestureState.dy > 0) {
+          sheetTranslateY.setValue(SHEET_OPEN_Y + gestureState.dy);
+        }
+      },
+
+      onPanResponderRelease: (_, gestureState) => {
+        if (!statsExpanded) {
+          if (gestureState.dy < -45) {
+            openSheet();
+          } else {
+            Animated.spring(sheetTranslateY, {
+              toValue: SHEET_CLOSED_Y,
+              useNativeDriver: true,
+            }).start();
+          }
+
+          
+          return;
+        }
+
+        if (statsExpanded) {
+          if (gestureState.dy > 45) {
+            closeSheet();
+          } else {
+            Animated.spring(sheetTranslateY, {
+              toValue: SHEET_OPEN_Y,
+              useNativeDriver: true,
+            }).start();
+          }
+        }
+      },
+    }),
+  [statsExpanded, sheetTranslateY]
+);
 
   useEffect(() => {
   async function load() {
@@ -363,11 +591,44 @@ function getDayTop(day) {
   return sceneHeight - SCENE_BOTTOM_PADDING - usableHeight * segmentProgress;
 }
 
-function getStageLayout(index) {
-  const isCurrent = index === displayCurrentStageIndex;
-  const cardPoints = JOURNEY_CARD_POINTS[segment] || JOURNEY_CARD_POINTS.start;
+function getStageLayout(stage) {
+  const isFuture = stage.days > attendanceCount;
 
-  return isCurrent ? cardPoints.current : cardPoints.next;
+  if (isFuture) {
+  const endPoint = getPositionByDay(range.end - 1);
+
+  const markerSize = 26;
+  const labelWidth = 120;
+
+  const markerOffsetX = 20;
+  const markerOffsetY = 20;
+
+  const labelGap = 4;
+
+  const markerLeft = endPoint.left - markerSize / 2 + markerOffsetX;
+  const markerTop = endPoint.top - markerSize / 2 + markerOffsetY;
+
+  const isMarkerOnRight = endPoint.left > sceneSize.width / 2;
+
+  return {
+    top: Math.max(80, markerTop),
+    left: Math.max(
+      16,
+      Math.min(sceneSize.width - markerSize - 16, markerLeft)
+    ),
+
+    labelLeft: isMarkerOnRight
+      ? -(labelWidth + labelGap)
+      : markerSize + labelGap,
+  };
+}
+
+  const position = getPositionByDay(stage.days);
+
+  return {
+    top: Math.max(120, position.top - 20),
+    right: 16,
+  };
 }
 
 function getWalkerPosition() {
@@ -412,19 +673,70 @@ return {
 };
 }
 
+function getPositionByDay(day) {
+  const targetSegment = getJourneySegment(day);
+  const points = JOURNEY_PATH_POINTS[targetSegment] || JOURNEY_PATH_POINTS.start;
+  const targetRange = getJourneyRange(day);
+
+  const progress = Math.min(
+    1,
+    Math.max(0, (day - targetRange.start) / (targetRange.end - targetRange.start))
+  );
+
+  let previous = points[0];
+  let next = points[points.length - 1];
+
+  for (let i = 0; i < points.length - 1; i++) {
+    if (progress >= points[i].progress && progress <= points[i + 1].progress) {
+      previous = points[i];
+      next = points[i + 1];
+      break;
+    }
+  }
+
+  const sectionProgress =
+    (progress - previous.progress) / (next.progress - previous.progress || 1);
+
+  const x = previous.x + (next.x - previous.x) * sectionProgress;
+  const y = previous.y + (next.y - previous.y) * sectionProgress;
+
+  return {
+    top: sceneSize.height * y,
+    left: sceneSize.width * x,
+  };
+}
+
   const progressText = nextStage
     ? `${Math.max(0, nextStage.days - attendanceCount)}일 더 수련하면 ${nextStage.title}`
     : "수련의 길은 계속 이어집니다";
 const promotionGoal = homeData?.trainingGoals?.promotion;
 
+const promotionRequiredDays = Number(
+  promotionGoal?.requiredAttendanceCount || 0
+);
+
+const promotionTargetDays =
+  promotionRequiredDays > 0
+    ? promotionRequiredDays
+    : attendanceCount + Number(promotionGoal?.remainingCount || 0);
+
+const promotionRemainDays = Math.max(
+  0,
+  promotionTargetDays - attendanceCount
+);
+
 const nextDanEvent = promotionGoal
   ? {
-      days: promotionGoal.requiredAttendanceCount,
+      days: promotionTargetDays,
       title: promotionGoal.label || `${promotionGoal.nextRankLevel}단 승단심사`,
-      desc: `${promotionGoal.nextRankLevel}단까지 앞으로 ${promotionGoal.remainingCount}일 남았습니다.`,
+      desc:
+        promotionRemainDays <= 0
+          ? `${promotionGoal.nextRankLevel}단 승단심사 자격이 되었습니다.`
+          : `${promotionGoal.nextRankLevel}단까지 앞으로 ${promotionRemainDays}일 남았습니다.`,
       kind: "promotion",
     }
   : getNextDanEvent(member);
+
 const mergedStages = [
   {
     days: 0,
@@ -456,7 +768,10 @@ const displayPreviousStage =
 
 const displayNextStage =
   mergedStages.find((stage) => stage.days > attendanceCount) || null;
-const statsTargetDays = displayNextStage?.days ?? null;
+
+const statsNextGoal = nextDanEvent || displayNextStage; 
+
+ const statsTargetDays = displayNextStage?.days ?? null;
 
 const statsRemainDays =
   statsTargetDays != null
@@ -469,6 +784,27 @@ const statsProgressPercent =
     : 100;
 
 const expectedTrainingHours = Math.floor(attendanceCount * 1.5);
+const journeyQuote = getJourneyQuote(attendanceCount);
+const showJourneyQuote = shouldShowJourneyQuote(attendanceCount);
+
+const walkerPosition = getWalkerPosition();
+const walkerScale = walkerPosition.transform?.[0]?.scale || 1;
+
+const speechBubblePosition = {
+  top: Math.max(
+    70,
+    walkerPosition.top - 55 * walkerScale
+  ),
+
+  left: Math.max(
+    16,
+    Math.min(
+      sceneSize.width - 190,
+      walkerPosition.left - 120 * walkerScale
+    )
+  ),
+};
+
   const displayNextStages = mergedStages
   .filter((stage) => stage.days > attendanceCount)
   .slice(0, 2);
@@ -502,19 +838,39 @@ const displayNextStageIndex = Math.min(
   
   <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.headerRow}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>‹</Text>
-        </Pressable>
+        <Pressable
+  style={styles.backButton}
+  onPress={handleBack}
+  hitSlop={16}
+>
+  <Image
+    source={backIcon}
+    style={styles.backIcon}
+    resizeMode="contain"
+  />
+</Pressable>
 
         <View style={styles.headerTextWrap}>
           <Text style={styles.title}>수련의 길</Text>
-          <Text style={styles.subtitle}>고수를 향해, 한 걸음 한 걸음</Text>
+          <Text style={styles.subtitle}>
+  고수를 향해, {attendanceCount}일째 걷는 중
+</Text>
         </View>
       </View>
 
-      
+      <LinearGradient
+  pointerEvents="none"
+  colors={[
+    "rgba(247,241,232,1)",
+    "rgba(247,241,232,0.72)",
+    "rgba(247,241,232,0)",
+  ]}
+  locations={[0, 0.42, 1]}
+  style={styles.journeyOutsideTopFade}
+/>
+    
 
-      
+ <View style={styles.journeySceneWrap}>
       <View
   style={[styles.journeyScene, { height: sceneHeight }]}
   onLayout={(event) => {
@@ -522,7 +878,7 @@ const displayNextStageIndex = Math.min(
     setSceneSize({ width, height });
   }}
 >
-        
+      
   <View style={styles.journeyBlockLayer}>
   <Image
     source={currentJourneyImage}
@@ -530,27 +886,27 @@ const displayNextStageIndex = Math.min(
     resizeMode="cover"
   />
 </View>
-
-  <View style={styles.sceneProfileCard}>
-  <Text style={styles.sceneProfileName}>{member?.name || "회원"}</Text>
-
-  <Text style={styles.sceneProfileMeta}>
-    입관일 {joinedAt ? String(joinedAt).slice(0, 10) : "-"}
-  </Text>
-
-  <Text style={styles.sceneProfileWalkText}>
-    수련의 길 {attendanceCount}일째 걷는 중
-  </Text>
 </View>
 
-  <Image
+<Image
   source={currentWalkerImage}
   style={[
     styles.sceneWalker,
-    getWalkerPosition(),
+    walkerPosition,
   ]}
   resizeMode="contain"
 />
+{showJourneyQuote && (
+  <View
+    pointerEvents="none"
+    style={[
+  styles.journeySpeechBubble,
+  speechBubblePosition,
+]}
+  >
+    <Text style={styles.journeySpeechText}>{journeyQuote}</Text>
+  </View>
+)}
 
   {mergedStages.map((stage, index) => {
     const completed = attendanceCount >= stage.days;
@@ -560,12 +916,45 @@ const displayNextStageIndex = Math.min(
     const visible = visibleStages.some((item) => item.days === stage.days);
 if (!visible) return null;
 
-const layout = getStageLayout(index);
+const layout = getStageLayout(stage);
+
+if (future) {
+  return (
+    <View
+      style={[
+        styles.sceneFutureGoalWrap,
+        {
+          top: layout.top,
+          left: layout.left,
+        },
+      ]}
+    >
+      <View style={[styles.sceneDot, styles.sceneDotFutureSmall]} />
+
+      <View
+        style={[
+          styles.sceneTextBox,
+          styles.sceneTextBoxFuture,
+          { left: layout.labelLeft },
+        ]}
+      >
+        <Text style={[styles.sceneMilestoneTitle, styles.sceneMilestoneTitleFuture]}>
+          {stage.title}
+        </Text>
+
+        <Text style={[styles.sceneMilestoneDesc, styles.sceneMilestoneDescFuture]}>
+          {stage.desc}
+        </Text>
+      </View>
+    </View>
+  );
+}
 
 return (
-      <View
+  <View
   style={[
     styles.sceneMilestone,
+    future && styles.sceneMilestoneFuture,
     current ? styles.sceneMilestoneRight : styles.sceneMilestoneLeft,
     {
       top: layout.top,
@@ -575,13 +964,14 @@ return (
   ]}
 >
         <View
-          style={[
-            styles.sceneDot,
-            completed && styles.sceneDotCompleted,
-            current && styles.sceneDotCurrent,
-            future && styles.sceneDotFuture,
-          ]}
-        >
+  style={[
+    styles.sceneDot,
+    completed && styles.sceneDotCompleted,
+    current && styles.sceneDotCurrent,
+    future && styles.sceneDotFuture,
+    future && styles.sceneDotFutureSmall,
+  ]}
+>
           <Text
             style={[
               styles.sceneDotText,
@@ -627,100 +1017,134 @@ return (
     );
   })}
 
-  <LinearGradient
-  pointerEvents="none"
-  colors={[
-    "rgba(247,241,232,1)",
-    "rgba(247,241,232,0.75)",
-    "rgba(247,241,232,0)",
-  ]}
-  locations={[0, 0.35, 1]}
-  style={styles.journeyTopFade}
-/>
+</View>
 
 <LinearGradient
   pointerEvents="none"
   colors={[
-    "rgba(247,241,232,0)",
-    "rgba(247,241,232,0.38)",
-    "rgba(247,241,232,1)",
-  ]}
-  locations={[0, 0.5, 1]}
-  style={styles.journeyBottomFade}
+  "rgba(247,241,232,0)",
+  "rgba(247,241,232,0.18)",
+  "rgba(247,241,232,0.48)",
+  "rgba(247,241,232,0.82)",
+  "rgba(247,241,232,1)",
+]}
+locations={[0, 0.32, 0.58, 0.82, 1]}
+  style={styles.journeyOutsideFade}
 />
-</View>
+</ScrollView>
 
-      <Pressable
-  style={styles.trainingStatsCard}
-  onPress={() => router.push("/training-stats")}
+{statsExpanded && (
+  <Pressable
+    style={styles.bottomSheetBackdrop}
+    onPress={closeSheet}
+  />
+)}
+
+<Animated.View
+  style={[
+    styles.bottomSheet,
+    {
+      transform: [{ translateY: sheetTranslateY }],
+    },
+  ]}
+  {...sheetPanResponder.panHandlers}
 >
-  <View style={styles.trainingStatsHeader}>
-    <View style={styles.trainingStatsTitleRow}>
-      <Image
-        source={statsIcon}
-        style={styles.trainingStatsIconImage}
-        resizeMode="contain"
-      />
-      <Text style={styles.trainingStatsTitle}>내 수련 통계</Text>
-    </View>
+  <Pressable
+    style={styles.bottomSheetHandleArea}
+    onPress={openSheet}
+  >
+    <View style={styles.bottomSheetHandle} />
+  </Pressable>
 
-    <View style={styles.trainingStatsViewButton}>
-      <Text style={styles.trainingStatsViewButtonText}>1년 보기</Text>
-    </View>
-  </View>
-
-  <View style={styles.trainingStatsMainRow}>
-    <View style={styles.trainingStatsMainItem}>
-      <Text style={styles.trainingStatsMainValue}>
-        {attendanceCount}일
-      </Text>
-      <Text style={styles.trainingStatsMainLabel}>총 출석일</Text>
-    </View>
-
-    <View style={styles.trainingStatsCenterDot} />
-
-    <View style={styles.trainingStatsMainItem}>
-      <Text style={styles.trainingStatsMainValue}>
-        {expectedTrainingHours}시간
-      </Text>
-      <Text style={styles.trainingStatsMainLabel}>예상 수련 시간</Text>
-    </View>
-  </View>
-
-  <View style={styles.trainingStatsGoalPanel}>
-  <Text style={styles.trainingStatsGoalSmallLabel}>다음 목표</Text>
-
-  <View style={styles.trainingStatsGoalTitleRow}>
-    <Text style={styles.trainingStatsGoalBigTitle}>
-      {displayNextStage?.title || "수련의 길은 계속 이어집니다"}
-    </Text>
-
-    {displayNextStage ? (
-      <View style={styles.trainingStatsProgressTrackInline}>
-        <View
-          style={[
-            styles.trainingStatsProgressFill,
-            { width: `${statsProgressPercent}%` },
-          ]}
+  {!statsExpanded ? (
+    <Pressable
+      style={styles.bottomSheetMiniContent}
+      onPress={openSheet}
+    >
+      <View style={styles.trainingStatsMiniContent}>
+        <Image
+          source={statsIcon}
+          style={styles.trainingStatsIconImage}
+          resizeMode="contain"
         />
-      </View>
-    ) : null}
-  </View>
 
-  <Text style={styles.trainingStatsGoalDesc}>
-    {displayNextStage
-      ? `현재 ${attendanceCount}일 · 목표 ${statsTargetDays}일 · 앞으로 ${statsRemainDays}일`
-      : "꾸준히 한 걸음씩 나아가고 있어요"}
+        <View style={styles.trainingStatsMiniTextRow}>
+  <Text style={styles.trainingStatsMiniTitle}>내 수련 통계</Text>
+  <Text style={styles.trainingStatsMiniSub}>
+    {attendanceCount}일 · {expectedTrainingHours}시간
   </Text>
 </View>
-</Pressable>
-     </ScrollView>
+      </View>
+    </Pressable>
+  ) : (
+    <View style={styles.bottomSheetFullContent}>
+      <View style={styles.trainingStatsHeader}>
+        <View style={styles.trainingStatsTitleRow}>
+          <Image
+            source={statsIcon}
+            style={styles.trainingStatsIconImage}
+            resizeMode="contain"
+          />
 
-  <Image
-  source={fogLayer}
-  style={styles.sceneTopFog}
-  resizeMode="cover"
-/>
+          <View style={styles.trainingStatsTitleTextRow}>
+            <Text style={styles.trainingStatsTitle}>내 수련 통계</Text>
+
+            <Pressable onPress={() => router.push("/training-stats")}>
+              <Text style={styles.trainingStatsInlineLink}>보기</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.trainingStatsMainRow}>
+        <View style={styles.trainingStatsMainItem}>
+          <Text style={styles.trainingStatsMainValue}>{attendanceCount}일</Text>
+          <Text style={styles.trainingStatsMainLabel}>총 출석일</Text>
+        </View>
+
+        <View style={styles.trainingStatsCenterDot} />
+
+        <View style={styles.trainingStatsMainItem}>
+          <Text style={styles.trainingStatsMainValue}>
+            {expectedTrainingHours}시간
+          </Text>
+          <Text style={styles.trainingStatsMainLabel}>예상 수련 시간</Text>
+        </View>
+      </View>
+
+      <View style={styles.trainingStatsGoalPanel}>
+        <Text style={styles.trainingStatsGoalSmallLabel}>다음 목표</Text>
+
+        <View style={styles.trainingStatsGoalTitleRow}>
+          <Text style={styles.trainingStatsGoalBigTitle}>
+            {statsNextGoal?.title || "수련의 길은 계속 이어집니다"}
+          </Text>
+
+          {statsNextGoal ? (
+            <View style={styles.trainingStatsProgressTrackInline}>
+              <View
+                style={[
+                  styles.trainingStatsProgressFill,
+                  { width: `${statsProgressPercent}%` },
+                ]}
+              />
+            </View>
+          ) : null}
+        </View>
+
+        <Text style={styles.trainingStatsGoalDesc}>
+          {statsNextGoal
+            ? `현재 ${attendanceCount}일 · 목표 ${statsNextGoal.days}일 · 앞으로 ${Math.max(
+                0,
+                statsNextGoal.days - attendanceCount
+              )}일`
+            : "꾸준히 한 걸음씩 나아가고 있어요"}
+        </Text>
+      </View>
+    </View>
+  )}
+</Animated.View>
+  
 </View>
   );
 }
@@ -733,7 +1157,7 @@ const styles = StyleSheet.create({
   content: {
   paddingHorizontal: 16,
   paddingTop: 20,
-  paddingBottom: 40,
+  paddingBottom: 30,
   gap: 8,
 },
   center: {
@@ -751,22 +1175,23 @@ const styles = StyleSheet.create({
   flexDirection: "row",
   alignItems: "center",
   gap: 12,
+  zIndex: 20,
 },
   backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.card,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  backButtonText: {
-    fontSize: 30,
-    color: colors.warmBrown,
-    marginTop: -2,
-  },
+  width: 44,
+  height: 44,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  zIndex: 200,
+  elevation: 20,
+},
+
+backIcon: {
+  width: 28,
+  height: 28,
+},
   headerTextWrap: {
     flex: 1,
     alignItems: "center",
@@ -1072,15 +1497,7 @@ continueIcon: {
 },
 journeyScene: {
   position: "relative",
-  marginTop: -11,
-  marginLeft: -16,
-  marginRight: -16,
-
-  borderTopLeftRadius: 0,
-  borderTopRightRadius: 0,
-  borderBottomLeftRadius: 0,
-  borderBottomRightRadius: 0,
-
+  marginTop: -16,
   borderWidth: 0,
   overflow: "hidden",
   backgroundColor: "#F7F1E8",
@@ -1133,11 +1550,6 @@ sceneDotFuture: {
   opacity: 0.75,
 },
 
-sceneTextBoxFuture: {
-  backgroundColor: "rgba(255, 253, 249, 0.38)",
-  borderColor: "rgba(214, 170, 85, 0.28)",
-},
-
 sceneDotText: {
   fontSize: 13,
   fontWeight: "900",
@@ -1181,10 +1593,16 @@ sceneMilestoneTitleCurrent: {
 },
 
 sceneMilestoneTitleFuture: {
-  color: "#4A382C",
+  fontSize: 13,
+  lineHeight: 17,
+  color: "#F1D39A",
+  textShadowColor: "transparent",
 },
+
 sceneMilestoneDescFuture: {
-  color: "#6F6258",
+  fontSize: 10,
+  lineHeight: 14,
+  color: "rgba(255,253,249,0.74)",
 },
 sceneMilestoneDesc: {
   marginTop: 4,
@@ -1238,53 +1656,14 @@ journeyBlockImage: {
   width: "100%",
   height: 250,
 },
-sceneTopFog: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 260,
-  opacity: 0.45,
-  zIndex: 7,
-},
+
 customEventBadge: {
   marginTop: 4,
   fontSize: 10,
   fontWeight: "900",
   color: "#D6AA55",
 },
-sceneProfileCard: {
-  position: "absolute",
-  top: 22,
-  left: 18,
-  zIndex: 10,
-  width: 165,
-  borderRadius: 18,
-  backgroundColor: "rgba(255, 252, 246, 0.74)",
-  borderWidth: 1,
-  borderColor: "rgba(224, 214, 200, 0.82)",
-  paddingHorizontal: 16,
-  paddingVertical: 14,
-},
 
-sceneProfileName: {
-  fontSize: 18,
-  fontWeight: "900",
-  color: "#2F2520",
-},
-
-sceneProfileMeta: {
-  marginTop: 7,
-  fontSize: 12,
-  color: "#6F6258",
-},
-
-sceneProfileWalkText: {
-  marginTop: 7,
-  fontSize: 12,
-  fontWeight: "800",
-  color: "#4D3A2F",
-},
 journeyFullImage: {
   width: "100%",
   height: "100%",
@@ -1295,22 +1674,6 @@ sceneMilestoneRight: {
 
 sceneMilestoneLeft: {
   alignItems: "flex-end",
-},
-
-trainingStatsCard: {
-  marginTop: -62,
-  marginHorizontal: 8,
-  borderRadius: 30,
-  backgroundColor: "rgba(255, 253, 249, 0.98)",
-  borderWidth: 1,
-  borderColor: "rgba(232, 222, 210, 0.95)",
-  padding: 18,
-  shadowColor: "#5A3A1D",
-  shadowOpacity: 0.08,
-  shadowRadius: 16,
-  shadowOffset: { width: 0, height: 8 },
-  elevation: 5,
-  zIndex: 20,
 },
 
 trainingStatsHeader: {
@@ -1354,15 +1717,24 @@ trainingStatsViewButtonText: {
 },
 
 trainingStatsMainRow: {
-  minHeight: 80,
-  borderRadius: 20,
+  minHeight: 68,
+  borderRadius: 18,
   borderWidth: 1,
-  borderColor: "rgba(232, 222, 210, 0.92)",
-  backgroundColor: "rgba(255, 255, 255, 0.62)",
+  borderColor: "rgba(232, 222, 210, 0.65)",
+  backgroundColor: "rgba(255, 255, 255, 0.42)",
   flexDirection: "row",
   alignItems: "center",
-  paddingHorizontal: 14,
-  marginBottom: 12,
+  paddingHorizontal: 12,
+  marginBottom: 10,
+},
+
+trainingStatsGoalPanel: {
+  borderRadius: 20,
+  borderWidth: 1,
+  borderColor: "rgba(232, 222, 210, 0.62)",
+  backgroundColor: "rgba(250, 246, 238, 0.48)",
+  padding: 13,
+  marginBottom: 0,
 },
 
 trainingStatsMainItem: {
@@ -1372,12 +1744,11 @@ trainingStatsMainItem: {
 },
 
 trainingStatsMainValue: {
-  fontSize: 25,
+  fontSize: 23,
   fontWeight: "700",
   color: "#2E2118",
-  letterSpacing: -0.8,
+  letterSpacing: -0.6,
 },
-
 
 trainingStatsMainLabel: {
   marginTop: 5,
@@ -1477,21 +1848,199 @@ trainingStatsBottomValue: {
   letterSpacing: -0.3,
 },
 
-journeyTopFade: {
-  position: "absolute",
-  top: -10,
-  left: 0,
-  right: 0,
-  height: 115,
-  zIndex: 3,
+journeyOutsideFade: {
+  height: 190,
+  marginTop: -190,
+  marginLeft: -20,
+  marginRight: -20,
+  zIndex: 8,
+},
+journeyOutsideTopFade: {
+  height: 120,
+  marginBottom: -110,
+  marginLeft: -24,
+  marginRight: -24,
+  zIndex: 1,
+  pointerEvents: "none",
+},
+journeySceneWrap: {
+  position: "relative",
+  marginLeft: -16,
+  marginRight: -16,
 },
 
-journeyBottomFade: {
+trainingStatsMiniTitle: {
+  fontSize: 15,
+  fontWeight: "800",
+  color: "#2E2118",
+},
+
+trainingStatsMiniSub: {
+  fontSize: 15,
+  color: "#8A7663",
+},
+
+trainingStatsMiniArrow: {
+  fontSize: 24,
+  fontWeight: "700",
+  color: "#A77A3F",
+  marginTop: -4,
+},
+
+trainingStatsTitleTextRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 8,
+},
+
+trainingStatsInlineLink: {
+  fontSize: 12,
+  fontWeight: "800",
+  color: "#8C6330",
+  textDecorationLine: "underline",
+},
+
+journeySpeechBubble: {
   position: "absolute",
-  left: 0,
-  right: 0,
-  bottom: 0,
-  height: 190,
-  zIndex: 3,
+
+  backgroundColor: "rgba(247, 232, 204, 0.78)",
+
+  borderWidth: 2,
+  borderColor: "#C9A96A",
+
+  borderRadius: 14,
+
+  paddingHorizontal: 16,
+  paddingVertical: 8,
+
+  minWidth: 170,
+
+  shadowColor: "#7A5A2B",
+  shadowOpacity: 0.18,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 2 },
+
+  zIndex: 12,
+},
+
+journeySpeechText: {
+  fontSize: 16,
+  lineHeight: 22,
+
+  fontWeight: "700",
+
+  color: "#5E4528",
+
+  textAlign: "center",
+},
+
+bottomSheetHandle: {
+  alignSelf: "center",
+
+  width: 52,
+  height: 5,
+
+  borderRadius: 999,
+
+  backgroundColor: "#CFC3B3",
+
+  marginBottom: 16,
+},
+
+
+trainingStatsMiniContent: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 10,
+},
+bottomSheet: {
+  position: "absolute",
+  left: 16,
+  right: 16,
+  bottom: -245,
+
+  minHeight: 330,
+
+  borderTopLeftRadius: 36,
+  borderTopRightRadius: 36,
+
+  backgroundColor: "rgba(255,253,249,0.96)",
+
+  paddingHorizontal: 20,
+  paddingTop: 10,
+  paddingBottom: 26,
+
+  zIndex: 100,
+
+  shadowColor: "#5A3A1D",
+  shadowOpacity: 0.14,
+  shadowRadius: 18,
+  shadowOffset: { width: 0, height: -5 },
+  elevation: 12,
+},
+
+bottomSheetHandleArea: {
+  alignItems: "center",
+  paddingTop: 2,
+  paddingBottom: 12,
+},
+
+bottomSheetHandle: {
+  width: 52,
+  height: 5,
+  borderRadius: 999,
+  backgroundColor: "#CFC3B3",
+},
+
+bottomSheetMiniContent: {
+  paddingTop: 4,
+  paddingBottom: 12,
+},
+
+bottomSheetFullContent: {
+  paddingTop: 2,
+},
+bottomSheetBackdrop: {
+  ...StyleSheet.absoluteFillObject,
+  backgroundColor: "transparent",
+  zIndex: 90,
+},
+trainingStatsMiniTextRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 8,
+},
+sceneMilestoneFuture: {
+  width: 160,
+  opacity: 0.92,
+
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 8,
+},
+sceneFutureGoalWrap: {
+  position: "absolute",
+  width: 26,
+  height: 26,
+  zIndex: 7,
+},
+
+sceneDotFutureSmall: {
+  width: 26,
+  height: 26,
+  borderRadius: 13,
+  marginBottom: 0,
+  opacity :0.8,
+},
+
+sceneTextBoxFuture: {
+  position: "absolute",
+  top: -60,
+  width: 120,
+  borderRadius: 13,
+  paddingHorizontal: 8,
+  paddingVertical: 7,
+  backgroundColor: "rgba(43, 37, 34, 0.68)",
+  borderColor: "rgba(214, 170, 85, 0.58)",
 },
 });
