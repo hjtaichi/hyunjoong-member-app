@@ -372,7 +372,19 @@ function getJoinedPeriodLabel(joinedAt) {
   const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
   return `입관 ${days}일째`;
 }
+function formatShortDate(dateValue) {
+  if (!dateValue) return "";
 
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  const year = String(date.getFullYear()).slice(2);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  return `${year}.${month}.${day}`;
+}
 function getSegmentProgress(days) {
   const range = getJourneyRange(days);
 
@@ -811,9 +823,73 @@ const speechBubblePosition = {
 
 const visibleStages = [
   ...(displayPreviousStage ? [displayPreviousStage] : []),
-  ...displayNextStages,
+  ...displayNextStages.filter((stage) => {
+    return stage.days >= range.start && stage.days <= range.end;
+  }),
 ];
+const roadmapItems = useMemo(() => {
+  const items = [];
 
+  if (joinedAt) {
+    items.push({
+      key: "join",
+      title: "입관",
+      desc: formatShortDate(joinedAt),
+      completed: true,
+      current: false,
+    });
+  }
+
+  const danPromotions = Array.isArray(member?.danPromotions)
+    ? member.danPromotions
+    : [];
+
+  danPromotions.forEach((promotion) => {
+    items.push({
+      key: `dan-${promotion.danRank}`,
+      title: `${promotion.danRank}단 승단`,
+      desc: promotion.promotedAt
+        ? formatShortDate(promotion.promotedAt)
+        : `${promotion.attendanceDay || ""}일`,
+      completed: true,
+      current: false,
+    });
+  });
+
+  const achievedHundred = Math.floor(attendanceCount / 100) * 100;
+
+  if (achievedHundred >= 100) {
+    items.push({
+      key: `day-${achievedHundred}`,
+      title: `${achievedHundred}일 달성`,
+      desc: "꾸준한 수련 기록",
+      completed: true,
+      current: false,
+    });
+  }
+
+  items.push({
+  key: "current",
+  title: "현재",
+  desc: `${attendanceCount}일째`,
+  completed: true,
+  current: true,
+});
+
+if (statsNextGoal && statsNextGoal.days > attendanceCount) {
+  items.push({
+    key: "next-goal",
+    title: statsNextGoal.title,
+    desc: `${statsNextGoal.days - attendanceCount}일 남음`,
+    completed: false,
+    current: false,
+    future: true,
+  });
+}
+
+return items.slice(-6);
+
+}, [joinedAt, member?.danPromotions, attendanceCount]);
 const displayCurrentStageIndex = Math.max(
   0,
   mergedStages.findIndex((stage) => stage.days === displayPreviousStage?.days)
@@ -887,7 +963,57 @@ const displayNextStageIndex = Math.min(
   />
 </View>
 </View>
+<View pointerEvents="box-none" style={styles.roadmapRail}>
+  {[...roadmapItems].reverse().map((item, index, arr) => {
+  const isLast = index === arr.length - 1;
+    return (
+      <View key={item.key} style={styles.roadmapItem}>
+        <View style={styles.roadmapMarkerWrap}>
+          <View
+            style={[
+              styles.roadmapDot,
+              item.completed && styles.roadmapDotCompleted,
+              item.current && styles.roadmapDotCurrent,
+              item.future && styles.roadmapDotFuture,
+            ]}
+          >
+            {item.current ? (
+              <Text style={styles.roadmapCurrentText}>현</Text>
+            ) : null}
+          </View>
 
+          {!isLast ? <View style={styles.roadmapLine} /> : null}
+        </View>
+
+        <View
+          style={[
+            styles.roadmapLabel,
+            item.current && styles.roadmapLabelCurrent,
+            item.future && styles.roadmapLabelFuture,
+          ]}
+        >
+          <Text
+            style={[
+              styles.roadmapTitle,
+              item.current && styles.roadmapTitleCurrent,
+            ]}
+          >
+            {item.title}
+          </Text>
+
+          <Text
+            style={[
+              styles.roadmapDesc,
+              item.current && styles.roadmapDescCurrent,
+            ]}
+          >
+            {item.desc}
+          </Text>
+        </View>
+      </View>
+    );
+  })}
+</View>
 <Image
   source={currentWalkerImage}
   style={[
@@ -2042,5 +2168,111 @@ sceneTextBoxFuture: {
   paddingVertical: 7,
   backgroundColor: "rgba(43, 37, 34, 0.68)",
   borderColor: "rgba(214, 170, 85, 0.58)",
+},
+roadmapRail: {
+  position: "absolute",
+  left: 12,
+  bottom: 155,
+  zIndex: 20,
+},
+
+roadmapItem: {
+  flexDirection: "row",
+  alignItems: "flex-start",
+  minHeight: 58,
+},
+
+roadmapMarkerWrap: {
+  width: 24,
+  alignItems: "center",
+},
+
+roadmapDot: {
+  width: 15,
+  height: 15,
+  borderRadius: 999,
+  borderWidth: 2,
+  borderColor: "rgba(214, 170, 85, 0.78)",
+  backgroundColor: "rgba(255, 253, 249, 0.72)",
+},
+
+roadmapDotCompleted: {
+  backgroundColor: "rgba(241, 211, 154, 0.92)",
+  borderColor: "#D6AA55",
+},
+
+roadmapDotCurrent: {
+  width: 24,
+  height: 24,
+  borderRadius: 999,
+  backgroundColor: "#2B2522",
+  borderColor: "#D6AA55",
+  alignItems: "center",
+  justifyContent: "center",
+  marginTop: -4,
+},
+
+roadmapCurrentText: {
+  fontSize: 10,
+  fontWeight: "900",
+  color: "#F1D39A",
+},
+
+roadmapLine: {
+  width: 2,
+  flex: 1,
+  minHeight: 42,
+  backgroundColor: "rgba(214, 170, 85, 0.62)",
+  marginTop: 4,
+},
+
+roadmapLabel: {
+  marginLeft: 4,
+  marginTop: -4,
+  maxWidth: 96,
+  borderRadius: 12,
+  paddingHorizontal: 8,
+  paddingVertical: 5,
+  backgroundColor: "rgba(43, 37, 34, 0.38)",
+  borderWidth: 1,
+  borderColor: "rgba(214, 170, 85, 0.26)",
+},
+
+roadmapLabelCurrent: {
+  backgroundColor: "rgba(43, 37, 34, 0.76)",
+  borderColor: "rgba(214, 170, 85, 0.72)",
+},
+
+roadmapTitle: {
+  fontSize: 11,
+  lineHeight: 15,
+  fontWeight: "900",
+  color: "#F1D39A",
+},
+
+roadmapTitleCurrent: {
+  color: "#F8DFA8",
+},
+
+roadmapDesc: {
+  marginTop: 2,
+  fontSize: 9,
+  lineHeight: 12,
+  fontWeight: "700",
+  color: "rgba(255,253,249,0.72)",
+},
+
+roadmapDescCurrent: {
+  color: "rgba(255,253,249,0.9)",
+},
+roadmapDotFuture: {
+  backgroundColor: "rgba(255, 253, 249, 0.72)",
+  borderColor: "#D6AA55",
+  borderStyle: "dashed",
+},
+
+roadmapLabelFuture: {
+  backgroundColor: "rgba(43, 37, 34, 0.58)",
+  borderColor: "rgba(214, 170, 85, 0.56)",
 },
 });
