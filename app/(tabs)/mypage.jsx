@@ -546,8 +546,10 @@ async function handleOpenSeoulPay() {
 
   const memberName = homeData?.member?.name || user?.name || "회원";
 
-  const levelLabel =
-    homeData?.member?.levelLabel || homeData?.member?.level || "일반회원";
+  const rankLevel = Number(homeData?.member?.rankLevel || 0);
+
+const levelLabel =
+  rankLevel > 0 ? `${rankLevel}단` : "일반회원";
 
   const academyName = homeData?.academyName || "현중태극권";
 

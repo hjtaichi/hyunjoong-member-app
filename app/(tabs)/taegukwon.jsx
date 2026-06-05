@@ -751,7 +751,11 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 ) : null}
 {activeTab === "training" ? (
   <View style={styles.coachingInlineBox}>
-    <Text style={styles.coachingInlineLabel}>수련 Tip ☆</Text>
+    <Image
+  source={require("../../assets/images/training-tip-title.png")}
+  style={styles.coachingTipTitleImage}
+  resizeMode="contain"
+/>
 
     <Text style={styles.coachingInlineText} numberOfLines={2}>
       {personalProgress?.recentAdminMemos?.[0]?.content ||
@@ -879,7 +883,11 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
   <Text style={styles.menuArrow}>〉</Text>
 </TouchableOpacity>
 
-<TouchableOpacity style={styles.menuRow} activeOpacity={0.85}>
+<TouchableOpacity
+  style={styles.menuRow}
+  activeOpacity={0.85}
+  onPress={() => router.push("/movement-dictionary")}
+>
   <Image
     source={require("../../assets/images/menu-dictionary.png")}
     style={styles.menuIcon}
@@ -2442,6 +2450,7 @@ coachingInlineText: {
   lineHeight: 19,
   color: "#4a3d31",
   fontWeight: "600",
+  marginLeft: 10,
 },
 trainingCard: {
   paddingVertical: 4,
@@ -3174,5 +3183,12 @@ riverHighlight: {
   elevation: 4,
 
   resizeMode: "stretch",
+},
+coachingTipTitleImage: {
+  width: 130,
+  height: 52,
+  marginBottom: 3,
+  marginLeft: 2,
+  marginTop: -4,
 },
 });

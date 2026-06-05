@@ -19,6 +19,7 @@ import {
   getCommonHistoryMilestones,
 } from "../src/api/memberHistoryEvents";
 import { LinearGradient } from "expo-linear-gradient";
+const goldenGoalMarker = require("../assets/images/golden-goal-marker.png");
 
 
 const fogLayer = require("../assets/images/fog-layer.png");
@@ -539,13 +540,13 @@ const sheetPanResponder = useMemo(
 
   const member = homeData?.member || {};
   const trainingStats = homeData?.trainingStats || {};
-  const realAttendanceCount = 
+  const realAttendanceCount =
   member?.totalAttendanceCount ??
-  member?.attendanceCount ??
+  homeData?.trainingStats?.totalAttendanceCount ??
   homeData?.totalAttendanceCount ??
   0;
 
-const attendanceCount = realAttendanceCount;
+const attendanceCount = Number(realAttendanceCount || 0);
 
   const joinedAt = member?.joinDate || member?.joinedAt || null;
 
@@ -581,7 +582,7 @@ const segment = getJourneySegment(attendanceCount);
 const currentJourneyImage = JOURNEY_IMAGES[season][segment];
 const range = getJourneyRange(attendanceCount);
 
-const sceneHeight = 820;
+const sceneHeight = 920;
 
 function getStageTop(index) {
   return sceneHeight - START_BOTTOM_OFFSET - index * STAGE_GAP;
@@ -607,32 +608,23 @@ function getStageLayout(stage) {
   const isFuture = stage.days > attendanceCount;
 
   if (isFuture) {
-  const endPoint = getPositionByDay(range.end - 1);
+  const endPoint = getWalkerLikePositionByDay(stage.days);
 
-  const markerSize = 26;
-  const labelWidth = 120;
+  const markerWidth = 70;
+const markerHeight = 220;
 
-  const markerOffsetX = 20;
-  const markerOffsetY = 20;
+const markerLeft = endPoint.left - markerWidth / 2 + 50;
+const markerTop = endPoint.top - markerHeight / 2 + 70;
+const markerScale = Math.max(
+  0.65,
+  Math.min(1.35, endPoint.scale || 1)
+);
 
-  const labelGap = 4;
-
-  const markerLeft = endPoint.left - markerSize / 2 + markerOffsetX;
-  const markerTop = endPoint.top - markerSize / 2 + markerOffsetY;
-
-  const isMarkerOnRight = endPoint.left > sceneSize.width / 2;
-
-  return {
-    top: Math.max(80, markerTop),
-    left: Math.max(
-      16,
-      Math.min(sceneSize.width - markerSize - 16, markerLeft)
-    ),
-
-    labelLeft: isMarkerOnRight
-      ? -(labelWidth + labelGap)
-      : markerSize + labelGap,
-  };
+return {
+  top: markerTop,
+  left: markerLeft,
+  markerScale,
+};
 }
 
   const position = getPositionByDay(stage.days);
@@ -642,6 +634,8 @@ function getStageLayout(stage) {
     right: 16,
   };
 }
+
+
 
 function getWalkerPosition() {
   const points = JOURNEY_PATH_POINTS[segment] || JOURNEY_PATH_POINTS.start;
@@ -684,7 +678,44 @@ return {
   transform: [{ scale }],
 };
 }
+function getWalkerLikePositionByDay(day) {
+  const points = JOURNEY_PATH_POINTS[segment] || JOURNEY_PATH_POINTS.start;
 
+  const targetProgress = Math.min(
+    1,
+    Math.max(0, (day - range.start) / (range.end - range.start))
+  );
+
+  let previous = points[0];
+  let next = points[points.length - 1];
+
+  for (let i = 0; i < points.length - 1; i++) {
+    if (
+      targetProgress >= points[i].progress &&
+      targetProgress <= points[i + 1].progress
+    ) {
+      previous = points[i];
+      next = points[i + 1];
+      break;
+    }
+  }
+
+  const sectionProgress =
+    (targetProgress - previous.progress) /
+    (next.progress - previous.progress || 1);
+
+  const x = previous.x + (next.x - previous.x) * sectionProgress;
+  const y = previous.y + (next.y - previous.y) * sectionProgress;
+  const scale =
+    (previous.scale ?? 1) +
+    ((next.scale ?? 1) - (previous.scale ?? 1)) * sectionProgress;
+
+  return {
+    top: sceneSize.height * y,
+    left: sceneSize.width * x,
+    scale,
+  };
+}
 function getPositionByDay(day) {
   const targetSegment = getJourneySegment(day);
   const points = JOURNEY_PATH_POINTS[targetSegment] || JOURNEY_PATH_POINTS.start;
@@ -713,9 +744,10 @@ function getPositionByDay(day) {
   const y = previous.y + (next.y - previous.y) * sectionProgress;
 
   return {
-    top: sceneSize.height * y,
-    left: sceneSize.width * x,
-  };
+  top: sceneSize.height * y,
+  left: sceneSize.width * x,
+  scale: previous.scale + (next.scale - previous.scale) * sectionProgress,
+};
 }
 
   const progressText = nextStage
@@ -728,10 +760,9 @@ const promotionRequiredDays = Number(
 );
 
 const promotionTargetDays =
-  promotionRequiredDays > 0
-    ? promotionRequiredDays
-    : attendanceCount + Number(promotionGoal?.remainingCount || 0);
-
+  Number(promotionGoal?.targetAttendanceCount) ||
+  Number(promotionGoal?.requiredAttendanceCount) ||
+  attendanceCount + Number(promotionGoal?.remainingCount || 0);
 const promotionRemainDays = Math.max(
   0,
   promotionTargetDays - attendanceCount
@@ -817,16 +848,9 @@ const speechBubblePosition = {
   ),
 };
 
-  const displayNextStages = mergedStages
-  .filter((stage) => stage.days > attendanceCount)
-  .slice(0, 2);
-
-const visibleStages = [
-  ...(displayPreviousStage ? [displayPreviousStage] : []),
-  ...displayNextStages.filter((stage) => {
-    return stage.days >= range.start && stage.days <= range.end;
-  }),
-];
+  const visibleStages = mergedStages.filter((stage) => {
+  return stage.days >= range.start && stage.days < range.end;
+});
 const roadmapItems = useMemo(() => {
   const items = [];
 
@@ -912,251 +936,268 @@ const displayNextStageIndex = Math.min(
   return (
    <View style={styles.bg}>
   
-  <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.headerRow}>
-        <Pressable
-  style={styles.backButton}
-  onPress={handleBack}
-  hitSlop={16}
->
-  <Image
-    source={backIcon}
-    style={styles.backIcon}
-    resizeMode="contain"
-  />
-</Pressable>
+  <ScrollView style={styles.screen} contentContainerStyle={styles.content}>   
 
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.title}>수련의 길</Text>
-          <Text style={styles.subtitle}>
-  고수를 향해, {attendanceCount}일째 걷는 중
-</Text>
-        </View>
-      </View>
-
-      <LinearGradient
-  pointerEvents="none"
-  colors={[
-    "rgba(247,241,232,1)",
-    "rgba(247,241,232,0.72)",
-    "rgba(247,241,232,0)",
-  ]}
-  locations={[0, 0.42, 1]}
-  style={styles.journeyOutsideTopFade}
-/>
-    
-
- <View style={styles.journeySceneWrap}>
-      <View
-  style={[styles.journeyScene, { height: sceneHeight }]}
-  onLayout={(event) => {
-    const { width, height } = event.nativeEvent.layout;
-    setSceneSize({ width, height });
-  }}
->
-      
-  <View style={styles.journeyBlockLayer}>
-  <Image
-    source={currentJourneyImage}
-    style={styles.journeyFullImage}
-    resizeMode="cover"
-  />
-</View>
-</View>
-<View pointerEvents="box-none" style={styles.roadmapRail}>
-  {[...roadmapItems].reverse().map((item, index, arr) => {
-  const isLast = index === arr.length - 1;
-    return (
-      <View key={item.key} style={styles.roadmapItem}>
-        <View style={styles.roadmapMarkerWrap}>
-          <View
-            style={[
-              styles.roadmapDot,
-              item.completed && styles.roadmapDotCompleted,
-              item.current && styles.roadmapDotCurrent,
-              item.future && styles.roadmapDotFuture,
-            ]}
-          >
-            {item.current ? (
-              <Text style={styles.roadmapCurrentText}>현</Text>
-            ) : null}
-          </View>
-
-          {!isLast ? <View style={styles.roadmapLine} /> : null}
-        </View>
-
-        <View
-          style={[
-            styles.roadmapLabel,
-            item.current && styles.roadmapLabelCurrent,
-            item.future && styles.roadmapLabelFuture,
-          ]}
-        >
-          <Text
-            style={[
-              styles.roadmapTitle,
-              item.current && styles.roadmapTitleCurrent,
-            ]}
-          >
-            {item.title}
-          </Text>
-
-          <Text
-            style={[
-              styles.roadmapDesc,
-              item.current && styles.roadmapDescCurrent,
-            ]}
-          >
-            {item.desc}
-          </Text>
-        </View>
-      </View>
-    );
-  })}
-</View>
-<Image
-  source={currentWalkerImage}
-  style={[
-    styles.sceneWalker,
-    walkerPosition,
-  ]}
-  resizeMode="contain"
-/>
-{showJourneyQuote && (
+<View style={styles.journeySceneWrap}>
   <View
-    pointerEvents="none"
-    style={[
-  styles.journeySpeechBubble,
-  speechBubblePosition,
-]}
+    style={[styles.journeyScene, { height: sceneHeight }]}
+    onLayout={(event) => {
+      const { width, height } = event.nativeEvent.layout;
+      setSceneSize({ width, height });
+    }}
   >
-    <Text style={styles.journeySpeechText}>{journeyQuote}</Text>
-  </View>
-)}
+    <Image
+      source={currentJourneyImage}
+      style={styles.journeyFullImage}
+      resizeMode="cover"
+    />
 
-  {mergedStages.map((stage, index) => {
-    const completed = attendanceCount >= stage.days;
-    const current = displayPreviousStage?.days === stage.days;
-    const future = !completed;
+    <LinearGradient
+      pointerEvents="none"
+      colors={[
+  "rgba(247,241,232,1)",
+  "rgba(247,241,232,0.82)",
+  "rgba(247,241,232,0.38)",
+  "rgba(247,241,232,0)",
+]}
+locations={[0, 0.28, 0.66, 1]}
+      style={styles.journeyHeaderFade}
+    />
 
-    const visible = visibleStages.some((item) => item.days === stage.days);
-if (!visible) return null;
-
-const layout = getStageLayout(stage);
-
-if (future) {
-  return (
-    <View
-      style={[
-        styles.sceneFutureGoalWrap,
-        {
-          top: layout.top,
-          left: layout.left,
-        },
-      ]}
-    >
-      <View style={[styles.sceneDot, styles.sceneDotFutureSmall]} />
-
-      <View
-        style={[
-          styles.sceneTextBox,
-          styles.sceneTextBoxFuture,
-          { left: layout.labelLeft },
-        ]}
+    <View style={styles.headerRow}>
+      <Pressable
+        style={styles.backButton}
+        onPress={handleBack}
+        hitSlop={16}
       >
-        <Text style={[styles.sceneMilestoneTitle, styles.sceneMilestoneTitleFuture]}>
-          {stage.title}
-        </Text>
+        <Image
+          source={backIcon}
+          style={styles.backIcon}
+          resizeMode="contain"
+        />
+      </Pressable>
 
-        <Text style={[styles.sceneMilestoneDesc, styles.sceneMilestoneDescFuture]}>
-          {stage.desc}
+      <View style={styles.headerTextWrap}>
+        <Text style={styles.title}>수련의 길</Text>
+        <Text style={styles.subtitle}>
+          고수를 향해, {attendanceCount}일째 걷는 중
         </Text>
       </View>
     </View>
-  );
-}
 
-return (
-  <View
+    <View pointerEvents="box-none" style={styles.roadmapRail}>
+      {[...roadmapItems].reverse().map((item, index, arr) => {
+        const isLast = index === arr.length - 1;
+
+        return (
+          <View key={item.key} style={styles.roadmapItem}>
+            <View style={styles.roadmapMarkerWrap}>
+              <View
+                style={[
+                  styles.roadmapDot,
+                  item.completed && styles.roadmapDotCompleted,
+                  item.current && styles.roadmapDotCurrent,
+                  item.future && styles.roadmapDotFuture,
+                ]}
+              >
+                {item.current ? (
+                  <Text style={styles.roadmapCurrentText}>현</Text>
+                ) : null}
+              </View>
+
+              {!isLast ? <View style={styles.roadmapLine} /> : null}
+            </View>
+
+            <View
+              style={[
+                styles.roadmapLabel,
+                item.current && styles.roadmapLabelCurrent,
+                item.future && styles.roadmapLabelFuture,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.roadmapTitle,
+                  item.current && styles.roadmapTitleCurrent,
+                ]}
+              >
+                {item.title}
+              </Text>
+
+              <Text
+                style={[
+                  styles.roadmapDesc,
+                  item.current && styles.roadmapDescCurrent,
+                ]}
+              >
+                {item.desc}
+              </Text>
+            </View>
+          </View>
+        );
+      })}
+    </View>
+
+    <Image
+      source={currentWalkerImage}
+      style={[styles.sceneWalker, walkerPosition]}
+      resizeMode="contain"
+    />
+
+    {showJourneyQuote && (
+      <View
+        pointerEvents="none"
+        style={[styles.journeySpeechBubble, speechBubblePosition]}
+      >
+        <Text style={styles.journeySpeechText}>{journeyQuote}</Text>
+      </View>
+    )}
+
+    {mergedStages.map((stage, index) => {
+      const completed = attendanceCount > stage.days;
+      const current = attendanceCount === stage.days;
+      const future = attendanceCount < stage.days;
+
+      const visible = visibleStages.some((item) => item.days === stage.days);
+      if (!visible) return null;
+
+      const layout = getStageLayout(stage);
+
+      if (future) {
+        return (
+          <View
+            key={`${stage.kind}-${stage.days}-${index}`}
+            style={[
+              styles.sceneFutureGoalWrap,
+              {
+                top: layout.top,
+                left: layout.left,
+              },
+            ]}
+          >
+            <Image
+  source={goldenGoalMarker}
   style={[
-    styles.sceneMilestone,
-    future && styles.sceneMilestoneFuture,
-    current ? styles.sceneMilestoneRight : styles.sceneMilestoneLeft,
+    styles.sceneGoalMarkerIcon,
     {
-      top: layout.top,
-      left: layout.left,
-      right: layout.right,
+      transform: [{ scale: layout.markerScale }],
     },
   ]}
->
-        <View
-  style={[
-    styles.sceneDot,
-    completed && styles.sceneDotCompleted,
-    current && styles.sceneDotCurrent,
-    future && styles.sceneDotFuture,
-    future && styles.sceneDotFutureSmall,
-  ]}
->
-          <Text
-            style={[
-              styles.sceneDotText,
-              current && styles.sceneDotTextCurrent,
-            ]}
-          >
-            {completed ? "✓" : ""}
-          </Text>
-        </View>
+  resizeMode="contain"
+/>
+   </View>
+        );
+      }
 
+      return (
         <View
+          key={`${stage.kind}-${stage.days}-${index}`}
           style={[
-            styles.sceneTextBox,
-            current && styles.sceneTextBoxCurrent,
-            future && styles.sceneTextBoxFuture,
+            styles.sceneMilestone,
+            future && styles.sceneMilestoneFuture,
+            current ? styles.sceneMilestoneRight : styles.sceneMilestoneLeft,
+            {
+              top: layout.top,
+              left: layout.left,
+              right: layout.right,
+            },
           ]}
         >
-          <Text
+          <View
             style={[
-              styles.sceneMilestoneTitle,
-              current && styles.sceneMilestoneTitleCurrent,
-              future && styles.sceneMilestoneTitleFuture,
+              styles.sceneDot,
+              completed && styles.sceneDotCompleted,
+              current && styles.sceneDotCurrent,
+              future && styles.sceneDotFuture,
+              future && styles.sceneDotFutureSmall,
             ]}
           >
-            {stage.title}
-          </Text>
+            <Text
+              style={[
+                styles.sceneDotText,
+                current && styles.sceneDotTextCurrent,
+              ]}
+            >
+              {completed ? "✓" : ""}
+            </Text>
+          </View>
 
-          {stage.kind === "custom" ? (
-  <Text style={styles.customEventBadge}>특별 수련 기록</Text>
-) : null}
+          <View
+            style={[
+              styles.sceneTextBox,
+              current && styles.sceneTextBoxCurrent,
+              future && styles.sceneTextBoxFuture,
+            ]}
+          >
+            <Text
+              style={[
+                styles.sceneMilestoneTitle,
+                current && styles.sceneMilestoneTitleCurrent,
+                future && styles.sceneMilestoneTitleFuture,
+              ]}
+            >
+              {stage.title}
+            </Text>
 
-          <Text
-  style={[
-    styles.sceneMilestoneDesc,
-    current && styles.sceneMilestoneDescCurrent,
-    future && styles.sceneMilestoneDescFuture,
-  ]}
->
-  {stage.desc}
-</Text>
-   </View>
-      </View>
-    );
-  })}
+            {stage.kind === "custom" ? (
+              <Text style={styles.customEventBadge}>특별 수련 기록</Text>
+            ) : null}
 
-</View>
-
-<LinearGradient
+            <Text
+              style={[
+                styles.sceneMilestoneDesc,
+                current && styles.sceneMilestoneDescCurrent,
+                future && styles.sceneMilestoneDescFuture,
+              ]}
+            >
+              {stage.desc}
+            </Text>
+          </View>
+        </View>
+      );
+    })}
+    <LinearGradient
   pointerEvents="none"
   colors={[
-  "rgba(247,241,232,0)",
-  "rgba(247,241,232,0.18)",
-  "rgba(247,241,232,0.48)",
-  "rgba(247,241,232,0.82)",
-  "rgba(247,241,232,1)",
-]}
-locations={[0, 0.32, 0.58, 0.82, 1]}
-  style={styles.journeyOutsideFade}
+    "rgba(247,241,232,0)",
+    "rgba(247,241,232,0.26)",
+    "rgba(247,241,232,0.72)",
+    "rgba(247,241,232,1)",
+  ]}
+  locations={[0, 0.38, 0.72, 1]}
+  style={styles.journeyBottomFade}
 />
+{!statsExpanded && (
+  <Animated.View
+    style={[
+      styles.sceneMiniStatsSheet,
+      {
+        transform: [{ translateY: sheetTranslateY }],
+      },
+    ]}
+    {...sheetPanResponder.panHandlers}
+  >
+  <View style={styles.bottomSheetHandle} />
+
+  <View style={styles.trainingStatsMiniContent}>
+    <Image
+      source={statsIcon}
+      style={styles.trainingStatsIconImage}
+      resizeMode="contain"
+    />
+
+    <View style={styles.trainingStatsMiniTextRow}>
+      <Text style={styles.trainingStatsMiniTitle}>내 수련 통계</Text>
+      <Text style={styles.trainingStatsMiniSub}>
+        {attendanceCount}일 · {expectedTrainingHours}시간
+      </Text>
+    </View>
+  </View>
+</Animated.View>
+)}
+  </View>
+</View>
+
 </ScrollView>
 
 {statsExpanded && (
@@ -1166,13 +1207,15 @@ locations={[0, 0.32, 0.58, 0.82, 1]}
   />
 )}
 
+{statsExpanded && (
 <Animated.View
   style={[
-    styles.bottomSheet,
-    {
-      transform: [{ translateY: sheetTranslateY }],
-    },
-  ]}
+  styles.bottomSheet,
+  styles.bottomSheetOpen,
+  {
+    transform: [{ translateY: sheetTranslateY }],
+  },
+]}
   {...sheetPanResponder.panHandlers}
 >
   <Pressable
@@ -1182,27 +1225,7 @@ locations={[0, 0.32, 0.58, 0.82, 1]}
     <View style={styles.bottomSheetHandle} />
   </Pressable>
 
-  {!statsExpanded ? (
-    <Pressable
-      style={styles.bottomSheetMiniContent}
-      onPress={openSheet}
-    >
-      <View style={styles.trainingStatsMiniContent}>
-        <Image
-          source={statsIcon}
-          style={styles.trainingStatsIconImage}
-          resizeMode="contain"
-        />
-
-        <View style={styles.trainingStatsMiniTextRow}>
-  <Text style={styles.trainingStatsMiniTitle}>내 수련 통계</Text>
-  <Text style={styles.trainingStatsMiniSub}>
-    {attendanceCount}일 · {expectedTrainingHours}시간
-  </Text>
-</View>
-      </View>
-    </Pressable>
-  ) : (
+  
     <View style={styles.bottomSheetFullContent}>
       <View style={styles.trainingStatsHeader}>
         <View style={styles.trainingStatsTitleRow}>
@@ -1268,9 +1291,8 @@ locations={[0, 0.32, 0.58, 0.82, 1]}
         </Text>
       </View>
     </View>
-  )}
 </Animated.View>
-  
+  )}
 </View>
   );
 }
@@ -1282,9 +1304,9 @@ const styles = StyleSheet.create({
 },
   content: {
   paddingHorizontal: 16,
-  paddingTop: 20,
+  paddingTop: 0,
   paddingBottom: 30,
-  gap: 8,
+  gap: 0,
 },
   center: {
     flex: 1,
@@ -1298,10 +1320,13 @@ const styles = StyleSheet.create({
     color: colors.textSub,
   },
   headerRow: {
+  position: "absolute",
+  top: 22,
+  left: 18,
+  right: 18,
   flexDirection: "row",
   alignItems: "center",
-  gap: 12,
-  zIndex: 20,
+  zIndex: 50,
 },
   backButton: {
   width: 44,
@@ -1324,15 +1349,21 @@ backIcon: {
     marginRight: 42,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "900",
-    color: colors.textMain,
-  },
+    marginTop: 18,
+  fontSize: 30,
+  fontWeight: "900",
+  color: "#2E2118",
+  textShadowColor: "rgba(255,255,255,0.75)",
+  textShadowRadius: 10,
+},
   subtitle: {
-    marginTop: 5,
-    fontSize: 14,
-    color: colors.textSub,
-  },
+  marginTop: 4,
+  fontSize: 14,
+  fontWeight: "700",
+  color: "rgba(75, 60, 48, 0.72)",
+  textShadowColor: "rgba(255,255,255,0.8)",
+  textShadowRadius: 8,
+},
   profileCard: {
   borderRadius: 24,
   backgroundColor: "rgba(255,253,249,0.92)",
@@ -1635,7 +1666,7 @@ sceneWalker: {
   width: 82,
   height: 124,
   opacity: 0.96,
-  zIndex: 5,
+  zIndex: 20,
 },
 
 sceneMilestone: {
@@ -1982,11 +2013,11 @@ journeyOutsideFade: {
   zIndex: 8,
 },
 journeyOutsideTopFade: {
-  height: 120,
-  marginBottom: -110,
+  height: 80,
+  marginBottom: -80,
   marginLeft: -24,
   marginRight: -24,
-  zIndex: 1,
+  zIndex: 2,
   pointerEvents: "none",
 },
 journeySceneWrap: {
@@ -2060,20 +2091,6 @@ journeySpeechText: {
   textAlign: "center",
 },
 
-bottomSheetHandle: {
-  alignSelf: "center",
-
-  width: 52,
-  height: 5,
-
-  borderRadius: 999,
-
-  backgroundColor: "#CFC3B3",
-
-  marginBottom: 16,
-},
-
-
 trainingStatsMiniContent: {
   flexDirection: "row",
   alignItems: "center",
@@ -2083,9 +2100,6 @@ bottomSheet: {
   position: "absolute",
   left: 16,
   right: 16,
-  bottom: -245,
-
-  minHeight: 330,
 
   borderTopLeftRadius: 36,
   borderTopRightRadius: 36,
@@ -2094,7 +2108,6 @@ bottomSheet: {
 
   paddingHorizontal: 20,
   paddingTop: 10,
-  paddingBottom: 26,
 
   zIndex: 100,
 
@@ -2105,6 +2118,13 @@ bottomSheet: {
   elevation: 12,
 },
 
+
+bottomSheetOpen: {
+  bottom: -245,
+  minHeight: 330,
+  paddingBottom: 26,
+},
+
 bottomSheetHandleArea: {
   alignItems: "center",
   paddingTop: 2,
@@ -2112,15 +2132,13 @@ bottomSheetHandleArea: {
 },
 
 bottomSheetHandle: {
+  alignSelf: "center",
   width: 52,
   height: 5,
   borderRadius: 999,
   backgroundColor: "#CFC3B3",
-},
-
-bottomSheetMiniContent: {
-  paddingTop: 4,
-  paddingBottom: 12,
+  marginTop: -4,
+  marginBottom: 10,
 },
 
 bottomSheetFullContent: {
@@ -2146,11 +2164,12 @@ sceneMilestoneFuture: {
 },
 sceneFutureGoalWrap: {
   position: "absolute",
-  width: 26,
-  height: 26,
-  zIndex: 7,
+  width: 70,
+  height: 220,
+  zIndex: 18,
+  overflow: "visible",
+  opacity: 0.9,
 },
-
 sceneDotFutureSmall: {
   width: 26,
   height: 26,
@@ -2161,7 +2180,7 @@ sceneDotFutureSmall: {
 
 sceneTextBoxFuture: {
   position: "absolute",
-  top: -60,
+  top: 58,
   width: 120,
   borderRadius: 13,
   paddingHorizontal: 8,
@@ -2172,14 +2191,14 @@ sceneTextBoxFuture: {
 roadmapRail: {
   position: "absolute",
   left: 12,
-  bottom: 155,
+  bottom: 85,
   zIndex: 20,
 },
 
 roadmapItem: {
   flexDirection: "row",
   alignItems: "flex-start",
-  minHeight: 58,
+  minHeight: 52,
 },
 
 roadmapMarkerWrap: {
@@ -2188,8 +2207,8 @@ roadmapMarkerWrap: {
 },
 
 roadmapDot: {
-  width: 15,
-  height: 15,
+  width: 17,
+  height: 17,
   borderRadius: 999,
   borderWidth: 2,
   borderColor: "rgba(214, 170, 85, 0.78)",
@@ -2202,8 +2221,8 @@ roadmapDotCompleted: {
 },
 
 roadmapDotCurrent: {
-  width: 24,
-  height: 24,
+  width: 26,
+  height: 26,
   borderRadius: 999,
   backgroundColor: "#2B2522",
   borderColor: "#D6AA55",
@@ -2213,7 +2232,7 @@ roadmapDotCurrent: {
 },
 
 roadmapCurrentText: {
-  fontSize: 10,
+  fontSize: 12,
   fontWeight: "900",
   color: "#F1D39A",
 },
@@ -2221,7 +2240,7 @@ roadmapCurrentText: {
 roadmapLine: {
   width: 2,
   flex: 1,
-  minHeight: 42,
+  minHeight: 34,
   backgroundColor: "rgba(214, 170, 85, 0.62)",
   marginTop: 4,
 },
@@ -2244,7 +2263,7 @@ roadmapLabelCurrent: {
 },
 
 roadmapTitle: {
-  fontSize: 11,
+  fontSize: 12,
   lineHeight: 15,
   fontWeight: "900",
   color: "#F1D39A",
@@ -2256,7 +2275,7 @@ roadmapTitleCurrent: {
 
 roadmapDesc: {
   marginTop: 2,
-  fontSize: 9,
+  fontSize: 10,
   lineHeight: 12,
   fontWeight: "700",
   color: "rgba(255,253,249,0.72)",
@@ -2274,5 +2293,53 @@ roadmapDotFuture: {
 roadmapLabelFuture: {
   backgroundColor: "rgba(43, 37, 34, 0.58)",
   borderColor: "rgba(214, 170, 85, 0.56)",
+},
+journeyHeaderFade: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  height: 180,
+  zIndex: 2,
+},
+
+journeyBottomFade: {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: 0,
+  height: 190,
+  zIndex: 70,
+  pointerEvents: "none",
+},
+
+sceneMiniStatsSheet: {
+  position: "absolute",
+  left: 28,
+  right: 28,
+  bottom: -5,
+  height: 85,
+  borderTopLeftRadius: 25,
+  borderTopRightRadius: 25,
+  backgroundColor: "rgba(255,253,249,0.96)",
+  paddingHorizontal: 18,
+  paddingTop: 18,
+  zIndex: 90,
+},
+sceneGoalMarkerImage: {
+  position: "absolute",
+  left: -27,
+  top: -68,
+  width: 80,
+  height: 120,
+  zIndex: 12,
+},
+sceneGoalMarkerIcon: {
+  position: "absolute",
+  left: 0,
+  top: 0,
+  width: 70,
+  height: 220,
+  zIndex: 8,
 },
 });
