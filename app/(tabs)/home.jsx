@@ -1783,12 +1783,12 @@ homeHeaderTextBlock: {
 },
 
   homeGreeting: {
-  fontSize: isWeb ? 14 : 14,
+  fontSize: isWeb ? 15 : 15,
   fontFamily: fonts.semiBold,
-  lineHeight: isWeb ? 19 : 20,
+  lineHeight: isWeb ? 20 : 20,
   color: colors.textSub,
   marginTop: 14,
-  marginBottom: 4,
+  marginBottom: 3,
 },
 
 homeName: {
@@ -1800,7 +1800,7 @@ homeName: {
 },
 
   homeBadgeRow: {
-    marginTop: 8,
+    marginTop: -2,
     flexDirection: "row",
     gap: 7,
     flexWrap: "wrap",
@@ -1881,12 +1881,13 @@ todayTrainingTitle: {
 },
 
 todayTrainingStep: {
-  fontSize: isWeb ? 14 : 16,
+  fontSize: isWeb ? 15 : 16,
   fontFamily: fonts.semiBold,
   lineHeight: isWeb ? 19 : 21,
   color: colors.warmBrown,
+  marginTop: 7,
   marginBottom: isWeb ? 24 : 32,
-  marginLeft: isWeb ? 2 : 8,
+  marginLeft: isWeb ? 4 : 8,
   maxWidth: "76%",
   zIndex: 5,
 },
@@ -2654,8 +2655,8 @@ homeProfileWrap: {
 homeProfileWrapYudanja: {
   width: isWeb ? 132 : 132,
   height: isWeb ? 132 : 132,
-  marginTop: isWeb ? 10 : 18,
-  marginRight: isWeb ? -3 : -2,
+  marginTop: isWeb ? 20 : 18,
+  marginRight: isWeb ? -7 : -2,
   marginBottom: isWeb ? -10 : 18,
 },
 
