@@ -390,26 +390,30 @@ const styles = StyleSheet.create({
   },
 
   backButton: {
-    width: 36,
-    height: 36,
-    justifyContent: "center",
-    marginTop: -35,
-    fontWeight: "500",
-  },
+  position: "absolute",
+  top: 10,
+  left: 16,
+  width: 44,
+  height: 44,
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 20,
+},
 
-  backText: {
-    fontSize: 34,
-    color: "#2B221D",
-  },
+backText: {
+  fontSize: 32,
+  lineHeight: 34,
+  color: "#2B221D",
+},
 
   pageTitle: {
-    textAlign: "center",
-    marginTop: -28,
-    marginBottom: 30,
-    fontSize: 18,
-    fontWeight: "900",
-    color: "#3A2C27",
-  },
+  textAlign: "center",
+  marginTop: -22,
+  marginBottom: 10,
+  fontSize: 18,
+  fontWeight: "900",
+  color: "#3A2C27",
+},
 
   stepTitle: {
     fontSize: 16,

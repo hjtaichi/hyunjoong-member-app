@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: -10,
     right: -40,
-    bottom: -10,
+    bottom: -15,
     height: 180,
     opacity: 0.55,
     width: "100%",
@@ -377,9 +377,14 @@ thumbnailFallback: {
   opacity: 0.35,
 },
   playIcon: {
-    fontSize: 26,
-    color: "#FFFFFF",
-  },
+  position: "absolute",
+  left: "52%",
+  top: "40%",
+  transform: [{ translateX: -13 }, { translateY: -13 }],
+  fontSize: 26,
+  color: "#FFFFFF",
+  zIndex: 3,
+},
 
   durationBadge: {
     position: "absolute",

@@ -1390,7 +1390,7 @@ const styles = StyleSheet.create({
 content: {
   paddingHorizontal: 16,
   paddingTop: 42,
-  paddingBottom: isWeb ? 130 : 120,
+  paddingBottom: isWeb ? 10 : 120,
   gap: 14,
 },
 center: {

@@ -183,6 +183,13 @@ const [fontsLoaded] = useFonts({
   PretendardMedium: require("../assets/fonts/Pretendard-Medium.otf"),
   PretendardSemiBold: require("../assets/fonts/Pretendard-SemiBold.otf"),
   PretendardBold: require("../assets/fonts/Pretendard-Bold.otf"),
+
+  MaruBuriRegular: require("../assets/fonts/MaruBuri-Regular.ttf"),
+  MaruBuriSemiBold: require("../assets/fonts/MaruBuri-SemiBold.ttf"),
+  MaruBuriBold: require("../assets/fonts/MaruBuri-Bold.ttf"),
+
+  SimKyungha: require("../assets/fonts/SimKyungha.ttf"),
+  KyoboHandwriting2025lyb: require("../assets/fonts/KyoboHandwriting2025lyb.ttf"),
 });
   useEffect(() => {
     if (fontsLoaded) {

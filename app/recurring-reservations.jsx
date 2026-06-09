@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import {
   getRecurringReservations,
@@ -232,7 +233,14 @@ export default function RecurringReservationsScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>정기출석 설정</Text>
+      <View style={styles.topHeader}>
+  <Text style={styles.backButton} onPress={() => router.back()}>
+    ‹
+  </Text>
+
+  <Text style={styles.topTitle}>정기출석 설정</Text>
+</View>
+
       <Text style={styles.subtitle}>
         요일마다 여러 시간대를 선택할 수 있어요. 자주 가는 시간으로 저장해두면 자동 예약과 연결됩니다.
       </Text>
@@ -437,8 +445,8 @@ const styles = StyleSheet.create({
   },
   content: {
   paddingHorizontal: 20,
-  paddingTop: 50,
-  paddingBottom: 90,
+  paddingTop: 20,
+  paddingBottom: 30,
 },
   center: {
   flex: 1,
@@ -751,5 +759,24 @@ sheetCheckText: {
   fontSize: 18,
   fontWeight: "900",
   color: "#8C6330",
+},
+topHeader: {
+  flexDirection: "row",
+  alignItems: "center",
+  marginBottom: 14,
+},
+
+backButton: {
+  width: 28,
+  fontSize: 30,
+  lineHeight: 32,
+  color: "#6b4f46",
+  marginRight: 8,
+},
+
+topTitle: {
+  fontSize: 24,
+  fontWeight: "900",
+  color: "#111827",
 },
 });

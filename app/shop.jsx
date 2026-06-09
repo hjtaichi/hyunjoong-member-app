@@ -15,7 +15,50 @@ import { colors } from "../src/theme/colors";
 
 const API_ORIGIN = "http://172.30.1.16:5000";
 
-const CATEGORIES = ["전체", "도복", "무기", "수련용품", "굿즈"];
+const SHOP_CATEGORIES = [
+  {
+    key: "도복·신발",
+    icon: require("../assets/images/shop-category-dobok.png"),
+    title: "도복·신발",
+    desc: "도복, 태극권화",
+    match: ["도복", "기성도복", "물실크", "여름마", "신소재", "비단", "태극권화", "신발"],
+  },
+  {
+    key: "무기",
+    icon: require("../assets/images/shop-category-weapon.png"),
+    title: "무기",
+    desc: "검, 부채, 단도",
+    match: ["무기", "검", "부채", "단도", "도", "창두", "편간", "채찍", "팔각봉"],
+  },
+  {
+    key: "수련용품",
+    icon: require("../assets/images/shop-category-training.png"),
+    title: "수련용품",
+    desc: "수련 보조용품",
+    match: ["수련용품", "폼롤러", "마사지볼", "탄력밴드", "명상방석"],
+  },
+  {
+    key: "차",
+    icon: require("../assets/images/shop-category-tea.png"),
+    title: "차",
+    desc: "보이차, 국화차",
+    match: ["차", "보이생차", "보이숙차", "국화차", "고정차", "만리화차", "산사차"],
+  },
+  {
+    key: "찻잔·도구",
+    icon: require("../assets/images/shop-category-teaware.png"),
+    title: "찻잔·도구",
+    desc: "찻잔, 자사호",
+    match: ["찻잔", "찻잔·도구", "차거름망", "자사호", "다기세트", "찻도구"],
+  },
+  {
+    key: "기타",
+    icon: require("../assets/images/shop-category-etc.png"),
+    title: "기타",
+    desc: "식품, 교재, 기념품",
+    match: ["기타", "식품", "건강식품", "교재", "기념품", "굿즈", "티셔츠", "수건", "텀블러"],
+  },
+];
 
 function formatPrice(value) {
   return `₩${Number(value || 0).toLocaleString("ko-KR")}`;
@@ -43,6 +86,122 @@ function getStockLabel(product) {
   };
 }
 
+function getMainCategory(product) {
+  const category = product?.category || "";
+
+  const found = SHOP_CATEGORIES.find((item) =>
+    item.match.some((word) => category.includes(word) || word.includes(category))
+  );
+
+  return found?.key || "기타";
+}
+
+function ProductCard({ product }) {
+  const stock = getStockLabel(product);
+  const imageSource = getImageUrl(product.imageUrl);
+
+  return (
+    <Pressable
+      style={styles.productCard}
+      onPress={() =>
+        router.push({
+          pathname: "/shop-detail",
+          params: { productId: product.id },
+        })
+      }
+    >
+      <View style={styles.productImageWrap}>
+        <View style={styles.productImageBox}>
+          {imageSource ? (
+            <Image
+              source={{ uri: imageSource }}
+              style={styles.productImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={styles.noImageText}>玄</Text>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.productInfo}>
+        <Text style={styles.productName} numberOfLines={1}>
+          {product.name}
+        </Text>
+
+        <Text style={styles.productPrice}>{formatPrice(product.price)}</Text>
+
+        <Text style={styles.productMemo} numberOfLines={2}>
+          {product.memo || product.optionName || "도장 수련용 상품"}
+        </Text>
+
+        <View style={styles.stockRow}>
+          <View
+            style={[
+              styles.stockBadge,
+              stock.tone === "available" && styles.stockBadgeAvailable,
+              stock.tone === "order" && styles.stockBadgeOrder,
+            ]}
+          >
+            <Text
+              style={[
+                styles.stockBadgeText,
+                stock.tone === "available" && styles.stockBadgeTextAvailable,
+                stock.tone === "order" && styles.stockBadgeTextOrder,
+              ]}
+            >
+              {stock.label}
+            </Text>
+          </View>
+
+          <Text style={styles.stockDesc}>{stock.desc}</Text>
+        </View>
+      </View>
+
+      <Text style={styles.chevron}>›</Text>
+    </Pressable>
+  );
+}
+
+function SmallProductCard({ product, badge }) {
+  const imageSource = getImageUrl(product.imageUrl);
+
+  return (
+    <Pressable
+      style={styles.smallProductCard}
+      onPress={() =>
+        router.push({
+          pathname: "/shop-detail",
+          params: { productId: product.id },
+        })
+      }
+    >
+      <View style={styles.smallImageBox}>
+        {imageSource ? (
+          <Image
+            source={{ uri: imageSource }}
+            style={styles.smallImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <Text style={styles.smallNoImage}>玄</Text>
+        )}
+
+        {badge ? (
+          <View style={styles.smallBadge}>
+            <Text style={styles.smallBadgeText}>{badge}</Text>
+          </View>
+        ) : null}
+      </View>
+
+      <Text style={styles.smallName} numberOfLines={1}>
+        {product.name}
+      </Text>
+      <Text style={styles.smallPrice}>{formatPrice(product.price)}</Text>
+    </Pressable>
+  );
+}
+
 export default function ShopScreen() {
   const { token } = useAuth();
   const [products, setProducts] = useState([]);
@@ -68,16 +227,19 @@ export default function ShopScreen() {
     loadProducts();
   }, [loadProducts]);
 
+  const bestProducts = useMemo(() => {
+    return [...products]
+      .sort((a, b) => Number(b.stockQuantity || 0) - Number(a.stockQuantity || 0))
+      .slice(0, 5);
+  }, [products]);
+
+  const newProducts = useMemo(() => {
+    return [...products].slice(0, 5);
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     if (selectedCategory === "전체") return products;
-
-    if (selectedCategory === "무기") {
-      return products.filter((item) =>
-        ["검", "부채", "무기"].includes(item.category)
-      );
-    }
-
-    return products.filter((item) => item.category === selectedCategory);
+    return products.filter((item) => getMainCategory(item) === selectedCategory);
   }, [products, selectedCategory]);
 
   if (loading) {
@@ -96,15 +258,13 @@ export default function ShopScreen() {
           <Text style={styles.backText}>‹</Text>
         </Pressable>
 
-        <Text style={styles.headerTitle}>현중 Shop</Text>
-
         <Pressable style={styles.cartIcon} onPress={() => router.push("/cart")}>
-  <Image
-    source={require("../assets/images/icon-shop-cart.png")}
-    style={styles.cartImage}
-    resizeMode="contain"
-  />
-</Pressable>
+          <Image
+            source={require("../assets/images/icon-shop-cart.png")}
+            style={styles.cartImage}
+            resizeMode="contain"
+          />
+        </Pressable>
       </View>
 
       <View style={styles.hero}>
@@ -122,33 +282,6 @@ export default function ShopScreen() {
         </View>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryRow}
-      >
-        {CATEGORIES.map((category) => {
-          const selected = selectedCategory === category;
-
-          return (
-            <Pressable
-              key={category}
-              style={[styles.categoryButton, selected && styles.categoryActive]}
-              onPress={() => setSelectedCategory(category)}
-            >
-              <Text
-                style={[
-                  styles.categoryText,
-                  selected && styles.categoryTextActive,
-                ]}
-              >
-                {category}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
       <View style={styles.noticeRow}>
         <Text style={styles.noticeIcon}>☆</Text>
         <Text style={styles.noticeText}>
@@ -156,84 +289,137 @@ export default function ShopScreen() {
         </Text>
       </View>
 
-      <View style={styles.productList}>
-        {filteredProducts.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>등록된 상품이 없습니다.</Text>
-            <Text style={styles.emptyText}>
-              관리자가 Shop 노출로 설정한 상품이 여기에 표시됩니다.
-            </Text>
+      {bestProducts.length > 0 ? (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>BEST 상품</Text>
+              <Text style={styles.sectionDesc}>많이 찾는 현중 수련용품</Text>
+            </View>
           </View>
-        ) : (
-          filteredProducts.map((product) => {
-            const stock = getStockLabel(product);
-            const imageSource = getImageUrl(product.imageUrl);
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalList}
+          >
+            {bestProducts.map((product, index) => (
+              <SmallProductCard
+                key={product.id}
+                product={product}
+                badge={`BEST ${index + 1}`}
+              />
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionTitle}>카테고리</Text>
+            <Text style={styles.sectionDesc}>필요한 물품을 쉽게 찾아보세요</Text>
+          </View>
+
+          {selectedCategory !== "전체" ? (
+            <Pressable onPress={() => setSelectedCategory("전체")}>
+              <Text style={styles.resetText}>전체보기</Text>
+            </Pressable>
+          ) : null}
+        </View>
+
+        <View style={styles.categoryGrid}>
+          {SHOP_CATEGORIES.map((category) => {
+            const selected = selectedCategory === category.key;
 
             return (
               <Pressable
-                key={product.id}
-                style={styles.productCard}
-                onPress={() =>
-                  router.push({
-                    pathname: "/shop-detail",
-                    params: { productId: product.id },
-                  })
-                }
-              >
-                <View style={styles.productImageWrap}>
-                  <View style={styles.productImageBox}>
-                    {imageSource ? (
-                      <Image
-                        source={{ uri: imageSource }}
-                        style={styles.productImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <Text style={styles.noImageText}>玄</Text>
-                    )}
-                  </View>
-                </View>
-
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName} numberOfLines={1}>
-                    {product.name}
-                  </Text>
-
-                  <Text style={styles.productPrice}>
-                    {formatPrice(product.price)}
-                  </Text>
-
-                  <Text style={styles.productMemo} numberOfLines={2}>
-                    {product.memo || product.optionName || "도장 수련용 상품"}
-                  </Text>
-
-                  <View style={styles.stockRow}>
-                    <View
+  key={category.key}
   style={[
-    styles.stockBadge,
-    stock.tone === "available" && styles.stockBadgeAvailable,
-    stock.tone === "order" && styles.stockBadgeOrder,
+    styles.categoryCard,
+    selected && styles.categoryCardActive,
   ]}
+  onPress={() => setSelectedCategory(category.key)}
 >
-                      <Text
-  style={[
-    styles.stockBadgeText,
-    stock.tone === "available" && styles.stockBadgeTextAvailable,
-    stock.tone === "order" && styles.stockBadgeTextOrder,
-  ]}
->
-  {stock.label}
-</Text>
-                    </View>
-                    <Text style={styles.stockDesc}>{stock.desc}</Text>
-                  </View>
-                </View>
+  <Image
+    source={category.icon}
+    style={styles.categoryImage}
+    resizeMode="contain"
+  />
 
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
+  <View style={styles.categoryTextBox}>
+    <Text
+      style={[
+        styles.categoryTitle,
+        selected && styles.categoryTitleActive,
+      ]}
+    >
+      {category.title}
+    </Text>
+
+    <Text
+      style={[
+        styles.categoryDesc,
+        selected && styles.categoryDescActive,
+      ]}
+      numberOfLines={1}
+    >
+      {category.desc}
+    </Text>
+  </View>
+</Pressable>
             );
-          })
-        )}
+          })}
+        </View>
+      </View>
+
+      {newProducts.length > 0 ? (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>신상품</Text>
+              <Text style={styles.sectionDesc}>새로 등록된 상품</Text>
+            </View>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalList}
+          >
+            {newProducts.map((product) => (
+              <SmallProductCard key={product.id} product={product} badge="NEW" />
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionTitle}>
+              {selectedCategory === "전체" ? "전체 상품" : selectedCategory}
+            </Text>
+            <Text style={styles.sectionDesc}>
+              {filteredProducts.length}개의 상품이 있습니다
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.productList}>
+          {filteredProducts.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>등록된 상품이 없습니다.</Text>
+              <Text style={styles.emptyText}>
+                관리자가 Shop 노출로 설정한 상품이 여기에 표시됩니다.
+              </Text>
+            </View>
+          ) : (
+            filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
+        </View>
       </View>
     </ScrollView>
   );
@@ -245,8 +431,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background || "#FFFCFA",
   },
   content: {
-    paddingHorizontal: 0,
-    paddingTop: 42,
+    paddingTop: 26,
     paddingBottom: 110,
   },
   center: {
@@ -261,7 +446,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    height: 44,
+    height: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -278,19 +463,15 @@ const styles = StyleSheet.create({
     color: "#2F2119",
     marginTop: -5,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#2F2119",
-  },
   cartIcon: {
     width: 42,
     height: 42,
     alignItems: "flex-end",
     justifyContent: "center",
   },
-  cartText: {
-    fontSize: 21,
+  cartImage: {
+    width: 26,
+    height: 26,
   },
 
   hero: {
@@ -303,53 +484,27 @@ const styles = StyleSheet.create({
   heroBg: {
     ...StyleSheet.absoluteFillObject,
     width: "100%",
-    height: "100%",
-    opacity: 0.96,
+    height: "80%",
+    opacity: 0.7,
+    marginTop: 40,
   },
   heroTextBox: {
     paddingHorizontal: 34,
     paddingTop: 12,
   },
   heroTitle: {
-    fontSize: 31,
+    fontSize: 33,
     fontWeight: "800",
     color: "#3A281F",
     letterSpacing: -0.5,
+    marginTop: 20,
   },
   heroDesc: {
-    marginTop: 9,
-    fontSize: 14,
+    marginTop: 8,
+    fontSize: 15,
     lineHeight: 20,
     color: "#5F4A3D",
-    fontWeight: "400",
-  },
-
-  categoryRow: {
-    gap: 10,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-  },
-  categoryButton: {
-    paddingHorizontal: 21,
-    height: 48,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E4D4C7",
-    backgroundColor: "#FFFDF9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  categoryActive: {
-    backgroundColor: "#3A281F",
-    borderColor: "#3A281F",
-  },
-  categoryText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#4B382E",
-  },
-  categoryTextActive: {
-    color: "#FFFFFF",
+    fontWeight: "600",
   },
 
   noticeRow: {
@@ -357,7 +512,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 7,
-    marginBottom: 16,
+    marginTop: 4,
+    marginBottom: 18,
     paddingHorizontal: 18,
   },
   noticeIcon: {
@@ -370,6 +526,147 @@ const styles = StyleSheet.create({
     color: "#5C4B42",
     fontWeight: "600",
   },
+
+  section: {
+    marginBottom: 26,
+  },
+  sectionHeader: {
+    paddingHorizontal: 18,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#2F2119",
+    letterSpacing: -0.3,
+  },
+  sectionDesc: {
+    marginTop: 4,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#7B6C63",
+  },
+  resetText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#9A6A36",
+  },
+
+  horizontalList: {
+    gap: 12,
+    paddingHorizontal: 18,
+  },
+  smallProductCard: {
+    width: 132,
+    borderRadius: 22,
+    padding: 10,
+    backgroundColor: "#FFFDF9",
+    borderWidth: 1,
+    borderColor: "#E9DCD1",
+  },
+  smallImageBox: {
+    height: 102,
+    borderRadius: 17,
+    backgroundColor: "#F1E4D9",
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  smallImage: {
+    width: "100%",
+    height: "100%",
+  },
+  smallNoImage: {
+    fontSize: 28,
+    fontWeight: "900",
+    color: "#B89A7A",
+  },
+  smallBadge: {
+    position: "absolute",
+    top: 7,
+    left: 7,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: "#3A281F",
+  },
+  smallBadgeText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+  smallName: {
+    marginTop: 9,
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#2F2119",
+  },
+  smallPrice: {
+    marginTop: 3,
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#76564B",
+  },
+
+  categoryGrid: {
+  paddingHorizontal: 18,
+  flexDirection: "row",
+  flexWrap: "wrap",
+  gap: 10,
+},
+
+categoryCard: {
+  width: "48%",
+  minHeight: 82,
+  borderRadius: 20,
+  paddingHorizontal: 12,
+  paddingVertical: 12,
+  backgroundColor: "#FFFDF9",
+  borderWidth: 1,
+  borderColor: "#E9DCD1",
+  flexDirection: "row",
+  alignItems: "center",
+},
+
+categoryCardActive: {
+  backgroundColor: "#3A281F",
+  borderColor: "#3A281F",
+},
+
+categoryImage: {
+  width: 42,
+  height: 42,
+  marginRight: 10,
+},
+
+categoryTextBox: {
+  flex: 1,
+},
+
+categoryTitle: {
+  fontSize: 16,
+  fontWeight: "900",
+  color: "#2F2119",
+},
+
+categoryTitleActive: {
+  color: "#FFFFFF",
+},
+
+categoryDesc: {
+  marginTop: 4,
+  fontSize: 11,
+  lineHeight: 15,
+  fontWeight: "600",
+  color: "#7B6C63",
+},
+
+categoryDescActive: {
+  color: "#EADFD6",
+},
 
   productList: {
     gap: 12,
@@ -417,7 +714,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#B89A7A",
   },
-
   productInfo: {
     flex: 1,
     marginLeft: 15,
@@ -425,14 +721,14 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 18,
-    fontWeight: "800",
+    fontWeight: "700",
     color: "#241811",
     letterSpacing: -0.2,
   },
   productPrice: {
-    marginTop: 5,
-    fontSize: 17,
-    fontWeight: "800",
+    marginTop: 3,
+    fontSize: 16,
+    fontWeight: "700",
     color: "#2F2119",
     letterSpacing: -0.1,
   },
@@ -449,28 +745,27 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   stockBadge: {
-  alignSelf: "flex-start",
-  borderRadius: 999,
-  paddingHorizontal: 10,
-  paddingVertical: 5,
-},
-stockBadgeAvailable: {
-  backgroundColor: "#EAF4E6",
-},
-stockBadgeOrder: {
-  backgroundColor: "#F3D38C",
-},
-
- stockBadgeText: {
-  fontSize: 11,
-  fontWeight: "800",
-},
-stockBadgeTextAvailable: {
-  color: "#3F6B3A",
-},
-stockBadgeTextOrder: {
-  color: "#684013",
-},
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  stockBadgeAvailable: {
+    backgroundColor: "#EAF4E6",
+  },
+  stockBadgeOrder: {
+    backgroundColor: "#F3D38C",
+  },
+  stockBadgeText: {
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  stockBadgeTextAvailable: {
+    color: "#3F6B3A",
+  },
+  stockBadgeTextOrder: {
+    color: "#684013",
+  },
   stockDesc: {
     marginTop: 6,
     fontSize: 11,
@@ -502,8 +797,4 @@ stockBadgeTextOrder: {
     textAlign: "center",
     lineHeight: 20,
   },
-  cartImage: {
-  width: 26,
-  height: 26,
-},
 });

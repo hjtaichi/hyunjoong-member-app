@@ -6,8 +6,8 @@ import {
   StyleSheet,
   Text,
   View,
-  PanResponder,
   Animated,
+  PanResponder,
 } from "react-native";
 import { router } from "expo-router";
 import { getMemberHome } from "../src/api/memberHome";
@@ -435,6 +435,47 @@ export default function TrainingHistoryScreen() {
   const [commonMilestones, setCommonMilestones] = useState([]);
   const { token } = useAuth();
 
+const COLLAPSED_HEIGHT = 96;
+const EXPANDED_HEIGHT = 320;
+
+const [statsExpanded, setStatsExpanded] = useState(false);
+
+const sheetHeight = useMemo(
+  () => new Animated.Value(COLLAPSED_HEIGHT),
+  []
+);
+
+const openSheet = () => {
+  setStatsExpanded(true);
+  Animated.spring(sheetHeight, {
+    toValue: EXPANDED_HEIGHT,
+    useNativeDriver: false,
+    tension: 60,
+    friction: 10,
+  }).start();
+};
+
+const closeSheet = () => {
+  Animated.spring(sheetHeight, {
+    toValue: COLLAPSED_HEIGHT,
+    useNativeDriver: false,
+    tension: 60,
+    friction: 10,
+  }).start(() => setStatsExpanded(false));
+};
+
+const sheetPanResponder = useMemo(
+  () =>
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dy) > 8,
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dy < -20) openSheet();
+        if (gesture.dy > 20) closeSheet();
+      },
+    }),
+  [sheetHeight]
+);
+
   const handleBack = () => {
     if (router.canGoBack?.()) {
       router.back();
@@ -446,76 +487,6 @@ export default function TrainingHistoryScreen() {
   width: 360,
   height: 820,
 });
-const SHEET_CLOSED_Y = 0;
-const SHEET_OPEN_Y = -230;
-
-const sheetTranslateY = useMemo(
-  () => new Animated.Value(SHEET_CLOSED_Y),
-  []
-);
-
-const openSheet = () => {
-  setStatsExpanded(true);
-  Animated.spring(sheetTranslateY, {
-    toValue: SHEET_OPEN_Y,
-    useNativeDriver: true,
-  }).start();
-};
-
-const closeSheet = () => {
-  Animated.spring(sheetTranslateY, {
-    toValue: SHEET_CLOSED_Y,
-    useNativeDriver: true,
-  }).start(() => setStatsExpanded(false));
-};
-
-const [statsExpanded, setStatsExpanded] = useState(false);
-const sheetPanResponder = useMemo(
-  () =>
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 6;
-      },
-
-      onPanResponderMove: (_, gestureState) => {
-        if (!statsExpanded && gestureState.dy < 0) {
-          sheetTranslateY.setValue(Math.max(SHEET_OPEN_Y, gestureState.dy));
-        }
-
-        if (statsExpanded && gestureState.dy > 0) {
-          sheetTranslateY.setValue(SHEET_OPEN_Y + gestureState.dy);
-        }
-      },
-
-      onPanResponderRelease: (_, gestureState) => {
-        if (!statsExpanded) {
-          if (gestureState.dy < -45) {
-            openSheet();
-          } else {
-            Animated.spring(sheetTranslateY, {
-              toValue: SHEET_CLOSED_Y,
-              useNativeDriver: true,
-            }).start();
-          }
-
-          
-          return;
-        }
-
-        if (statsExpanded) {
-          if (gestureState.dy > 45) {
-            closeSheet();
-          } else {
-            Animated.spring(sheetTranslateY, {
-              toValue: SHEET_OPEN_Y,
-              useNativeDriver: true,
-            }).start();
-          }
-        }
-      },
-    }),
-  [statsExpanded, sheetTranslateY]
-);
 
   useEffect(() => {
   async function load() {
@@ -1167,17 +1138,25 @@ locations={[0, 0.28, 0.66, 1]}
   locations={[0, 0.38, 0.72, 1]}
   style={styles.journeyBottomFade}
 />
-{!statsExpanded && (
-  <Animated.View
-    style={[
-      styles.sceneMiniStatsSheet,
-      {
-        transform: [{ translateY: sheetTranslateY }],
-      },
-    ]}
-    {...sheetPanResponder.panHandlers}
-  >
-  <View style={styles.bottomSheetHandle} />
+{statsExpanded ? (
+  <Pressable
+    style={styles.statsSheetBackdrop}
+    onPress={closeSheet}
+  />
+) : null}
+<Animated.View
+  style={[
+    styles.statsBottomSheet,
+    { height: sheetHeight },
+  ]}
+>
+  <Pressable
+  style={styles.bottomSheetHandleArea}
+  onPress={statsExpanded ? closeSheet : openSheet}
+  {...sheetPanResponder.panHandlers}
+>
+    <View style={styles.bottomSheetHandle} />
+  </Pressable>
 
   <View style={styles.trainingStatsMiniContent}>
     <Image
@@ -1193,58 +1172,9 @@ locations={[0, 0.28, 0.66, 1]}
       </Text>
     </View>
   </View>
-</Animated.View>
-)}
-  </View>
-</View>
 
-</ScrollView>
-
-{statsExpanded && (
-  <Pressable
-    style={styles.bottomSheetBackdrop}
-    onPress={closeSheet}
-  />
-)}
-
-{statsExpanded && (
-<Animated.View
-  style={[
-  styles.bottomSheet,
-  styles.bottomSheetOpen,
-  {
-    transform: [{ translateY: sheetTranslateY }],
-  },
-]}
-  {...sheetPanResponder.panHandlers}
->
-  <Pressable
-    style={styles.bottomSheetHandleArea}
-    onPress={openSheet}
-  >
-    <View style={styles.bottomSheetHandle} />
-  </Pressable>
-
-  
+  {statsExpanded ? (
     <View style={styles.bottomSheetFullContent}>
-      <View style={styles.trainingStatsHeader}>
-        <View style={styles.trainingStatsTitleRow}>
-          <Image
-            source={statsIcon}
-            style={styles.trainingStatsIconImage}
-            resizeMode="contain"
-          />
-
-          <View style={styles.trainingStatsTitleTextRow}>
-            <Text style={styles.trainingStatsTitle}>내 수련 통계</Text>
-
-            <Pressable onPress={() => router.push("/training-stats")}>
-              <Text style={styles.trainingStatsInlineLink}>보기</Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
-
       <View style={styles.trainingStatsMainRow}>
         <View style={styles.trainingStatsMainItem}>
           <Text style={styles.trainingStatsMainValue}>{attendanceCount}일</Text>
@@ -1291,10 +1221,13 @@ locations={[0, 0.28, 0.66, 1]}
         </Text>
       </View>
     </View>
+  ) : null}
 </Animated.View>
-  )}
+      </View>
+    </View>
+  </ScrollView>
 </View>
-  );
+);
 }
 
 const styles = StyleSheet.create({
@@ -1305,7 +1238,7 @@ const styles = StyleSheet.create({
   content: {
   paddingHorizontal: 16,
   paddingTop: 0,
-  paddingBottom: 30,
+  paddingBottom: 0,
   gap: 0,
 },
   center: {
@@ -2027,7 +1960,7 @@ journeySceneWrap: {
 },
 
 trainingStatsMiniTitle: {
-  fontSize: 15,
+  fontSize: 16,
   fontWeight: "800",
   color: "#2E2118",
 },
@@ -2096,35 +2029,35 @@ trainingStatsMiniContent: {
   alignItems: "center",
   gap: 10,
 },
-bottomSheet: {
+
+statsBottomSheet: {
   position: "absolute",
-  left: 16,
-  right: 16,
-
-  borderTopLeftRadius: 36,
-  borderTopRightRadius: 36,
-
-  backgroundColor: "rgba(255,253,249,0.96)",
-
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(255,253,249,0.98)",
+  borderTopLeftRadius: 32,
+  borderTopRightRadius: 32,
   paddingHorizontal: 20,
-  paddingTop: 10,
+  paddingTop: 8,
 
-  zIndex: 100,
+  zIndex: 999,
+  elevation: 999,
 
-  shadowColor: "#5A3A1D",
-  shadowOpacity: 0.14,
-  shadowRadius: 18,
-  shadowOffset: { width: 0, height: -5 },
-  elevation: 12,
+  shadowColor: "#000",
+  shadowOpacity: 0.12,
+  shadowRadius: 16,
+  shadowOffset: { width: 0, height: -4 },
+  overflow: "hidden",
 },
 
-
-bottomSheetOpen: {
-  bottom: -245,
-  minHeight: 330,
-  paddingBottom: 26,
+statsBottomSheetCollapsed: {
+  height: 96,
 },
 
+statsBottomSheetExpanded: {
+  height: 320,
+},
 bottomSheetHandleArea: {
   alignItems: "center",
   paddingTop: 2,
@@ -2142,13 +2075,9 @@ bottomSheetHandle: {
 },
 
 bottomSheetFullContent: {
-  paddingTop: 2,
+  paddingTop: 12,
 },
-bottomSheetBackdrop: {
-  ...StyleSheet.absoluteFillObject,
-  backgroundColor: "transparent",
-  zIndex: 90,
-},
+
 trainingStatsMiniTextRow: {
   flexDirection: "row",
   alignItems: "center",
@@ -2341,5 +2270,14 @@ sceneGoalMarkerIcon: {
   width: 70,
   height: 220,
   zIndex: 8,
+},
+statsSheetBackdrop: {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0,
+  zIndex: 998,
+  backgroundColor: "rgba(0,0,0,0.08)",
 },
 });

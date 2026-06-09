@@ -85,11 +85,9 @@ export default function MovementDictionaryHomeScreen() {
         const isLocked = rankLevel < requiredRank;
 
         const lockedText =
-          requiredRank === 1
-            ? "1단 승단 후 열립니다"
-            : requiredRank === 2
-            ? "2단 승단 후 열립니다"
-            : "수련 단계에 따라 열립니다";
+  requiredRank > 0
+    ? `${requiredRank}단 승단 후 열립니다`
+    : "수련 단계에 따라 열립니다";
 
         return (
           <TouchableOpacity

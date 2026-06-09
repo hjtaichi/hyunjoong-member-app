@@ -671,11 +671,13 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
     <View style={styles.goalGrid}>
   <View style={styles.goalItem}>
     <Text style={styles.goalItemTitle}>일심양의</Text>
-    <Text style={[styles.goalGoalValue, styles.goalValueBrown]}
-    numberOfLines={1}
+    <Text
+  style={[styles.goalGoalValue, styles.goalValueBrown]}
+  numberOfLines={1}
   adjustsFontSizeToFit
-  minimumFontScale={0.65}>    
-  {gongbeopGoals.ilsimyangui}<Text style={styles.goalUnit}>회</Text>
+  minimumFontScale={0.45}
+>
+  {`${gongbeopGoals.ilsimyangui || 0}회`}
 </Text>
   </View>
 
@@ -767,8 +769,8 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
    <View style={[styles.card, styles.trainingCard]}>
     <View style={styles.cardTopActionRow}>
   <TouchableOpacity
-  activeOpacity={personalProgress ? 0.85 : 1}
-  disabled={!personalProgress}
+  style={styles.detailButton}
+  activeOpacity={0.85}
   onPress={() => {
     if (!personalProgress?.curriculumId) {
       Alert.alert("안내", "아직 등록된 개인 진도 정보가 없습니다.");
@@ -2406,13 +2408,17 @@ currentCardHeaderRow: {
   gap: 12,
   marginBottom: 16,
 },
-
+detailButton: {
+  paddingHorizontal: 12,
+  paddingVertical: 8,
+},
 detailTextButton: {
   fontSize: 12,
   fontWeight: "700",
   color: "#8a7f72",
   marginTop: 7,
 },
+
 sectionLabel: {
   fontSize: 14,
   fontWeight: "800",
@@ -2446,11 +2452,12 @@ coachingInlineLabel: {
 },
 
 coachingInlineText: {
-  fontSize: 13,
+  fontSize: 20,
   lineHeight: 19,
   color: "#4a3d31",
   fontWeight: "600",
   marginLeft: 10,
+  fontFamily: "KyoboHandwriting2025lyb"
 },
 trainingCard: {
   paddingVertical: 4,
@@ -2854,7 +2861,7 @@ goalHeaderRow: {
 
 goalTitle: {
   fontFamily: "ChosunCentennial",
-  fontSize: 15,
+  fontSize: 18,
   color: "#5b3f30",
    transform: [{ scaleX: 0.9 }],
 },
@@ -2910,15 +2917,11 @@ goalItemTitle: {
   marginBottom: 0,
 },
 goalGoalValue: {
-  fontSize: 22,
-  fontWeight: "700",
-  color: "#3f3028",
-},
-
-goalUnit: {
-  fontSize: 11,
-  fontWeight: "800",
-  color: "#7a6f61",
+  fontSize: 18,
+  fontWeight: "900",
+  textAlign: "center",
+  includeFontPadding: false,
+  maxWidth: "100%",
 },
 
 goalSettingIconButton: {

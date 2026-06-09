@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
 
   content: {
     paddingHorizontal: 16,
-    paddingTop: 44,
+    paddingTop: 10,
     paddingBottom: 100,
   },
 
@@ -259,7 +259,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 18,
+    marginBottom: 30,
+    marginTop: 30,
   },
 
   videoImage: {
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#EFE5DE",
     padding: 16,
-    marginBottom: 22,
+    marginBottom: 35,
   },
 
   sectionTitle: {

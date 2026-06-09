@@ -809,7 +809,7 @@ inquiryRightDate: {
   color: colors.textMuted,
 },
 shopMiniCard: {
-  height: 118,
+  height: 105,
   borderRadius: 22,
   overflow: "hidden",
   marginTop: 14,
@@ -837,18 +837,19 @@ shopMiniTextBox: {
 },
 
 shopMiniTitle: {
-  fontSize: 25,
+  fontSize: 24,
   fontWeight: "800",
   color: "#2F2119",
-  marginTop: 20,
-  marginLeft: -30,
+  marginTop: 10,
+  marginLeft: -25,
   letterSpacing: -0.4,
 },
 
 shopMiniDesc: {
-  marginTop: 5,
+  marginTop: 1,
   fontSize: 13,
   lineHeight: 16,
+  marginLeft: 12,
   color: "#4F4037",
   fontWeight: "500",
 },

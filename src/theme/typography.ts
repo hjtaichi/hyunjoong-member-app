@@ -1,19 +1,43 @@
 export const typography = {
+  screenTitle: {
+    fontSize: 30,
+    fontWeight: "800" as const,
+    lineHeight: 38,
+  },
+
+  heroTitle: {
+    fontSize: 33,
+    fontWeight: "800" as const,
+    lineHeight: 40,
+  },
+
   titleLarge: {
     fontSize: 24,
-    fontWeight: "700" as const,
+    fontWeight: "800" as const,
     lineHeight: 32,
   },
 
   title: {
-    fontSize: 20,
-    fontWeight: "700" as const,
-    lineHeight: 28,
+    fontSize: 21,
+    fontWeight: "800" as const,
+    lineHeight: 29,
   },
 
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: "700" as const,
+    fontSize: 19,
+    fontWeight: "800" as const,
+    lineHeight: 26,
+  },
+
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "800" as const,
+    lineHeight: 25,
+  },
+
+  bodyLarge: {
+    fontSize: 16,
+    fontWeight: "400" as const,
     lineHeight: 24,
   },
 
@@ -25,7 +49,7 @@ export const typography = {
 
   bodyBold: {
     fontSize: 15,
-    fontWeight: "600" as const,
+    fontWeight: "700" as const,
     lineHeight: 22,
   },
 
@@ -37,7 +61,13 @@ export const typography = {
 
   captionBold: {
     fontSize: 12,
-    fontWeight: "600" as const,
+    fontWeight: "700" as const,
     lineHeight: 17,
+  },
+
+  tiny: {
+    fontSize: 11,
+    fontWeight: "600" as const,
+    lineHeight: 15,
   },
 };

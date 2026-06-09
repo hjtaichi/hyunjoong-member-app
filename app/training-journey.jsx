@@ -221,7 +221,7 @@ const currentJourney = useMemo(() => {
 </View>
           <Text style={styles.philosophyText}>
             승단은 필수가 아닙니다.{"\n"}
-            다만 수련이 충분히 쌓였다면, 한 번쯤 도전해보셔도 좋습니다.
+            다만 수련이 충분히 쌓였다면, {"\n"}한 번쯤 도전해보셔도 좋습니다.
           </Text>
         </View>
       </ImageBackground>
@@ -460,16 +460,16 @@ const styles = StyleSheet.create({
     color: "rgba(45,33,23,0.06)",
   },
   heroTitle: {
-  fontSize: 25,
+  fontSize: 23,
   fontWeight: "900",
-  lineHeight: 32,
+  lineHeight: 30,
   color: COLORS.ink,
 },
 
 heroDesc: {
-  marginTop: 10,
-  fontSize: 13,
-  lineHeight: 22,
+  marginTop: 9,
+  fontSize: 14,
+  lineHeight: 19,
   fontWeight: "600",
   color: COLORS.ink,
 },

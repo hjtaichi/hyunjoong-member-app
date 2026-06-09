@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 const CURRICULUM_STEP_MAP = {
   "현중태극권 29식": [
@@ -221,6 +221,16 @@ export default function TaegukwonCurriculumDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.topHeader}>
+  <Text style={styles.backButton} onPress={() => router.back()}>
+    ‹
+  </Text>
+
+  <View style={styles.topTitleRow}>
+    <Text style={styles.topTitle}>수련 상세</Text>
+
+  </View>
+</View>
       <View style={styles.heroCard}>
         <Text style={styles.eyebrow}>
           {source === "group" ? "도장 단체 진도" : "내 수련 투로"}
@@ -491,5 +501,37 @@ currentStepHanjaInline: {
   fontSize: 16,
   fontWeight: "600",
   color: "#8a5a21",
+},
+topHeader: {
+  flexDirection: "row",
+  alignItems: "center",
+  marginBottom: 4,
+},
+
+backButton: {
+  width: 28,
+  fontSize: 30,
+  lineHeight: 32,
+  color: "#6b4f46",
+  marginRight: 8,
+},
+
+topTitleRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 8,
+},
+
+topTitle: {
+  fontSize: 20,
+  fontWeight: "900",
+  color: "#2f2a24",
+},
+
+topSubTitle: {
+  fontSize: 13,
+  fontWeight: "700",
+  color: "#7a6f61",
+  marginTop: 2,
 },
 });

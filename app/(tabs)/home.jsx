@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { colors, typography, spacing, radius, shadow } from "../../src/theme";
 import {
   ActivityIndicator,
   Alert,
@@ -1711,31 +1712,20 @@ return (
   );
 }
 
-const colors = {
-  background: "#FFFCFA",
-  card: "#FFFFFF",
-  blushBeige: "#F5EAE4",
-  roseTaupe: "#DCC6BE",
-  warmBrown: "#76564B",
-  softBrown: "#A78D83",
-  bronzeGold: "#C89E6A",
-  textMain: "#3A2C27",
-  textSub: "#8A7A72",
-  textMuted: "#A99F98",
-  border: "#EFE5DE",
-  reserved: "#F4E4C8",
-  present: "#6B4F46",
-  absent: "#D9D2CD",
-  closed: "#E9E1DB",
-  white: "#FFFFFF",
-  danger: "#C46A5A",
-};
+
 const isWeb = Platform.OS === "web";
 const fonts = {
   regular: "PretendardRegular",
   medium: "PretendardMedium",
   semiBold: "PretendardSemiBold",
   bold: "PretendardBold",
+
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+  titleRegular: "MaruBuriRegular",
+
+  handwriting: "KyoboHandwriting2025lyb",
+  brush: "SimKyungha",
 };
 const styles = StyleSheet.create({
   screen: {
@@ -1745,9 +1735,9 @@ const styles = StyleSheet.create({
 
   content: {
   paddingHorizontal: isWeb ? 12 : 16,
-  paddingTop: isWeb ? 28 : 48,
+  paddingTop: isWeb ? 24 : 44,
   paddingBottom: isWeb ? 30 : 18,
-  gap: isWeb ? 12 : 15,
+  gap: isWeb ? 10 : 14,
   width: "100%",
   maxWidth: 430,
   alignSelf: "center",
@@ -1768,10 +1758,10 @@ const styles = StyleSheet.create({
   },
 
   homeHeader: {
-  minHeight: isWeb ? 112 : 140,
+  minHeight: isWeb ? 136 : 160,
   paddingHorizontal: 4,
-  paddingTop: isWeb ? 0 : 8,
-  paddingBottom: isWeb ? 28 : 45,
+  paddingTop: isWeb ? 6 : 12,
+  paddingBottom: isWeb ? 42 : 54,
   flexDirection: "row",
   justifyContent: "space-between",
   alignItems: "flex-start",
@@ -1784,29 +1774,29 @@ homeHeaderTextBlock: {
 },
   homeMountainBg: {
   position: "absolute",
-  left: -100,
+  left: -95,
   right: -40,
-  bottom: -75,
-  height: 175,
-  opacity: 0.55,
-  transform: [{ scale: 0.75}],
+  bottom: -54,
+  height: 190,
+  opacity: 0.72,
+  transform: [{ scale: 0.82 }],
 },
 
   homeGreeting: {
   fontSize: isWeb ? 14 : 14,
   fontFamily: fonts.semiBold,
-  lineHeight: isWeb ? 18 : 20,
+  lineHeight: isWeb ? 19 : 20,
   color: colors.textSub,
-  marginTop: 10,
-  marginBottom: 3,
+  marginTop: 14,
+  marginBottom: 4,
 },
 
 homeName: {
-  fontSize: isWeb ? 30 : 36,
-  fontFamily: fonts.bold,
+  fontSize: isWeb ? 31 : 36,
+  fontFamily: fonts.title,
   letterSpacing: -1.2,
-  color: "#161311",
-  marginBottom: 1,
+  color: colors.textMain,
+  marginBottom: 4,
 },
 
   homeBadgeRow: {
@@ -1838,31 +1828,27 @@ homeName: {
   },
 
   homeBadgeTextYudanja: {
-    color: "#E3B66F",
+    color: colors.bronzeGold,
   },
 
-  todayTrainingCard: {
-  marginTop: isWeb ? -14 : -25,
+ todayTrainingCard: {
+  marginTop: isWeb ? -18 : -28,
   backgroundColor: colors.card,
-  borderRadius: isWeb ? 20 : 22,
-  borderWidth: 0.3,
-  borderColor: colors.border,
-  paddingTop: isWeb ? 13 : 15,
-  paddingBottom: isWeb ? 13 : 15,
-  paddingHorizontal: isWeb ? 15 : 18,
+  borderRadius: radius.lg,
+  borderWidth: 1,
+  borderColor: colors.bronzeGold,
+  paddingTop: isWeb ? 14 : 16,
+  paddingBottom: isWeb ? 14 : 16,
+  paddingHorizontal: spacing.lg,
   overflow: "hidden",
-  shadowColor: "#BFA79B",
-  shadowOpacity: 0.08,
-  shadowRadius: 14,
-  shadowOffset: { width: 0, height: 6 },
-  elevation: 3,
+  ...shadow.card,
 },
 
 todayTrainingHeader: {
   flexDirection: "row",
   justifyContent: "space-between",
   alignItems: "center",
-  marginBottom: isWeb ? 14 : 20,
+  marginBottom: isWeb ? 10 : 14,
   marginLeft: isWeb ? 2 : 8,
   zIndex: 5,
 },
@@ -1870,7 +1856,7 @@ todayTrainingHeader: {
 todayTrainingLabel: {
   marginTop: 3,
   fontSize: isWeb ? 15 : 17,
-  fontFamily: fonts.bold,
+  fontFamily: fonts.title,
   lineHeight: 22,
   color: colors.textMain,
 },
@@ -1883,23 +1869,23 @@ todayTrainingMore: {
 },
 
 todayTrainingTitle: {
-  fontSize: isWeb ? 24 : 28,
-  fontFamily: fonts.bold,
+  fontSize: isWeb ? 23 : 27,
+  fontFamily: fonts.title,
   letterSpacing: -0.8,
   lineHeight: isWeb ? 30 : 33,
   color: colors.textMain,
-  marginTop: 10,
+  marginTop: 6,
   marginLeft: isWeb ? 2 : 8,
   maxWidth: "76%",
   zIndex: 5,
 },
 
 todayTrainingStep: {
-  fontSize: isWeb ? 15 : 17,
+  fontSize: isWeb ? 14 : 16,
   fontFamily: fonts.semiBold,
-  lineHeight: isWeb ? 20 : 22,
+  lineHeight: isWeb ? 19 : 21,
   color: colors.warmBrown,
-  marginBottom: isWeb ? 30 : 40,
+  marginBottom: isWeb ? 24 : 32,
   marginLeft: isWeb ? 2 : 8,
   maxWidth: "76%",
   zIndex: 5,
@@ -1923,17 +1909,13 @@ todayTrainingButtonText: {
 
 card: {
   backgroundColor: colors.card,
-  borderRadius: isWeb ? 20 : 22,
-  paddingHorizontal: isWeb ? 14 : 16,
-  paddingTop: isWeb ? 14 : 16,
-  paddingBottom: isWeb ? 14 : 16,
-  borderWidth: 0.3,
+  borderRadius: radius.lg,
+  paddingHorizontal: spacing.lg,
+  paddingTop: spacing.lg,
+  paddingBottom: spacing.lg,
+  borderWidth: 1,
   borderColor: colors.border,
-  shadowColor: "#BFA79B",
-  shadowOpacity: 0.05,
-  shadowRadius: 12,
-  shadowOffset: { width: 0, height: 4 },
-  elevation: 2,
+  ...shadow.card,
 },
 
   miniCalendarHeader: {
@@ -1944,10 +1926,10 @@ card: {
   },
 
   miniCalendarTitle: {
-  fontSize: 17,
-  fontFamily: fonts.bold,
+  fontSize: 18,
+  fontFamily: fonts.title,
   letterSpacing: -0.4,
-  lineHeight: 24,
+  lineHeight: 25,
   color: colors.textMain,
 },
 
@@ -1995,13 +1977,13 @@ miniCalendarMore: {
   dayCellSelected: {
     borderWidth: 0.8,
     borderColor: colors.roseTaupe,
-    backgroundColor: "#FFFDF9",
+    backgroundColor: colors.card,
   },
 
   dayCellToday: {
     borderWidth: 1,
     borderColor: colors.roseTaupe,
-    backgroundColor: "#FFFDF9",
+    backgroundColor: colors.card,
   },
 
   dayNumber: {
@@ -2076,8 +2058,8 @@ miniCalendarMore: {
   },
 
   noticeSummaryTitle: {
-  fontSize: 17,
-  fontFamily: fonts.bold,
+  fontSize: 18,
+  fontFamily: fonts.title,
   color: colors.textMain,
 },
 
@@ -2485,8 +2467,8 @@ noticeSummaryDate: {
   position: "absolute",
   left: 0,
   right: 0,
-  bottom: -70,
-  height: 90,
+  bottom: -54,
+  height: 100,
 },
 
 calendarLegend: {
@@ -2535,24 +2517,24 @@ dayStampPresent: {
   width: 28,
   height: 28,
   borderRadius: 14,
-  backgroundColor: "#8B6A5E",
+  backgroundColor: colors.present,
   alignItems: "center",
   justifyContent: "center",
 },
 
 dayStampPresentTwo: {
-  backgroundColor: "#76564B",
+  backgroundColor: colors.warmBrown,
 },
 
 dayStampPresentThree: {
-  backgroundColor: "#4A332C",
+  backgroundColor:  colors.ink,
 },
 
 dayStampReserved: {
   width: 28,
   height: 28,
   borderRadius: 14,
-  backgroundColor: "#F2E1C4",
+  backgroundColor: colors.reserved,
   alignItems: "center",
   justifyContent: "center",
 },
@@ -2566,7 +2548,7 @@ dayStampTextPresent: {
 dayStampTextReserved: {
   fontSize: 14,
   fontFamily: fonts.bold,
-  color: "#8A6B44",
+  color: colors.warmBrown,
 },
 moreLinkRow: {
   flexDirection: "row",
