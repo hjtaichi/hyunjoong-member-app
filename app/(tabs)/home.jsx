@@ -1792,9 +1792,9 @@ homeHeaderTextBlock: {
 },
 
 homeName: {
-  fontSize: isWeb ? 31 : 36,
+  fontSize: isWeb ? 33 : 38,
   fontFamily: fonts.title,
-  letterSpacing: -1.2,
+  letterSpacing: -1.0,
   color: colors.textMain,
   marginBottom: 4,
 },
@@ -1855,9 +1855,9 @@ todayTrainingHeader: {
 
 todayTrainingLabel: {
   marginTop: 3,
-  fontSize: isWeb ? 15 : 17,
+  fontSize: isWeb ? 16 : 18,
   fontFamily: fonts.title,
-  lineHeight: 22,
+  lineHeight: 24,
   color: colors.textMain,
 },
 
@@ -1869,10 +1869,10 @@ todayTrainingMore: {
 },
 
 todayTrainingTitle: {
-  fontSize: isWeb ? 23 : 27,
+  fontSize: isWeb ? 24 : 28,
   fontFamily: fonts.title,
-  letterSpacing: -0.8,
-  lineHeight: isWeb ? 30 : 33,
+  letterSpacing: -0.6,
+  lineHeight: isWeb ? 31 : 34,
   color: colors.textMain,
   marginTop: 6,
   marginLeft: isWeb ? 2 : 8,
@@ -1926,10 +1926,10 @@ card: {
   },
 
   miniCalendarTitle: {
-  fontSize: 18,
+  fontSize: isWeb ? 19 : 22,
   fontFamily: fonts.title,
-  letterSpacing: -0.4,
-  lineHeight: 25,
+  letterSpacing: -0.3,
+  lineHeight: 28,
   color: colors.textMain,
 },
 
@@ -2058,7 +2058,7 @@ miniCalendarMore: {
   },
 
   noticeSummaryTitle: {
-  fontSize: 18,
+  fontSize: isWeb ? 19 : 22,
   fontFamily: fonts.title,
   color: colors.textMain,
 },
