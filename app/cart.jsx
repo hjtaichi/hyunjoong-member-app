@@ -12,7 +12,15 @@ import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { useCart } from "../src/contexts/CartContext";
 import { createProductOrder } from "../src/api/memberShop";
-import { colors } from "../src/theme/colors";
+import { colors, radius, shadow } from "../src/theme";
+import ScreenHeader from "../src/components/ScreenHeader";
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  titleSemi: "MaruBuriSemiBold",
+};
+
 
 const API_ORIGIN = "http://172.30.1.16:5000";
 
@@ -73,15 +81,7 @@ export default function CartScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
-
-        <Text style={styles.headerTitle}>장바구니</Text>
-
-        <View style={styles.headerRight} />
-      </View>
+      <ScreenHeader title="장바구니" />
 
       {items.length === 0 ? (
         <View style={styles.emptyCard}>
@@ -180,74 +180,108 @@ export default function CartScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background || "#FFFCFA" },
-  content: { paddingHorizontal: 18, paddingTop: 42, paddingBottom: 120 },
-  header: {
-    height: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  backButton: { width: 42, height: 42, justifyContent: "center" },
-  backText: { fontSize: 38, color: "#2F2119", marginTop: -5 },
-  headerTitle: { fontSize: 18, fontWeight: "800", color: "#2F2119" },
-  headerRight: { width: 42 },
+  container: {
+  flex: 1,
+  backgroundColor: colors.background,
+},
 
+content: {
+  paddingHorizontal: 16,
+  paddingTop: 24,
+  paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},
   emptyCard: {
-    marginTop: 26,
-    borderRadius: 26,
-    backgroundColor: "#FFFDF9",
-    borderWidth: 1,
-    borderColor: "#E9DCD1",
-    padding: 28,
-    alignItems: "center",
-  },
-  emptyTitle: { fontSize: 18, fontWeight: "800", color: "#3A281F" },
-  emptyText: {
-    marginTop: 8,
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#7A6A61",
-    textAlign: "center",
-  },
-  shopButton: {
-    marginTop: 18,
-    borderRadius: 16,
-    backgroundColor: "#3A281F",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  shopButtonText: { color: "#fff", fontWeight: "800" },
+  marginTop: 18,
+  borderRadius: radius.lg,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  paddingHorizontal: 22,
+  paddingVertical: 28,
+  alignItems: "center",
+  ...shadow.card,
+},
 
-  list: { marginTop: 18, gap: 12 },
-  itemCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 24,
-    backgroundColor: "#FFFDF9",
-    borderWidth: 1,
-    borderColor: "#E9DCD1",
-    padding: 13,
-  },
-  imageBox: {
-    width: 82,
-    height: 82,
-    borderRadius: 16,
-    backgroundColor: "#F1E4D9",
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+emptyTitle: {
+  fontSize: 17,
+  lineHeight: 25,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+
+emptyText: {
+  marginTop: 8,
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  textAlign: "center",
+},
+
+shopButton: {
+  marginTop: 18,
+  minHeight: 48,
+  borderRadius: radius.md,
+  backgroundColor: colors.warmBrown,
+  paddingHorizontal: 20,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+shopButtonText: {
+  color: colors.white,
+  fontSize: 14,
+  fontFamily: fonts.bold,
+},
+
+  list: {
+  marginTop: 18,
+  gap: 12,
+},
+
+itemCard: {
+  flexDirection: "row",
+  alignItems: "center",
+  borderRadius: radius.lg,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  padding: 13,
+  ...shadow.card,
+},
+
+imageBox: {
+  width: 82,
+  height: 82,
+  borderRadius: 16,
+  backgroundColor: "#F1E4D9",
+  overflow: "hidden",
+  alignItems: "center",
+  justifyContent: "center",
+},
   image: { width: "100%", height: "100%" },
-  noImageText: { fontSize: 26, fontWeight: "900", color: "#B89A7A" },
+  noImageText: {
+  fontSize: 26,
+  fontFamily: fonts.bold,
+  color: "#B89A7A",
+},
   itemInfo: { flex: 1, marginLeft: 13 },
-  itemName: { fontSize: 16, fontWeight: "800", color: "#241811" },
+ itemName: {
+  fontSize: 16,
+  lineHeight: 23,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
   itemPrice: {
-    marginTop: 5,
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#2F2119",
-  },
+  marginTop: 4,
+  fontSize: 15,
+  lineHeight: 22,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
   quantityRow: {
     marginTop: 10,
     flexDirection: "row",
@@ -255,42 +289,80 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   qtyButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#F3E8DE",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  qtyText: { fontSize: 15, fontWeight: "900", color: "#3A281F" },
-  qtyNumber: { minWidth: 20, textAlign: "center", fontWeight: "800" },
+  width: 30,
+  height: 30,
+  borderRadius: 15,
+  backgroundColor: "#F8F1EA",
+  borderWidth: 1,
+  borderColor: colors.border,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+qtyText: {
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+},
+
+qtyNumber: {
+  minWidth: 22,
+  textAlign: "center",
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
   removeButton: { paddingHorizontal: 8, paddingVertical: 8 },
-  removeText: { fontSize: 12, color: "#9B5A4B", fontWeight: "700" },
+removeText: {
+  fontSize: 12,
+  fontFamily: fonts.semiBold,
+  color: colors.danger,
+},
 
   summaryCard: {
-    marginTop: 18,
-    borderRadius: 26,
-    backgroundColor: "#FFF8EF",
-    borderWidth: 1,
-    borderColor: "#E9DCD1",
-    padding: 20,
-  },
+  marginTop: 18,
+  borderRadius: radius.lg,
+  backgroundColor: "#F8F1EA",
+  borderWidth: 1,
+  borderColor: colors.border,
+  padding: 18,
+  ...shadow.card,
+},
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 12,
   },
-  summaryLabel: { fontSize: 14, color: "#6F5C50" },
-  summaryValue: { fontSize: 15, fontWeight: "800", color: "#2F2119" },
-  summaryPrice: { fontSize: 18, fontWeight: "800", color: "#2F2119" },
-  submitButton: {
-    marginTop: 10,
-    height: 54,
-    borderRadius: 17,
-    backgroundColor: "#3A281F",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  summaryLabel: {
+  fontSize: 14,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+summaryValue: {
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+
+summaryPrice: {
+  fontSize: 18,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+
+submitButton: {
+  marginTop: 10,
+  height: 54,
+  borderRadius: radius.md,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+},
   submitButtonDisabled: { opacity: 0.75 },
-  submitButtonText: { color: "#fff", fontSize: 15, fontWeight: "800" },
+submitButtonText: {
+  color: colors.white,
+  fontSize: 15,
+  fontFamily: fonts.bold,
+},
 });

@@ -1,5 +1,14 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { colors, radius, shadow } from "../../../src/theme";
+import ScreenHeader from "../../../src/components/ScreenHeader";
+
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 
 const items = [
   "수련 전 따뜻한 차로 몸 속을 덥혀 줍니다.",
@@ -20,7 +29,9 @@ const items = [
 export default function GuideScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.subtitle}>
+  <ScreenHeader title="수련 가이드" />
+
+  <Text style={styles.subtitle}>
         현중태극권 수련 시 함께 지키는 기본 안내입니다.
       </Text>
 
@@ -39,60 +50,70 @@ export default function GuideScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#f6f3ee",
-  },
-  content: {
-    paddingHorizontal: 20,
-      paddingTop: 10,
-      paddingBottom: 28,
-  },
+screen: {
+  flex: 1,
+  backgroundColor: colors.background,
+},
+
+content: {
+  paddingHorizontal: 16,
+  paddingTop: 24,
+  paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},
   title: {
     fontSize: 28,
     fontWeight: "800",
     color: "#2f2a24",
   },
-  subtitle: {
-    marginTop: 10,
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#6b6257",
-  },
-  card: {
-    marginTop: 20,
-    backgroundColor: "#fffdf9",
-    borderRadius: 22,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#ece4d8",
-  },
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    paddingVertical: 9,
-  },
-  checkbox: {
-    width: 13,
-    height: 13,
-    marginTop: 4,
-    borderWidth: 1.5,
-    borderColor: "#5f554b",
-    borderRadius: 2,
-  },
-  itemText: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 22,
-    color: "#3f3831",
-    fontWeight: "600",
-  },
-  footer: {
-    marginTop: 22,
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#4c4339",
-  },
+ subtitle: {
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  marginBottom: 14,
+},
+
+card: {
+  backgroundColor: colors.card,
+  borderRadius: radius.lg,
+  paddingHorizontal: 18,
+  paddingVertical: 16,
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
+},
+
+itemRow: {
+  flexDirection: "row",
+  alignItems: "flex-start",
+  gap: 10,
+  paddingVertical: 9,
+},
+
+checkbox: {
+  width: 14,
+  height: 14,
+  marginTop: 5,
+  borderWidth: 1.4,
+  borderColor: colors.softBrown,
+  borderRadius: 3,
+},
+itemText: {
+  flex: 1,
+  fontSize: 15,
+  lineHeight: 24,
+  fontFamily: fonts.medium,
+  color: colors.textMain,
+},
+
+footer: {
+  marginTop: 22,
+  textAlign: "center",
+  fontSize: 16,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+},
 });

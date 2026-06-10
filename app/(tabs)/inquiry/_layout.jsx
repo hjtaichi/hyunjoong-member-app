@@ -10,37 +10,28 @@ export default function InquiryLayout() {
         }}
       />
 
-      <Stack.Screen
-        name="guide"
-        options={{
-          title: "수련 가이드",
-          headerBackTitle: "뒤로",
-        }}
-      />
+<Stack.Screen
+  name="guide"
+  options={{
+    headerShown: false,
+  }}
+/>
 
       <Stack.Screen
-        name="schedule"
-        options={{
-          title: "수련 시간표",
-          headerBackTitle: "뒤로",
-        }}
-      />
+  name="schedule"
+  options={{ headerShown: false }}
+/>
 
       <Stack.Screen
         name="faq"
-        options={{
-          title: "FAQ",
-          headerBackTitle: "뒤로",
-        }}
-      />
+  options={{ headerShown: false }}
+/>
 
       <Stack.Screen
         name="[roomId]"
-        options={{
-          title: "1:1 문의",
-          headerBackTitle: "뒤로",
-        }}
-      />
+  options={{ headerShown: false }}
+/>
+
     </Stack>
   );
 }

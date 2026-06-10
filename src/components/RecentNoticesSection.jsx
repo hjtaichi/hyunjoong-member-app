@@ -7,12 +7,19 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
-import { colors } from "../theme/colors";
+import { colors, radius, shadow } from "../theme";
 import { useAuth } from "../contexts/AuthContext";
 import { getMemberNoticeList } from "../api/memberNotice";
 
 const PAGE_SIZE = 5;
-
+const fonts = {
+  regular: "PretendardRegular",
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 function formatDate(value) {
   if (!value) return "";
 
@@ -50,6 +57,7 @@ export default function RecentNoticesSection() {
 
   const pagedNotices = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
+    
     return notices.slice(start, start + PAGE_SIZE);
   }, [notices, page]);
 
@@ -217,74 +225,66 @@ const styles = StyleSheet.create({
   mainCard: {
   position: "relative",
   backgroundColor: colors.card,
-  borderRadius: 24,
-  paddingHorizontal: 20,
-  paddingTop: 18,
-  paddingBottom: 16,
-  borderWidth: 0.4,
-borderColor: colors.border,
+  borderRadius: radius.lg,
+  paddingHorizontal: 18,
+  paddingTop: 16,
+  paddingBottom: 14,
+  borderWidth: 1,
+  borderColor: colors.border,
   marginBottom: 14,
-  minHeight: 150,
-
-  shadowColor: "#6B4F46",
-shadowOffset: { width: 0, height: 6 },
-shadowOpacity: 0.03,
-shadowRadius: 12,
-elevation: 3,
+  minHeight: 118,
+  ...shadow.card,
 },
 
-  popupBadge: {
-    position: "absolute",
-    top: 18,
-    right: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: colors.blushBeige,
-  },
+popupBadge: {
+  position: "absolute",
+  top: 16,
+  right: 16,
+  paddingHorizontal: 13,
+  paddingVertical: 7,
+  borderRadius: 999,
+  backgroundColor: colors.blushBeige,
+},
 
-  popupBadgeText: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: colors.warmBrown,
-  },
+popupBadgeText: {
+  fontSize: 12,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+},
 
   mainTitle: {
   paddingRight: 76,
-  fontSize: 20,
-  fontWeight: "800",
+  fontSize: 18,
+  fontFamily: fonts.bold,
   color: colors.textMain,
-  lineHeight: 28,
-  marginBottom: 10,
+  lineHeight: 25,
+  marginBottom: 6,
 },
 
-  mainContent: {
+mainContent: {
   fontSize: 14,
-  lineHeight: 22,
+  fontFamily: fonts.medium,
+  lineHeight: 21,
   color: colors.textSub,
-  marginBottom: 12,
+  marginBottom: 8,
 },
 
-  mainDate: {
-    fontSize: 14,
-    color: colors.textMuted,
-    letterSpacing: 1,
-  },
+mainDate: {
+  fontSize: 13,
+  fontFamily: fonts.medium,
+  color: colors.textMuted,
+  letterSpacing: 0.3,
+},
 
   noticeCard: {
   backgroundColor: colors.card,
-  borderRadius: 24,
-  paddingHorizontal: 20,
-  paddingTop: 18,
+  borderRadius: radius.lg,
+  paddingHorizontal: 18,
+  paddingTop: 16,
   paddingBottom: 10,
-  borderWidth: 0.4,
+  borderWidth: 1,
   borderColor: colors.border,
-
-  shadowColor: "#BFA79B",
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.05,
-  shadowRadius: 12,
-  elevation: 2,
+  ...shadow.card,
 },
 
   noticeHeader: {
@@ -294,16 +294,16 @@ elevation: 3,
   },
 
   noticeHeaderTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: colors.textMain,
-  },
+  fontSize: 22,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+},
 
   noticeCount: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.textSub,
-  },
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: colors.textSub,
+},
 
   headerDivider: {
     height: 1,
@@ -313,24 +313,23 @@ elevation: 3,
   },
 
   noticeRow: {
-  minHeight: 52,
+  minHeight: 50,
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
   gap: 12,
 },
-
   noticeRowBorder: {
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
 
   noticeTitle: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.textMain,
-  },
+  flex: 1,
+  fontSize: 15,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
 
   noticeRight: {
     flexDirection: "row",
@@ -338,10 +337,11 @@ elevation: 3,
     gap: 8,
   },
 
-  noticeDate: {
-    fontSize: 13,
-    color: colors.textMuted,
-  },
+noticeDate: {
+  fontSize: 11,
+  fontFamily: fonts.medium,
+  color: colors.textMuted,
+},
 
   arrow: {
     fontSize: 10,
@@ -386,10 +386,10 @@ elevation: 3,
   },
 
   pageText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.textSub,
-  },
+  fontSize: 16,
+  fontFamily: fonts.bold,
+  color: colors.textSub,
+},
 
   pageTextActive: {
     color: colors.white,
@@ -403,13 +403,15 @@ elevation: 3,
   },
 
   loadingText: {
-    fontSize: 13,
-    color: "#7a6f66",
-  },
+  fontSize: 13,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
 
-  emptyText: {
-    fontSize: 14,
-    color: "#7a6f66",
-    lineHeight: 21,
-  },
+emptyText: {
+  fontSize: 14,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  lineHeight: 21,
+},
   });

@@ -10,7 +10,15 @@ import {
   Modal,
 } from "react-native";
 import { router } from "expo-router";
-import { colors } from "../src/theme/colors";
+import { colors, radius, shadow } from "../src/theme";
+import ScreenHeader from "../src/components/ScreenHeader";
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 import { submitTrialApplication } from "../src/api/member";
 import { Image } from "react-native";
 
@@ -125,15 +133,7 @@ function handleSelectHopeDate(date) {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
-
-        <Text style={styles.headerTitle}>지인 체험 신청</Text>
-
-        <View style={{ width: 28 }} />
-      </View>
+      <ScreenHeader title="지인 체험 신청" />
 
       <View style={styles.hero}>
   <View style={styles.heroTextArea}>
@@ -328,10 +328,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: 18,
-    paddingTop: 20,
-    paddingBottom: 120,
-  },
+  paddingHorizontal: 16,
+  paddingTop: 24,
+  paddingBottom: 120,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},
   header: {
     height: 42,
     flexDirection: "row",
@@ -364,32 +367,33 @@ const styles = StyleSheet.create({
 
 heroTitle: {
   fontSize: 28,
-  fontWeight: "900",
-  color: "#241E1A",
+  fontFamily: fonts.title,
+  color: colors.textMain,
 },
 
 heroDesc: {
-  marginTop: 16,
+  marginTop: 14,
   fontSize: 14,
   lineHeight: 23,
-  color: "#5F554B",
+  fontFamily: fonts.medium,
+  color: colors.textSub,
 },
 
 heroDecorImage: {
   position: "absolute",
-  right: -38,
-  top: -8,
-  width: 220,
-  height: 190,
-  opacity: 0.9,
+  right: -22,
+  top: 8,
+  width: 180,
+  height: 150,
+  opacity: 0.72,
 },
-  label: {
-    marginTop: 14,
-    marginBottom: 7,
-    fontSize: 14,
-    fontWeight: "900",
-    color: "#241E1A",
-  },
+label: {
+  marginTop: 14,
+  marginBottom: 7,
+  fontSize: 13,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
   genderRow: {
     flexDirection: "row",
     gap: 10,
@@ -409,18 +413,19 @@ heroDecorImage: {
     borderColor: "#D7C7B6",
   },
   genderText: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#4A4038",
-  },
-  genderTextActive: {
-    color: "#241E1A",
-  },
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
+
+genderTextActive: {
+  color: colors.textMain,
+},
   input: {
     minHeight: 54,
-    borderRadius: 15,
+    borderRadius: radius.lg,
+    borderColor: colors.border,
     borderWidth: 1,
-    borderColor: "#E3D8CC",
     backgroundColor: "#FFFEFC",
     paddingHorizontal: 15,
     paddingVertical: 13,
@@ -447,24 +452,25 @@ heroDecorImage: {
     color: "#8C6330",
   },
   submitButton: {
-    marginTop: 26,
-    minHeight: 58,
-    borderRadius: 18,
-    backgroundColor: "#241E1A",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  submitButtonText: {
-    fontSize: 17,
-    fontWeight: "900",
-    color: "#E9C98A",
-  },
+  marginTop: 24,
+  minHeight: 54,
+  borderRadius: 16,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+submitButtonText: {
+  fontSize: 16,
+  fontFamily: fonts.bold,
+  color: colors.white,
+},
   dateInputButton: {
   minHeight: 54,
-  borderRadius: 15,
+  borderRadius: radius.lg,
   borderWidth: 1,
-  borderColor: "#E3D8CC",
-  backgroundColor: "#FFFEFC",
+  borderColor: colors.border,
+  backgroundColor: colors.card,
   paddingHorizontal: 15,
   justifyContent: "center",
 },
@@ -567,4 +573,10 @@ calendarCloseButtonText: {
   fontWeight: "900",
   color: "#8C6330",
 },
+sectionTitle: {
+  fontSize: 22,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+  marginBottom: 12,
+}
 });

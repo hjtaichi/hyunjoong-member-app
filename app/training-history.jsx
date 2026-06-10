@@ -19,6 +19,12 @@ import {
   getCommonHistoryMilestones,
 } from "../src/api/memberHistoryEvents";
 import { LinearGradient } from "expo-linear-gradient";
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 const goldenGoalMarker = require("../assets/images/golden-goal-marker.png");
 
 
@@ -1166,15 +1172,23 @@ locations={[0, 0.28, 0.66, 1]}
     />
 
     <View style={styles.trainingStatsMiniTextRow}>
-      <Text style={styles.trainingStatsMiniTitle}>내 수련 통계</Text>
-      <Text style={styles.trainingStatsMiniSub}>
-        {attendanceCount}일 · {expectedTrainingHours}시간
-      </Text>
-    </View>
+  <Text style={styles.trainingStatsMiniTitle}>내 수련 통계</Text>
+
+  <Text style={styles.trainingStatsMiniSub}>
+    {attendanceCount}일 · {expectedTrainingHours}시간
+  </Text>
+</View>
   </View>
 
   {statsExpanded ? (
     <View style={styles.bottomSheetFullContent}>
+      <View style={styles.trainingStatsFullHeader}>
+  <Text style={styles.trainingStatsFullTitle}>수련 통계 자세히 보기</Text>
+
+  <Pressable onPress={() => router.push("/training-stats")}>
+    <Text style={styles.trainingStatsInlineLink}>보기</Text>
+  </Pressable>
+</View>
       <View style={styles.trainingStatsMainRow}>
         <View style={styles.trainingStatsMainItem}>
           <Text style={styles.trainingStatsMainValue}>{attendanceCount}일</Text>
@@ -1282,17 +1296,19 @@ backIcon: {
     marginRight: 42,
   },
   title: {
-    marginTop: 18,
-  fontSize: 30,
-  fontWeight: "900",
+  marginTop: 18,
+  fontSize: 28,
+  lineHeight: 36,
+  fontFamily: fonts.titleSemi,
   color: "#2E2118",
   textShadowColor: "rgba(255,255,255,0.75)",
   textShadowRadius: 10,
 },
   subtitle: {
-  marginTop: 4,
+  marginTop: 2,
   fontSize: 14,
-  fontWeight: "700",
+  lineHeight: 20,
+  fontFamily: fonts.medium,
   color: "rgba(75, 60, 48, 0.72)",
   textShadowColor: "rgba(255,255,255,0.8)",
   textShadowRadius: 8,
@@ -1834,16 +1850,17 @@ trainingStatsMainItem: {
 },
 
 trainingStatsMainValue: {
-  fontSize: 23,
-  fontWeight: "700",
+  fontSize: 22,
+  lineHeight: 30,
+  fontFamily: fonts.bold,
   color: "#2E2118",
-  letterSpacing: -0.6,
 },
 
 trainingStatsMainLabel: {
-  marginTop: 5,
+  marginTop: 4,
   fontSize: 12,
-  fontWeight: "700",
+  lineHeight: 18,
+  fontFamily: fonts.medium,
   color: "#8A7663",
 },
 
@@ -1866,7 +1883,8 @@ trainingStatsGoalPanel: {
 
 trainingStatsGoalSmallLabel: {
   fontSize: 13,
-  fontWeight: "700",
+  lineHeight: 19,
+  fontFamily: fonts.semiBold,
   color: "#A77A3F",
 },
 
@@ -1879,11 +1897,10 @@ trainingStatsGoalTitleRow: {
 
 trainingStatsGoalBigTitle: {
   flexShrink: 0,
-  fontSize: 18,
-  lineHeight: 26,
-  fontWeight: "800",
+  fontSize: 17,
+  lineHeight: 25,
+  fontFamily: fonts.bold,
   color: "#2E2118",
-  letterSpacing: -0.4,
 },
 trainingStatsProgressTrackInline: {
   flex: 1,
@@ -1894,11 +1911,11 @@ trainingStatsProgressTrackInline: {
 },
 
 trainingStatsGoalDesc: {
-  marginTop: 9,
+  marginTop: 8,
   fontSize: 12,
   lineHeight: 18,
+  fontFamily: fonts.medium,
   color: "#8A7663",
-  fontWeight: "700",
 },
 
 trainingStatsProgressFill: {
@@ -1961,13 +1978,21 @@ journeySceneWrap: {
 
 trainingStatsMiniTitle: {
   fontSize: 16,
-  fontWeight: "800",
+  lineHeight: 23,
+  fontFamily: fonts.bold,
   color: "#2E2118",
 },
 
 trainingStatsMiniSub: {
-  fontSize: 15,
+  fontSize: 14,
+  lineHeight: 20,
+  fontFamily: fonts.medium,
   color: "#8A7663",
+},
+trainingStatsMiniTitleLine: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 8,
 },
 
 trainingStatsMiniArrow: {
@@ -1985,7 +2010,8 @@ trainingStatsTitleTextRow: {
 
 trainingStatsInlineLink: {
   fontSize: 12,
-  fontWeight: "800",
+  lineHeight: 18,
+  fontFamily: fonts.bold,
   color: "#8C6330",
   textDecorationLine: "underline",
 },
@@ -2279,5 +2305,18 @@ statsSheetBackdrop: {
   bottom: 0,
   zIndex: 998,
   backgroundColor: "rgba(0,0,0,0.08)",
+},
+trainingStatsFullHeader: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 10,
+},
+
+trainingStatsFullTitle: {
+  fontSize: 15,
+  lineHeight: 22,
+  fontFamily: fonts.semiBold,
+  color: "#2E2118",
 },
 });

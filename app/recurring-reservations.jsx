@@ -16,6 +16,16 @@ import {
   saveRecurringReservations,
 } from "../src/api/memberRecurringReservations";
 import { getMemberHome } from "../src/api/memberHome";
+import { colors, radius, shadow } from "../src/theme";
+import ScreenHeader from "../src/components/ScreenHeader";
+
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 
 const WEEKDAY_ROWS = [
   { value: 2, label: "화요일", shortLabel: "화" },
@@ -233,13 +243,7 @@ export default function RecurringReservationsScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.topHeader}>
-  <Text style={styles.backButton} onPress={() => router.back()}>
-    ‹
-  </Text>
-
-  <Text style={styles.topTitle}>정기출석 설정</Text>
-</View>
+      <ScreenHeader title="정기출석 설정" />
 
       <Text style={styles.subtitle}>
         요일마다 여러 시간대를 선택할 수 있어요. 자주 가는 시간으로 저장해두면 자동 예약과 연결됩니다.
@@ -440,13 +444,17 @@ export default function RecurringReservationsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#f6f3ee",
-  },
-  content: {
-  paddingHorizontal: 20,
-  paddingTop: 20,
-  paddingBottom: 30,
+  flex: 1,
+  backgroundColor: colors.background,
+},
+
+content: {
+  paddingHorizontal: 16,
+  paddingTop: 24,
+  paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
 },
   center: {
   flex: 1,
@@ -466,51 +474,59 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
-    color: "#4B5563",
-    lineHeight: 22,
-    marginBottom: 20,
-  },
-  summaryCard: {
-  backgroundColor: "#F8F5EF",
-  borderRadius: 24,
+  fontSize: 14,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  lineHeight: 22,
+  marginBottom: 18,
+},
+
+summaryCard: {
+  backgroundColor: colors.card,
+  borderRadius: radius.lg,
   padding: 18,
   marginBottom: 14,
   borderWidth: 1,
-  borderColor: "#E8E1D6",
+  borderColor: colors.border,
+  ...shadow.card,
 },
 summaryTitle: {
-  fontSize: 17,
-  fontWeight: "800",
-  color: "#1F1A17",
+  fontSize: 16,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
   marginBottom: 6,
 },
+
 summaryText: {
   fontSize: 14,
-  fontWeight: "800",
-  color: "#8C6330",
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
   marginBottom: 4,
 },
+
 summarySubText: {
   fontSize: 13,
-  color: "#7A7168",
+  fontFamily: fonts.medium,
+  color: colors.textSub,
   lineHeight: 19,
 },
 card: {
-  backgroundColor: "#FFFEFC",
-  borderRadius: 26,
+  backgroundColor: colors.card,
+  borderRadius: radius.lg,
   paddingHorizontal: 16,
   paddingVertical: 18,
-  marginBottom: 18,
+  marginBottom: 16,
   borderWidth: 1,
-  borderColor: "#ECE7DE",
+  borderColor: colors.border,
+  ...shadow.card,
 },
 saveButton: {
   marginTop: 6,
-  backgroundColor: "#2A2624",
-  borderRadius: 18,
-  paddingVertical: 16,
+  height: 54,
+  borderRadius: 16,
+  backgroundColor: colors.warmBrown,
   alignItems: "center",
+  justifyContent: "center",
 },
   dayHeaderRow: {
     flexDirection: "row",
@@ -532,10 +548,11 @@ saveButton: {
     color: "#374151",
   },
   cardTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#111827",
-  },
+  fontSize: 18,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+},
+
   helperText: {
     fontSize: 12,
     color: "#6B7280",
@@ -600,10 +617,10 @@ saveButton: {
     opacity: 0.6,
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#FFFFFF",
-  },
+  fontSize: 16,
+  fontFamily: fonts.bold,
+  color: colors.white,
+},
   rowItem: {
   flexDirection: "row",
   justifyContent: "space-between",
@@ -648,27 +665,28 @@ dayRowBorder: {
   borderBottomColor: "#ECE7DE",
 },
 dayRowTitle: {
-  fontSize: 16,
-  fontWeight: "800",
-  color: "#1F1A17",
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
 },
 
 dayRowValue: {
   marginTop: 5,
   fontSize: 13,
+  fontFamily: fonts.medium,
   lineHeight: 18,
-  color: "#9A8F81",
+  color: colors.textSub,
 },
 
 dayRowValueActive: {
-  color: "#8C6330",
-  fontWeight: "800",
+  color: colors.warmBrown,
+  fontFamily: fonts.bold,
 },
 
 dayRowArrow: {
-  fontSize: 12,
-  fontWeight: "300",
-  color: "#B7ADA1",
+  fontSize: 18,
+  color: colors.textMuted,
+  fontFamily: fonts.medium,
   marginLeft: 10,
 },
 sheetOverlay: {

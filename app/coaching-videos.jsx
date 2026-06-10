@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
+import { colors, radius, shadow } from "../src/theme";
+import ScreenHeader from "../src/components/ScreenHeader";
 
 export default function CoachingVideosScreen() {
   const { token } = useAuth();
@@ -92,9 +94,7 @@ useEffect(() => {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>‹</Text>
-      </Pressable>
+      <ScreenHeader title="수련 영상" />
 
       <View style={styles.hero}>
         <Image
@@ -252,15 +252,18 @@ function VideoItem({
 
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
-    backgroundColor: "#FFFCFA",
-  },
+  flex: 1,
+  backgroundColor: colors.background,
+},
 
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 44,
-    paddingBottom: 30,
-  },
+content: {
+  paddingHorizontal: 16,
+  paddingTop: 24,
+  paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},
 
   backButton: {
     width: 36,
@@ -276,13 +279,13 @@ const styles = StyleSheet.create({
   },
 
   hero: {
-    height: 150,
-    borderRadius: 24,
-    overflow: "hidden",
-    justifyContent: "center",
-    paddingHorizontal: 18,
-    marginBottom: 16,
-  },
+  height: 124,
+  borderRadius: radius.lg,
+  overflow: "hidden",
+  justifyContent: "center",
+  paddingHorizontal: 18,
+  marginBottom: 12,
+},
 
   heroBg: {
     position: "absolute",
@@ -296,56 +299,56 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 25,
-    fontWeight: "900",
-    color: "#3A2C27",
-    marginBottom: 8,
-    marginTop: -10,
-  },
+  fontSize: 24,
+  fontFamily: "MaruBuriBold",
+  color: colors.textMain,
+  marginBottom: 5,
+  marginTop: -4,
+},
 
   subtitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#6B4F46",
-  },
+  fontSize: 15,
+  fontFamily: "PretendardSemiBold",
+  color: colors.warmBrown,
+},
 
   noticeBox: {
-    backgroundColor: "#F8F0E4",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 12,
-  },
+  backgroundColor: "#F8F1EA",
+  borderRadius: 13,
+  paddingHorizontal: 14,
+  paddingVertical: 10,
+  marginBottom: 10,
+},
 
-  noticeText: {
-    fontSize: 13,
-    lineHeight: 20,
-    fontWeight: "600",
-    color: "#6B4F46",
-  },
+noticeText: {
+  fontSize: 13,
+  lineHeight: 19,
+  fontFamily: "PretendardSemiBold",
+  color: colors.warmBrown,
+},
 
   uploadButton: {
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: "#2B221D",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 18,
-  },
+  height: 46,
+  borderRadius: 13,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+  marginBottom: 18,
+},
 
-  uploadButtonText: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#FFFFFF",
-  },
+uploadButtonText: {
+  fontSize: 15,
+  fontFamily: "PretendardBold",
+  color: colors.white,
+},
 
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: "#3A2C27",
-    marginBottom: 10,
-  },
-
+sectionTitle: {
+  fontSize: 18,
+  fontFamily: "MaruBuriSemiBold",
+  color: colors.textMain,
+  marginBottom: 9,
+  marginLeft: 2,
+},
   videoCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -439,12 +442,12 @@ thumbnailFallback: {
   },
   emptyText: {
   fontSize: 14,
-  fontWeight: "700",
-  color: "#8A7A72",
-  backgroundColor: "#FFFFFF",
-  borderRadius: 14,
+  fontFamily: "PretendardMedium",
+  color: colors.textSub,
+  backgroundColor: colors.card,
+  borderRadius: radius.md,
   borderWidth: 1,
-  borderColor: "#EFE5DE",
+  borderColor: colors.border,
   padding: 18,
   textAlign: "center",
 },

@@ -11,7 +11,15 @@ import {
   Alert,
 } from "react-native";
 import { router } from "expo-router";
-import { colors } from "../src/theme/colors";
+import { colors, radius, shadow } from "../src/theme";
+import ScreenHeader from "../src/components/ScreenHeader";
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 import { API_BASE_URL } from "../src/config/env";
 import { useAuth } from "../src/contexts/AuthContext";
 import { Calendar, LocaleConfig } from "react-native-calendars";
@@ -100,27 +108,17 @@ export default function PrivateTrainingGuideScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <ScreenHeader title="개별 수련 지도 안내" />
         <View style={styles.heroSection}>
           <Image
             source={require("../assets/images/private-guide-mountain-bg.png")}
             style={styles.mountainBg}
             resizeMode="cover"
           />
+          <View style={styles.heroFadeTop} />
+<View style={styles.heroFadeBottom} />
 
- <TouchableOpacity
-  onPress={() => router.back()}
-  style={styles.heroBackButton}
->
-  <Image
-    source={require("../assets/images/back.png")}
-    style={styles.backIconImage}
-    resizeMode="contain"
-  />
-</TouchableOpacity>
-
-<Text style={styles.heroTitle}>
-  개별 수련 지도 안내
-</Text>
+ 
 
 <Text style={styles.kicker}>
   정규 수업 외 유료 과정
@@ -371,29 +369,33 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 0,
-    paddingBottom: 34,
-  },
-
-  heroSection: {
-  position: "relative",
-  minHeight: 360,
-  marginHorizontal: -16,
-  paddingHorizontal: 22,
+  paddingHorizontal: 16,
   paddingTop: 24,
-  overflow: "hidden",
+  paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
 },
 
-  mountainBg: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 40,
-    width: "105%",
-    height: 400,
-    opacity: 0.5,
-  },
+heroSection: {
+  position: "relative",
+  minHeight: 190,
+  marginHorizontal: -16,
+  paddingHorizontal: 34,
+  paddingTop: 16,
+  overflow: "hidden",
+  marginBottom: 12,
+},
+
+mountainBg: {
+  position: "absolute",
+  left: -90,
+  right: -40,
+  bottom: -100,
+  width: "145%",
+  height: 260,
+  opacity: 0.3,
+},
 
   heroBackButton: {
   width: 42,
@@ -410,64 +412,65 @@ const styles = StyleSheet.create({
   },
 
   heroTitle: {
-  fontSize: 29,
-  lineHeight: 42,
-  fontWeight: "800",
-  color: "#2f241e",
+  fontSize: 26,
+  lineHeight: 36,
+  fontFamily: fonts.title,
+  color: colors.textMain,
   marginBottom: 8,
   zIndex: 3,
 },
 
 kicker: {
   alignSelf: "flex-start",
-  paddingHorizontal: 14,
+  paddingHorizontal: 13,
   paddingVertical: 6,
   borderRadius: 999,
   borderWidth: 1,
   borderColor: "#c9a978",
-  backgroundColor: "rgba(255,253,249,0.72)",
+  backgroundColor: "rgba(255,253,249,0.76)",
   color: "#6f4e2c",
-  fontSize: 15,
-  fontWeight: "700",
-  marginBottom: 22,
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  marginTop: 8,
+  marginBottom: 18,
+  zIndex: 3,
+},
+  heroDesc: {
+  width: "56%",
+  fontSize: 14,
+  lineHeight: 23,
+  marginLeft: 12,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+  zIndex: 3,
+},
+heroImage: {
+  position: "absolute",
+  right: 20,
+  bottom: 18,
+  width: 135,
+  height: 155,
+  opacity: 0.62,
   zIndex: 3,
 },
 
-  heroDesc: {
-    fontSize: 14,
-    lineHeight: 22,
-    color: "#3f332c",
-    fontWeight: "500",
-    zIndex: 3,
-  },
-
-  heroImage: {
-  position: "absolute",
-  right: 25,
-  bottom: 90,
-
-  width: 140,
-  height: 170,
-
-  opacity: 0.6,
+  mainCard: {
+  marginTop: 0,
+  borderRadius: radius.lg,
+  padding: 16,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
 },
 
-  mainCard: {
-    marginTop: -65,
-    borderRadius: 24,
-    padding: 16,
-    backgroundColor: "rgba(255,253,249,0.92)",
-    borderWidth: 1,
-    borderColor: "#e2cda9",
-  },
-
   sectionTitle: {
-    fontSize: 20,
-    lineHeight: 30,
-    fontWeight: "800",
-    color: "#2f2a24",
-    marginBottom: 14,
-  },
+  fontSize: 20,
+  lineHeight: 28,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+  marginBottom: 14,
+},
 
   directionGrid: {
   flexDirection: "row",
@@ -478,14 +481,14 @@ kicker: {
 
 directionItem: {
   width: "47%",
-  minHeight: 120,
+  minHeight: 116,
   borderRadius: 16,
   paddingVertical: 14,
   paddingHorizontal: 8,
   alignItems: "center",
-  backgroundColor: "rgba(255,248,239,0.92)",
+  backgroundColor: colors.card,
   borderWidth: 1,
-  borderColor: "#e2cda9",
+  borderColor: colors.border,
 },
 
 directionIcon: {
@@ -550,8 +553,9 @@ directionDesc: {
   },
 
   personText: {
-  fontSize: 12,
-  lineHeight: 18,
+fontSize: 13,
+  lineHeight: 19,
+  fontFamily: fonts.medium,
   color: "#2f2a24",
   textAlign: "center",
   fontWeight: "600",
@@ -635,14 +639,11 @@ directionDesc: {
   infoTextWrap: {
     flex: 1,
   },
-
-  infoText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: "#2f2a24",
-    fontWeight: "600",
-    marginBottom: 2,
-  },
+infoText: {
+  fontSize: 14,
+  lineHeight: 24,
+  fontFamily: fonts.medium,
+},
 
   infoSubText: {
     fontSize: 15,
@@ -687,8 +688,8 @@ directionDesc: {
   },
 
   ctaButton: {
-    height: 58,
-    borderRadius: 20,
+    height: 54,
+    borderRadius: 18,
     backgroundColor: "#9b6f36",
     alignItems: "center",
     justifyContent: "center",
@@ -853,5 +854,25 @@ personIconImage: {
   width: 24,
   height: 24,
   opacity: 0.9,
+},
+heroFadeTop: {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  top: 0,
+  height: 20,
+  backgroundColor: "rgba(255,252,250,0.45)",
+  zIndex: 1,
+},
+
+
+heroFadeBottom: {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: 0,
+  height: 32,
+  backgroundColor: "rgba(255,252,250,0.55)",
+  zIndex: 1,
 },
 });

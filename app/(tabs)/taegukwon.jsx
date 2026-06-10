@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { colors, spacing, radius, shadow } from "../../src/theme";
 import {
   ActivityIndicator,
   Alert,
@@ -20,7 +21,6 @@ import { useAuth } from "../../src/contexts/AuthContext";
 import { getMemberTaegukwon } from "../../src/api/memberTaegukwon";
 import { API_BASE_URL } from "../../src/config/env";
 import Svg, { Circle } from "react-native-svg";
-import { colors } from "../../src/theme/colors";
 
 
 function getStatusLabel(status) {
@@ -1463,15 +1463,31 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
   );
 }
 
+const isWeb = Platform.OS === "web";
+
+const fonts = {
+  regular: "PretendardRegular",
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+  handwriting: "KyoboHandwriting2025lyb",
+};
+
 const styles = StyleSheet.create({
   container: {
   flex: 1,
   backgroundColor: colors.background,
 },
   content: {
-  paddingHorizontal: 16,
-  paddingTop: 52,
-  paddingBottom: 10,
+  paddingHorizontal: isWeb ? 12 : 16,
+  paddingTop: isWeb ? 24 : 44,
+  paddingBottom: isWeb ? 30 : 18,
+  gap: isWeb ? 10 : 14,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
 },
   center: {
   flex: 1,
@@ -1498,13 +1514,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    backgroundColor: colors.card,
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#ece4d8",
-  },
+  backgroundColor: colors.card,
+  borderRadius: radius.lg,
+  paddingHorizontal: spacing.lg,
+  paddingVertical: spacing.lg,
+  marginBottom: 0,
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
+},
   overviewHeaderRow: {
     marginBottom: 10,
   },
@@ -1554,12 +1572,12 @@ levelTextBadgeText: {
     marginBottom: 8,
   },
   personalName: {
-    flex: 1,
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#2f2a24",
-    lineHeight: 30,
-  },
+  flex: 1,
+  fontSize: isWeb ? 24 : 28,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  lineHeight: isWeb ? 31 : 35,
+},
   completedBadgeInline: {
     backgroundColor: "#dfead9",
     paddingHorizontal: 12,
@@ -1574,11 +1592,11 @@ levelTextBadgeText: {
     color: "#4f7144",
   },
   bigProgressText: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#7c4f21",
-    marginBottom: 10,
-  },
+  fontSize: 18,
+  fontFamily: fonts.titleSemi,
+  color: colors.warmBrown,
+  marginBottom: 10,
+},
   cardText: {
     fontSize: 14,
     lineHeight: 21,
@@ -1594,7 +1612,7 @@ levelTextBadgeText: {
 },
   progressFillPersonal: {
   height: "100%",
-  backgroundColor: "#c89e6a",
+  backgroundColor: colors.bronzeGold,
   borderRadius: 999,
 },
   progressPercent: {
@@ -2255,13 +2273,13 @@ memoHistoryContentText: {
 },
 topTabWrap: {
   flexDirection: "row",
-  backgroundColor: "#FFFEFC",
+  backgroundColor: colors.card,
   borderWidth: 1,
-  borderColor: "#EFE5DE",
-  borderRadius: 12,
+  borderColor: colors.border,
+  borderRadius: radius.md,
   padding: 3,
-  marginTop: -30,
-  marginBottom: 12,
+  marginTop: 0,
+  marginBottom: spacing.md,
 },
 
 topTabButton: {
@@ -2273,26 +2291,25 @@ topTabButton: {
 },
 
 topTabButtonActive: {
-  backgroundColor: "#6B4F46",
+  backgroundColor: colors.warmBrown,
 },
 
 topTabText: {
   fontSize: 14,
-  fontWeight: "500",
-  color: "#A78D83",
+  fontFamily: fonts.semiBold,
+  color: colors.softBrown,
 },
 
 topTabTextActive: {
-  color: "#FFFFFF",
+  color: colors.white,
 },
 
 menuRow: {
-  borderBottomWidth: 1,
-  paddingVertical: 16,
-  borderBottomColor: "#f0e8dc",
+  minHeight: 68,
+  paddingHorizontal: 18,
+  paddingVertical: 13,
   flexDirection: "row",
   alignItems: "center",
-  justifyContent: "space-between",
 },
 
 menuRowLocked: {
@@ -2300,15 +2317,15 @@ menuRowLocked: {
 },
 
 menuTitle: {
-  fontSize: 15,
-  fontWeight: "700",
-  color: "#2f2a24",
-  marginBottom: 4,
+  fontSize: 17,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  marginBottom: 3,
 },
-
 menuDesc: {
   fontSize: 12,
-  color: "#8a7f72",
+  fontFamily: fonts.medium,
+  color: colors.textSub,
 },
 
 menuLock: {
@@ -2352,19 +2369,19 @@ trainingSilhouetteWrap: {
 trainingSilhouette: {
   width: 150,
   height: 150,
-  marginTop: -10,
-  marginBottom: -20,
+  marginTop: -20,
+  marginBottom: -25,
 },
 
 progressSection: {
-  marginTop: 8,
-  marginBottom: 6,
+  marginTop: 10,
+  marginBottom: 4,
 },
 
 progressLabel: {
   fontSize: 13,
-  fontWeight: "800",
-  color: "#3f372f",
+  fontFamily: fonts.bold,
+  color: colors.textMain,
   marginBottom: 4,
 },
 
@@ -2377,7 +2394,7 @@ progressBarRow: {
 progressTrackInline: {
   flex: 1,
   height: 9,
-  backgroundColor: "#eee8df",
+  backgroundColor: colors.border,
   borderRadius: 999,
   overflow: "hidden",
 },
@@ -2385,8 +2402,8 @@ progressTrackInline: {
 progressPercentInline: {
   width: 42,
   fontSize: 13,
-  fontWeight: "800",
-  color: "#3f372f",
+  fontFamily: fonts.bold,
+  color: colors.textMain,
 },
 
 progressHeaderRow: {
@@ -2416,15 +2433,15 @@ detailTextButton: {
   fontSize: 12,
   fontWeight: "700",
   color: "#8a7f72",
-  marginTop: 7,
+  marginTop: -2,
 },
 
 sectionLabel: {
-  fontSize: 14,
-  fontWeight: "800",
-  color: "#4a3d31",
-  marginTop: 6,
-  marginBottom: 8,
+  fontSize: 18,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  marginTop: 2,
+  marginBottom: 6,
   marginLeft: 4,
 },
 
@@ -2434,14 +2451,15 @@ cardTopActionRow: {
   marginBottom: 2,
 },
 coachingInlineBox: {
-  marginTop: -2,
+  marginTop: -6,
   marginBottom: 10,
-  paddingHorizontal: 12,
-  paddingVertical: 10,
-  borderRadius: 14,
-  backgroundColor: "#f7efe2",
+  paddingHorizontal: 16,
+  paddingVertical: 13,
+  borderRadius: 18,
+  backgroundColor: "#F7EFE2",
   borderWidth: 1,
-  borderColor: "#eadcc8",
+  borderColor: "#E6D5BA",
+  transform: [{ rotate: "-0.3deg" }],
 },
 
 coachingInlineLabel: {
@@ -2451,17 +2469,21 @@ coachingInlineLabel: {
   marginBottom: 4,
 },
 
-coachingInlineText: {
-  fontSize: 20,
-  lineHeight: 19,
-  color: "#4a3d31",
-  fontWeight: "600",
-  marginLeft: 10,
-  fontFamily: "KyoboHandwriting2025lyb"
+coachingInlineText: {  
+  fontSize: 22,
+  lineHeight: 24,
+  color: colors.ink,
+  marginLeft: 15,
+  marginTop: -3,
+  marginLeft: 18,
+  fontFamily: fonts.handwriting,
 },
 trainingCard: {
-  paddingVertical: 4,
+  paddingTop: 8,
+  paddingBottom: 10,
   paddingHorizontal: 16,
+  backgroundColor: "#FFFCF8",
+  borderColor: "#E8D8BE",
 },
 menuCard: {
   paddingTop: 4,
@@ -2469,7 +2491,7 @@ menuCard: {
 },
 
 menuRow: {
-  minHeight: 72,
+  minHeight: 67,
   paddingVertical: 12,
   borderBottomWidth: 1,
   borderBottomColor: "#f0e8dc",
@@ -2493,15 +2515,16 @@ menuTextWrap: {
 },
 
 menuTitle: {
-  fontSize: 16,
-  fontWeight: "800",
-  color: "#2f2a24",
-  marginBottom: 3,
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
 },
 
 menuDesc: {
+  marginTop: 4,
   fontSize: 12,
-  color: "#9b9085",
+  fontFamily: fonts.medium,
+  color: colors.textSub,
 },
 
 menuArrow: {
@@ -3189,9 +3212,8 @@ riverHighlight: {
 },
 coachingTipTitleImage: {
   width: 130,
-  height: 52,
+  height: 50,
   marginBottom: 3,
-  marginLeft: 2,
-  marginTop: -4,
+  marginTop: -7,
 },
 });

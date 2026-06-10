@@ -13,7 +13,14 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberProducts, createProductOrder } from "../src/api/memberShop";
-import { colors } from "../src/theme/colors";
+import { colors, radius, shadow } from "../src/theme";
+import ScreenHeader from "../src/components/ScreenHeader";
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 import { useCart } from "../src/contexts/CartContext";
 
 const API_ORIGIN = "http://172.30.1.16:5000";
@@ -106,21 +113,17 @@ export default function ShopDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
+      <View style={styles.shopHeader}>
+  <ScreenHeader title="상품 상세" />
 
-        <Text style={styles.headerTitle}>상품 상세</Text>
-
-        <Pressable style={styles.cartIcon} onPress={() => router.push("/cart")}>
-  <Image
-    source={require("../assets/images/icon-shop-cart.png")}
-    style={styles.cartImage}
-    resizeMode="contain"
-  />
-</Pressable>
-      </View>
+  <Pressable style={styles.cartButton} onPress={() => router.push("/cart")}>
+    <Image
+      source={require("../assets/images/icon-shop-cart.png")}
+      style={styles.cartImage}
+      resizeMode="contain"
+    />
+  </Pressable>
+</View>
 
       <View style={styles.imageCard}>
         {imageSource ? (
@@ -162,7 +165,51 @@ export default function ShopDetailScreen() {
           </View>
         </View>
 
-        <Text style={styles.buyText}>{stock.desc}</Text>
+        
+
+<View style={styles.buttonRow}>
+  <Pressable
+    style={styles.outlineButton}
+    onPress={() => {
+      addToCart(product, 1);
+      router.push("/cart");
+    }}
+  >
+    <Text style={styles.outlineButtonText}>장바구니 담기</Text>
+  </Pressable>
+
+  <Pressable
+    style={[styles.primaryButton, ordering && styles.primaryButtonDisabled]}
+    onPress={async () => {
+      if (ordering) return;
+
+      try {
+        setOrdering(true);
+
+        await createProductOrder(token, {
+          items: [
+            {
+              productId: product.id,
+              quantity: 1,
+              memo: `${product.name} 주문 요청`,
+            },
+          ],
+          memo: `${product.name} 주문 요청`,
+        });
+
+        setSuccessModalVisible(true);
+      } catch (error) {
+        Alert.alert("오류", error.message || "주문 요청에 실패했습니다.");
+      } finally {
+        setOrdering(false);
+      }
+    }}
+  >
+    <Text style={styles.primaryButtonText}>
+      {ordering ? "요청 중..." : "구매 문의하기"}
+    </Text>
+  </Pressable>
+</View>
 
         <View style={styles.line} />
 
@@ -211,50 +258,6 @@ export default function ShopDetailScreen() {
             <Text style={styles.checkIcon}>✓</Text>
             <Text style={styles.checkText}>관리자 안내 후 구매하고 싶은 회원</Text>
           </View>
-        </View>
-
-        <View style={styles.buttonRow}>
-          <Pressable
-            style={styles.outlineButton}
-            onPress={() => {
-  addToCart(product, 1);
-  router.push("/cart");
-}}
-          >
-            <Text style={styles.outlineButtonText}>장바구니 담기</Text>
-          </Pressable>
-
-          <Pressable
-            style={[styles.primaryButton, ordering && styles.primaryButtonDisabled]}
-            onPress={async () => {
-              if (ordering) return;
-
-              try {
-                setOrdering(true);
-
-                await createProductOrder(token, {
-  items: [
-    {
-      productId: product.id,
-      quantity: 1,
-      memo: `${product.name} 주문 요청`,
-    },
-  ],
-  memo: `${product.name} 주문 요청`,
-});
-
-                setSuccessModalVisible(true);
-              } catch (error) {
-                Alert.alert("오류", error.message || "주문 요청에 실패했습니다.");
-              } finally {
-                setOrdering(false);
-              }
-            }}
-          >
-            <Text style={styles.primaryButtonText}>
-              {ordering ? "요청 중..." : "구매 문의하기"}
-            </Text>
-          </Pressable>
         </View>
       </View>
 
@@ -328,10 +331,33 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background || "#FFFCFA",
   },
   content: {
-    paddingHorizontal: 18,
-    paddingTop: 10,
-    paddingBottom: 120,
-  },
+  paddingHorizontal: 16,
+  paddingTop: 24,
+  paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},
+
+shopHeader: {
+  position: "relative",
+},
+
+cartButton: {
+  position: "absolute",
+  right: 0,
+  top: 0,
+  width: 44,
+  height: 44,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+cartImage: {
+  width: 24,
+  height: 24,
+  opacity: 0.82,
+},
   center: {
     flex: 1,
     backgroundColor: colors.background || "#FFFCFA",
@@ -390,16 +416,16 @@ const styles = StyleSheet.create({
   cartText: {
     fontSize: 21,
   },
-
-  imageCard: {
-    marginTop: 18,
-    height: 318,
-    borderRadius: 24,
-    overflow: "hidden",
-    backgroundColor: "#F3E8DE",
-    borderWidth: 1,
-    borderColor: "#E8D9CB",
-  },
+imageCard: {
+  marginTop: 16,
+  height: 250,
+  borderRadius: radius.lg,
+  overflow: "hidden",
+  backgroundColor: "#F3E8DE",
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
+},
   mainImage: {
     width: "100%",
     height: "100%",
@@ -416,13 +442,14 @@ const styles = StyleSheet.create({
   },
 
   infoCard: {
-    marginTop: 18,
-    borderRadius: 26,
-    backgroundColor: "#FFFDF9",
-    borderWidth: 1,
-    borderColor: "#E9DCD1",
-    padding: 20,
-  },
+  marginTop: 18,
+  borderRadius: radius.lg,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  padding: 18,
+  ...shadow.card,
+},
   titleRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -433,18 +460,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   productName: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#241811",
-    letterSpacing: -0.3,
-  },
-  productPrice: {
-    marginTop: 8,
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#2F2119",
-    letterSpacing: -0.2,
-  },
+  fontSize: 22,
+  lineHeight: 30,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+
+productPrice: {
+  marginTop: 4,
+  fontSize: 20,
+  lineHeight: 28,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+
   stockPill: {
   borderRadius: 999,
   paddingHorizontal: 12,
@@ -467,32 +496,33 @@ stockPillTextOrder: {
   color: "#684013",
 },
   buyText: {
-    marginTop: 8,
-    alignSelf: "flex-end",
-    fontSize: 13,
-    color: "#8A6E5C",
-  },
+  marginTop: 8,
+  fontSize: 13,
+  lineHeight: 20,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
   line: {
     height: 1,
     backgroundColor: "#E8D9CB",
     marginVertical: 18,
   },
   description: {
-    fontSize: 15,
-    lineHeight: 25,
-    color: "#4F4038",
-    fontWeight: "400",
-  },
+  fontSize: 14,
+  lineHeight: 24,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
 
   specBox: {
-    marginTop: 18,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#E8D9CB",
-    backgroundColor: "#FFF9F0",
-    padding: 15,
-    gap: 13,
-  },
+  marginTop: 18,
+  borderRadius: radius.md,
+  borderWidth: 1,
+  borderColor: colors.border,
+  backgroundColor: "#FFF9F0",
+  padding: 15,
+  gap: 13,
+},
   specRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -515,19 +545,20 @@ stockPillTextOrder: {
   },
 
   recommendBox: {
-    marginTop: 18,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#E8D9CB",
-    backgroundColor: "#FFFDF9",
-    padding: 15,
-  },
+  marginTop: 18,
+  borderRadius: radius.md,
+  borderWidth: 1,
+  borderColor: colors.border,
+  backgroundColor: colors.card,
+  padding: 15,
+},
   boxTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#3A281F",
-    marginBottom: 12,
-  },
+  fontSize: 16,
+  lineHeight: 24,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+  marginBottom: 12,
+},
   checkRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -546,56 +577,64 @@ stockPillTextOrder: {
   },
 
   buttonRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 20,
-  },
-  outlineButton: {
-    flex: 1,
-    height: 56,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: "#4A3327",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFDF9",
-  },
-  outlineButtonText: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#3A281F",
-  },
-  primaryButton: {
-    flex: 1,
-    height: 56,
-    borderRadius: 17,
-    backgroundColor: "#3A281F",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  flexDirection: "row",
+  gap: 10,
+  marginTop: 12,
+},
+
+outlineButton: {
+  flex: 1,
+  height: 50,
+  borderRadius: radius.md,
+  borderWidth: 1,
+  borderColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: colors.card,
+},
+
+outlineButtonText: {
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+},
+
+primaryButton: {
+  flex: 1,
+  height: 50,
+  borderRadius: radius.md,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+primaryButtonText: {
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.white,
+},
+  
   primaryButtonDisabled: {
     opacity: 0.78,
   },
-  primaryButtonText: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#FFFFFF",
-  },
+
 
   stockGuideCard: {
-    marginTop: 14,
-    borderRadius: 26,
-    backgroundColor: "#FFF8EF",
-    borderWidth: 1,
-    borderColor: "#E9DCD1",
-    padding: 20,
-  },
+  marginTop: 14,
+  borderRadius: radius.lg,
+  backgroundColor: "#F8F1EA",
+  borderWidth: 1,
+  borderColor: colors.border,
+  padding: 18,
+  ...shadow.card,
+},
   stockGuideTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#3A281F",
-    marginBottom: 12,
-  },
+  fontSize: 16,
+  lineHeight: 24,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+  marginBottom: 12,
+},
   stockGuideItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -695,8 +734,5 @@ grayDot: {
     fontSize: 15,
     fontWeight: "800",
   },
-  cartImage: {
-  width: 26,
-  height: 26,
-},
+
 });

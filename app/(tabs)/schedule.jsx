@@ -1,7 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { colors, spacing, radius, shadow } from "../../src/theme";
+import { Platform } from "react-native";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Modal,
   Pressable,
   RefreshControl,
@@ -56,6 +59,13 @@ function getSessionDisplayLabel(item) {
     return "유단자수련";
   }
 
+    const startText = item?.startTime || "";
+
+  if (startText.includes("오전 10:00")) return "오전 10시 수업";
+if (startText.includes("오후 4:00")) return "오후 4시 수업";
+if (startText.includes("오후 7:00")) return "오후 7시 수업";
+if (startText.includes("오후 1:30")) return "오후 1시 30분 수업";
+
   const regularTitles = [
     "오전 10시 태극권반",
     "오후 4시 태극권반",
@@ -69,13 +79,6 @@ function getSessionDisplayLabel(item) {
   if (title && !isRegularTitle) {
     return title;
   }
-
-  const startText = item?.startTime || "";
-
-  if (startText.includes("오전 10:00")) return "오전 10시부";
-  if (startText.includes("오후 4:00")) return "오후 4시부";
-  if (startText.includes("오후 7:00")) return "오후 7시부";
-  if (startText.includes("오후 1:30")) return "오후 1시 30분부";
 
   return item?.timeLabel || title || "수업";
 }
@@ -107,6 +110,59 @@ function getMonthMatrix(year, month) {
 
   return weeks;
   
+}
+
+const weekdayLabelMap = {
+  0: "일",
+  1: "월",
+  2: "화",
+  3: "수",
+  4: "목",
+  5: "금",
+  6: "토",
+};
+
+function formatRecurringTime(timeText) {
+  if (!timeText) return "";
+  if (String(timeText).includes("MON_YUDANJA")) return "유단자회";
+  if (String(timeText).includes("10")) return "10시";
+  if (String(timeText).includes("16") || String(timeText).includes("4")) return "4시";
+  if (String(timeText).includes("19") || String(timeText).includes("7")) return "7시";
+  if (String(timeText).includes("13") || String(timeText).includes("1:30")) return "1시 30분";
+
+  return String(timeText);
+}
+
+function formatRecurringReservations(list = []) {
+  if (!Array.isArray(list) || list.length === 0) return "";
+
+  return list
+    .map((item) => {
+      const weekday =
+        item.weekday ??
+        item.dayOfWeek ??
+        item.weekDay ??
+        item.day;
+
+      const dayLabel =
+        typeof weekday === "number"
+          ? weekdayLabelMap[weekday]
+          : String(weekday || "");
+
+      const timeLabel = formatRecurringTime(
+  item.sessionTimeKey ||
+    item.time ||
+    item.startTime ||
+    item.classTime ||
+    item.sessionTime
+);
+
+      if (!dayLabel || !timeLabel) return null;
+
+      return `${dayLabel}(${timeLabel})`;
+    })
+    .filter(Boolean)
+    .join(" · ");
 }
 
 function getScheduleUiMeta(item, { isReservableDate }) {
@@ -399,6 +455,17 @@ if (
     item?.attendanceStatus === "present"
   );
 });
+
+const recurringInfoText = useMemo(() => {
+  const recurringList =
+    calendarData?.recurringReservations ||
+    calendarData?.memberRecurringReservations ||
+    calendarData?.recurringSchedules ||
+    calendarData?.myRecurringReservations ||
+    [];
+
+  return formatRecurringReservations(recurringList);
+}, [calendarData]);
 
   const selectedDateDiff = getDateDiffInDays(todayString, selectedDate);
 
@@ -960,6 +1027,26 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
     })
   )}
 </View>
+{recurringInfoText ? (
+  <Pressable
+    style={styles.recurringInfoBox}
+    onPress={() => router.push("/recurring-reservations")}
+  >
+    <Text style={styles.recurringInfoLabel}>정기출석</Text>
+
+    <Text numberOfLines={1} style={styles.recurringInfoText}>
+      {recurringInfoText}
+    </Text>
+
+    <View style={styles.recurringSettingButton}>
+      <Image
+        source={require("../../assets/images/goal-setting-icon.png")}
+        style={styles.recurringSettingIcon}
+        resizeMode="contain"
+      />
+    </View>
+  </Pressable>
+) : null}
  </>
 ) : (
   <View style={styles.weekListCard}>
@@ -1175,12 +1262,6 @@ return (
           {getSessionDisplayLabel(item)}
         </Text>
 
-        {finalUiMeta.isRecurring ? (
-          <View style={styles.compactRecurringBadge}>
-            <Text style={styles.compactRecurringBadgeText}>정기</Text>
-          </View>
-        ) : null}
-
         <View style={[styles.compactStatusChip, toneStyles.chip]}>
           <Text
             style={[
@@ -1236,18 +1317,30 @@ return (
     </>
   );
 }
+const isWeb = Platform.OS === "web";
 
+const fonts = {
+  regular: "PretendardRegular",
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
-    backgroundColor: "#FFFCF8",
-  },
+  flex: 1,
+  backgroundColor: colors.background,
+},
 
-  content: {
-  paddingHorizontal: 22,
-  paddingTop: 55,
-  paddingBottom: 55,
-  gap: 10,
+content: {
+  paddingHorizontal: isWeb ? 12 : 16,
+  paddingTop: isWeb ? 24 : 44,
+  paddingBottom: isWeb ? 30 : 18,
+  gap: isWeb ? 10 : 14,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
 },
 
 calendarSection: {
@@ -1258,19 +1351,20 @@ calendarHeader: {
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
-  marginTop: 0,
-  marginBottom: 10,
+  marginTop: 2,
+  marginBottom: 15,
 },
 
 selectedScheduleSummaryCard: {
-  marginTop: 14,
-  backgroundColor: "#FFFEFC",
+  marginTop: 10,
+  backgroundColor: colors.card,
   borderWidth: 1,
-  borderColor: "#F2E8E1",
-  borderRadius: 14,
-  paddingHorizontal: 12,
-  paddingTop: 10,
-  paddingBottom: 8,
+  borderColor: colors.border,
+  borderRadius: radius.lg,
+  paddingHorizontal: 14,
+  paddingTop: 14,
+  paddingBottom: 14,
+  ...shadow.card,
 },
 
 selectedScheduleSummaryHeader: {
@@ -1281,31 +1375,33 @@ selectedScheduleSummaryHeader: {
 },
 
 selectedScheduleSummaryTitle: {
-  fontSize: 15,
-  fontWeight: "700",
-  color: "#2B2522",
+  fontSize: 18,
+  fontFamily: fonts.title,
+  color: colors.textMain,
 },
 
 selectedScheduleSummaryItem: {
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
-  paddingVertical: 7,
+  paddingTop: 10,
+  paddingBottom: 8,
   borderTopWidth: 1,
-  borderTopColor: "#F3EDE7",
+  borderTopColor: colors.border,
 },
 
 selectedScheduleTime: {
-  fontSize: 11,
-  fontWeight: "500",
-  color: "#8A8176",
-  marginBottom: 2,
+  fontSize: 13,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  marginBottom: 6,
+  marginTop: 6,
 },
 
 selectedScheduleName: {
-  fontSize: 13,
-  fontWeight: "600",
-  color: "#2B2522",
+  fontSize: 16,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
 },
 
 selectedScheduleStatusChip: {
@@ -1340,13 +1436,13 @@ schedulePageDescription: {
 
 scheduleViewToggle: {
   flexDirection: "row",
-  backgroundColor: "#FFFEFC",
+  backgroundColor: colors.card,
   borderWidth: 1,
-  borderColor: "#EFE5DE",
-  borderRadius: 12,
+  borderColor: colors.border,
+  borderRadius: radius.md,
   padding: 3,
-  marginTop: -30,
-  marginBottom: 12,
+  marginTop: 0,
+  marginBottom: spacing.md,
 },
 
 scheduleToggleButton: {
@@ -1357,10 +1453,18 @@ scheduleToggleButton: {
   justifyContent: "center",
 },
 
+scheduleToggleActive: {
+  backgroundColor: colors.warmBrown,
+},
+
 scheduleToggleText: {
   fontSize: 14,
-  fontWeight: "500",
-  color: "#A78D83",
+  fontFamily: fonts.semiBold,
+  color: colors.softBrown,
+},
+
+scheduleToggleTextActive: {
+  color: colors.white,
 },
 
 monthButton: {
@@ -1373,27 +1477,26 @@ monthButton: {
 },
 
 monthButtonText: {
-  fontSize: 12,
+  fontSize: 20,
   fontWeight: "800",
   color: "#8D7F76",
   marginTop: -1,
 },
 
 monthTitle: {
-  fontSize: 14,
-  fontWeight: "700",
-  color: "#2B2522",
+  fontSize: 16,
+  fontFamily: fonts.title,
+  color: colors.textMain,
 },
 weekHeader: {
   flexDirection: "row",
-  marginBottom: 8,
+  marginBottom: 6,
 },
 
 weekRow: {
   flexDirection: "row",
-  marginTop: 7,
+  marginTop: 4,
 },
-
 dayCell: {
   flex: 1,
   aspectRatio: 1,
@@ -1416,13 +1519,7 @@ center: {
     fontSize: 14,
     color: "#7D746D",
   },
-  scheduleToggleActive: {
-  backgroundColor: "#6B4F46",
-},
-
-scheduleToggleTextActive: {
-  color: "#FFFFFF",
-},
+  
 selectedScheduleSummaryMore: {
   fontSize: 12,
   fontWeight: "600",
@@ -1527,9 +1624,9 @@ sheetOverlay: {
   },
 
   sheetTitle: {
-  fontSize: 20,
-  fontWeight: "700",
-  color: "#2B2522",
+  fontSize: 21,
+  fontFamily: fonts.title,
+  color: colors.textMain,
 },
 
   sheetCloseButton: {
@@ -1538,10 +1635,10 @@ sheetOverlay: {
   },
 
   sheetCloseButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#7D746D",
-  },
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: colors.textSub,
+},
 
   sheetContent: {
     paddingBottom: 45,
@@ -1629,14 +1726,18 @@ compactTitleRow: {
 
 compactScheduleTitle: {
   fontSize: 16,
-  fontWeight: "700",
-  color: "#2B2522",
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+  marginBottom: 4,
 },
 
 compactStatusChip: {
+  alignSelf: "center",
   paddingHorizontal: 8,
   paddingVertical: 3,
   borderRadius: 999,
+  marginBottom: 0,
+  marginTop: 2,
 },
 
 compactRecurringBadge: {
@@ -1665,13 +1766,6 @@ compactScheduleTitle: {
     color: "#8A684A",
   },
 
-  compactStatusChip: {
-  alignSelf: "flex-start",
-  paddingHorizontal: 8,
-  paddingVertical: 3,
-  borderRadius: 999,
-  marginBottom: 4,
-},
 
 compactStatusChipText: {
   fontSize: 10,
@@ -1814,26 +1908,27 @@ dayStatusDotReserved: {
   backgroundColor: "#D8BC8A",
 },
 weekListCard: {
-  backgroundColor: "#FFFEFC",
+  backgroundColor: colors.card,
   borderWidth: 1,
-  borderColor: "#F2E8E1",
-  borderRadius: 14,
+  borderColor: colors.border,
+  borderRadius: radius.lg,
   paddingHorizontal: 14,
   paddingTop: 14,
-  paddingBottom: 8,
+  paddingBottom: 6,
+  ...shadow.card,
 },
 
 weekListTitle: {
-  fontSize: 16,
-  fontWeight: "700",
-  color: "#2B2522",
+  fontSize: 18,
+  fontFamily: fonts.title,
+  color: colors.textMain,
   marginBottom: 10,
 },
 
 weekDaySection: {
-  paddingVertical: 10,
+  paddingVertical: 8,
   borderTopWidth: 1,
-  borderTopColor: "#F3EDE7",
+  borderTopColor: colors.border,
 },
 
 weekDayTitle: {
@@ -1851,7 +1946,7 @@ weekEmptyText: {
 weekScheduleRow: {
   flexDirection: "row",
   alignItems: "center",
-  paddingVertical: 6,
+  paddingVertical: 5,
   gap: 8,
 },
 
@@ -1895,5 +1990,45 @@ weekScheduleStatusChipReserved: {
 
 weekScheduleStatusTextReserved: {
   color: "#9A7448",
+},
+recurringInfoBox: {
+  marginTop: 10,
+  paddingLeft: 14,
+  paddingRight: 8,
+  paddingVertical: 9,
+  borderRadius: radius.md,
+  backgroundColor: "#F8F1EA",
+  borderWidth: 1,
+  borderColor: colors.border,
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 8,
+},
+
+recurringInfoLabel: {
+  fontSize: 14,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+},
+
+recurringInfoText: {
+  flex: 1,
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: colors.textSub,
+},
+
+recurringSettingButton: {
+  width: 28,
+  height: 28,
+  borderRadius: 999,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+recurringSettingIcon: {
+  width: 18,
+  height: 18,
+  opacity: 0.75,
 },
 });

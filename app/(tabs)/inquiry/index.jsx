@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
-import { colors } from "../../../src/theme/colors";
+import { colors, spacing, radius, shadow } from "../../../src/theme";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { getMemberInquiries } from "../../../src/api/memberInquiry";
 import { createMemberInquiry } from "../../../src/api/memberInquiryCreate";
@@ -355,16 +355,22 @@ export default function InquiryScreen() {
 
       {activeTab === "inquiry" ? (
         <View style={styles.section}>
-          <View style={styles.rowBetween}>
-            <View>
-              <Text style={styles.sectionTitle}>문의</Text>
-              <Text style={styles.sectionDesc}>
-                관리자와 주고받은 1:1 문의 기록입니다.
-              </Text>
-            </View>
+          <View style={styles.noticeHero}>
+  <View style={styles.noticeTitleBlock}>
+    <Text style={styles.sectionTitle}>문의</Text>
+    <Text style={styles.sectionInlineDesc}>
+      관리자와 주고받은 1:1 문의 기록입니다.
+    </Text>
+  </View>
 
-            <Text style={styles.countText}>{rooms.length}건</Text>
-          </View>
+  <Image
+    source={require("../../../assets/images/notice-bg.png")}
+    style={styles.noticeHeroImage}
+    resizeMode="contain"
+  />
+</View>
+
+<Text style={styles.countText}>문의 {rooms.length}건</Text>
 
           <View style={styles.inquiryCard}>
             {rooms.length === 0 ? (
@@ -436,6 +442,14 @@ export default function InquiryScreen() {
     </ScrollView>
   );
 }
+const fonts = {
+  regular: "PretendardRegular",
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -443,9 +457,12 @@ const styles = StyleSheet.create({
   backgroundColor: colors.background,
 },
   content: {
-  paddingHorizontal: 20,
-  paddingTop: 46,
+  paddingHorizontal: 16,
+  paddingTop: 28,
   paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
 },
   center: {
   flex: 1,
@@ -475,30 +492,32 @@ const styles = StyleSheet.create({
   segment: {
   flexDirection: "row",
   backgroundColor: colors.card,
-  borderRadius: 12,
+  borderRadius: radius.md,
   padding: 3,
   borderWidth: 1,
   borderColor: colors.border,
-  marginBottom: 24,
-  marginTop: -19,
+  marginBottom: 22,
 },
-  segmentButton: {
-    flex: 1,
-    height: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    
-  },
-  segmentActive: {
+
+segmentButton: {
+  flex: 1,
+  height: 40,
+  borderRadius: 10,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+segmentActive: {
   backgroundColor: colors.warmBrown,
 },
-  segmentText: {
+
+segmentText: {
   fontSize: 14,
-  fontWeight: "500",
+  fontFamily: fonts.semiBold,
   color: colors.softBrown,
 },
-  segmentTextActive: {
+
+segmentTextActive: {
   color: colors.white,
 },
 
@@ -506,12 +525,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#342a24",
-    marginLeft: 4,
-    marginbottom: 2,
-  },
+  fontSize: 26,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  marginLeft: 4,
+  marginBottom: 3,
+},
   sectionDesc: {
     marginTop: 4,
     fontSize: 13,
@@ -535,7 +554,7 @@ const styles = StyleSheet.create({
 },
 
 guideItem: {
-  minHeight: 82,
+  minHeight: 74,
   flexDirection: "row",
   alignItems: "center",
 },
@@ -557,9 +576,9 @@ guideIconText: {
 guideTextBlock: {
   flex: 1,
 },
-  guideTitle: {
-  fontSize: 20,
-  fontWeight: "700",
+guideTitle: {
+  fontSize: 18,
+  fontFamily: fonts.bold,
   color: colors.textMain,
 },
 
@@ -584,12 +603,13 @@ divider: {
 },
 
   inquiryCard: {
-    backgroundColor: "#fffdf9",
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    borderWidth: 1,
-    borderColor: "#eadfd4",
-  },
+  backgroundColor: colors.card,
+  borderRadius: radius.lg,
+  paddingHorizontal: 18,
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
+},
   inquiryItem: {
     paddingVertical: 18,
     borderBottomWidth: 1,
@@ -611,10 +631,14 @@ divider: {
     justifyContent: "space-between",
   },
   countText: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#9a6f3a",
-  },
+  alignSelf: "flex-start",
+  marginTop: -16,
+  marginLeft: 4,
+  marginBottom: 4,
+  fontSize: 13,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+},
   emptyText: {
     paddingVertical: 24,
     fontSize: 14,
@@ -682,13 +706,13 @@ divider: {
   },
 
   button: {
-    marginTop: 6,
-    height: 56,
-    borderRadius: 20,
-    backgroundColor: "#735247",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  marginTop: 8,
+  height: 48,
+  borderRadius: 14,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+},
   buttonDisabled: {
     opacity: 0.6,
   },
@@ -740,16 +764,15 @@ noticeTitleBlock: {
 },
 
 sectionInlineDesc: {
-  marginBottom: 1,
   fontSize: 13,
-  fontWeight: "500",
-  color: "#8b7f75",
+  fontFamily: fonts.medium,
+  color: colors.textSub,
   marginLeft: 4,
 },
 noticeHero: {
   position: "relative",
-  minHeight: 78,
-  marginBottom: -8,
+  minHeight: 92,
+  marginBottom: -4,
   justifyContent: "flex-start",
 },
 
@@ -759,13 +782,11 @@ noticeHeroText: {
 
 noticeHeroImage: {
   position: "absolute",
-  right: -20,
-  top: -30,
-
-  width: 200,
-  height: 130,
-
-  opacity: 0.7,
+  right: -6,
+  top: -10,
+  width: 190,
+  height: 120,
+  opacity: 0.62,
 },
 guideIconImage: {
   width: 50,
@@ -792,7 +813,7 @@ inquiryRightMeta: {
 
 inquiryTitle: {
   fontSize: 18,
-  fontWeight: "800",
+  fontFamily: fonts.bold,
   color: colors.textMain,
 },
 

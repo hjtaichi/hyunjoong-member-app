@@ -11,6 +11,8 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberTaegukwon } from "../src/api/memberTaegukwon";
+import { colors, spacing, radius, shadow } from "../src/theme";
+import ScreenHeader from "../src/components/ScreenHeader";
 
 const COLORS = {
   ink: "#2D2117",
@@ -126,10 +128,19 @@ const STEP_IMAGES = {
   star: require("../assets/images/icon-star.png"),
 };
 
+const fonts = {
+  regular: "PretendardRegular",
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+};
+
 function toneColor(tone) {
-  if (tone === "blue") return COLORS.blue;
-  if (tone === "brown") return COLORS.brown;
-  return COLORS.olive;
+  if (tone === "blue") return "#5F8490";
+  if (tone === "brown") return colors.warmBrown;
+  return "#7E8550";
 }
 
 export default function TrainingJourneyScreen() {
@@ -192,13 +203,7 @@ const currentJourney = useMemo(() => {
 }, [rankLevel]);
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>수련 여정</Text>
-      </View>
-
+      <ScreenHeader title="수련 여정" />
       <ImageBackground
   source={require("../assets/images/training-journey-mountain.png")}
   style={styles.heroCard}
@@ -410,46 +415,59 @@ function StepCard({ step, isLast }) {
 
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 40,
-  },
+  flex: 1,
+  backgroundColor: colors.background,
+},
+
+content: {
+  paddingHorizontal: 16,
+  paddingTop: 24,
+  paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},
+
   header: {
-    height: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  backButton: {
-    position: "absolute",
-    left: -4,
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-  },
-  backText: {
-    fontSize: 36,
-    color: COLORS.ink,
-  },
-  headerTitle: {
-    fontSize: 23,
-    fontWeight: "900",
-    color: COLORS.ink,
-  },
+  height: 54,
+  alignItems: "center",
+  justifyContent: "center",
+  marginBottom: 10,
+  position: "relative",
+},
+
+backButton: {
+  position: "absolute",
+  left: 0,
+  width: 44,
+  height: 44,
+  alignItems: "flex-start",
+  justifyContent: "center",
+},
+
+backIcon: {
+  width: 22,
+  height: 22,
+  opacity: 0.9,
+},
+
+headerTitle: {
+  fontSize: 24,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  lineHeight: 32,
+},
 
   heroCard: {
-  borderRadius: 24,
+  borderRadius: radius.lg,
   borderWidth: 1,
-  borderColor: "#EFE5DE",
-   backgroundColor: COLORS.card,
+  borderColor: colors.border,
+  backgroundColor: colors.card,
   padding: 20,
   overflow: "hidden",
   marginBottom: 14,
   minHeight: 210,
+  ...shadow.card,
 },
   heroBgText: {
     position: "absolute",
@@ -460,18 +478,18 @@ const styles = StyleSheet.create({
     color: "rgba(45,33,23,0.06)",
   },
   heroTitle: {
-  fontSize: 23,
-  fontWeight: "900",
-  lineHeight: 30,
-  color: COLORS.ink,
+  fontSize: 28,
+  fontFamily: fonts.title,
+  lineHeight: 36,
+  color: colors.textMain,
 },
 
 heroDesc: {
   marginTop: 9,
   fontSize: 14,
-  lineHeight: 19,
-  fontWeight: "600",
-  color: COLORS.ink,
+  lineHeight: 21,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
 },
   philosophyBox: {
     marginTop: 18,
@@ -506,13 +524,15 @@ heroDesc: {
 },
 
   currentCard: {
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: "#EFE5DE",
-    backgroundColor: COLORS.card,
-    padding: 16,
-    marginBottom: 22,
-  },
+  borderRadius: radius.lg,
+  borderWidth: 1,
+  borderColor: colors.border,
+  backgroundColor: colors.card,
+  padding: 16,
+  marginBottom: 22,
+  ...shadow.card,
+},
+
   currentTop: {
     flexDirection: "row",
     alignItems: "center",
@@ -541,10 +561,10 @@ heroDesc: {
   },
   currentTitle: {
   marginTop: 4,
-  fontSize: 22,
-  lineHeight: 28,
-  fontWeight: "800",
-  color: COLORS.ink,
+  fontSize: 20,
+  lineHeight: 27,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
 },
   currentDesc: {
     marginTop: 6,
@@ -597,11 +617,11 @@ heroDesc: {
   },
 
   sectionTitle: {
-    fontSize: 22,
-    fontWeight: "900",
-    color: COLORS.ink,
-    marginBottom: 12,
-  },
+  fontSize: 22,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+  marginBottom: 12,
+},
 
   stepWrap: {
     flexDirection: "row",
@@ -630,14 +650,15 @@ heroDesc: {
     marginTop: 4,
   },
   stepCard: {
-    flex: 1,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: "#EFE5DE",
-    backgroundColor: COLORS.card,
-    padding: 14,
-    marginBottom: 12,
-  },
+  flex: 1,
+  borderRadius: radius.lg,
+  borderWidth: 1,
+  borderColor: colors.border,
+  backgroundColor: colors.card,
+  padding: 14,
+  marginBottom: 12,
+  ...shadow.card,
+},
   stepInner: {
     flexDirection: "row",
     gap: 12,
@@ -664,10 +685,10 @@ heroDesc: {
     marginBottom: 6,
   },
   stepTitle: {
-  fontSize: 18,
+  fontSize: 17,
   lineHeight: 24,
-  fontWeight: "900",
-  color: COLORS.ink,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
 },
   badge: {
     borderRadius: 99,
@@ -681,11 +702,11 @@ heroDesc: {
     color: COLORS.brownDark,
   },
   stepDesc: {
-    fontSize: 14,
-    lineHeight: 22,
-    fontWeight: "600",
-    color: COLORS.ink,
-  },
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
   infoBox: {
   marginTop: 12,
   borderRadius: 16,

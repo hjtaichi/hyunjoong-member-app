@@ -32,7 +32,8 @@ import { getMemberHome } from "../../src/api/memberHome";
 import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
 import profilePlaceholder from "../../assets/images/profile-placeholder.png";
-import { colors } from "../../src/theme/colors";
+import { colors, radius, shadow } from "../../src/theme";
+import { getRankBadgeColors } from "../../src/theme/rankBadge";
 
 export default function MyPageScreen() {
   
@@ -547,6 +548,7 @@ async function handleOpenSeoulPay() {
   const memberName = homeData?.member?.name || user?.name || "회원";
 
   const rankLevel = Number(homeData?.member?.rankLevel || 0);
+  const rankBadgeColors = getRankBadgeColors(rankLevel);
 
 const levelLabel =
   rankLevel > 0 ? `${rankLevel}단` : "일반회원";
@@ -730,7 +732,7 @@ const recurringMenuSummary = hasRecurring
         ) : null}
       </View>
 
-      <Text style={styles.menuArrow}>›</Text>
+      <Text style={styles.menuArrow}>〉</Text>
     </Pressable>
   );
 }
@@ -785,15 +787,30 @@ function MenuDivider() {
 
   {isYudanja ? <View style={styles.heroCardBgSoftOverlay} /> : null}
   {/* {isYudanja ? <View style={styles.heroGoldGlow} /> : null} */}
-  {isYudanja ? <View style={styles.heroGoldLine} /> : null}
+
   <View style={styles.heroProfileRow}>
     <View style={styles.heroTextWrap}>
       <View style={styles.heroNameRow}>
   <Text style={styles.heroName}>{memberName}</Text>
 
-  <View style={styles.heroLevelBadge}>
-    <Text style={styles.heroLevelBadgeText}>{levelLabel}</Text>
-  </View>
+  <View
+  style={[
+    styles.heroLevelBadge,
+    {
+      backgroundColor: rankBadgeColors.backgroundColor,
+      borderColor: rankBadgeColors.borderColor,
+    },
+  ]}
+>
+  <Text
+    style={[
+      styles.heroLevelBadgeText,
+      { color: rankBadgeColors.textColor },
+    ]}
+  >
+    {levelLabel}
+  </Text>
+</View>
 
   {homeData?.member?.canAccessYudanjaClass ? (
   <View style={styles.heroYudanjaBadge}>
@@ -979,7 +996,7 @@ function MenuDivider() {
       <TextInput
         style={styles.input}
         placeholder="현재 비밀번호"
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={colors.textSub}
         secureTextEntry
         value={currentPassword}
         onChangeText={setCurrentPassword}
@@ -1253,20 +1270,22 @@ function MenuDivider() {
             </View>
 
             <View style={styles.paymentMethodBody}>
-              <Text style={styles.paymentMethodTitle}>계좌이체</Text>
-              <Text style={styles.paymentMethodText}>
-                {PAYMENT_ACCOUNT_DISPLAY_TEXT}
-              </Text>
+  <View style={styles.paymentMethodTextWrap}>
+    <Text style={styles.paymentMethodTitle}>계좌이체</Text>
+    <Text style={styles.paymentMethodText}>
+      {PAYMENT_ACCOUNT_DISPLAY_TEXT}
+    </Text>
+  </View>
 
-              <Pressable
-                style={styles.paymentMethodButton}
-                onPress={handleCopyAccount}
-              >
-                <Text style={styles.paymentMethodButtonText}>
-                  계좌 정보 복사
-                </Text>
-              </Pressable>
-            </View>
+  <Pressable
+    style={styles.paymentMethodButton}
+    onPress={handleCopyAccount}
+  >
+    <Text style={styles.paymentMethodButtonText}>
+      계좌 정보 복사
+    </Text>
+  </Pressable>
+</View>
           </View>
         </View>
 
@@ -1281,23 +1300,25 @@ function MenuDivider() {
             </View>
 
             <View style={styles.paymentMethodBody}>
-              <Text style={styles.paymentMethodTitle}>
-                서울Pay+ 비대면 결제
-              </Text>
-              <Text style={styles.paymentMethodText}>
-                서울Pay+ 앱에서 비대면 결제 {"\n"} →  현중태극권 검색  → {"\n"}
-                금액 입력 후 결제해주세요.                
-              </Text>
+  <View style={styles.paymentMethodTextWrap}>
+    <Text style={styles.paymentMethodTitle}>
+      서울Pay+ 비대면 결제
+    </Text>
+    <Text style={styles.paymentMethodText}>
+      서울Pay+ 앱에서 비대면 결제 {"\n"} → 현중태극권 검색 → {"\n"}
+      금액 입력 후 결제해주세요.
+    </Text>
+  </View>
 
-              <Pressable
-                style={styles.paymentMethodButton}
-                onPress={handleOpenSeoulPay}
-              >
-                <Text style={styles.paymentMethodButtonText}>
-                  서울Pay+ 앱 열기
-                </Text>
-              </Pressable>
-            </View>
+  <Pressable
+    style={styles.paymentMethodButton}
+    onPress={handleOpenSeoulPay}
+  >
+    <Text style={styles.paymentMethodButtonText}>
+      서울Pay+ 앱 열기
+    </Text>
+  </Pressable>
+</View>
           </View>
         </View>
 
@@ -1312,11 +1333,13 @@ function MenuDivider() {
             </View>
 
             <View style={styles.paymentMethodBody}>
-              <Text style={styles.paymentMethodTitle}>카드결제</Text>
-              <Text style={styles.paymentMethodText}>
-                신용카드 결제는 도장에서 직접 결제해주세요.
-              </Text>
-            </View>
+  <View style={styles.paymentMethodTextWrap}>
+    <Text style={styles.paymentMethodTitle}>카드결제</Text>
+    <Text style={styles.paymentMethodText}>
+      신용카드 결제는 도장에서 직접 결제해주세요.
+    </Text>
+  </View>
+</View>
           </View>
         </View>
 
@@ -1381,6 +1404,14 @@ function MenuDivider() {
 </ScrollView>
   );
 }
+const fonts = {
+  regular: "PretendardRegular",
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 const isWeb = Platform.OS === "web";
 const styles = StyleSheet.create({
   screen: {
@@ -1389,9 +1420,12 @@ const styles = StyleSheet.create({
 },
 content: {
   paddingHorizontal: 16,
-  paddingTop: 42,
-  paddingBottom: isWeb ? 10 : 120,
+  paddingTop: 32,
+  paddingBottom: isWeb ? 90 : 130,
   gap: 14,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
 },
 center: {
   flex: 1,
@@ -1408,16 +1442,17 @@ center: {
     marginBottom: 2,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#161311",
-  },
+  fontSize: 28,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+},
   subtitle: {
-  fontSize: 13,
+  fontSize: 14,
+  fontFamily: fonts.medium,
   color: colors.textSub,
-  marginBottom: 1,
-  marginLeft: 9,
-  lineHeight: 32,
+  marginBottom: 6,
+  marginLeft: 4,
+  lineHeight: 20,
 },
   profileCard: {
     backgroundColor: "#F8F5EF",
@@ -1514,20 +1549,19 @@ center: {
     color: "#6B7280",
   },
   logoutButton: {
-    marginTop: 2,
-    marginBottom: 20,
-    zIndex: 5,
-    minHeight: 52,
-    borderRadius: 18,
-    backgroundColor: "#2A2624",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  marginTop: 2,
+  marginBottom: 20,
+  minHeight: 50,
+  borderRadius: 16,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+},
   logoutButtonText: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#FFFDF9",
-  },
+  fontSize: 16,
+  fontFamily: fonts.bold,
+  color: colors.white,
+},
   profileNameWrap: {
   flex: 1,
 },
@@ -1625,14 +1659,17 @@ tuitionDue: {
   color: "#7A7168",
 },
 input: {
+  marginTop: 16,
+  minHeight: 52,
   borderWidth: 1,
-  borderColor: "#E1D8CC",
-  borderRadius: 14,
+  borderColor: colors.border,
+  borderRadius: radius.md,
   paddingHorizontal: 14,
   paddingVertical: 13,
   fontSize: 15,
-  backgroundColor: "#FFFEFC",
-  marginTop: 12,
+  fontFamily: fonts.medium,
+  backgroundColor: colors.card,
+  color: colors.textMain,
 },
 
 accountActionRow: {
@@ -1657,48 +1694,52 @@ innerDivider: {
 
 modalOverlay: {
   flex: 1,
-  backgroundColor: "rgba(58, 44, 39, 0.38)",
+  backgroundColor: "rgba(58, 44, 39, 0.34)",
   justifyContent: "center",
-  paddingHorizontal: 24,
+  paddingHorizontal: 22,
 },
 
 modalCard: {
   backgroundColor: colors.card,
-  borderRadius: 28,
-  padding: 22,
+  borderRadius: radius.lg,
+  paddingHorizontal: 20,
+  paddingVertical: 22,
   borderWidth: 1,
   borderColor: colors.border,
+  ...shadow.card,
 },
 
 modalTitle: {
-  fontSize: 24,
-  fontWeight: "900",
+  fontSize: 22,
+  lineHeight: 30,
+  fontFamily: fonts.titleSemi,
   color: colors.textMain,
 },
 
 modalDesc: {
   marginTop: 10,
-  fontSize: 15,
+  fontSize: 14,
   lineHeight: 22,
+  fontFamily: fonts.medium,
   color: colors.textSub,
 },
 
 modalButtonRow: {
   flexDirection: "row",
-  gap: 12,
+  gap: 10,
   marginTop: 18,
 },
 
 modalButton: {
   flex: 1,
   minHeight: 52,
-  borderRadius: 16,
+  borderRadius: radius.md,
   alignItems: "center",
   justifyContent: "center",
 },
 
 modalCancelButton: {
-  backgroundColor: colors.blushBeige,
+  backgroundColor: "#F8F1EA",
   borderWidth: 1,
   borderColor: colors.border,
 },
@@ -1709,21 +1750,21 @@ modalPrimaryButton: {
 
 modalCancelButtonText: {
   fontSize: 15,
-  fontWeight: "900",
+  fontFamily: fonts.bold,
   color: colors.warmBrown,
 },
 
 modalPrimaryButtonText: {
   fontSize: 15,
-  fontWeight: "900",
+  fontFamily: fonts.bold,
   color: colors.white,
 },
 headerRow: {
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
-  marginBottom: -15,
-  marginLeft: 9,
+  marginBottom: 0,
+  marginLeft: 4,
 },
 
 headerEditButton: {
@@ -1790,28 +1831,31 @@ paymentButtonText: {
 },
 paymentModalCard: {
   width: "100%",
-  maxHeight: "82%",
+  maxHeight: "86%",
   backgroundColor: colors.card,
-  borderRadius: 30,
+  borderRadius: radius.lg,
   paddingHorizontal: 18,
   paddingTop: 26,
   paddingBottom: 18,
   borderWidth: 1,
   borderColor: colors.border,
-  shadowColor: colors.textMain,
-  shadowOpacity: 0.14,
-  shadowRadius: 20,
-  shadowOffset: { width: 0, height: 10 },
-  elevation: 10,
+  ...shadow.card,
 },
 
+paymentModalTitle: {
+  fontSize: 26,
+  lineHeight: 34,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+  textAlign: "center",
+},
 paymentModalCloseIcon: {
   position: "absolute",
   top: 16,
   right: 16,
-  width: 42,
-  height: 42,
-  borderRadius: 21,
+  width: 36,
+  height: 36,
+  borderRadius: 18,
   backgroundColor: "#F6EFE8",
   borderWidth: 1,
   borderColor: colors.border,
@@ -1831,65 +1875,43 @@ paymentModalContent: {
   paddingTop: 8,
   paddingBottom: 2,
 },
-paymentModalCard: {
-  width: "100%",
-  maxHeight: "82%",
-  backgroundColor: colors.card,
-  borderRadius: 30,
-  paddingHorizontal: 18,
-  paddingTop: 26,
-  paddingBottom: 18,
-  borderWidth: 1,
-  borderColor: colors.border,
-  shadowColor: colors.textMain,
-  shadowOpacity: 0.14,
-  shadowRadius: 20,
-  shadowOffset: { width: 0, height: 10 },
-  elevation: 10,
-},
-paymentModalTitle: {
-  fontSize: 28,
-  fontWeight: "900",
-  color: colors.textMain,
-  textAlign: "center",
-   marginTop: -10,
-  marginBottom: -5,
-},
 
 paymentModalDesc: {
-  marginTop: 12,
-  marginBottom: 2,
-  fontSize: 14,
-  lineHeight: 18,
+  marginTop: 8,
+  marginBottom: 8,
+  fontSize: 15,
+  lineHeight: 23,
+  fontFamily: fonts.medium,
   color: colors.textSub,
   textAlign: "center",
 },
 
 paymentMethodBox: {
-  marginTop: 10,
-  borderRadius: 24,
+  marginTop: 12,
+  borderRadius: radius.md,
   borderWidth: 1,
-  borderColor: "#E8DED2",
-  backgroundColor: "#FFFEFC",
-  paddingHorizontal: 16,
-  paddingVertical: 9,
+  borderColor: colors.border,
+  backgroundColor: colors.card,
+  paddingHorizontal: 14,
+  paddingVertical: 14,
 },
 
 paymentMethodRow: {
   flexDirection: "row",
   alignItems: "center",
-  gap: 15,
+  gap: 18,
 },
 
 paymentIconCircle: {
-  width: 55,
-  height: 55,
-  borderRadius: 31,
-  backgroundColor: "#F7F0EA",
+  width: 54,
+  height: 54,
+  borderRadius: 27,
+  marginLeft: 2,
+  backgroundColor: "#F8F1EA",
   alignItems: "center",
   justifyContent: "center",
   borderWidth: 1,
-  borderColor: "#EFE5DE",
+  borderColor: colors.border,
 },
 
 paymentIconText: {
@@ -1910,48 +1932,53 @@ paymentMethodBody: {
 
 paymentMethodTitle: {
   fontSize: 17,
-  fontWeight: "900",
+  lineHeight: 24,
+  fontFamily: fonts.bold,
   color: colors.textMain,
 },
 
 paymentMethodText: {
-  marginTop: 7,
+  marginTop: 6,
   fontSize: 14,
-  lineHeight: 19,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
   color: colors.textSub,
 },
 
 paymentMethodButton: {
-  marginTop: 10,
-  minHeight: 40,
-  borderRadius: 12,
-  backgroundColor: "#FFF8F1",
+  marginTop: 12,
+  minHeight: 44,
+  width: "100%",
+  borderRadius: radius.md,
+  backgroundColor: "#F8F1EA",
   borderWidth: 1,
-  borderColor: "#E8D7C4",
+  borderColor: colors.border,
   alignItems: "center",
   justifyContent: "center",
 },
 
 paymentMethodButtonText: {
   fontSize: 14,
-  fontWeight: "900",
+  lineHeight: 20,
+  fontFamily: fonts.bold,
   color: colors.warmBrown,
 },
 
 paymentCloseButton: {
-  marginTop: 18,
+  marginTop: 14,
   minHeight: 52,
-  borderRadius: 18,
-  backgroundColor: "#F3ECE4",
+  borderRadius: radius.md,
+  backgroundColor: "#F8F1EA",
   borderWidth: 1,
-  borderColor: "#E2D5C7",
+  borderColor: colors.border,
   alignItems: "center",
   justifyContent: "center",
 },
 
 paymentCloseButtonText: {
-  fontSize: 17,
-  fontWeight: "900",
+  fontSize: 16,
+  lineHeight: 23,
+  fontFamily: fonts.bold,
   color: colors.warmBrown,
 },
 
@@ -2011,29 +2038,32 @@ avatarSaveButtonText: {
   color: "#FFFFFF",
 },
 heroCard: {
-  backgroundColor: "#FFFEFC",
-  borderRadius: 28,
+  backgroundColor: colors.card,
+  borderRadius: radius.lg,
   paddingHorizontal: 18,
   paddingVertical: 18,
   borderWidth: 1,
-  borderColor: "#EFE5DE",
-  shadowColor: "#6B4F46",
-  shadowOpacity: 0.06,
-  shadowRadius: 12,
-  shadowOffset: { width: 0, height: 6 },
-  elevation: 2,
+  borderColor: colors.border,
+  ...shadow.card,
 },
+
 heroCardYudanja: {
-  borderColor: "#E3BD61",
-  borderWidth: 1.4,
-  backgroundColor: "#FFFDF7",
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  borderColor: "transparent",
+
+  // 카드 안쪽 여백 조절
+  paddingHorizontal: 14,
+  paddingVertical: 12,
+
   shadowColor: "#C9962A",
-  shadowOpacity: 0.18,
-  shadowRadius: 20,
+  shadowOpacity: 0.14,
+  shadowRadius: 18,
   shadowOffset: { width: 0, height: 8 },
   elevation: 6,
   overflow: "hidden",
 },
+
 heroGoldGlow: {
   position: "absolute",
   right: -80,
@@ -2062,9 +2092,10 @@ heroNameRow: {
 },
 
 heroName: {
-  fontSize: 24,
-  fontWeight: "900",
-  color: "#2B2522",
+  fontSize: 26,
+  lineHeight: 32,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
 },
 
 heroLevelBadge: {
@@ -2171,8 +2202,8 @@ cameraBadgeYudanja: {
 },
 heroDivider: {
   height: 1,
-  backgroundColor: "#EFE5DE",
-  marginVertical: 16,
+  backgroundColor: "rgba(224, 188, 101, 0.28)",
+  marginVertical: 10,
 },
 
 heroPaymentRow: {
@@ -2321,8 +2352,8 @@ menuTextWrap: {
 
 menuTitle: {
   fontSize: 15,
-  fontWeight: "900",
-  color: "#2B2522",
+  fontFamily: fonts.bold,
+  color: colors.textMain,
 },
 
 menuDescription: {
@@ -2332,9 +2363,13 @@ menuDescription: {
 },
 
 menuArrow: {
-  fontSize: 12,
-  fontWeight: "500",
-  color: "#A99F98",
+  width: 18,
+  textAlign: "center",
+  fontSize: 13,
+  lineHeight: 18,
+  color: "#a08f7a",
+  fontWeight: "300",
+  marginRight: 2,
 },
 
 menuDivider: {
@@ -2691,13 +2726,15 @@ menuSectionYudanja: {
   backgroundColor: "#FFFDF8",
 },
 heroCardBgImage: {
-  position: "absolute",
-  left: -17,
-  top: -40,
-  width: "123%",
-  height: "140%",
-  borderRadius: 28,
-  opacity: 0.5,
+  ...StyleSheet.absoluteFillObject,
+  left: 0,
+  top: 0,
+  right: 0,
+  bottom: 0,
+  width: "100%",
+  height: "100%",
+  borderRadius: radius.lg,
+  opacity: 1,
 },
 
 heroCardBgSoftOverlay: {
@@ -2782,5 +2819,7 @@ historyStatLabel: {
   fontWeight: "700",
   color: "#8A8177",
 },
-
+paymentMethodTextWrap: {
+  paddingLeft: 20,
+},
 });

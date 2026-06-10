@@ -11,7 +11,14 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberProducts } from "../src/api/memberShop";
-import { colors } from "../src/theme/colors";
+import { colors, radius, shadow } from "../src/theme";
+import ScreenHeader from "../src/components/ScreenHeader";
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 
 const API_ORIGIN = "http://172.30.1.16:5000";
 
@@ -99,6 +106,7 @@ function getMainCategory(product) {
 function ProductCard({ product }) {
   const stock = getStockLabel(product);
   const imageSource = getImageUrl(product.imageUrl);
+  const category = getMainCategory(product);
 
   return (
     <Pressable
@@ -125,17 +133,13 @@ function ProductCard({ product }) {
       </View>
 
       <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={1}>
-          {product.name}
-        </Text>
+        <Text style={styles.productCategory}>{category}</Text>
 
-        <Text style={styles.productPrice}>{formatPrice(product.price)}</Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.productName} numberOfLines={1}>
+            {product.name}
+          </Text>
 
-        <Text style={styles.productMemo} numberOfLines={2}>
-          {product.memo || product.optionName || "도장 수련용 상품"}
-        </Text>
-
-        <View style={styles.stockRow}>
           <View
             style={[
               styles.stockBadge,
@@ -153,12 +157,14 @@ function ProductCard({ product }) {
               {stock.label}
             </Text>
           </View>
-
-          <Text style={styles.stockDesc}>{stock.desc}</Text>
         </View>
-      </View>
 
-      <Text style={styles.chevron}>›</Text>
+        <Text style={styles.productPrice}>
+          {formatPrice(product.price)}
+        </Text>
+
+        <Text style={styles.stockDesc}>{stock.desc}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -253,146 +259,146 @@ export default function ShopScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
+      <View style={styles.topContent}>
+  <View style={styles.shopHeader}>
+  <ScreenHeader title="현중 Shop" />
 
-        <Pressable style={styles.cartIcon} onPress={() => router.push("/cart")}>
-          <Image
-            source={require("../assets/images/icon-shop-cart.png")}
-            style={styles.cartImage}
-            resizeMode="contain"
-          />
-        </Pressable>
-      </View>
+  <Pressable style={styles.cartButton} onPress={() => router.push("/cart")}>
+    <Image
+      source={require("../assets/images/icon-shop-cart.png")}
+      style={styles.cartImage}
+      resizeMode="contain"
+    />
+  </Pressable>
+</View>
 
-      <View style={styles.hero}>
-        <Image
-          source={require("../assets/images/shop-mountain-bg.png")}
-          style={styles.heroBg}
-          resizeMode="cover"
-        />
-
-        <View style={styles.heroTextBox}>
-          <Text style={styles.heroTitle}>현중 Shop</Text>
-          <Text style={styles.heroDesc}>
-            수련에 필요한 도장 물품과 용품 안내
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.noticeRow}>
-        <Text style={styles.noticeIcon}>☆</Text>
-        <Text style={styles.noticeText}>
-          도장 회원만 구매 및 주문 문의가 가능합니다.
-        </Text>
-      </View>
-
-      {bestProducts.length > 0 ? (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View>
-              <Text style={styles.sectionTitle}>BEST 상품</Text>
-              <Text style={styles.sectionDesc}>많이 찾는 현중 수련용품</Text>
-            </View>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          >
-            {bestProducts.map((product, index) => (
-              <SmallProductCard
-                key={product.id}
-                product={product}
-                badge={`BEST ${index + 1}`}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      ) : null}
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <View>
-            <Text style={styles.sectionTitle}>카테고리</Text>
-            <Text style={styles.sectionDesc}>필요한 물품을 쉽게 찾아보세요</Text>
-          </View>
-
-          {selectedCategory !== "전체" ? (
-            <Pressable onPress={() => setSelectedCategory("전체")}>
-              <Text style={styles.resetText}>전체보기</Text>
-            </Pressable>
-          ) : null}
-        </View>
-
-        <View style={styles.categoryGrid}>
-          {SHOP_CATEGORIES.map((category) => {
-            const selected = selectedCategory === category.key;
-
-            return (
-              <Pressable
-  key={category.key}
-  style={[
-    styles.categoryCard,
-    selected && styles.categoryCardActive,
-  ]}
-  onPress={() => setSelectedCategory(category.key)}
->
+  <View style={styles.heroArea}>
   <Image
-    source={category.icon}
-    style={styles.categoryImage}
-    resizeMode="contain"
+    source={require("../assets/images/shop-mountain-bg.png")}
+    style={styles.heroBg}
+    resizeMode="cover"
   />
 
-  <View style={styles.categoryTextBox}>
-    <Text
-      style={[
-        styles.categoryTitle,
-        selected && styles.categoryTitleActive,
-      ]}
-    >
-      {category.title}
-    </Text>
+  <Text style={styles.heroDesc}>
+    수련에 필요한 도장 물품과 용품 안내
+  </Text>
 
-    <Text
-      style={[
-        styles.categoryDesc,
-        selected && styles.categoryDescActive,
-      ]}
-      numberOfLines={1}
-    >
-      {category.desc}
-    </Text>
-  </View>
-</Pressable>
-            );
-          })}
-        </View>
+  <Text style={styles.noticeText}>
+    도장 회원만 구매 및 주문 문의가 가능합니다.
+  </Text>
+</View>
+</View>
+
+      {bestProducts.length > 0 ? (
+  <View style={styles.section}>
+    <View style={styles.sectionHeader}>
+      <View>
+        <Text style={styles.sectionTitle}>추천 상품</Text>
+        <Text style={styles.sectionDesc}>도장에서 자주 찾는 수련용품</Text>
       </View>
+    </View>
 
-      {newProducts.length > 0 ? (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View>
-              <Text style={styles.sectionTitle}>신상품</Text>
-              <Text style={styles.sectionDesc}>새로 등록된 상품</Text>
-            </View>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.horizontalList}
+    >
+      {bestProducts.map((product) => (
+        <SmallProductCard
+          key={product.id}
+          product={product}
+          badge="추천"
+        />
+      ))}
+    </ScrollView>
+  </View>
+) : null}
+
+{newProducts.length > 0 ? (
+  <View style={styles.section}>
+    <View style={styles.sectionHeader}>
+      <View>
+        <Text style={styles.sectionTitle}>신상품</Text>
+        <Text style={styles.sectionDesc}>새로 등록된 상품</Text>
+      </View>
+    </View>
+
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.horizontalList}
+    >
+      {newProducts.map((product) => (
+        <SmallProductCard
+          key={product.id}
+          product={product}
+          badge="NEW"
+        />
+      ))}
+    </ScrollView>
+  </View>
+) : null}
+
+<View style={styles.section}>
+  <View style={styles.sectionHeader}>
+    <View>
+      <Text style={styles.sectionTitle}>카테고리</Text>
+      <Text style={styles.sectionDesc}>필요한 물품을 쉽게 찾아보세요</Text>
+    </View>
+
+    {selectedCategory !== "전체" ? (
+      <Pressable onPress={() => setSelectedCategory("전체")}>
+        <Text style={styles.resetText}>전체보기</Text>
+      </Pressable>
+    ) : null}
+  </View>
+
+  <View style={styles.categoryGrid}>
+    {SHOP_CATEGORIES.map((category) => {
+      const selected = selectedCategory === category.key;
+
+      return (
+        <Pressable
+          key={category.key}
+          style={[
+            styles.categoryCard,
+            selected && styles.categoryCardActive,
+          ]}
+          onPress={() => setSelectedCategory(category.key)}
+        >
+          <Image
+            source={category.icon}
+            style={styles.categoryImage}
+            resizeMode="contain"
+          />
+
+          <View style={styles.categoryTextBox}>
+            <Text
+              style={[
+                styles.categoryTitle,
+                selected && styles.categoryTitleActive,
+              ]}
+            >
+              {category.title}
+            </Text>
+
+            <Text
+              style={[
+                styles.categoryDesc,
+                selected && styles.categoryDescActive,
+              ]}
+              numberOfLines={1}
+            >
+              {category.desc}
+            </Text>
           </View>
+        </Pressable>
+      );
+    })}
+  </View>
+</View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          >
-            {newProducts.map((product) => (
-              <SmallProductCard key={product.id} product={product} badge="NEW" />
-            ))}
-          </ScrollView>
-        </View>
-      ) : null}
+      
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -431,9 +437,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background || "#FFFCFA",
   },
   content: {
-    paddingTop: 26,
-    paddingBottom: 110,
-  },
+  paddingTop: 24,
+  paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},
+topContent: {
+  paddingHorizontal: 16,
+},
+
   center: {
     flex: 1,
     alignItems: "center",
@@ -445,110 +458,64 @@ const styles = StyleSheet.create({
     color: "#7A6A61",
   },
 
-  header: {
-    height: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 18,
-  },
-  backButton: {
-    width: 42,
-    height: 42,
-    alignItems: "flex-start",
-    justifyContent: "center",
-  },
-  backText: {
-    fontSize: 38,
-    color: "#2F2119",
-    marginTop: -5,
-  },
-  cartIcon: {
-    width: 42,
-    height: 42,
-    alignItems: "flex-end",
-    justifyContent: "center",
-  },
-  cartImage: {
-    width: 26,
-    height: 26,
-  },
+heroArea: {
+  marginTop: 6,
+  minHeight: 128,
+  paddingHorizontal: 16,
+  paddingTop: 52,
+  paddingBottom: 18,
+  justifyContent: "flex-start",
+  overflow: "hidden",
+},
 
-  hero: {
-    marginTop: 8,
-    height: 154,
-    overflow: "hidden",
-    backgroundColor: "#FFFCFA",
-    justifyContent: "center",
-  },
-  heroBg: {
-    ...StyleSheet.absoluteFillObject,
-    width: "100%",
-    height: "80%",
-    opacity: 0.7,
-    marginTop: 40,
-  },
-  heroTextBox: {
-    paddingHorizontal: 34,
-    paddingTop: 12,
-  },
-  heroTitle: {
-    fontSize: 33,
-    fontWeight: "800",
-    color: "#3A281F",
-    letterSpacing: -0.5,
-    marginTop: 20,
-  },
-  heroDesc: {
-    marginTop: 8,
-    fontSize: 15,
-    lineHeight: 20,
-    color: "#5F4A3D",
-    fontWeight: "600",
-  },
+heroBg: {
+  position: "absolute",
+  right: -24,
+  top: 4,
+  width: "112%",
+  height: 128,
+  opacity: 0.42,
+},
 
-  noticeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 7,
-    marginTop: 4,
-    marginBottom: 18,
-    paddingHorizontal: 18,
-  },
-  noticeIcon: {
-    color: "#B88737",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  noticeText: {
-    fontSize: 12,
-    color: "#5C4B42",
-    fontWeight: "600",
-  },
+heroDesc: {
+  fontSize: 16,
+  lineHeight: 23,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
 
+noticeText: {
+  marginTop: 3,
+  fontSize: 14,
+  lineHeight: 20,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
   section: {
-    marginBottom: 26,
+    marginBottom: 18,
   },
   sectionHeader: {
-    paddingHorizontal: 18,
-    marginBottom: 12,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "900",
-    color: "#2F2119",
-    letterSpacing: -0.3,
-  },
-  sectionDesc: {
-    marginTop: 4,
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#7B6C63",
-  },
+  paddingHorizontal: 16,
+  marginBottom: 12,
+  flexDirection: "row",
+  alignItems: "flex-end",
+  justifyContent: "space-between",
+},
+
+sectionTitle: {
+  fontSize: 18,
+  lineHeight: 26,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+},
+
+sectionDesc: {
+  marginTop: 4,
+  fontSize: 13,
+  lineHeight: 20,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
   resetText: {
     fontSize: 13,
     fontWeight: "800",
@@ -560,13 +527,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
   smallProductCard: {
-    width: 132,
-    borderRadius: 22,
-    padding: 10,
-    backgroundColor: "#FFFDF9",
-    borderWidth: 1,
-    borderColor: "#E9DCD1",
-  },
+  width: 132,
+  borderRadius: radius.lg,
+  padding: 10,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
+},
   smallImageBox: {
     height: 102,
     borderRadius: 17,
@@ -585,14 +553,14 @@ const styles = StyleSheet.create({
     color: "#B89A7A",
   },
   smallBadge: {
-    position: "absolute",
-    top: 7,
-    left: 7,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: "#3A281F",
-  },
+  position: "absolute",
+  top: 7,
+  left: 7,
+  borderRadius: 999,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  backgroundColor: colors.warmBrown,
+},
   smallBadgeText: {
     fontSize: 10,
     fontWeight: "900",
@@ -621,19 +589,19 @@ const styles = StyleSheet.create({
 categoryCard: {
   width: "48%",
   minHeight: 82,
-  borderRadius: 20,
+  borderRadius: radius.lg,
   paddingHorizontal: 12,
   paddingVertical: 12,
-  backgroundColor: "#FFFDF9",
+  backgroundColor: colors.card,
   borderWidth: 1,
-  borderColor: "#E9DCD1",
+  borderColor: colors.border,
   flexDirection: "row",
   alignItems: "center",
 },
 
 categoryCardActive: {
-  backgroundColor: "#3A281F",
-  borderColor: "#3A281F",
+  backgroundColor: colors.warmBrown,
+  borderColor: colors.warmBrown,
 },
 
 categoryImage: {
@@ -647,21 +615,21 @@ categoryTextBox: {
 },
 
 categoryTitle: {
-  fontSize: 16,
-  fontWeight: "900",
-  color: "#2F2119",
+  fontSize: 15,
+  lineHeight: 21,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
 },
-
 categoryTitleActive: {
   color: "#FFFFFF",
 },
 
 categoryDesc: {
-  marginTop: 4,
+  marginTop: 3,
   fontSize: 11,
-  lineHeight: 15,
-  fontWeight: "600",
-  color: "#7B6C63",
+  lineHeight: 16,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
 },
 
 categoryDescActive: {
@@ -673,20 +641,16 @@ categoryDescActive: {
     paddingHorizontal: 18,
   },
   productCard: {
-    minHeight: 132,
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 24,
-    padding: 13,
-    backgroundColor: "#FFFDF9",
-    borderWidth: 1,
-    borderColor: "#E9DCD1",
-    shadowColor: "#BFA79B",
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 7 },
-    elevation: 2,
-  },
+  minHeight: 132,
+  flexDirection: "row",
+  alignItems: "center",
+  borderRadius: radius.lg,
+  padding: 13,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
+},
   productImageWrap: {
     width: 108,
     height: 108,
@@ -719,31 +683,34 @@ categoryDescActive: {
     marginLeft: 15,
     paddingVertical: 2,
   },
+  productCategory: {
+  fontSize: 12,
+  lineHeight: 18,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+nameRow: {
+  marginTop: 2,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
   productName: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#241811",
-    letterSpacing: -0.2,
-  },
+  flex: 1,
+  fontSize: 18,
+  lineHeight: 26,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
   productPrice: {
-    marginTop: 3,
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#2F2119",
-    letterSpacing: -0.1,
-  },
-  productMemo: {
-    marginTop: 9,
-    fontSize: 13,
-    lineHeight: 19,
-    color: "#5E5048",
-    fontWeight: "400",
-  },
-  stockRow: {
-    marginTop: 10,
-    flexDirection: "column",
-    alignItems: "flex-start",
-  },
+  marginTop: 2,
+fontSize: 18,
+lineHeight: 26,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+  
   stockBadge: {
     alignSelf: "flex-start",
     borderRadius: 999,
@@ -767,16 +734,13 @@ categoryDescActive: {
     color: "#684013",
   },
   stockDesc: {
-    marginTop: 6,
-    fontSize: 11,
-    color: "#7B6C63",
-  },
-  chevron: {
-    fontSize: 26,
-    color: "#3A281F",
-    marginLeft: 8,
-  },
-
+  marginTop: 8,
+  fontSize: 13,
+  lineHeight: 19,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+  
   emptyCard: {
     borderRadius: 24,
     padding: 30,
@@ -797,4 +761,23 @@ categoryDescActive: {
     textAlign: "center",
     lineHeight: 20,
   },
+  shopHeader: {
+  position: "relative",
+},
+
+cartButton: {
+  position: "absolute",
+  right: 0,
+  top: 0,
+  width: 44,
+  height: 44,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+cartImage: {
+  width: 24,
+  height: 24,
+  opacity: 0.82,
+},
 });

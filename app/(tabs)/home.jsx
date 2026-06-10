@@ -17,6 +17,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
+import { getRankBadgeColors } from "../../src/theme/rankBadge";
 
 import { getMemberHome } from "../../src/api/memberHome";
 import { getMemberCalendar } from "../../src/api/memberCalendar";
@@ -551,6 +552,8 @@ const attendanceCount =
   homeData?.member?.totalAttendanceCount || 0;
 
 const isYudanja = homeData?.member?.canAccessYudanjaClass === true;
+const rankLevel = Number(homeData?.member?.rankLevel || 0);
+const rankBadgeColors = getRankBadgeColors(rankLevel);
 const trainingGoals = homeData?.trainingGoals || null;
 
 const promotionGoal = trainingGoals?.promotion || null;
@@ -1232,11 +1235,25 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
     <Text style={styles.homeName}>{displayName}님</Text>
 
     <View style={styles.homeBadgeRow}>
-      <View style={styles.homeBadge}>
-        <Text style={styles.homeBadgeText}>
-          {homeData?.member?.levelLabel || homeData?.member?.level || "일반회원"}
-        </Text>
-      </View>
+      <View
+  style={[
+    styles.homeBadge,
+    {
+      backgroundColor: rankBadgeColors.backgroundColor,
+      borderColor: rankBadgeColors.borderColor,
+      borderWidth: 1,
+    },
+  ]}
+>
+  <Text
+    style={[
+      styles.homeBadgeText,
+      { color: rankBadgeColors.textColor },
+    ]}
+  >
+    {homeData?.member?.levelLabel || homeData?.member?.level || "일반회원"}
+  </Text>
+</View>
       
 
       {isYudanja ? (
@@ -2643,8 +2660,8 @@ yudanjaFlowLine: {
   display: "none",
 },
 homeProfileWrap: {
-  width: isWeb ? 88 : 104,
-  height: isWeb ? 88 : 104,
+  width: isWeb ? 132 : 104,
+  height: isWeb ? 132 : 104,
   marginTop: isWeb ? 10 : 28,
   marginRight: isWeb ? 20 : 8,
   alignItems: "center",
@@ -2661,8 +2678,8 @@ homeProfileWrapYudanja: {
 },
 
 homeProfileCircle: {
-  width: isWeb ? 76 : 90,
-  height: isWeb ? 76 : 90,
+  width: isWeb ? 88 : 90,
+  height: isWeb ? 88 : 90,
   borderRadius: 999,
   overflow: "hidden",
   backgroundColor: "#F7EFE8",

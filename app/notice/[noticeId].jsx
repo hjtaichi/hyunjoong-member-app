@@ -10,6 +10,15 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { getMemberNoticeDetail } from "../../src/api/memberNotice";
+import { colors, radius, shadow } from "../../src/theme";
+import ScreenHeader from "../../src/components/ScreenHeader";
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 
 export default function NoticeDetailScreen() {
   const { noticeId } = useLocalSearchParams();
@@ -52,23 +61,27 @@ export default function NoticeDetailScreen() {
 
   return (
   <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScreenHeader title="공지 상세" />
+
     <View style={styles.card}>
-  <View style={styles.badge}>
-    <Text style={styles.badgeText}>
-      {notice.isPopup ? "팝업 공지" : "공지사항"}
-    </Text>
-  </View>
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>
+          {notice.isPopup ? "팝업 공지" : "공지사항"}
+        </Text>
+      </View>
 
-  <Text style={styles.title}>{notice.title}</Text>
+      <Text style={styles.title}>{notice.title}</Text>
 
-  <Text style={styles.date}>
-    {notice.publishedAt
-      ? new Date(notice.publishedAt).toLocaleDateString("ko-KR")
-      : ""}
-  </Text>
+      <Text style={styles.date}>
+        {notice.publishedAt
+          ? new Date(notice.publishedAt).toLocaleDateString("ko-KR")
+          : ""}
+      </Text>
 
-  <Text style={styles.body}>{notice.content}</Text>
-</View>
+      <View style={styles.divider} />
+
+      <Text style={styles.body}>{notice.content}</Text>
+    </View>
   </ScrollView>
 );
 }
@@ -76,44 +89,80 @@ export default function NoticeDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f6f3ee",
+    backgroundColor: colors.background,
   },
+
   content: {
-  paddingHorizontal: 20,
-  paddingTop: 42,
-  paddingBottom: 24,
-},
-  card: {
-    backgroundColor: "#fffdf9",
-    borderRadius: 20,
-    padding: 22,
-    borderWidth: 1,
-    borderColor: "#ece4d8",
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 110,
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
   },
+
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.card,
+  },
+
+  badge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: colors.blushBeige,
+    marginBottom: 14,
+  },
+
+  badgeText: {
+    fontSize: 12,
+    fontFamily: fonts.bold,
+    color: colors.warmBrown,
+  },
+
+  title: {
+    fontSize: 24,
+    lineHeight: 32,
+    fontFamily: fonts.titleSemi,
+    color: colors.textMain,
+    marginBottom: 8,
+  },
+
+  date: {
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    color: colors.textMuted,
+    marginBottom: 16,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginBottom: 18,
+  },
+
+  body: {
+    fontSize: 15,
+    lineHeight: 25,
+    fontFamily: fonts.medium,
+    color: colors.textMain,
+  },
+
   center: {
     flex: 1,
-    backgroundColor: "#f6f3ee",
+    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#2f2a24",
-    marginBottom: 8,
-  },
-  date: {
-    fontSize: 12,
-    color: "#8a7f72",
-    marginBottom: 18,
-  },
-  body: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: "#4c4339",
-  },
+
   emptyText: {
-  fontSize: 14,
-  color: "#6b6257",
-},
+    fontSize: 14,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
 });

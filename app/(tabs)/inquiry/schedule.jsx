@@ -1,5 +1,14 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { colors, radius, shadow } from "../../../src/theme";
+import ScreenHeader from "../../../src/components/ScreenHeader";
+
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 
 const rows = [
   { time: "10:00 ~ 11:20", tue: "정규반", wed: "정규반", thu: "정규반", fri: "정규반", sat: "정규반" },
@@ -13,9 +22,7 @@ const rows = [
 export default function ScheduleScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.subtitle}>
-        현중태극권 정규 수련 시간표입니다.
-      </Text>
+  <ScreenHeader title="수련 시간표" />
 
       <View style={styles.noticeBox}>
         <Text style={styles.noticeText}>
@@ -58,93 +65,104 @@ export default function ScheduleScreen() {
 
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
-    backgroundColor: "#f6f3ee",
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 28,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#2f2a24",
-  },
-  subtitle: {
-    marginTop: 10,
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#6b6257",
-  },
-  noticeBox: {
-    marginTop: 12,
-    borderRadius: 18,
-    padding: 14,
-    backgroundColor: "#fff7ed",
-    borderWidth: 1,
-    borderColor: "#fed7aa",
-  },
-  noticeText: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: "#7c2d12",
-    fontWeight: "700",
-  },
-  table: {
-    marginTop: 18,
-    borderRadius: 18,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#ded4c7",
-    backgroundColor: "#fffdf9",
-  },
+  flex: 1,
+  backgroundColor: colors.background,
+},
+
+content: {
+  paddingHorizontal: 16,
+  paddingTop: 24,
+  paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},subtitle: {
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  marginBottom: 12,
+},
+
+noticeBox: {
+  borderRadius: radius.md,
+  paddingHorizontal: 14,
+  paddingVertical: 12,
+  backgroundColor: "#F8F1EA",
+  borderWidth: 1,
+  borderColor: colors.border,
+},
+
+noticeText: {
+  fontSize: 13,
+  lineHeight: 20,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+},
+
+table: {
+  marginTop: 16,
+  borderRadius: radius.lg,
+  overflow: "hidden",
+  borderWidth: 1,
+  borderColor: colors.border,
+  backgroundColor: colors.card,
+  ...shadow.card,
+},
   row: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "#ece4d8",
   },
   headerRow: {
-    backgroundColor: "#f3ecdf",
-  },
-  cell: {
-    flex: 1,
-    minHeight: 58,
-    paddingHorizontal: 5,
-    paddingVertical: 10,
-    textAlign: "center",
-    textAlignVertical: "center",
-    fontSize: 12,
-    lineHeight: 17,
-    color: "#3f3831",
-    fontWeight: "700",
-  },
-  timeCell: {
-    flex: 1.25,
-    color: "#5f554b",
-  },
-  headerText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#2f2a24",
-  },
-  infoCard: {
-    marginTop: 16,
-    borderRadius: 18,
-    padding: 16,
-    backgroundColor: "#fffdf9",
-    borderWidth: 1,
-    borderColor: "#ece4d8",
-  },
-  infoTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#2f2a24",
-  },
-  infoText: {
-    marginTop: 6,
-    fontSize: 13,
-    lineHeight: 20,
-    color: "#6b6257",
-  },
+  backgroundColor: "#F5EDE3",
+},
+
+cell: {
+  flex: 1,
+  minHeight: 58,
+  paddingHorizontal: 5,
+  paddingVertical: 10,
+  textAlign: "center",
+  textAlignVertical: "center",
+  fontSize: 12,
+  lineHeight: 17,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
+
+timeCell: {
+  flex: 1.25,
+  color: colors.textSub,
+},
+
+headerText: {
+  fontSize: 12,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+
+infoCard: {
+  marginTop: 16,
+  borderRadius: radius.lg,
+  padding: 16,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
+},
+
+infoTitle: {
+  fontSize: 16,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+},
+
+infoText: {
+  marginTop: 6,
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
 });

@@ -18,7 +18,14 @@ import {
   changeMyLoginId,
 } from "../src/api/member";
 
-import { colors } from "../src/theme/colors";
+import { colors, radius, shadow } from "../src/theme";
+import ScreenHeader from "../src/components/ScreenHeader";
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 
 function onlyNumbers(value) {
   return String(value || "").replace(/[^0-9]/g, "");
@@ -187,16 +194,11 @@ export default function ProfileEditScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>‹</Text>
-        </Pressable>
+      <ScreenHeader title="내정보 수정" />
 
-        <View>
-          <Text style={styles.title}>내정보 수정</Text>
-          <Text style={styles.subtitle}>계정 정보를 확인하고 관리합니다.</Text>
-        </View>
-      </View>
+<Text style={styles.subtitle}>
+  계정 정보를 확인하고 관리합니다.
+</Text>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>기본 정보</Text>
@@ -254,7 +256,7 @@ export default function ProfileEditScreen() {
         <TextInput
   style={styles.input}
   placeholder="01000000000"
-  placeholderTextColor={colors.textMuted}
+  placeholderTextColor={colors.textSub}
   keyboardType="phone-pad"
   value={phone}
   onChangeText={(value) => setPhone(onlyNumbers(value))}
@@ -333,9 +335,12 @@ const styles = StyleSheet.create({
 
 content: {
   paddingHorizontal: 16,
-  paddingTop: 44,
-  paddingBottom: 30,
+  paddingTop: 24,
+  paddingBottom: 110,
   gap: 14,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
 },
 
 center: {
@@ -350,61 +355,40 @@ loadingText: {
   fontSize: 14,
   color: colors.textSub,
 },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 4,
-  },
-  backButton: {
-  width: 42,
-  height: 42,
-  borderRadius: 21,
-  backgroundColor: colors.card,
-  alignItems: "center",
-  justifyContent: "center",
-  borderWidth: 1,
-  borderColor: colors.border,
-},
-
-backButtonText: {
-  fontSize: 30,
-  color: colors.warmBrown,
-  marginTop: -2,
-},
-
-title: {
-  fontSize: 26,
-  fontWeight: "800",
-  color: colors.textMain,
-},
+  
 
 subtitle: {
-  marginTop: 4,
-  fontSize: 15,
-  lineHeight: 21,
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
   color: colors.textSub,
+  marginBottom: 2,
 },
-  card: {
+
+card: {
   backgroundColor: colors.card,
-  borderRadius: 26,
-  padding: 20,
+  borderRadius: radius.lg,
+  paddingHorizontal: 18,
+  paddingVertical: 18,
   borderWidth: 1,
   borderColor: colors.border,
+  ...shadow.card,
 },
 
 cardTitle: {
-  fontSize: 21,
-  fontWeight: "900",
+  fontSize: 19,
+  lineHeight: 27,
+  fontFamily: fonts.titleSemi,
   color: colors.textMain,
-  marginBottom: 18,
+  marginBottom: 14,
 },
 
 cardDesc: {
   fontSize: 14,
-  lineHeight: 20,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
   color: colors.textSub,
-  marginBottom: 14,
+  marginBottom: 12,
 },
   infoRow: {
   flexDirection: "row",
@@ -413,16 +397,38 @@ cardDesc: {
   paddingVertical: 7,
 },
 
-infoLabel: {
-  fontSize: 15,
-  fontWeight: "800",
+subtitle: {
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
   color: colors.textSub,
+  marginBottom: 2,
 },
 
-infoValue: {
-  fontSize: 16,
-  fontWeight: "900",
+card: {
+  backgroundColor: colors.card,
+  borderRadius: radius.lg,
+  paddingHorizontal: 18,
+  paddingVertical: 18,
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
+},
+
+cardTitle: {
+  fontSize: 19,
+  lineHeight: 27,
+  fontFamily: fonts.titleSemi,
   color: colors.textMain,
+  marginBottom: 14,
+},
+
+cardDesc: {
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  marginBottom: 12,
 },
 
 helpText: {
@@ -438,23 +444,25 @@ divider: {
   marginVertical: 16,
 },
  input: {
-  minHeight: 56,
-  borderRadius: 16,
+  minHeight: 52,
+  borderRadius: radius.md,
   borderWidth: 1,
   borderColor: colors.border,
-  backgroundColor: colors.white,
-  paddingHorizontal: 16,
-  fontSize: 16,
+  backgroundColor: colors.card,
+  paddingHorizontal: 14,
+  fontSize: 15,
+  fontFamily: fonts.medium,
   color: colors.textMain,
   marginTop: 10,
 },
-  button: {
-  minHeight: 56,
-  borderRadius: 18,
+
+button: {
+  minHeight: 52,
+  borderRadius: radius.md,
   backgroundColor: colors.warmBrown,
   alignItems: "center",
   justifyContent: "center",
-  marginTop: 18,
+  marginTop: 16,
 },
 
 buttonDisabled: {
@@ -462,10 +470,11 @@ buttonDisabled: {
 },
 
 buttonText: {
-  fontSize: 17,
-  fontWeight: "900",
+  fontSize: 15,
+  fontFamily: fonts.bold,
   color: colors.white,
 },
+
 loginIdChangeBox: {
   marginTop: 10,
 },

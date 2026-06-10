@@ -13,6 +13,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
+import { colors, radius, shadow } from "../src/theme";
+import ScreenHeader from "../src/components/ScreenHeader";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 export default function CoachingUploadScreen() {
@@ -248,11 +250,7 @@ setTimeout(() => {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>‹</Text>
-      </Pressable>
-
-      <Text style={styles.pageTitle}>영상 업로드</Text>
+      <ScreenHeader title="영상 업로드" />
 
       <Text style={styles.stepTitle}>1. 영상 선택</Text>
 
@@ -379,15 +377,18 @@ function InputLabel({ label }) {
 
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
-    backgroundColor: "#FFFCFA",
-  },
+  flex: 1,
+  backgroundColor: colors.background,
+},
 
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 44,
-    paddingBottom: 34,
-  },
+content: {
+  paddingHorizontal: 16,
+  paddingTop: 24,
+  paddingBottom: 110,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},
 
   backButton: {
   position: "absolute",
@@ -416,23 +417,25 @@ backText: {
 },
 
   stepTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#3A2C27",
-    marginBottom: 12,
-  },
+  fontSize: 16,
+  fontFamily: "PretendardBold",
+  color: colors.textMain,
+  marginTop: 4,
+  marginBottom: 12,
+},
 
-  uploadBox: {
-    minHeight: 220,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#EADFD5",
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-    marginBottom: 26,
-  },
+uploadBox: {
+  minHeight: 220,
+  borderRadius: radius.lg,
+  borderWidth: 1,
+  borderColor: colors.border,
+  backgroundColor: colors.card,
+  alignItems: "center",
+  justifyContent: "center",
+  paddingHorizontal: 16,
+  marginBottom: 26,
+  ...shadow.card,
+},
 
   uploadIcon: {
     fontSize: 46,
@@ -545,14 +548,13 @@ backText: {
   },
 
   submitButton: {
-  height: 56,
+  height: 50,
   borderRadius: 14,
-  backgroundColor: "#4A2F1E",
+  backgroundColor: colors.warmBrown,
   alignItems: "center",
   justifyContent: "center",
   marginTop: 10,
   marginBottom: 30,
-  zIndex: 10,
 },
 
   submitButtonText: {

@@ -19,13 +19,22 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import { useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import {
   getMemberInquiryDetail,
   sendMemberInquiryMessage,
 } from "../../../src/api/memberInquiryDetail";
-import { Stack, router, useLocalSearchParams } from "expo-router";
+import { colors, radius, shadow } from "../../../src/theme";
+import ScreenHeader from "../../../src/components/ScreenHeader";
 
+const fonts = {
+  medium: "PretendardMedium",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  titleSemi: "MaruBuriSemiBold",
+};
 
 function formatDateTime(value) {
   if (!value) return "";
@@ -74,14 +83,13 @@ export default function InquiryDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sending, setSending] = useState(false);
-
   const [room, setRoom] = useState(null);
-  const roomStatusLabel = getRoomStatusLabel(room?.status);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+
   const scrollRef = useRef(null);
- 
+  const roomStatusLabel = getRoomStatusLabel(room?.status);
 
   const loadDetail = useCallback(
     async ({ silent = false } = {}) => {
@@ -108,25 +116,24 @@ export default function InquiryDetailScreen() {
   }, [loadDetail]);
 
   useEffect(() => {
-  const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
-    setKeyboardHeight(e.endCoordinates?.height || 0);
+    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+      setKeyboardHeight(e.endCoordinates?.height || 0);
 
-    setTimeout(() => {
-      scrollRef.current?.scrollToEnd({ animated: false });
-    }, 100);
-  });
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: false });
+      }, 100);
+    });
 
-  const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-    setKeyboardHeight(0);
-  });
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardHeight(0);
+    });
 
-  return () => {
-    showSub.remove();
-    hideSub.remove();
-  };
-}, []);
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
-  
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadDetail({ silent: true });
@@ -141,28 +148,29 @@ export default function InquiryDetailScreen() {
   }, [messages]);
 
   const handleSend = useCallback(async () => {
-  const trimmed = input.trim();
-  if (!trimmed) {
-    Alert.alert("안내", "문의 내용을 입력해주세요.");
-    return;
-  }
+    const trimmed = input.trim();
 
-  try {
-    setSending(true);
+    if (!trimmed) {
+      Alert.alert("안내", "문의 내용을 입력해주세요.");
+      return;
+    }
 
-    await sendMemberInquiryMessage(token, roomId, trimmed);
-    setInput("");
-    await loadDetail({ silent: true });
-    setTimeout(() => {
-  scrollRef.current?.scrollToEnd({ animated: true });
-}, 100);
+    try {
+      setSending(true);
 
-  } catch (error) {
-    Alert.alert("오류", error.message || "메시지 전송에 실패했습니다.");
-  } finally {
-    setSending(false);
-  }
-}, [input, token, roomId, loadDetail]);
+      await sendMemberInquiryMessage(token, roomId, trimmed);
+      setInput("");
+      await loadDetail({ silent: true });
+
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } catch (error) {
+      Alert.alert("오류", error.message || "메시지 전송에 실패했습니다.");
+    } finally {
+      setSending(false);
+    }
+  }, [input, token, roomId, loadDetail]);
 
   if (loading) {
     return (
@@ -174,334 +182,347 @@ export default function InquiryDetailScreen() {
   }
 
   return (
-  <>
-    <Stack.Screen
-  options={{
-    title: "1:1 문의",
-    headerLeft: () => (
-      <Pressable
-        onPress={() => router.replace("/(tabs)/inquiry")}
-        style={{ paddingHorizontal: 8 }}
-      >
-        <Text style={{ fontSize: 24 }}>‹</Text>
-      </Pressable>
-    ),
-    headerRight: () => (
-      <View style={styles.headerStatusBadge}>
-        <Text style={styles.headerStatusBadgeText}>
-          {roomStatusLabel}
-        </Text>
-      </View>
-    ),
-  }}
-/>
-
     <KeyboardAvoidingView
-  style={styles.keyboard}
-  behavior={Platform.OS === "ios" ? "padding" : "height"}
-  keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
->
-  
-  <View style={styles.container}>
-        <View style={styles.headerBlock}>
-          <View style={styles.infoCard}>
-            <Text style={styles.headerSubtitle}>
-              운영시간 외 문의는 관리자가 확인 후 순차적으로 답변드려요.
-            </Text>
+      style={styles.screen}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+    >
+      <View style={styles.content}>
+        <ScreenHeader title="1:1 문의" />
 
-            <Text style={styles.headerMeta}>
-              운영시간: 평일 오전 9시 ~ 오후 6시
-            </Text>
-          </View>
-        </View>
+        <View style={styles.infoCard}>
+          <View style={styles.infoTopRow}>
+            <Text style={styles.infoTitle}>문의 안내</Text>
 
-        <ScrollView
-  ref={scrollRef}
-  style={styles.messageArea}
-  contentContainerStyle={styles.messageContent}
-  refreshControl={
-    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-  }
-  keyboardShouldPersistTaps="handled"
->
-  
-          {sortedMessages.length === 0 ? (
-            <View style={styles.emptyWrap}>
-              <Text style={styles.emptyText}>
-                아직 등록된 메시지가 없습니다.
-              </Text>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusBadgeText}>{roomStatusLabel}</Text>
             </View>
-          ) : (
-            sortedMessages.map((message, index) => {
-              const mine = isMine(message, user);
+          </View>
 
-              return (
+          <Text style={styles.headerSubtitle}>
+            운영시간 외 문의는 관리자가 확인 후 순차적으로 답변드려요.
+          </Text>
+
+          <Text style={styles.headerMeta}>
+            운영시간: 평일 오전 9시 ~ 오후 6시
+          </Text>
+        </View>
+      </View>
+
+      <ScrollView
+        ref={scrollRef}
+        style={styles.messageArea}
+        contentContainerStyle={styles.messageContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        keyboardShouldPersistTaps="handled"
+      >
+        {sortedMessages.length === 0 ? (
+          <View style={styles.emptyWrap}>
+            <Text style={styles.emptyText}>아직 등록된 메시지가 없습니다.</Text>
+          </View>
+        ) : (
+          sortedMessages.map((message, index) => {
+            const mine = isMine(message, user);
+
+            return (
+              <View
+                key={message.id || index}
+                style={[
+                  styles.messageRow,
+                  mine ? styles.messageRowMine : styles.messageRowOther,
+                ]}
+              >
                 <View
-                  key={message.id || index}
                   style={[
-                    styles.messageRow,
-                    mine ? styles.messageRowMine : styles.messageRowOther,
+                    styles.messageBubble,
+                    mine ? styles.messageBubbleMine : styles.messageBubbleOther,
                   ]}
                 >
-                  <View
+                  {!mine ? (
+                    <Text style={styles.senderText}>
+                      {message.senderName || "상대방"}
+                    </Text>
+                  ) : null}
+
+                  <Text
                     style={[
-                      styles.messageBubble,
-                      mine
-                        ? styles.messageBubbleMine
-                        : styles.messageBubbleOther,
+                      styles.messageText,
+                      mine && styles.messageTextMine,
                     ]}
                   >
-                    {!mine ? (
-                      <Text style={styles.senderText}>
-                        {message.senderName || "상대방"}
-                      </Text>
-                    ) : null}
+                    {message.message || ""}
+                  </Text>
 
-                    <Text
-                      style={[
-                        styles.messageText,
-                        mine && styles.messageTextMine,
-                      ]}
-                    >
-                      {message.message || ""}
-                    </Text>
-
-                    <Text
-                      style={[
-                        styles.messageTime,
-                        mine && styles.messageTimeMine,
-                      ]}
-                    >
-                      {formatDateTime(message.createdAt)}
-                    </Text>
-                  </View>
+                  <Text
+                    style={[
+                      styles.messageTime,
+                      mine && styles.messageTimeMine,
+                    ]}
+                  >
+                    {formatDateTime(message.createdAt)}
+                  </Text>
                 </View>
-              );
-            })
-          )}
-        </ScrollView> 
+              </View>
+            );
+          })
+        )}
+      </ScrollView>
 
-        <View
-  style={[
-    styles.inputBar,
-    {
-      bottom: keyboardHeight > 0 ? keyboardHeight - 220 : 0,
-    },
-  ]}
->
-          <TextInput
-            style={styles.input}
-            placeholder="문의 내용을 입력하세요"
-            placeholderTextColor="#8a7f72"
-            value={input}
-            onChangeText={setInput}
-            multiline
-            maxLength={1000}
-            textAlignVertical="top"
-          />
+      <View
+        style={[
+          styles.inputBar,
+          {
+            bottom: keyboardHeight > 0 ? Math.max(keyboardHeight - 220, 0) : 0,
+          },
+        ]}
+      >
+        <TextInput
+          style={styles.input}
+          placeholder="문의 내용을 입력하세요"
+          placeholderTextColor={colors.textSub}
+          value={input}
+          onChangeText={setInput}
+          multiline
+          maxLength={1000}
+          textAlignVertical="top"
+        />
 
-          <Pressable
-            style={[styles.sendButton, sending && styles.sendButtonDisabled]}
-            onPress={handleSend}
-            disabled={sending}
-          >
-            <Text style={styles.sendButtonText}>
-              {sending ? "전송중" : "전송"}
-            </Text>
-          </Pressable>
-        </View>
+        <Pressable
+          style={[styles.sendButton, sending && styles.sendButtonDisabled]}
+          onPress={handleSend}
+          disabled={sending}
+        >
+          <Text style={styles.sendButtonText}>
+            {sending ? "전송중" : "전송"}
+          </Text>
+        </Pressable>
       </View>
     </KeyboardAvoidingView>
-  </>
-);
+  );
 }
 
 const styles = StyleSheet.create({
-  keyboard: {
-  flex: 1,
-  backgroundColor: "#f6f3ee",
-},
-container: {
-  flex: 1,
-  backgroundColor: "#f6f3ee",
-},
-center: {
-  flex: 1,
-  backgroundColor: "#f6f3ee",
-  alignItems: "center",
-  justifyContent: "center",
-},
-loadingText: {
-  marginTop: 10,
-  fontSize: 14,
-  color: "#6b6257",
-},
-infoCard: {
-  backgroundColor: "#fffdf9",
-  borderRadius: 16,
-  paddingHorizontal: 16,
-  paddingVertical: 14,
-  borderWidth: 1,
-  borderColor: "#ece4d8",
-},
-  headerBlock: {
-  paddingHorizontal: 20,
-  paddingTop: 18,
-  paddingBottom: 8,
-},
-headerRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginBottom: 12,
-},
-headerTitle: {
-  fontSize: 30,
-  fontWeight: "900",
-  color: "#2f2a24",
-},
-headerSubtitle: {
-  fontSize: 14,
-  lineHeight: 21,
-  color: "#6b6257",
-  marginBottom: 6,
-},
-headerMeta: {
-  fontSize: 13,
-  color: "#8a7f72",
-},
-statusBadge: {
-  alignSelf: "flex-start",
-  paddingHorizontal: 10,
-  paddingVertical: 5,
-  borderRadius: 999,
-  backgroundColor: "#f3ecdf",
-},
-statusBadgeText: {
-  fontSize: 12,
-  fontWeight: "800",
-  color: "#8c6330",
-},
-messageArea: {
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+
+  center: {
+    flex: 1,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
+
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 8,
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+  },
+
+  infoCard: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.card,
+  },
+
+  infoTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+
+  infoTitle: {
+    fontSize: 16,
+    lineHeight: 23,
+    fontFamily: fonts.titleSemi,
+    color: colors.textMain,
+  },
+
+  headerSubtitle: {
+    fontSize: 15,
+    lineHeight: 23,
+    fontFamily: fonts.medium,
+    color: colors.textMain,
+    marginBottom: 6,
+  },
+
+  headerMeta: {
+    fontSize: 13,
+    lineHeight: 20,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
+
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "#F8F1EA",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+
+  statusBadgeText: {
+    fontSize: 12,
+    fontFamily: fonts.bold,
+    color: colors.warmBrown,
+  },
+
+  messageArea: {
     flex: 1,
   },
- messageContent: {
-  paddingHorizontal: 20,
-  paddingTop: 14,
-  paddingBottom: 170,
-  gap: 12,
-},
+
+  messageContent: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 170,
+    gap: 12,
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+  },
+
+  emptyWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 40,
+  },
+
   emptyText: {
-  textAlign: "center",
-  fontSize: 14,
-  color: "#6b6257",
-},
+    textAlign: "center",
+    fontSize: 14,
+    lineHeight: 22,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
+
   messageRow: {
     flexDirection: "row",
   },
+
   messageRowMine: {
     justifyContent: "flex-end",
   },
+
   messageRowOther: {
     justifyContent: "flex-start",
   },
+
   messageBubble: {
     maxWidth: "78%",
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
+
   messageBubbleMine: {
-  backgroundColor: "#9a6d35",
-  borderBottomRightRadius: 6,
-},
-messageBubbleOther: {
-  backgroundColor: "#fffdf9",
-  borderBottomLeftRadius: 6,
-  borderWidth: 1,
-  borderColor: "#ece4d8",
-},
+    backgroundColor: colors.warmBrown,
+    borderBottomRightRadius: 6,
+  },
+
+  messageBubbleOther: {
+    backgroundColor: colors.card,
+    borderBottomLeftRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.card,
+  },
+
   senderText: {
-  fontSize: 12,
-  fontWeight: "700",
-  color: "#6b6257",
-  marginBottom: 6,
-},
-messageText: {
-  fontSize: 15,
-  lineHeight: 22,
-  color: "#2f2a24",
-},
+    fontSize: 12,
+    fontFamily: fonts.semiBold,
+    color: colors.textSub,
+    marginBottom: 6,
+  },
+
+  messageText: {
+    fontSize: 15,
+    lineHeight: 23,
+    fontFamily: fonts.medium,
+    color: colors.textMain,
+  },
+
   messageTextMine: {
-  color: "#fffdf9",
-},
-messageTimeMine: {
-  color: "#f3ecdf",
-},
-messageTime: {
-  marginTop: 6,
-  fontSize: 11,
-  color: "#8a7f72",
-},
-    inputBar: {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  flexDirection: "row",
-  alignItems: "flex-end",
-  paddingHorizontal: 14,
-  paddingTop: 10,
-  paddingBottom: 10,
-  backgroundColor: "#f6f3ee",
-  borderTopWidth: 1,
-  borderTopColor: "#ece4d8",
-  gap: 10,
-},
-input: {
-  flex: 1,
-  minHeight: 48,
-  maxHeight: 120,
-  backgroundColor: "#fffdf9",
-  borderRadius: 16,
-  borderWidth: 1,
-  borderColor: "#ece4d8",
-  paddingHorizontal: 14,
-  paddingVertical: 12,
-  fontSize: 14,
-  color: "#2f2a24",
-},
-sendButton: {
-  height: 48,
-  minWidth: 76,
-  paddingHorizontal: 18,
-  borderRadius: 16,
-  backgroundColor: "#8c6330",
-  alignItems: "center",
-  justifyContent: "center",
-},
-sendButtonText: {
-  color: "#fffdf9",
-  fontSize: 14,
-  fontWeight: "800",
-},
+    color: colors.white,
+  },
+
+  messageTime: {
+    marginTop: 6,
+    fontSize: 11,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
+
+  messageTimeMine: {
+    color: "#F3ECE4",
+  },
+
+  inputBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 10,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    gap: 10,
+  },
+
+  input: {
+    flex: 1,
+    minHeight: 52,
+    maxHeight: 120,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    fontSize: 15,
+    lineHeight: 22,
+    fontFamily: fonts.medium,
+    color: colors.textMain,
+  },
+
+  sendButton: {
+    height: 52,
+    minWidth: 72,
+    paddingHorizontal: 18,
+    borderRadius: 16,
+    backgroundColor: colors.warmBrown,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  sendButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontFamily: fonts.bold,
+  },
+
   sendButtonDisabled: {
     opacity: 0.6,
   },
-  emptyWrap: {
-  flex: 1,
-  alignItems: "center",
-  justifyContent: "center",
-  paddingTop: 40,
-},
-headerStatusBadge: {
-  paddingHorizontal: 8,
-  paddingVertical: 4,
-  borderRadius: 999,
-  backgroundColor: "#f3ecdf",
-},
-headerStatusBadgeText: {
-  fontSize: 11,
-  fontWeight: "800",
-  color: "#8c6330",
-},
 });
