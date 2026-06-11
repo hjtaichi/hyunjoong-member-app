@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import {
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,7 +20,7 @@ import { movementForms } from "../../../src/data/movementDictionary";
   bold: "PretendardBold",
   title: "MaruBuriBold",
   titleSemi: "MaruBuriSemiBold",
-  hanja: "ZhaoCaiKaiShu",
+  hanja: "ZhaoKai",
 };
 
 const parseHanjaMeaning = (text = "") => {
@@ -41,6 +42,8 @@ const parseHanjaMeaning = (text = "") => {
 
 const sectionIcon = require("../../../assets/images/movement-section-icon.png");
 const cardBrush = require("../../../assets/images/movement-card-brush.png");
+const meaningBottomBrush = require("../../../assets/images/meaning-bottom-brush.png");
+const descriptionBottomBrush = require("../../../assets/images/description-bottom-brush.png");
 
 function SectionTitle({ title }) {
   return (
@@ -104,10 +107,17 @@ const movementBg = require("../../../assets/images/movement-bg-circle.png");
     <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>‹</Text>
-        </TouchableOpacity>
-
+        <Pressable
+  style={styles.backButton}
+  onPress={() => router.back()}
+  hitSlop={12}
+>
+  <Image
+    source={require("../../../assets/images/back.png")}
+    style={styles.backIcon}
+    resizeMode="contain"
+  />
+</Pressable>
         <Text style={styles.headerTitle}>
   {String(movement.stepLabel || movement.order).padStart(2, "0")} / {form.title.includes("29식") ? "29" : form.totalCount}
 </Text>
@@ -125,9 +135,6 @@ const movementBg = require("../../../assets/images/movement-bg-circle.png");
       <Text style={styles.heroHanja}>[{movement.hanja}]</Text>
     ) : null}
 
-    {movement.meaning ? (
-      <Text style={styles.heroShortDesc}>{movement.meaning}</Text>
-    ) : null}
   </View>
 
   <View style={styles.heroImageArea}>
@@ -154,33 +161,66 @@ const movementBg = require("../../../assets/images/movement-bg-circle.png");
 </View>
 
 <View style={styles.infoCard}>
-  <Image source={cardBrush} style={styles.cardBrush} resizeMode="contain" />
-  <SectionTitle title="글자별 풀이" />
+  <Image
+    source={meaningBottomBrush}
+    style={styles.meaningBottomBrush}
+    resizeMode="contain"
+  />
+
+  {movement.meaning ? (
+    <View style={styles.meaningBlockTop}>
+      <Text style={styles.meaningTitle}>{movement.name}의 뜻</Text>
+      <Text style={styles.meaningUnderHanja}>{movement.meaning}</Text>
+    </View>
+  ) : null}
+
+  <View style={styles.meaningDividerRow}>
+    <View style={styles.meaningDivider} />
+    <Image source={sectionIcon} style={styles.meaningCenterIcon} resizeMode="contain" />
+    <View style={styles.meaningDivider} />
+  </View>
 
   <View style={styles.hanjaHorizontalWrap}>
-  {parseHanjaMeaning(movement.hanjaMeaning).map((item, index) => (
-    <View key={`${item.char}-${index}`} style={styles.hanjaSquareCard}>
-      <Image source={cardBrush} style={styles.hanjaBrush} resizeMode="contain" />
-      <Text style={styles.hanjaSquareChar}>{item.char}</Text>
-      <Text style={styles.hanjaSquareText}>
-        {item.meaning} {item.sound}
-      </Text>
-    </View>
-  ))}
-</View>
-</View>
-
-<View style={styles.infoCard}>
-  <SectionTitle title="투로명 뜻" />
-  <Text style={styles.cardText}>{movement.meaning}</Text>
+    {parseHanjaMeaning(movement.hanjaMeaning).map((item, index) => (
+      <View key={`${item.char}-${index}`} style={styles.hanjaSquareCard}>
+        <Image source={cardBrush} style={styles.hanjaBrush} resizeMode="contain" />
+        <Text style={styles.hanjaSquareChar}>{item.char}</Text>
+        <Text style={styles.hanjaSquareText}>
+          {item.meaning} {item.sound}
+        </Text>
+      </View>
+    ))}
+  </View>
 </View>
 
 <View style={styles.infoCard}>
+  <Image
+    source={descriptionBottomBrush}
+    style={styles.descriptionBottomBrush}
+    resizeMode="contain"
+  />
+
   <SectionTitle title="동작 설명" />
   <Text style={styles.cardText}>{movement.description}</Text>
 </View>
 
-      
+ <View style={styles.navRow}>
+  <Pressable
+    style={[styles.navPillButton, !prevMovement && styles.navPillDisabled]}
+    onPress={() => goMovement(prevMovement)}
+    disabled={!prevMovement}
+  >
+    <Text style={styles.navPillText}>이전 동작</Text>
+  </Pressable>
+
+  <Pressable
+    style={[styles.navPillButton, !nextMovement && styles.navPillDisabled]}
+    onPress={() => goMovement(nextMovement)}
+    disabled={!nextMovement}
+  >
+    <Text style={styles.navPillText}>다음 동작</Text>
+  </Pressable>
+</View>     
     </ScrollView>
     {movement.image ? (
   <Modal visible={imageModalVisible} transparent animationType="fade">
@@ -214,11 +254,12 @@ const movementBg = require("../../../assets/images/movement-bg-circle.png");
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-  paddingHorizontal: 22,
+  flex: 1,
+  backgroundColor: colors.background,
+},
+
+content: {
+  paddingHorizontal: 14,
   paddingTop: 20,
   paddingBottom: 110,
   width: "100%",
@@ -233,16 +274,26 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: {
-    height: 52,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+  height: 52,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  zIndex: 50,
+  elevation: 50,
+},
   backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-  },
+  width: 44,
+  height: 44,
+  alignItems: "flex-start",
+  justifyContent: "center",
+  zIndex: 20,
+},
+
+backIcon: {
+  width: 18,
+  height: 18,
+  opacity: 0.78,
+},
   backText: {
     fontSize: 36,
     color: colors.warmBrown,
@@ -560,10 +611,11 @@ titleArrow: {
 },
 heroCard: {
   position: "relative",
-  minHeight: 320,
-  marginTop: 20,
-  marginBottom: 10,
+  minHeight: 300,
+  marginTop: 10,
+  marginBottom: 1,
   overflow: "visible",
+  borderBottomWidth: 0,
 },
 
 heroTextArea: {
@@ -573,32 +625,36 @@ heroTextArea: {
 },
 
 heroName: {
-  fontSize: 46,
+  fontSize: 40,
+  marginTop: 40,
+  marginLeft: 10,
   fontFamily: fonts.title,
   color: colors.textMain,
-  letterSpacing: -1.8,
+  letterSpacing: -1.2,
 },
 
 heroHanja: {
-  marginTop: 12,
-  fontSize: 22,
+  marginTop: 5,
+  fontSize: 24,
+  marginLeft: 15,
   fontFamily: fonts.hanja,
   color: colors.warmBrown,
 },
 
+
 heroShortDesc: {
-  marginTop: 22,
+  marginTop: 16,
   width: "100%",
-  fontSize: 16,
-  lineHeight: 27,
-  fontFamily: fonts.medium,
+  fontSize: 14,
+  lineHeight: 23,
+  fontFamily: fonts.semiBold,
   color: colors.textMain,
 },
 
 heroImageArea: {
   position: "absolute",
-  left: -60,
-  right: -60,
+  left: 0,
+  right: 0,
   bottom: 0,
   height: 420,
   alignItems: "center",
@@ -607,20 +663,19 @@ heroImageArea: {
 
 heroBgImage: {
   position: "absolute",
-  width: "100%",
+  width: "110%",
   height: "100%",
-  opacity: 0.85,
-  bottom: -30,
-  left: "50%",
-  transform: [{ translateX: -300 }],
+  opacity: 0.95,
+  bottom: -36,
+  alignSelf: "center",
 },
 
 heroPersonTouch: {
   position: "absolute",
-  right: 88,
-  bottom: 20,
-  width: 170,
-  height: 270,
+  right: 44,
+  bottom: 45,
+  width: 175,
+  height: 275,
   opacity: 0.9,
   alignItems: "center",
   justifyContent: "flex-end",
@@ -668,16 +723,15 @@ cardTitle: {
 },
 
 infoCard: {
-  marginTop: 10,
-  paddingHorizontal: 20,
-  paddingVertical: 24,
-  borderRadius: 26,
-  backgroundColor: "rgba(255, 253, 249, 0.96)",
+  marginTop: 8,
+  paddingHorizontal: 16,
+  paddingVertical: 20,
+  borderRadius: 22,
+  backgroundColor: colors.card,
   borderWidth: 1,
-  borderColor: "#E2C9A6",
+  borderColor: colors.border,
   overflow: "hidden",
 },
-
 sectionTitleRow: {
   flexDirection: "row",
   alignItems: "center",
@@ -685,15 +739,15 @@ sectionTitleRow: {
 },
 
 sectionTitle: {
-  fontSize: 28,
+  fontSize: 22,
   fontFamily: fonts.title,
   color: colors.textMain,
-  letterSpacing: -0.5,
+  letterSpacing: -0.4,
 },
 
 cardText: {
-  fontSize: 17,
-  lineHeight: 32,
+  fontSize: 16,
+  lineHeight: 25,
   fontFamily: fonts.medium,
   color: colors.textMain,
 },
@@ -738,8 +792,8 @@ hanjaExplainTitle: {
 },
 
 sectionIcon: {
-  width: 34,
-  height: 34,
+  width: 28,
+  height: 28,
   marginRight: 10,
 },
 
@@ -751,46 +805,129 @@ hanjaHorizontalWrap: {
 
 hanjaSquareCard: {
   flex: 1,
-  minHeight: 124,
-  borderRadius: 17,
+  minHeight: 78,
+  borderRadius: 14,
   borderWidth: 1,
-  borderColor: "#E2C9A6",
-  backgroundColor: "rgba(255,255,255,0.76)",
+  borderColor: colors.border,
+  backgroundColor: "#FFFDF9",
   alignItems: "center",
   justifyContent: "center",
-  paddingVertical: 14,
-  paddingHorizontal: 6,
+  paddingVertical: 10,
+  paddingHorizontal: 3,
   overflow: "hidden",
 },
+
 hanjaBrush: {
   position: "absolute",
-  top: 12,
-  width: 72,
-  height: 72,
-  opacity: 0.42,
+  top: 3,
+  width: 64,
+  height: 64,
+  opacity: 0.72,
 },
+
 hanjaSquareChar: {
-  fontSize: 42,
+  fontSize: 40,
   fontFamily: fonts.hanja,
   color: colors.textMain,
-  marginBottom: 8,
+  marginBottom: 5,
   zIndex: 2,
 },
 
 hanjaSquareText: {
-  fontSize: 14,
-  lineHeight: 20,
+  fontSize: 13,
+  lineHeight: 17,
   fontFamily: fonts.semiBold,
   color: colors.textMain,
   textAlign: "center",
   zIndex: 2,
 },
+
 cardBrush: {
   position: "absolute",
-  right: -34,
-  bottom: -34,
+  right: -40,
+  bottom: -42,
   width: 150,
   height: 150,
+  opacity: 0.18,
+},
+meaningBlockTop: {
+  alignItems: "center",
+  paddingTop: 0,
+  marginBottom: 12,
+},
+
+meaningTitle: {
+  fontSize: 22,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  marginBottom: 8,
+},
+
+meaningUnderHanja: {
+  fontSize: 17,
+  lineHeight: 23,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+  textAlign: "center",
+},
+
+meaningDividerRow: {
+  width: "100%",
+  flexDirection: "row",
+  alignItems: "center",
+  marginBottom: 12,
+},
+
+meaningDivider: {
+  flex: 1,
+  height: 1,
+  backgroundColor: colors.border,
+},
+
+meaningCenterIcon: {
+  width: 33,
+  height: 33,
+  marginHorizontal: 12,
+},
+navRow: {
+  marginTop: 14,
+  flexDirection: "row",
+  gap: 10,
+},
+
+navPillButton: {
+  flex: 1,
+  height: 46,
+  borderRadius: 16,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+navPillDisabled: {
+  opacity: 0.35,
+},
+
+navPillText: {
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: "#FFFFFF",
+},
+meaningBottomBrush: {
+  position: "absolute",
+  right: -18,
+  bottom: -1,
+  width: 170,
+  height: 92,
+  opacity: 0.8,
+},
+
+descriptionBottomBrush: {
+  position: "absolute",
+  right: -22,
+  bottom: -45,
+  width: 155,
+  height: 155,
   opacity: 0.7,
 },
 });

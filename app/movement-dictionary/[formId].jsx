@@ -9,6 +9,7 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { colors } from "../../src/theme/colors";
 import { movementForms } from "../../src/data/movementDictionary";
+import ScreenHeader from "../../src/components/ScreenHeader";
 
 export default function MovementFormDetailScreen() {
   const { formId } = useLocalSearchParams();
@@ -32,18 +33,9 @@ export default function MovementFormDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>‹</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>{form.title}</Text>
-
-        <View style={styles.headerRight} />
-      </View>
+      <ScreenHeader title={form.title} />
 
       <View style={styles.introCard}>
-        <Text style={styles.introTitle}>{form.title}</Text>
         <Text style={styles.introDesc}>{form.description}</Text>
 
         <View style={styles.countRow}>
@@ -109,12 +101,6 @@ export default function MovementFormDetailScreen() {
         </View>
       )}
 
-      <TouchableOpacity style={styles.slideButton} activeOpacity={0.86}>
-        <Text style={styles.slideIcon}>▶</Text>
-        <Text style={styles.slideButtonText}>
-          {form.title} 전체 흐름 보기
-        </Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -135,30 +121,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
-  header: {
-    height: 52,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-  },
-  backText: {
-    fontSize: 36,
-    color: colors.warmBrown,
-    lineHeight: 38,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: colors.textMain,
-  },
-  headerRight: {
-    width: 40,
-  },
+  
   introCard: {
     marginTop: 8,
     padding: 20,
@@ -167,12 +130,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  introTitle: {
-    fontSize: 23,
-    fontWeight: "900",
-    color: colors.textMain,
-    marginBottom: 10,
-  },
+  
   introDesc: {
     fontSize: 15,
     lineHeight: 23,
@@ -260,8 +218,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   numberText: {
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 15,
+    fontWeight: "800",
     color: "#FFFFFF",
   },
   

@@ -936,24 +936,10 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
         return (
           <Pressable
             key={dateString}
-            style={[
-              styles.dayCell,
-              selected && styles.dayCellSelected,
-              todayFlag && styles.dayCellToday,
-            ]}
+            style={styles.dayCell}
             onPress={() => handlePressDate(dateObj)}
           >
-            <Text
-              style={[
-                styles.dayNumber,
-                (isSunday || isClosedHoliday) && styles.dayNumberSunday,
-                isOpenEvent && styles.dayNumberEvent,
-                selected && styles.dayNumberSelected,
-              ]}
-            >
-              {dateObj.getDate()}
-            </Text>
-
+            
             {dayInfo?.holidayName ? (
               <View
                 style={[
@@ -965,15 +951,35 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
               />
             ) : null}
 
-            {dayInfo?.attendanceStatus === "present" ? (
-              <View style={styles.dayStatusDotPresent} />
-            ) : null}
-
-            {dayInfo?.attendanceStatus === "reserved" &&
-            dayInfo?.isHoliday !== true &&
-            dayInfo?.hasRecurringException !== true ? (
-              <View style={styles.dayStatusDotReserved} />
-            ) : null}
+            <View
+  style={[
+    styles.dayInner,
+    selected && styles.dayInnerSelected,
+    todayFlag && styles.dayInnerToday,
+  ]}
+>
+  {dayInfo?.attendanceStatus === "present" ? (
+    <View style={styles.dayStampPresent}>
+      <Text style={styles.dayStampTextPresent}>{dateObj.getDate()}</Text>
+    </View>
+  ) : dayInfo?.attendanceStatus === "reserved" &&
+    dayInfo?.isHoliday !== true &&
+    dayInfo?.hasRecurringException !== true ? (
+    <View style={styles.dayStampReserved}>
+      <Text style={styles.dayStampTextReserved}>{dateObj.getDate()}</Text>
+    </View>
+  ) : (
+    <Text
+      style={[
+        styles.dayNumber,
+        (isSunday || isClosedHoliday) && styles.dayNumberSunday,
+        isOpenEvent && styles.dayNumberEvent,
+      ]}
+    >
+      {dateObj.getDate()}
+    </Text>
+  )}
+</View>
           </Pressable>
         );
       })}
@@ -1501,11 +1507,27 @@ dayCell: {
   flex: 1,
   aspectRatio: 1,
   marginHorizontal: 3,
-  borderRadius: 999,
-  backgroundColor: "transparent",
   alignItems: "center",
   justifyContent: "center",
   position: "relative",
+},
+
+dayInner: {
+  width: 43,
+  height: 43,
+  borderRadius: 19,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+dayInnerSelected: {
+  borderWidth: 1,
+  borderColor: "#BCA99F",
+},
+
+dayInnerToday: {
+  borderWidth: 1,
+  borderColor: "#D8CFC4",
 },
 center: {
     flex: 1,
@@ -1537,14 +1559,6 @@ weekHeaderText: {
   weekHeaderTextSunday: {
     color: "#C45A2A",
   },
-dayCellSelected: {
-  backgroundColor: "#A78D83",
-},
-
-dayCellToday: {
-  borderWidth: 1,
-  borderColor: "#D8CFC4",
-},
 
 dayNumber: {
   fontSize: 15,
@@ -1553,8 +1567,8 @@ dayNumber: {
 },
 
 dayNumberSelected: {
-  color: "#FFFFFF",
-  fontWeight: "700",
+  color: "#6B4F46",
+  fontFamily: fonts.bold,
 },
 
   dayNumberSunday: {
@@ -1890,23 +1904,7 @@ scheduleCardDone: {
   scheduleStatusChipTextDisabled: {
     color: "#7D746D",
   },
-  dayStatusDotPresent: {
-  position: "absolute",
-  bottom: 2,
-  width: 4,
-  height: 4,
-  borderRadius: 999,
-  backgroundColor: "#6B4F46",
-},
-
-dayStatusDotReserved: {
-  position: "absolute",
-  bottom: 2,
-  width: 4,
-  height: 4,
-  borderRadius: 999,
-  backgroundColor: "#D8BC8A",
-},
+  
 weekListCard: {
   backgroundColor: colors.card,
   borderWidth: 1,
@@ -2013,7 +2011,7 @@ recurringInfoLabel: {
 
 recurringInfoText: {
   flex: 1,
-  fontSize: 14,
+  fontSize: 13,
   fontFamily: fonts.semiBold,
   color: colors.textSub,
 },
@@ -2030,5 +2028,34 @@ recurringSettingIcon: {
   width: 18,
   height: 18,
   opacity: 0.75,
+},
+dayStampPresent: {
+  width: 34,
+  height: 34,
+  borderRadius: 17,
+  backgroundColor: colors.present,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+dayStampReserved: {
+  width: 34,
+  height: 34,
+  borderRadius: 17,
+  backgroundColor: colors.reserved,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+dayStampTextPresent: {
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.white,
+},
+
+dayStampTextReserved: {
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
 },
 });

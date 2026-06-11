@@ -133,7 +133,7 @@ function handleSelectHopeDate(date) {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <ScreenHeader title="지인 체험 신청" />
+      <ScreenHeader title="지인 체험 추천" />
 
       <View style={styles.hero}>
   <View style={styles.heroTextArea}>

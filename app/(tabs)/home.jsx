@@ -1304,21 +1304,11 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
   ]}
 >
   {isYudanja ? (
-  <>
-    <Image
-      source={yudanjaProfileBg}
-      style={[styles.todayYudanjaBgImage, { pointerEvents: "none" }]}
-      resizeMode="cover"
-    />
-
-    <View
-      style={[styles.yudanjaGoldBorderOuter, { pointerEvents: "none" }]}
-    />
-
-    <View
-      style={[styles.yudanjaGoldBorderInner, { pointerEvents: "none" }]}
-    />
-  </>
+  <Image
+    source={yudanjaProfileBg}
+    style={[styles.todayYudanjaBgImage, { pointerEvents: "none" }]}
+    resizeMode="stretch"
+  />
 ) : null}
 
   <View style={styles.todayTrainingHeader}>
@@ -1835,18 +1825,20 @@ homeName: {
 
 
   homeBadgeText: {
-  fontSize: 11,
+  fontSize: 12,
   fontFamily: fonts.bold,
   color: colors.warmBrown,
 },
 
-  homeBadgeYudanja: {
-    backgroundColor: colors.warmBrown,
-  },
+homeBadgeYudanja: {
+  backgroundColor: "#6A4B3F",
+  borderWidth: 1,
+  borderColor: "#D8B06A",
+},
 
-  homeBadgeTextYudanja: {
-    color: colors.bronzeGold,
-  },
+homeBadgeTextYudanja: {
+  color: "#FFF6E4",
+},
 
  todayTrainingCard: {
   marginTop: isWeb ? -18 : -28,
@@ -2609,17 +2601,8 @@ homeNoticeDot: {
   backgroundColor: "#D9534F",
 },
 todayTrainingCardYudanja: {
-  borderWidth: 1,
-  borderColor: "rgba(214, 168, 78, 0.75)",
-  backgroundColor: "#FFFDF7",
-  shadowColor: "#D7A63D",
-  shadowOpacity: 0.12,
-  shadowRadius: 14,
-  shadowOffset: {
-    width: 0,
-    height: 5,
-  },
-  elevation: 3,
+  borderWidth: 0,
+  backgroundColor: "transparent",
 },
 
 todayTrainingStepYudanja: {
@@ -2717,21 +2700,7 @@ homeYudanjaEmblemFrame: {
   top: isWeb ? -14 : -20,
   left: isWeb ? -16 : -20,
 },
-yudanjaGoldBorderOuter: {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 0,
-  bottom: 0,
-  borderRadius: isWeb ? 20 : 22,
-  borderWidth: 1,
-  borderColor: "rgba(214, 168, 78, 0.42)",
-  zIndex: 2,
-},
 
-yudanjaGoldBorderInner: {
-  display: "none",
-},
 
 yudanjaSoftLight: {
   position: "absolute",
@@ -2745,12 +2714,13 @@ yudanjaSoftLight: {
 },
 todayYudanjaBgImage: {
   position: "absolute",
-  right: -35,
-  bottom: -28,
-  width: 180,
-  height: 130,
-  opacity: 0.08,
-  zIndex: 0,
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0,
+  width: "100%",
+  height: "100%",
+  opacity: 0.9,
 },
 homeAttendanceSummary: {
   marginTop: 8,

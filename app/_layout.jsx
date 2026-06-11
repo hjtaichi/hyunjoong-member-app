@@ -190,7 +190,7 @@ const [fontsLoaded] = useFonts({
 
   SimKyungha: require("../assets/fonts/SimKyungha.ttf"),
   KyoboHandwriting2025lyb: require("../assets/fonts/KyoboHandwriting2025lyb.ttf"),
-  ZhaoCaiKaiShu: require("../assets/fonts/ZhaoCaiKaiShu.ttf"),
+  ZhaoKai: require("../assets/fonts/ZhaoCaiKaiShu.otf"),
 });
   useEffect(() => {
     if (fontsLoaded) {

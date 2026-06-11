@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +14,23 @@ import { colors } from "../../src/theme/colors";
 import { movementForms } from "../../src/data/movementDictionary";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { getMemberTaegukwon } from "../../src/api/memberTaegukwon";
+import ScreenHeader from "../../src/components/ScreenHeader";
+const fonts = {
+  title: "MaruBuriBold",
+  semiBold: "PretendardSemiBold",
+  medium: "PretendardMedium",
+  hanja: "ZhaoKai",
+};
+const formIcons = {
+  "hyunjung-29": require("../../assets/images/taiji.png"),
+  "fan-29": require("../../assets/images/fan.png"),
+  "sword-52": require("../../assets/images/sword.png"),
+  "daega-79": require("../../assets/images/taiji1.png"),
+  "single-sword-24": require("../../assets/images/single-sword.png"),
+  "daga-2-62": require("../../assets/images/taiji2.png"),
+};
+const lockIcon = require("../../assets/images/menu-lock.png");
+const cardBrush = require("../../assets/images/movement-card-brush.png");
 
 export default function MovementDictionaryHomeScreen() {
   const { token } = useAuth();
@@ -50,22 +68,16 @@ export default function MovementDictionaryHomeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>‹</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>동작명 사전</Text>
-
-        <View style={styles.headerRight} />
-      </View>
+      <ScreenHeader title="동작명 사전" />
 
       <View style={styles.hero}>
-        <Text style={styles.heroTitle}>투로명이 궁금해요?</Text>
-        <Text style={styles.heroDesc}>
-          수련 중 들은 동작 이름과 뜻을 그림, 설명, 포인트와 함께 확인해보세요.
-        </Text>
-      </View>
+  <Image source={cardBrush} style={styles.heroBrush} resizeMode="contain" />
+
+  <Text style={styles.heroTitle}>투로명이 궁금해요?</Text>
+  <Text style={styles.heroDesc}>
+    수련 중 들은 동작 이름과 뜻을 그림, 설명, 포인트와 함께 확인해보세요.
+  </Text>
+</View>
 
       <View style={styles.searchBox}>
         <Text style={styles.searchIcon}>⌕</Text>
@@ -107,10 +119,24 @@ export default function MovementDictionaryHomeScreen() {
             }}
           >
             <View style={[styles.thumbCircle, isLocked && styles.thumbCircleLocked]}>
-              <Text style={[styles.thumbText, isLocked && styles.thumbTextLocked]}>
-                {isLocked ? "🔒" : "太"}
-              </Text>
-            </View>
+  {!isLocked ? (
+    <Image source={cardBrush} style={styles.thumbBrush} resizeMode="contain" />
+  ) : null}
+
+{isLocked ? (
+  <Image
+    source={lockIcon}
+    style={styles.thumbLockImage}
+    resizeMode="contain"
+  />
+) : (
+  <Image
+    source={formIcons[form.id] || formIcons["hyunjung-29"]}
+    style={styles.thumbIconImage}
+    resizeMode="contain"
+  />
+)}
+</View>
 
             <View style={styles.formTextWrap}>
               <View style={styles.formTitleRow}>
@@ -118,11 +144,23 @@ export default function MovementDictionaryHomeScreen() {
                   {form.title}
                 </Text>
 
-                <View style={[styles.badge, isLocked && styles.lockBadge]}>
-                  <Text style={[styles.badgeText, isLocked && styles.lockBadgeText]}>
-                    {isLocked ? "잠금" : form.badge}
-                  </Text>
-                </View>
+                <View
+  style={[
+    styles.badge,
+    form.badge === "일부 수록" && styles.partialBadge,
+    isLocked && styles.lockBadge,
+  ]}
+>
+  <Text
+    style={[
+      styles.badgeText,
+      form.badge === "일부 수록" && styles.partialBadgeText,
+      isLocked && styles.lockBadgeText,
+    ]}
+  >
+    {isLocked ? "잠금" : form.badge}
+  </Text>
+</View>
               </View>
 
               <Text style={[styles.formDesc, isLocked && styles.formDescLocked]}>
@@ -131,7 +169,11 @@ export default function MovementDictionaryHomeScreen() {
             </View>
 
             <Text style={[styles.arrow, isLocked && styles.arrowLocked]}>
-              {isLocked ? "🔒" : "〉"}
+              {isLocked ? (
+  <Image source={lockIcon} style={styles.arrowLockImage} resizeMode="contain" />
+) : (
+  <Text style={styles.arrow}>〉</Text>
+)}
             </Text>
           </TouchableOpacity>
         );
@@ -156,144 +198,150 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  header: {
-    height: 52,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-  },
-  backText: {
-    fontSize: 36,
-    color: colors.warmBrown,
-    lineHeight: 38,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: colors.textMain,
-  },
-  headerRight: {
-    width: 40,
-  },
-  hero: {
-    marginTop: 8,
-    padding: 22,
-    borderRadius: 22,
-    backgroundColor: "#FFF8EF",
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
+  paddingHorizontal: 16,
+  paddingTop: 10,
+  paddingBottom: 48,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},
+
+hero: {
+  marginTop: 6,
+  paddingHorizontal: 20,
+  paddingVertical: 24,
+  borderRadius: 24,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  overflow: "hidden",
+},
   heroTitle: {
-    fontSize: 28,
-    fontWeight: "900",
-    color: colors.textMain,
-    marginBottom: 12,
-  },
-  heroDesc: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: colors.textMain,
-  },
-  searchBox: {
-    marginTop: 16,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-  },
-  searchIcon: {
-    fontSize: 22,
-    color: colors.softBrown,
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.textMain,
-  },
-  sectionTitle: {
-    marginTop: 24,
-    marginBottom: 10,
-    fontSize: 16,
-    fontWeight: "800",
-    color: colors.textMain,
-  },
-  formCard: {
-    minHeight: 104,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    marginBottom: 10,
-  },
-  formCardLocked: {
-    backgroundColor: "#F7F1EA",
-    opacity: 0.78,
-  },
-  thumbCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#F8EFE3",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
+  fontSize: 28,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  marginBottom: 10,
+  letterSpacing: -0.8,
+},
+
+heroDesc: {
+  fontSize: 15,
+  lineHeight: 24,
+  fontFamily: fonts.medium,
+  color: colors.textMain,
+},
+
+searchBox: {
+  marginTop: 14,
+  height: 50,
+  borderRadius: 25,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  flexDirection: "row",
+  alignItems: "center",
+  paddingHorizontal: 16,
+},
+
+searchIcon: {
+  fontSize: 20,
+  color: colors.softBrown,
+  marginRight: 8,
+},
+
+searchInput: {
+  flex: 1,
+  fontSize: 14,
+  fontFamily: fonts.medium,
+  color: colors.textMain,
+},
+
+sectionTitle: {
+  marginTop: 22,
+  marginBottom: 10,
+  fontSize: 16,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
+
+formCard: {
+  minHeight: 96,
+  borderRadius: 20,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  flexDirection: "row",
+  alignItems: "center",
+  paddingHorizontal: 14,
+  paddingVertical: 13,
+  marginBottom: 10,
+},
+
+thumbCircle: {
+  width: 58,
+  height: 58,
+  borderRadius: 29,
+  backgroundColor: "#F8EFE3",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 13,
+  overflow: "hidden",
+},
   thumbCircleLocked: {
     backgroundColor: "#E9E0D6",
   },
-  thumbText: {
-    fontSize: 24,
-    fontWeight: "900",
-    color: colors.bronzeGold,
-  },
-  thumbTextLocked: {
-    fontSize: 20,
-    color: colors.softBrown,
-  },
+
+  thumbBrush: {
+  position: "absolute",
+  width: 56,
+  height: 56,
+  opacity: 0.65,
+},
+
+  thumbIconImage: {
+  width: 42,
+  height: 42,
+  zIndex: 2,
+  opacity: 0.85,
+},
+
+thumbLockText: {
+  fontSize: 20,
+  color: colors.softBrown,
+  zIndex: 2,
+},
   formTextWrap: {
     flex: 1,
   },
   formTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 6,
-  },
-  formTitle: {
-    fontSize: 17,
-    fontWeight: "900",
-    color: colors.textMain,
-  },
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 7,
+  marginBottom: 5,
+},
+
+formTitle: {
+  flexShrink: 1,
+  fontSize: 17,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
   formTitleLocked: {
     color: colors.softBrown,
   },
   badge: {
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: "#F3D37A",
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: "#5C3B17",
-  },
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  borderRadius: 999,
+  backgroundColor: "#F3D37A",
+},
+
+badgeText: {
+  fontSize: 10,
+  fontFamily: fonts.semiBold,
+  color: "#5C3B17",
+},
+
   lockBadge: {
     backgroundColor: "#E5DDD3",
   },
@@ -301,18 +349,20 @@ const styles = StyleSheet.create({
     color: colors.warmBrown,
   },
   formDesc: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: colors.textMain,
-  },
+  fontSize: 13,
+  lineHeight: 20,
+  fontFamily: fonts.medium,
+  color: colors.textMain,
+},
   formDescLocked: {
     color: colors.textSub,
   },
   arrow: {
-    fontSize: 26,
-    color: colors.warmBrown,
-    marginLeft: 8,
-  },
+  fontSize: 26,
+  color: colors.warmBrown,
+  marginLeft: 8,
+  opacity: 0.75,
+},
   arrowLocked: {
     fontSize: 18,
     color: colors.softBrown,
@@ -322,17 +372,37 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
   },
-  termChip: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  termText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: colors.textMain,
-  },
+termChip: {
+  paddingHorizontal: 16,
+  paddingVertical: 10,
+  borderRadius: 14,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+},
+
+termText: {
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
+thumbLockImage: {
+  width: 30,
+  height: 30,
+  zIndex: 2,
+  opacity: 0.9,
+},
+arrowLockImage: {
+  width: 22,
+  height: 22,
+  marginLeft: 8,
+  opacity: 0.55,
+},
+partialBadge: {
+  backgroundColor: "#E8DDD3",
+},
+
+partialBadgeText: {
+  color: colors.warmBrown,
+},
 });

@@ -244,9 +244,7 @@ const currentJourney = useMemo(() => {
           <View style={styles.currentInfo}>
             <Text style={styles.currentLabel}>현재 수련 과정</Text>
             <Text style={styles.currentTitle}>{currentJourney.title}</Text>
-<Text style={styles.currentDesc}>
-  {personalProgress?.curriculumName || currentJourney.desc}
-</Text>
+
           </View>
         </View>
 
