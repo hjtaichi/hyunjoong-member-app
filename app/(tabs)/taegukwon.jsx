@@ -110,10 +110,18 @@ export default function TaegukwonScreen() {
   const memberTrackMap = useMemo(() => {
   return new Map(memberTracks.map((track) => [track.curriculumId, track]));
 }, [memberTracks]);
-
+const [formRecordData, setFormRecordData] = useState(null);
+const [formRecordLoading, setFormRecordLoading] = useState(false);
+const [formGoalCount, setFormGoalCount] = useState("");
 const [recordModalVisible, setRecordModalVisible] = useState(false);
 const [goalModalVisible, setGoalModalVisible] = useState(false);
 const [memoHistoryModalVisible, setMemoHistoryModalVisible] = useState(false);
+const [formRecordModalVisible, setFormRecordModalVisible] = useState(false);
+const [formGoalModalVisible, setFormGoalModalVisible] = useState(false);
+const [selectedFormId, setSelectedFormId] = useState(null);
+const [formRecordCount, setFormRecordCount] = useState("3");
+const [showInactiveForms, setShowInactiveForms] = useState(false);
+const [featuredFormId, setFeaturedFormId] = useState(null);
 
 const [todayRecord, setTodayRecord] = useState({
   ilsimyangui: "",
@@ -142,7 +150,8 @@ const scrollRef = useRef(null);
   const [showRecentAdminMemos, setShowRecentAdminMemos] = useState(false);
   const [showCurriculumOptions, setShowCurriculumOptions] = useState(false);
   const [showMemoHistory, setShowMemoHistory] = useState(false);
-  const [activeTab, setActiveTab] = useState("training");
+  // training | gongbeop | formRecord
+const [activeTab, setActiveTab] = useState("training");
 
 const loadGongbeopRecord = useCallback(async () => {
   const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop?t=${Date.now()}`, {
@@ -170,6 +179,68 @@ const loadGongbeopRecord = useCallback(async () => {
   setGongbeopUpdatedAt(record?.updatedAt || null);
 }, [token]);
 
+const loadFormRecords = useCallback(async () => {
+
+  if (!token) return;
+
+
+
+  setFormRecordLoading(true);
+
+
+
+  try {
+
+    const response = await fetch(
+
+      `${API_BASE_URL}/api/member/me/form-records?t=${Date.now()}`,
+
+      {
+
+        method: "GET",
+
+        headers: {
+
+          "Content-Type": "application/json",
+
+          Authorization: `Bearer ${token}`,
+
+          "ngrok-skip-browser-warning": "true",
+
+        },
+
+      }
+
+    );
+
+
+
+    const result = await response.json();
+
+
+
+    if (!response.ok) {
+
+      throw new Error(result.message || "투로 기록 불러오기 실패");
+
+    }
+
+
+
+    setFormRecordData(result.data);
+
+  } catch (error) {
+
+    console.log("투로 기록 불러오기 실패:", error);
+
+  } finally {
+
+    setFormRecordLoading(false);
+
+  }
+
+}, [token]);
+
   const loadData = useCallback(
     async ({ silent = false } = {}) => {
       if (!token) return;
@@ -184,6 +255,13 @@ try {
 } catch (gongbeopError) {
   console.log("공법 기록 불러오기 실패:", gongbeopError);
 }
+
+try {
+  await loadFormRecords();
+} catch (formRecordError) {
+  console.log("투로 기록 불러오기 실패:", formRecordError);
+}
+
 
 const payload = taegukwonResult?.data ? taegukwonResult.data : taegukwonResult;
         console.log("TAEGUKWON payload:", payload);
@@ -209,7 +287,7 @@ const payload = taegukwonResult?.data ? taegukwonResult.data : taegukwonResult;
         setRefreshing(false);
       }
     },
-    [token]
+    [token, loadGongbeopRecord, loadFormRecords]
   );
 
   useEffect(() => {
@@ -301,6 +379,113 @@ const handleSaveGongbeopRecord = useCallback(async () => {
 }, []);
 
   const member = taegukwonData?.member || null;
+const memberRank = Number(member?.rankLevel || 0);
+const now = new Date();
+const currentPeriodYear = now.getFullYear();
+const currentPeriodHalf = now.getMonth() + 1 <= 6 ? 1 : 2;
+const currentPeriodLabel = currentPeriodHalf === 1 ? "상반기" : "하반기";
+const currentPeriodSub = currentPeriodHalf === 1 ? "1월 ~ 6월" : "7월 ~ 12월";
+
+const FORM_DEFINITIONS = [
+  {
+    id: "taeguk-29",
+    name: "현중태극권 29식",
+    minRank: 0,
+  },
+  {
+    id: "taeguk-fan-29",
+    name: "현중태극선 29식",
+    minRank: 0,
+  },
+  {
+    id: "taeguk-sword-52",
+    name: "현중태극검 52식",
+    minRank: 1,
+  },
+  {
+    id: "daega-1-79",
+    name: "현중태극권 대가1로 79식",
+    minRank: 2,
+  },
+  {
+    id: "dando-24",
+    name: "현중태극단도 24식",
+    minRank: 2,
+  },
+  {
+    id: "daega-2-62",
+    name: "현중태극권 대가2로 62식",
+    minRank: 3,
+  },
+];
+
+const FORM_IMAGES = {
+  "taeguk-29": require("../../assets/images/form-records/taeguk-29.png"),
+  "taeguk-fan-29": require("../../assets/images/form-records/taeguk-fan-29.png"),
+  "taeguk-sword-52": require("../../assets/images/form-records/taeguk-sword-52.png"),
+  "dando-24": require("../../assets/images/form-records/dando-24.png"),
+  "daega-1-79": require("../../assets/images/form-records/daega-1-79.png"),
+  "daega-2-62": require("../../assets/images/form-records/daega-2-62.png"),
+};
+const FORM_IMAGE_STYLES = {
+  "daega-1-79": {
+    featured: {
+      right: -6,
+      bottom: 85,
+      width: 175,
+      height: 215,
+      opacity:0.85,
+    },
+    small: {
+      right: -10,
+      bottom: -12,
+      width: 96,
+      height: 105,
+    },
+  },
+};
+function getFormCategory(formId) {
+  if (formId?.includes("fan")) return "태극선 · 반복수련";
+  if (formId?.includes("sword")) return "태극검 · 반복수련";
+  if (formId?.includes("dando")) return "단도 · 반복수련";
+  if (formId?.includes("daega")) return "권법 · 반복수련";
+  return "권법 · 반복수련";
+}
+
+const apiForms = formRecordData?.forms || [];
+
+const mergedForms = FORM_DEFINITIONS.map((definition) => {
+  const apiForm = apiForms.find((item) => item.id === definition.id);
+
+  return {
+    ...definition,
+    ...apiForm,
+    minRank: definition.minRank,
+  };
+});
+
+const accessibleForms = mergedForms.filter(
+  (item) => memberRank >= Number(item.minRank || 0)
+);
+
+const lockedForms = mergedForms.filter(
+  (item) => memberRank < Number(item.minRank || 0)
+);
+
+const activeForms = accessibleForms.filter((item) => item.isActive);
+
+const featuredForm =
+  activeForms.find((item) => item.id === featuredFormId) ||
+  activeForms[0] ||
+  null;
+
+const otherForms = [
+  ...accessibleForms.filter((item) => item.id !== featuredForm?.id),
+  ...lockedForms,
+];
+
+const selectedForm = mergedForms.find((item) => item.id === selectedFormId);
+
   const groupProgress = taegukwonData?.groupProgress || null;
   const personalProgress = taegukwonData?.personalProgress || null;
   const memoHistory = personalProgress?.memoHistory || [];
@@ -521,23 +706,41 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
   <TouchableOpacity
     style={[
       styles.topTabButton,
-      activeTab === "record" && styles.topTabButtonActive,
+      activeTab === "gongbeop" && styles.topTabButtonActive,
     ]}
-    onPress={() => setActiveTab("record")}
+    onPress={() => setActiveTab("gongbeop")}
     activeOpacity={0.85}
   >
     <Text
       style={[
         styles.topTabText,
-        activeTab === "record" && styles.topTabTextActive,
+        activeTab === "gongbeop" && styles.topTabTextActive,
       ]}
     >
-      공력 증진 기록
+      공력 기록
+    </Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    style={[
+      styles.topTabButton,
+      activeTab === "formRecord" && styles.topTabButtonActive,
+    ]}
+    onPress={() => setActiveTab("formRecord")}
+    activeOpacity={0.85}
+  >
+    <Text
+      style={[
+        styles.topTabText,
+        activeTab === "formRecord" && styles.topTabTextActive,
+      ]}
+    >
+      투로 기록
     </Text>
   </TouchableOpacity>
 </View>
 
-{activeTab === "record" ? (
+{activeTab === "gongbeop" ? (
   <View style={styles.flowSection}>
    
     <Image
@@ -643,7 +846,7 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 </View>
 ) : null}
 
-{activeTab === "record" ? (
+{activeTab === "gongbeop" ? (
   <View style={styles.goalCard}>
     <View style={styles.goalHeaderRow}>
       <View style={styles.goalTitleRow}>
@@ -717,7 +920,7 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 </View>
 ) : null}
 
-{activeTab === "record" ? (
+{activeTab === "gongbeop" ? (
   <View style={styles.memoImageCard}>
     <Image
       source={require("../../assets/images/memo-card-bg.png")}
@@ -747,6 +950,211 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
   </View>
 ) : null}
       
+{activeTab === "formRecord" ? (
+  <View style={styles.formRecordSection}>
+    <View style={styles.formPeriodRow}>
+      <View>
+        <Text style={styles.formPeriodTitle}>
+          {currentPeriodYear}년 {currentPeriodLabel}
+        </Text>
+        <Text style={styles.formPeriodSub}>{currentPeriodSub}</Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.formPeriodTextButton}
+        activeOpacity={0.85}
+        onPress={() => router.push("/form-record-history")}
+      >
+        <Text style={styles.formPeriodTextButtonLabel}>지난 기록 보기 〉</Text>
+      </TouchableOpacity>
+    </View>
+
+    <View style={styles.formTipCardNew}>
+      <View>
+        <Text style={styles.formTipTitleNew}>Tip</Text>
+        <Text style={styles.formTipTextNew}>
+          다 배운 투로를 반복하여 몸에 익히는 기록입니다.
+        </Text>
+      </View>
+      <Image
+  source={require("../../assets/images/form-records/tip-flower.png")}
+  style={styles.formTipFlower}
+  resizeMode="contain"
+/>
+    </View>
+
+    <View style={styles.formSectionHeaderRowNew}>
+      <Text style={styles.formSectionTitleNew}>내가 연습하는 투로</Text>
+
+      <TouchableOpacity
+        onPress={() => {
+          const firstForm = accessibleForms[0];
+
+          if (!firstForm) {
+            Alert.alert("안내", "설정 가능한 투로가 없습니다.");
+            return;
+          }
+
+          setSelectedFormId(firstForm.id);
+          setFormGoalCount(firstForm.targetCount ? String(firstForm.targetCount) : "");
+          setFormGoalModalVisible(true);
+        }}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.formGoalTextButton}>목표 설정 〉</Text>
+      </TouchableOpacity>
+    </View>
+
+    {featuredForm ? (() => {
+      const target = Number(featuredForm.targetCount || 0);
+      const current = Number(featuredForm.currentCount || 0);
+      const remain = Math.max(target - current, 0);
+      const percent = target
+        ? Math.min(Math.round((current / target) * 100), 100)
+        : 0;
+
+      return (
+        <View style={styles.featuredFormCard}>
+          <Image
+  source={require("../../assets/images/form-records/ink-circle.png")}
+  style={styles.featuredInkCircleImage}
+  resizeMode="contain"
+/>
+
+          {FORM_IMAGES[featuredForm.id] ? (
+            <Image
+              source={FORM_IMAGES[featuredForm.id]}
+              style={[
+  styles.featuredFormImage,
+  FORM_IMAGE_STYLES[featuredForm.id]?.featured,
+]}
+              resizeMode="contain"
+            />
+          ) : null}
+
+          <View style={styles.featuredFormContent}>
+            <Text style={styles.featuredFormTitle}>{featuredForm.name}</Text>
+            <Text style={styles.featuredFormCategory}>
+              {getFormCategory(featuredForm.id)}
+            </Text>
+
+            <Text style={styles.featuredFormCount}>
+              {current}회 기록 · 목표 {target || 0}회
+            </Text>
+
+            <Text style={styles.featuredFormRemain}>
+              {target > 0
+                ? `앞으로 ${remain}회 더 수련하면 목표 달성`
+                : "목표를 설정해주세요"}
+            </Text>
+
+            <View style={styles.featuredProgressTrack}>
+              <View
+                style={[
+                  styles.featuredProgressFill,
+                  { width: `${percent}%` },
+                ]}
+              />
+            </View>
+
+            <Text style={styles.featuredPercentText}>{percent}%</Text>
+
+            <TouchableOpacity
+              style={styles.featuredRecordButton}
+              activeOpacity={0.88}
+              onPress={() => {
+                setSelectedFormId(featuredForm.id);
+                setFormRecordCount("3");
+                setFormRecordModalVisible(true);
+              }}
+            >
+              <Text style={styles.featuredRecordButtonText}>
+                오늘 수련 기록하기
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    })() : (
+      <View style={styles.emptyFormCard}>
+        <Text style={styles.emptyFormTitle}>아직 연습 중인 투로가 없습니다.</Text>
+        <Text style={styles.emptyFormText}>
+          목표를 설정하면 이곳에 대표 투로가 표시됩니다.
+        </Text>
+      </View>
+    )}
+
+    <View style={styles.otherFormTitleRow}>
+      <Text style={styles.otherFormTitle}>다른 투로 보기</Text>
+      <View style={styles.otherFormLine} />
+    </View>
+
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.otherFormScrollContent}
+    >
+      {otherForms.map((item) => {
+  const current = Number(item.currentCount || 0);
+  const target = Number(item.targetCount || 0);
+  const locked = memberRank < Number(item.minRank || 0);
+
+        return (
+          <TouchableOpacity
+            key={item.id}
+            style={[
+  styles.otherFormCard,
+  locked && styles.otherFormCardLocked,
+]}
+            activeOpacity={0.86}
+            onPress={() => {
+  if (locked) {
+    Alert.alert("안내", "해당 투로는 승단 후 이용할 수 있습니다.");
+    return;
+  }
+
+  setSelectedFormId(item.id);
+  setFormRecordCount("1");
+  setFormRecordModalVisible(true);
+}}
+          >
+            <Text style={styles.otherFormName} numberOfLines={1}>
+              {item.name
+                .replace("현중", "")
+                .replace("태극권 ", "")
+                .replace(" 29식", "")
+                .replace(" 52식", "")
+                .replace(" 24식", "")}
+            </Text>
+
+            <Text style={styles.otherFormCount}>
+  {target > 0 ? `${current}/${target}회` : `${current}회 기록`}
+</Text>
+
+            {FORM_IMAGES[item.id] ? (
+              <Image
+                source={FORM_IMAGES[item.id]}
+                style={[
+  styles.otherFormImage,
+  FORM_IMAGE_STYLES[item.id]?.small,
+]}
+                resizeMode="contain"
+              />
+            ) : null}
+
+            {locked ? (
+  <View style={styles.lockBadge}>
+    <Text style={styles.lockBadgeText}>🔒</Text>
+  </View>
+) : null}
+
+            <Text style={styles.otherFormArrow}>〉</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  </View>
+) : null}   
 
 {activeTab === "training" ? (
   <Text style={styles.sectionLabel}>현재 수련</Text>
@@ -1454,6 +1862,264 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
           }}
         >
           <Text style={styles.memoEditSaveText}>저장</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+<Modal visible={formRecordModalVisible} transparent animationType="fade">
+  <View style={styles.recordModalOverlay}>
+    <View style={styles.formRecordModalCard}>
+      <Text style={styles.formModalTitle}>오늘 투로 기록</Text>
+
+      <TouchableOpacity
+        style={styles.formModalClose}
+        onPress={() => setFormRecordModalVisible(false)}
+      >
+        <Text style={styles.formModalCloseText}>×</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.formModalName}>
+        {selectedForm?.name || "투로"}
+      </Text>
+
+      <Text style={styles.formModalDesc}>
+        오늘 몇 회 수련하셨나요?
+      </Text>
+
+      <View style={styles.formCountStepper}>
+        <TouchableOpacity
+          style={styles.formStepperButton}
+          onPress={() => {
+            setFormRecordCount((prev) =>
+              String(Math.max(Number(prev || 0) - 1, 0))
+            );
+          }}
+        >
+          <Text style={styles.formStepperText}>−</Text>
+        </TouchableOpacity>
+
+        <TextInput
+          value={formRecordCount}
+          onChangeText={(value) =>
+            setFormRecordCount(value.replace(/[^0-9]/g, ""))
+          }
+          keyboardType="numeric"
+          style={styles.formCountInput}
+        />
+
+        <TouchableOpacity
+          style={styles.formStepperButton}
+          onPress={() => {
+            setFormRecordCount((prev) => String(Number(prev || 0) + 1));
+          }}
+        >
+          <Text style={styles.formStepperText}>＋</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.quickCountRow}>
+        {["1", "2", "3", "5"].map((count) => (
+          <TouchableOpacity
+            key={count}
+            style={styles.quickCountButton}
+            onPress={() => setFormRecordCount(count)}
+          >
+            <Text style={styles.quickCountText}>{count}회</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.formModalButtonRow}>
+        <TouchableOpacity
+          style={styles.formModalCancelButton}
+          onPress={() => setFormRecordModalVisible(false)}
+        >
+          <Text style={styles.formModalCancelText}>취소</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+  style={styles.formModalSaveButton}
+  onPress={async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/member/me/form-records`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({
+          formKey: selectedForm?.id,
+          count: Number(formRecordCount || 0),
+          recordDate: new Date().toISOString().slice(0, 10),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "투로 기록 저장 실패");
+      }
+
+      Alert.alert("완료", "투로 기록이 저장되었습니다.");
+      setFormRecordModalVisible(false);
+      await loadFormRecords();
+    } catch (error) {
+      Alert.alert("오류", error.message || "투로 기록 저장 중 오류가 발생했습니다.");
+    }
+  }}
+>
+          <Text style={styles.formModalSaveText}>기록 저장</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+<Modal visible={formGoalModalVisible} transparent animationType="fade">
+  <View style={styles.recordModalOverlay}>
+    <View style={styles.formRecordModalCard}>
+      <Text style={styles.formModalTitle}>투로 목표 설정</Text>
+
+      <TouchableOpacity
+        style={styles.formModalClose}
+        onPress={() => setFormGoalModalVisible(false)}
+      >
+        <Text style={styles.formModalCloseText}>×</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.formModalDesc}>목표를 설정할 투로를 선택해주세요.</Text>
+
+      <View style={{ gap: 8, marginBottom: 18 }}>
+        {accessibleForms.map((item) => {
+  const selected = item.id === selectedFormId;
+  const isFeatured = item.id === featuredFormId;
+
+  return (
+    <TouchableOpacity
+      key={item.id}
+      style={[
+        styles.goalFormSelectCard,
+        selected && styles.goalFormSelectCardSelected,
+      ]}
+      activeOpacity={0.86}
+      onPress={() => {
+        setSelectedFormId(item.id);
+        setFormGoalCount(item.targetCount ? String(item.targetCount) : "");
+      }}
+    >
+      <View style={styles.goalFormSelectTextWrap}>
+        <Text style={styles.goalFormSelectName}>{item.name}</Text>
+        <Text style={styles.goalFormSelectMeta}>
+          현재 목표 {item.targetCount || 0}회
+        </Text>
+      </View>
+
+      <TouchableOpacity
+        style={[
+          styles.featuredStarButton,
+          isFeatured && styles.featuredStarButtonActive,
+        ]}
+        activeOpacity={0.8}
+        onPress={() => {
+          setFeaturedFormId(item.id);
+        }}
+      >
+        <Text
+          style={[
+            styles.featuredStarText,
+            isFeatured && styles.featuredStarTextActive,
+          ]}
+        >
+          ★
+        </Text>
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
+})}
+      </View>
+
+      <View style={styles.goalInputSection}>
+  <Text style={styles.goalInputLabel}>
+    {currentPeriodLabel} 목표 횟수
+  </Text>
+
+  <View style={styles.goalInputBox}>
+    <TextInput
+      value={formGoalCount}
+      onChangeText={(value) => setFormGoalCount(value.replace(/[^0-9]/g, ""))}
+      keyboardType="numeric"
+      style={styles.goalCountInput}
+      placeholder="100"
+      placeholderTextColor="#B8A99D"
+    />
+    <Text style={styles.goalInputUnit}>회</Text>
+  </View>
+</View>
+
+      <View style={styles.formModalButtonRow}>
+        <TouchableOpacity
+          style={styles.formModalCancelButton}
+          onPress={() => setFormGoalModalVisible(false)}
+        >
+          <Text style={styles.formModalCancelText}>취소</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.formModalSaveButton}
+          onPress={async () => {
+            console.log("투로 목표 저장 버튼 눌림");
+             console.log("selectedFormId:", selectedFormId);
+  console.log("formGoalCount:", formGoalCount);
+
+            try {
+              if (!selectedFormId) {
+                Alert.alert("안내", "투로를 선택해주세요.");
+                return;
+              }
+
+              const targetCountValue = Number(formGoalCount);
+
+if (!formGoalCount || targetCountValue <= 0) {
+  Alert.alert("안내", "목표 횟수를 입력하셔야 합니다.");
+  return;
+}
+
+              console.log("투로 목표 저장 요청 시작");
+              const response = await fetch(`${API_BASE_URL}/api/member/me/form-goals`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                  "ngrok-skip-browser-warning": "true",
+                },
+                body: JSON.stringify({
+                  formKey: selectedFormId,
+                  periodYear: currentPeriodYear,
+                  periodHalf: currentPeriodHalf,
+                  targetCount: targetCountValue,
+                  isActive: true,
+                }),
+              });
+              console.log("투로 목표 저장 요청 도착");
+
+              const result = await response.json();
+              console.log("투로 목표 저장 응답:", response.status, result);
+
+
+              if (!response.ok) {
+                throw new Error(result.message || "투로 목표 저장 실패");
+              }
+
+              Alert.alert("완료", "투로 목표가 저장되었습니다.");
+              setFormGoalModalVisible(false);
+              await loadFormRecords();
+            } catch (error) {
+              Alert.alert("오류", error.message || "투로 목표 저장 중 오류가 발생했습니다.");
+            }
+          }}
+        >
+          <Text style={styles.formModalSaveText}>목표 저장</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -3215,5 +3881,737 @@ coachingTipTitleImage: {
   height: 50,
   marginBottom: 3,
   marginTop: -7,
+},
+formRecordSection: {
+  gap: 12,
+},
+
+formPeriodRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 2,
+},
+
+formPeriodTitle: {
+  fontSize: 22,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+},
+
+formPeriodSub: {
+  marginTop: 3,
+  fontSize: 13,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+formPeriodButton: {
+  paddingHorizontal: 14,
+  paddingVertical: 8,
+  borderRadius: 999,
+  borderWidth: 1,
+  borderColor: colors.border,
+  backgroundColor: colors.card,
+},
+
+formPeriodButtonText: {
+  fontSize: 12,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+},
+
+formTipCard: {
+  paddingHorizontal: 16,
+  paddingVertical: 14,
+  borderRadius: 18,
+  backgroundColor: "#F7EFE2",
+  borderWidth: 1,
+  borderColor: "#E6D5BA",
+},
+
+formTipTitle: {
+  fontSize: 14,
+  fontFamily: fonts.titleSemi,
+  color: colors.warmBrown,
+  marginBottom: 5,
+},
+
+formTipText: {
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
+  color: colors.textMain,
+},
+
+formSectionHeaderRow: {
+  marginTop: 6,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+formSectionTitle: {
+  fontSize: 18,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+},
+
+formSmallButton: {
+  paddingHorizontal: 12,
+  paddingVertical: 7,
+  borderRadius: 999,
+  borderWidth: 1,
+  borderColor: "#d7c9b3",
+  backgroundColor: "#fffaf2",
+},
+
+formSmallButtonText: {
+  fontSize: 12,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+},
+
+formRecordCard: {
+  backgroundColor: "#FFFCF8",
+  borderRadius: 20,
+  padding: 16,
+  borderWidth: 1,
+  borderColor: "#E8D8BE",
+  ...shadow.card,
+},
+
+formRecordTopRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+},
+
+formRecordTextWrap: {
+  flex: 1,
+},
+
+formRecordName: {
+  fontSize: 24,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  marginBottom: 8,
+},
+
+formRecordGoal: {
+  fontSize: 13,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+formProgressRow: {
+  marginTop: 8,
+  flexDirection: "row",
+  alignItems: "flex-end",
+  justifyContent: "space-between",
+  gap: 10,
+},
+
+formCountText: {
+  fontSize: 17,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+
+formRemainText: {
+  fontSize: 12,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+formProgressTrack: {
+  marginTop: 9,
+  height: 9,
+  borderRadius: 999,
+  overflow: "hidden",
+  backgroundColor: colors.border,
+},
+
+formProgressFill: {
+  height: "100%",
+  borderRadius: 999,
+  backgroundColor: "#6f805e",
+},
+
+formRecordButton: {
+  marginTop: 14,
+  height: 46,
+  borderRadius: 14,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: colors.warmBrown,
+},
+
+formRecordButtonText: {
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.white,
+},
+
+moreFormToggle: {
+  paddingVertical: 13,
+  alignItems: "center",
+  borderTopWidth: 1,
+  borderTopColor: "#ece4d8",
+},
+
+moreFormToggleText: {
+  fontSize: 14,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+},
+
+inactiveFormCard: {
+  paddingHorizontal: 16,
+  paddingVertical: 14,
+  borderRadius: 16,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+},
+
+inactiveFormName: {
+  fontSize: 16,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+  marginBottom: 5,
+},
+
+inactiveFormText: {
+  fontSize: 12,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+formRecordModalCard: {
+  width: "90%",
+  maxWidth: 360,
+  maxHeight: "86%",
+  borderRadius: 24,
+  backgroundColor: "#FFFDF9",
+  paddingHorizontal: 18,
+  paddingTop: 24,
+  paddingBottom: 20,
+},
+
+formModalTitle: {
+  fontSize: 20,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  marginBottom: 18,
+  textAlign: "center",
+},
+
+formModalClose: {
+  position: "absolute",
+  top: 14,
+  right: 16,
+  width: 32,
+  height: 32,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+formModalCloseText: {
+  fontSize: 24,
+  color: colors.softBrown,
+},
+
+formModalName: {
+  fontSize: 24,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  textAlign: "center",
+  marginBottom: 8,
+},
+
+formModalDesc: {
+  fontSize: 14,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  textAlign: "center",
+  marginBottom: 18,
+},
+
+formCountStepper: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 12,
+  marginBottom: 14,
+},
+
+formStepperButton: {
+  width: 44,
+  height: 44,
+  borderRadius: 999,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#F7EFE2",
+  borderWidth: 1,
+  borderColor: "#E6D5BA",
+},
+
+formStepperText: {
+  fontSize: 22,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+},
+
+formCountInput: {
+  width: 86,
+  height: 52,
+  borderRadius: 14,
+  borderWidth: 1,
+  borderColor: "#E1D8CA",
+  backgroundColor: "#FFFDF9",
+  textAlign: "center",
+  fontSize: 24,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+
+quickCountRow: {
+  flexDirection: "row",
+  justifyContent: "center",
+  gap: 8,
+  marginBottom: 22,
+},
+
+quickCountButton: {
+  paddingHorizontal: 13,
+  paddingVertical: 8,
+  borderRadius: 999,
+  backgroundColor: "#FFF7EC",
+  borderWidth: 1,
+  borderColor: "#E4D1B6",
+},
+
+quickCountText: {
+  fontSize: 13,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+},
+
+formModalButtonRow: {
+  flexDirection: "row",
+  gap: 10,
+},
+
+formModalCancelButton: {
+  flex: 1,
+  height: 46,
+  borderRadius: 14,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#E8E0D2",
+},
+
+formModalCancelText: {
+  fontSize: 14,
+  fontFamily: fonts.bold,
+  color: "#5D5146",
+},
+
+formModalSaveButton: {
+  flex: 1,
+  height: 46,
+  borderRadius: 14,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: colors.warmBrown,
+},
+
+formModalSaveText: {
+  fontSize: 14,
+  fontFamily: fonts.bold,
+  color: colors.white,
+},
+formPeriodTextButton: {
+  paddingVertical: 6,
+  paddingHorizontal: 2,
+},
+
+formPeriodTextButtonLabel: {
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+},
+
+formTipCardNew: {
+  minHeight: 74,
+  borderRadius: 18,
+  borderWidth: 1,
+  borderColor: "#E5D5C7",
+  backgroundColor: "#FFF8ED",
+  paddingHorizontal: 18,
+  paddingVertical: 14,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  overflow: "hidden",
+},
+
+formTipTitleNew: {
+  fontSize: 17,
+  fontFamily: fonts.titleSemi,
+  color: colors.warmBrown,
+  marginBottom: 6,
+},
+
+formTipTextNew: {
+  fontSize: 14,
+  lineHeight: 21,
+  fontFamily: fonts.medium,
+  color: colors.textMain,
+},
+
+formSectionHeaderRowNew: {
+  marginTop: 18,
+  marginBottom: 10,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+formSectionTitleNew: {
+  fontSize: 21,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+},
+
+formGoalTextButton: {
+  fontSize: 15,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+},
+
+featuredFormCard: {
+  position: "relative",
+  minHeight: 276,
+  borderRadius: 22,
+  borderWidth: 1,
+  borderColor: "#E2D3C5",
+  backgroundColor: "rgba(255,252,247,0.96)",
+  padding: 20,
+  overflow: "hidden",
+},
+
+featuredFormContent: {
+  position: "relative",
+  zIndex: 3,
+  width: "62%",
+},
+
+featuredFormImage: {
+  position: "absolute",
+  right: 5,
+  bottom: 70,
+  width: 175,
+  height: 210,
+  opacity: 0.85,
+  zIndex: 2,
+},
+
+featuredFormTitle: {
+  fontSize: 25,
+  lineHeight: 34,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  marginBottom: 6,
+},
+
+featuredFormCategory: {
+  fontSize: 14,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  marginBottom: 22,
+},
+
+featuredFormCount: {
+  fontSize: 19,
+  lineHeight: 26,
+  fontFamily: fonts.titleSemi,
+  color: colors.warmBrown,
+  marginBottom: 4,
+},
+
+featuredFormRemain: {
+  fontSize: 13,
+  lineHeight: 21,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  marginBottom: 16,
+},
+
+featuredProgressTrack: {
+  width: 170,
+  height: 7,
+  borderRadius: 999,
+  backgroundColor: "#EFE6DC",
+  overflow: "hidden",
+  marginBottom: 8,
+},
+
+featuredProgressFill: {
+  height: "100%",
+  borderRadius: 999,
+  backgroundColor: colors.warmBrown,
+},
+
+featuredPercentText: {
+  fontSize: 15,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+  marginBottom: 18,
+},
+
+featuredRecordButton: {
+  height: 52,
+  borderRadius: 16,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+},
+
+featuredRecordButtonText: {
+  fontSize: 17,
+  fontFamily: fonts.bold,
+  color: "#FFFDF9",
+},
+
+otherFormTitleRow: {
+  marginTop: 22,
+  marginBottom: 12,
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+},
+
+otherFormTitle: {
+  fontSize: 21,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+},
+
+otherFormLine: {
+  flex: 1,
+  height: 1,
+  backgroundColor: "#DED0C3",
+},
+
+otherFormScrollContent: {
+  gap: 10,
+  paddingRight: 16,
+},
+
+otherFormCard: {
+  width: 136,
+  height: 132,
+  borderRadius: 18,
+  borderWidth: 1,
+  borderColor: "#E2D3C5",
+  backgroundColor: "rgba(255,252,247,0.96)",
+  padding: 14,
+  overflow: "hidden",
+  position: "relative",
+},
+
+otherFormName: {
+  fontSize: 16,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+  marginBottom: 4,
+  zIndex: 2,
+},
+
+otherFormCount: {
+  fontSize: 12.5,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  zIndex: 2,
+},
+
+otherFormImage: {
+  position: "absolute",
+  right: -8,
+  bottom: -8,
+  width: 95,
+  height: 100,
+  opacity: 0.85,
+},
+
+otherFormArrow: {
+  position: "absolute",
+  right: 12,
+  top: 52,
+  fontSize: 26,
+  color: "rgba(118,86,75,0.72)",
+},
+
+emptyFormCard: {
+  borderRadius: 20,
+  borderWidth: 1,
+  borderColor: "#E2D3C5",
+  backgroundColor: "#FFFDF9",
+  padding: 20,
+},
+
+emptyFormTitle: {
+  fontSize: 18,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+  marginBottom: 6,
+},
+
+emptyFormText: {
+  fontSize: 14,
+  lineHeight: 21,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+goalInputSection: {
+  marginTop: 4,
+  marginBottom: 18,
+  alignItems: "center",
+},
+
+goalInputLabel: {
+  fontSize: 13,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  marginBottom: 8,
+},
+
+goalInputBox: {
+  width: "100%",
+  height: 54,
+  borderRadius: 16,
+  borderWidth: 1,
+  borderColor: "#E2D3C5",
+  backgroundColor: "#FFFDF9",
+  flexDirection: "row",
+  alignItems: "center",
+  paddingHorizontal: 16,
+},
+
+goalCountInput: {
+  flex: 1,
+  height: "100%",
+  fontSize: 22,
+  fontFamily: fonts.titleSemi,
+  color: colors.warmBrown,
+  textAlign: "center",
+  outlineStyle: "none",
+},
+
+goalInputUnit: {
+  fontSize: 16,
+  fontFamily: fonts.semiBold,
+  color: colors.textSub,
+},
+featuredInkCircleImage: {
+  position: "absolute",
+  right: 5,
+  top: 25,
+  width: 190,
+  height: 190,
+  opacity: 0.35,
+  zIndex: 1,
+},
+
+formTipFlower: {
+  position: "absolute",
+  right: -2,
+  top: -12,
+  width: 100,
+  height: 78,
+  opacity: 0.5,
+},
+goalFormSelectCard: {
+  minHeight: 56,
+  borderRadius: 14,
+  borderWidth: 1,
+  borderColor: "#E8DDD3",
+  backgroundColor: "#FFFDF9",
+  paddingLeft: 14,
+  paddingRight: 10,
+  paddingVertical: 11,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+goalFormSelectCardSelected: {
+  borderColor: colors.warmBrown,
+  backgroundColor: "#FFF7EC",
+},
+
+goalFormSelectTextWrap: {
+  flex: 1,
+  paddingRight: 8,
+},
+
+goalFormSelectName: {
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+  marginBottom: 4,
+},
+
+goalFormSelectMeta: {
+  fontSize: 11,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+featuredStarButton: {
+  width: 34,
+  height: 34,
+  borderRadius: 999,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#F3ECE4",
+},
+
+featuredStarButtonActive: {
+  backgroundColor: colors.warmBrown,
+},
+
+featuredStarText: {
+  fontSize: 18,
+  color: "#B8A99D",
+  lineHeight: 22,
+},
+
+featuredStarTextActive: {
+  color: "#FFFDF9",
+},
+otherFormCardLocked: {
+  opacity: 0.42,
+},
+
+lockBadge: {
+  position: "absolute",
+  right: 9,
+  top: 9,
+  width: 26,
+  height: 26,
+  borderRadius: 999,
+  backgroundColor: "rgba(118,86,75,0.16)",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 5,
+},
+
+lockBadgeText: {
+  fontSize: 13,
 },
 });
