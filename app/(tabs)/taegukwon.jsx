@@ -16,11 +16,12 @@ import {
   View,
   Image,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { getMemberTaegukwon } from "../../src/api/memberTaegukwon";
 import { API_BASE_URL } from "../../src/config/env";
 import Svg, { Circle } from "react-native-svg";
+import { LinearGradient } from "expo-linear-gradient";
 
 
 function getStatusLabel(status) {
@@ -44,7 +45,7 @@ function AnimatedPercentCircle({ percent, color = "#9b7650" }) {
     animatedValue.setValue(0);
 
     Animated.timing(animatedValue, {
-      toValue: percent,
+      toValue: Math.min(percent, 100),
       duration: 900,
       useNativeDriver: false,
     }).start();
@@ -90,6 +91,7 @@ function AnimatedPercentCircle({ percent, color = "#9b7650" }) {
 
 export default function TaegukwonScreen() {
   const { token } = useAuth();
+  const { tab } = useLocalSearchParams();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -115,6 +117,8 @@ const [formRecordLoading, setFormRecordLoading] = useState(false);
 const [formGoalCount, setFormGoalCount] = useState("");
 const [recordModalVisible, setRecordModalVisible] = useState(false);
 const [goalModalVisible, setGoalModalVisible] = useState(false);
+const [completionModalVisible, setCompletionModalVisible] = useState(false);
+const [completedGoalNames, setCompletedGoalNames] = useState([]);
 const [memoHistoryModalVisible, setMemoHistoryModalVisible] = useState(false);
 const [formRecordModalVisible, setFormRecordModalVisible] = useState(false);
 const [formGoalModalVisible, setFormGoalModalVisible] = useState(false);
@@ -152,7 +156,15 @@ const scrollRef = useRef(null);
   const [showMemoHistory, setShowMemoHistory] = useState(false);
   // training | gongbeop | formRecord
 const [activeTab, setActiveTab] = useState("training");
+useEffect(() => {
+  if (tab === "gongbeop") {
+    setActiveTab("gongbeop");
+  }
 
+  if (tab === "formRecord") {
+    setActiveTab("formRecord");
+  }
+}, [tab]);
 const loadGongbeopRecord = useCallback(async () => {
   const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop?t=${Date.now()}`, {
     method: "GET",
@@ -178,6 +190,42 @@ const loadGongbeopRecord = useCallback(async () => {
 
   setGongbeopUpdatedAt(record?.updatedAt || null);
 }, [token]);
+
+const loadGongbeopGoals = useCallback(async () => {
+  const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop-goals?t=${Date.now()}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "ngrok-skip-browser-warning": "true",
+    },
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) throw new Error(result.message || "공력 목표 불러오기 실패");
+
+  const activeGoals = result.data?.activeGoals || [];
+
+  setGongbeopGoalRows(activeGoals);
+
+  setGongbeopGoals((prev) => ({
+    ...prev,
+    ilsimyangui:
+      activeGoals.find((item) => item.type === "ilsimyangui")?.target?.toString() ||
+      prev.ilsimyangui,
+    yobujeonsa:
+      activeGoals.find((item) => item.type === "yobujeonsa")?.target?.toString() ||
+      prev.yobujeonsa,
+    duyoMinutes:
+      activeGoals.find((item) => item.type === "duyoMinutes")?.target?.toString() ||
+      prev.duyoMinutes,
+    ohaengjeonsa:
+      activeGoals.find((item) => item.type === "ohaengjeonsa")?.target?.toString() ||
+      prev.ohaengjeonsa,
+  }));
+}, [token]);
+
 
 const loadFormRecords = useCallback(async () => {
 
@@ -255,7 +303,11 @@ try {
 } catch (gongbeopError) {
   console.log("공법 기록 불러오기 실패:", gongbeopError);
 }
-
+try {
+  await loadGongbeopGoals();
+} catch (gongbeopGoalError) {
+  console.log("공력 목표 불러오기 실패:", gongbeopGoalError);
+}
 try {
   await loadFormRecords();
 } catch (formRecordError) {
@@ -287,7 +339,7 @@ const payload = taegukwonResult?.data ? taegukwonResult.data : taegukwonResult;
         setRefreshing(false);
       }
     },
-    [token, loadGongbeopRecord, loadFormRecords]
+    [token, loadGongbeopRecord, loadGongbeopGoals, loadFormRecords]
   );
 
   useEffect(() => {
@@ -309,7 +361,7 @@ const [gongbeopGoals, setGongbeopGoals] = useState({
   duyoMinutes: "10",
   ohaengjeonsa: "20",
 });
-
+const [gongbeopGoalRows, setGongbeopGoalRows] = useState([]);
 const handleChangeGongbeopGoal = useCallback((key, value) => {
   const numericOnly = value.replace(/[^0-9]/g, "");
   setGongbeopGoals((prev) => ({
@@ -321,7 +373,7 @@ const handleChangeGongbeopGoal = useCallback((key, value) => {
 function getGongbeopPercent(value, goal) {
   const current = Number(value || 0);
   if (!goal) return 0;
-  return Math.min(Math.round((current / goal) * 100), 100);
+  return Math.round((current / goal) * 100);
 }
 
 const handleChangeGongbeop = useCallback((key, value) => {
@@ -354,18 +406,63 @@ const handleSaveGongbeopRecord = useCallback(async () => {
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.message || "공법 기록 저장 실패");
-    }
+  throw new Error(result.message || "공법 기록 저장 실패");
+}
 
+const progressEntries = [
+  ["ilsimyangui", Number(gongbeopRecord.ilsimyangui || 0)],
+  ["yobujeonsa", Number(gongbeopRecord.yobujeonsa || 0)],
+  ["duyoMinutes", Number(gongbeopRecord.duyoMinutes || 0)],
+  ["ohaengjeonsa", Number(gongbeopRecord.ohaengjeonsa || 0)],
+];
+
+const completedNames = [];
+
+for (const [type, current] of progressEntries) {
+  const progressResponse = await fetch(
+    `${API_BASE_URL}/api/member/me/gongbeop-goals/${type}/progress`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      body: JSON.stringify({ current }),
+    }
+  );
+
+  const progressResult = await progressResponse.json();
+  console.log("공력 목표 진행률 응답:", type, progressResponse.status, progressResult);
+
+  if (progressResult?.data?.status === "completed") {
+    if (type === "ilsimyangui") completedNames.push("일심양의");
+    if (type === "yobujeonsa") completedNames.push("요부전사");
+    if (type === "duyoMinutes") completedNames.push("두요");
+    if (type === "ohaengjeonsa") completedNames.push("오행전사");
+  }
+}
+
+await loadGongbeopGoals();
+
+setTimeout(() => {
+  if (completedNames.length > 0) {
+    setCompletedGoalNames(completedNames);
+setCompletionModalVisible(true);
+  } else {
     Alert.alert("완료", "공법 기록이 저장되었습니다.");
-    setGongbeopEditMode(false);
+  }
+}, 250);
+
+setGongbeopEditMode(false);
+
   } catch (error) {
     Alert.alert(
       "오류",
       error.message || "공법 기록 저장 중 오류가 발생했습니다."
     );
   }
-}, [token, gongbeopRecord]);
+}, [token, gongbeopRecord, loadGongbeopGoals]);
 
 
 
@@ -432,18 +529,34 @@ const FORM_IMAGE_STYLES = {
     featured: {
       right: -6,
       bottom: 85,
-      width: 175,
-      height: 215,
+      width: 160,
+      height: 175,
       opacity:0.85,
     },
     small: {
-      right: -10,
-      bottom: -12,
-      width: 96,
-      height: 105,
+      right: 1,
+      bottom: -7,
+      width: 85,
+      height: 100,
+    },
+  },
+  "dando-24": {
+    featured: {
+      right: -2,
+      bottom: 100,
+      width: 147,
+      height: 147,
+      opacity:0.85,
+    },
+    small: {
+      right: -1,
+      bottom: 10,
+      width: 85,
+      height: 85,
     },
   },
 };
+
 function getFormCategory(formId) {
   if (formId?.includes("fan")) return "태극선 · 반복수련";
   if (formId?.includes("sword")) return "태극검 · 반복수련";
@@ -702,6 +815,7 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
       수련
     </Text>
   </TouchableOpacity>
+  
 
   <TouchableOpacity
     style={[
@@ -741,13 +855,39 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 </View>
 
 {activeTab === "gongbeop" ? (
+  <View style={styles.formPeriodRow}>
+    <View>
+      <Text style={styles.formPeriodTitle}>공력 기록</Text>
+      <Text style={styles.formPeriodSub}>
+        목표는 달성할 때마다 새롭게 시작됩니다.
+      </Text>
+    </View>
+
+    <TouchableOpacity
+      style={styles.formPeriodTextButton}
+      activeOpacity={0.85}
+      onPress={() => router.push("/gongbeop-record-history")}
+    >
+      <Text style={styles.formPeriodTextButtonLabel}>완료 기록 보기 〉</Text>
+    </TouchableOpacity>
+  </View>
+) : null}
+
+{activeTab === "gongbeop" ? (
   <View style={styles.flowSection}>
    
     <Image
-       source={require("../../assets/images/gongbeop-flow-full.png")}
-      style={styles.flowBackground}
-      resizeMode="contain"
-    />
+  source={require("../../assets/images/gongbeop-flow-full.png")}
+  style={styles.flowBackground}
+  resizeMode="stretch"
+/>
+
+<LinearGradient
+  colors={["rgba(255,252,250,0)", colors.background]}
+  style={styles.flowBottomFade}
+  pointerEvents="none"
+/>
+
     <Animated.Image
   source={require("../../assets/images/river-highlight.png")}
   style={[
@@ -1033,7 +1173,9 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
           ) : null}
 
           <View style={styles.featuredFormContent}>
-            <Text style={styles.featuredFormTitle}>{featuredForm.name}</Text>
+            <Text style={styles.featuredFormTitle}>
+  {featuredForm.name.replace(/ (\d+식)$/, "\n$1")}
+</Text>
             <Text style={styles.featuredFormCategory}>
               {getFormCategory(featuredForm.id)}
             </Text>
@@ -1356,8 +1498,29 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 )}
 </TouchableOpacity>
   </View>
+  
 ) : null}
+<TouchableOpacity
+  style={styles.awardEntryMiniCard}
+  activeOpacity={0.86}
+  onPress={() => router.push("/training-awards")}
+>
+  <Image
+    source={require("../../assets/images/awards/award-icon-hall.png")}
+    style={styles.awardEntryIcon}
+    resizeMode="contain"
+  />
 
+  <View style={styles.awardEntryTextBox}>
+    <Text style={styles.awardEntryEyebrow}>현중 수련 기록</Text>
+    <Text style={styles.awardEntryTitle}>수련 시상식</Text>
+    <Text style={styles.awardEntryDesc}>
+      반기별 목표달성률과 연말 명예의 전당
+    </Text>
+  </View>
+
+  <Text style={styles.awardEntryArrow}>›</Text>
+</TouchableOpacity>
 {false && (
       <View style={[styles.card, styles.menuCard]}>
         <Text style={styles.cardTitle}>수련 과정 로드맵</Text>
@@ -1719,11 +1882,48 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
   <TouchableOpacity
     style={styles.modalSaveHotspot}
     onPress={async () => {
-      await handleSaveGongbeopRecord();
       setRecordModalVisible(false);
+setTimeout(async () => {
+  await handleSaveGongbeopRecord();
+}, 150);
     }}
   />
 </View>
+  </View>
+</Modal>
+
+<Modal visible={completionModalVisible} transparent animationType="fade">
+  <View style={styles.recordModalOverlay}>
+    <View style={styles.completionModalCard}>
+      <Text style={styles.completionTitle}>축하합니다!</Text>
+
+      <Text style={styles.completionText}>
+        {completedGoalNames.join(", ")} 목표를 달성하셨습니다.
+      </Text>
+
+      <Text style={styles.completionSubText}>
+        새 목표를 설정하고 수련을 이어가세요.
+      </Text>
+
+      <View style={styles.completionButtonRow}>
+        <TouchableOpacity
+          style={styles.completionCancelButton}
+          onPress={() => setCompletionModalVisible(false)}
+        >
+          <Text style={styles.completionCancelText}>나중에</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.completionSaveButton}
+          onPress={() => {
+            setCompletionModalVisible(false);
+            setGoalModalVisible(true);
+          }}
+        >
+          <Text style={styles.completionSaveText}>목표 재설정</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   </View>
 </Modal>
 <Modal
@@ -1779,9 +1979,45 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 
       <TouchableOpacity
         style={styles.modalSaveHotspot}
-        onPress={() => {
-          setGoalModalVisible(false);
-        }}
+        onPress={async () => {
+  try {
+    const entries = [
+      ["ilsimyangui", gongbeopGoals.ilsimyangui],
+      ["yobujeonsa", gongbeopGoals.yobujeonsa],
+      ["duyoMinutes", gongbeopGoals.duyoMinutes],
+      ["ohaengjeonsa", gongbeopGoals.ohaengjeonsa],
+    ];
+
+    for (const [type, target] of entries) {
+      if (!target || Number(target) <= 0) continue;
+
+      const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop-goals`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({
+          type,
+          target: Number(target),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "공력 목표 저장 실패");
+      }
+    }
+
+    Alert.alert("완료", "공력 목표가 저장되었습니다.");
+    setGoalModalVisible(false);
+    await loadGongbeopGoals();
+  } catch (error) {
+    Alert.alert("오류", error.message || "공력 목표 저장 중 오류가 발생했습니다.");
+  }
+}}
       />
     </View>
   </View>
@@ -1962,9 +2198,15 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
         throw new Error(result.message || "투로 기록 저장 실패");
       }
 
-      Alert.alert("완료", "투로 기록이 저장되었습니다.");
       setFormRecordModalVisible(false);
-      await loadFormRecords();
+await loadFormRecords();
+
+if (result.data?.completedGoal) {
+  setCompletedGoalNames([selectedForm?.name || "투로"]);
+  setCompletionModalVisible(true);
+} else {
+  Alert.alert("완료", "투로 기록이 저장되었습니다.");
+}
     } catch (error) {
       Alert.alert("오류", error.message || "투로 기록 저장 중 오류가 발생했습니다.");
     }
@@ -3225,18 +3467,25 @@ menuYudanjaIcon: {
 },
 flowSection: {
   position: "relative",
-  height: 480,
-  marginBottom: 15,
+  width: "100%",
+  height: 455,
+  marginTop: 4,
+  marginBottom: 0,
   overflow: "hidden",
 },
 
 flowBackground: {
+  width: "100%",
+  height: "108%",
+},
+
+flowBottomFade: {
   position: "absolute",
   left: 0,
-  top: 0,
-  width: "100%",
-  height: "100%",
-  opacity: 0.96,
+  right: 0,
+  bottom: 0,
+  height: 130,
+  zIndex: 3,
 },
 
 recordActionRow: {
@@ -3309,10 +3558,10 @@ recordPercentText: {
   position: "absolute",
   left: 2,
   right: 0,
-  top: 15,
+  top: 13,
   textAlign: "center",
-  fontSize: 9.5,
-  fontWeight: "800",
+  fontSize: 12,
+  fontWeight: "700",
   color: "#5b3f30",
 },
 
@@ -3536,7 +3785,8 @@ goalCard: {
   backgroundColor: "rgba(255,253,249,0.92)",
   borderRadius: 20,
   padding: 16,
-  marginBottom: 12,
+  marginTop: -10,
+  marginBottom: 2,
   borderWidth: 1,
   borderColor: "#ece4d8",
 },
@@ -4104,7 +4354,7 @@ formModalTitle: {
   fontSize: 20,
   fontFamily: fonts.title,
   color: colors.textMain,
-  marginBottom: 18,
+  marginBottom: 12,
   textAlign: "center",
 },
 
@@ -4312,46 +4562,46 @@ featuredFormContent: {
 featuredFormImage: {
   position: "absolute",
   right: 5,
-  bottom: 70,
-  width: 175,
-  height: 210,
+  bottom: 90,
+  width: 147,
+  height: 147,
   opacity: 0.85,
   zIndex: 2,
 },
 
 featuredFormTitle: {
-  fontSize: 25,
+  fontSize: 24,
   lineHeight: 34,
   fontFamily: fonts.title,
   color: colors.textMain,
-  marginBottom: 6,
+  marginBottom: 3,
 },
 
 featuredFormCategory: {
-  fontSize: 14,
-  fontFamily: fonts.medium,
-  color: colors.textSub,
-  marginBottom: 22,
-},
-
-featuredFormCount: {
-  fontSize: 19,
-  lineHeight: 26,
-  fontFamily: fonts.titleSemi,
-  color: colors.warmBrown,
-  marginBottom: 4,
-},
-
-featuredFormRemain: {
   fontSize: 13,
-  lineHeight: 21,
   fontFamily: fonts.medium,
   color: colors.textSub,
   marginBottom: 16,
 },
 
+featuredFormCount: {
+  fontSize: 17,
+  lineHeight: 25,
+  fontFamily: fonts.titleSemi,
+  color: colors.warmBrown,
+  marginBottom: 3,
+},
+
+featuredFormRemain: {
+  fontSize: 12,
+  lineHeight: 20,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  marginBottom: 12,
+},
+
 featuredProgressTrack: {
-  width: 170,
+  width: 155,
   height: 7,
   borderRadius: 999,
   backgroundColor: "#EFE6DC",
@@ -4373,16 +4623,16 @@ featuredPercentText: {
 },
 
 featuredRecordButton: {
-  height: 52,
+  height: 45,
   borderRadius: 16,
   backgroundColor: colors.warmBrown,
   alignItems: "center",
   justifyContent: "center",
-  width: "100%",
+  width: "85%",
 },
 
 featuredRecordButtonText: {
-  fontSize: 17,
+  fontSize: 16,
   fontFamily: fonts.bold,
   color: "#FFFDF9",
 },
@@ -4441,10 +4691,10 @@ otherFormCount: {
 
 otherFormImage: {
   position: "absolute",
-  right: -8,
-  bottom: -8,
-  width: 95,
-  height: 100,
+  right: -2,
+  bottom: 5,
+  width: 85,
+  height: 85,
   opacity: 0.85,
 },
 
@@ -4519,10 +4769,10 @@ goalInputUnit: {
 },
 featuredInkCircleImage: {
   position: "absolute",
-  right: 5,
+  right: -10,
   top: 25,
-  width: 190,
-  height: 190,
+  width: 180,
+  height: 180,
   opacity: 0.35,
   zIndex: 1,
 },
@@ -4560,14 +4810,14 @@ goalFormSelectTextWrap: {
 },
 
 goalFormSelectName: {
-  fontSize: 14,
+  fontSize: 16,
   fontFamily: fonts.semiBold,
   color: colors.textMain,
   marginBottom: 4,
 },
 
 goalFormSelectMeta: {
-  fontSize: 11,
+  fontSize: 13,
   fontFamily: fonts.medium,
   color: colors.textSub,
 },
@@ -4613,5 +4863,121 @@ lockBadge: {
 
 lockBadgeText: {
   fontSize: 13,
+},
+completionModalCard: {
+  width: "86%",
+  maxWidth: 340,
+  borderRadius: 24,
+  backgroundColor: "#FFFDF9",
+  borderWidth: 1,
+  borderColor: "#E7D8CB",
+  paddingHorizontal: 22,
+  paddingTop: 26,
+  paddingBottom: 18,
+},
+
+completionTitle: {
+  fontSize: 23,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  textAlign: "center",
+  marginBottom: 14,
+},
+
+completionText: {
+  fontSize: 16,
+  lineHeight: 24,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+  textAlign: "center",
+},
+
+completionSubText: {
+  marginTop: 8,
+  fontSize: 13,
+  lineHeight: 20,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  textAlign: "center",
+},
+
+completionButtonRow: {
+  marginTop: 22,
+  flexDirection: "row",
+  gap: 10,
+},
+
+completionCancelButton: {
+  flex: 1,
+  height: 46,
+  borderRadius: 14,
+  backgroundColor: "#EDE4D6",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+completionSaveButton: {
+  flex: 1,
+  height: 46,
+  borderRadius: 14,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+completionCancelText: {
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+},
+
+completionSaveText: {
+  fontSize: 14,
+  fontFamily: fonts.semiBold,
+  color: "#FFFDF9",
+},
+awardEntryMiniCard: {
+  marginHorizontal: 0,
+  marginTop: 12,
+  paddingVertical: 13,
+  paddingHorizontal: 14,
+  borderRadius: 18,
+  backgroundColor: "#FFF8EC",
+  borderWidth: 1,
+  borderColor: "#E7D2A9",
+  flexDirection: "row",
+  alignItems: "center",
+  ...shadow.card,
+},
+awardEntryIcon: {
+  width: 34,
+  height: 34,
+  marginRight: 12,
+  opacity: 0.9,
+},
+awardEntryTextBox: {
+  flex: 1,
+},
+awardEntryEyebrow: {
+  fontSize: 11,
+  fontWeight: "800",
+  color: colors.bronzeGold,
+  marginBottom: 3,
+},
+awardEntryTitle: {
+  fontSize: 16,
+  fontWeight: "900",
+  color: colors.textMain,
+},
+awardEntryDesc: {
+  marginTop: 3,
+  fontSize: 12,
+  lineHeight: 17,
+  color: colors.textSub,
+},
+awardEntryArrow: {
+  fontSize: 24,
+  color: colors.bronzeGold,
+  marginLeft: 8,
 },
 });

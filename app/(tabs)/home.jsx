@@ -345,6 +345,7 @@ const isPausedMember = memberStatus === "paused";
   const [hasUnreadNotice, setHasUnreadNotice] = useState(false);
   const [memberNotifications, setMemberNotifications] = useState([]);
   const [closedNoticeIds, setClosedNoticeIds] = useState([]);
+  const [trainingRecordSheetVisible, setTrainingRecordSheetVisible] = useState(false);
 
   const yudanjaEmblemFrame = require("../../assets/images/yudanja-emblem-frame.png");
   const yudanjaProfileBg = require("../../assets/images/yudanja-profile-card-bg.png");
@@ -1358,6 +1359,32 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
   </Pressable>
 </LinearGradient>
 
+<Pressable
+  style={styles.trainingRecordBanner}
+  onPress={() => setTrainingRecordSheetVisible(true)}
+>
+  <Image
+    source={require("../../assets/images/movement-section-icon.png")}
+    style={styles.trainingRecordBannerIcon}
+    resizeMode="contain"
+  />
+
+  <Image
+    source={require("../../assets/images/movement-card-brush.png")}
+    style={styles.trainingRecordBannerBrush}
+    resizeMode="contain"
+  />
+
+  <View style={styles.trainingRecordBannerTextBlock}>
+    <Text style={styles.trainingRecordBannerTitle}>수련 기록</Text>
+    <Text style={styles.trainingRecordBannerSub}>
+      오늘의 공력과 투로를 기록해보세요.
+    </Text>
+  </View>
+
+  <Text style={styles.trainingRecordBannerArrow}>기록하기 〉</Text>
+</Pressable>
+
         <View style={styles.card}>
           <View style={styles.miniCalendarHeader}>
   <Text style={styles.miniCalendarTitle}>
@@ -1512,7 +1539,48 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
 )}
 </View>
 </ScrollView>
+<Modal visible={trainingRecordSheetVisible} transparent animationType="fade">
+  <View style={styles.modalOverlay}>
+    <View style={styles.recordSelectCardThin}>
+  <Pressable
+    style={styles.recordSelectClose}
+    onPress={() => setTrainingRecordSheetVisible(false)}
+  >
+    <Text style={styles.recordSelectCloseText}>×</Text>
+  </Pressable>
 
+  <View style={styles.recordSelectThinRow}>
+    <Pressable
+      style={styles.recordSelectThinItem}
+      onPress={() => {
+        setTrainingRecordSheetVisible(false);
+        router.push({
+          pathname: "/(tabs)/taegukwon",
+          params: { tab: "gongbeop" },
+        });
+      }}
+    >
+      <Text style={styles.recordSelectThinText}>공력 기록</Text>
+    </Pressable>
+
+    <View style={styles.recordSelectDivider} />
+
+    <Pressable
+      style={styles.recordSelectThinItem}
+      onPress={() => {
+        setTrainingRecordSheetVisible(false);
+        router.push({
+          pathname: "/(tabs)/taegukwon",
+          params: { tab: "formRecord" },
+        });
+      }}
+    >
+      <Text style={styles.recordSelectThinText}>투로 기록</Text>
+    </Pressable>
+  </View>
+</View>
+</View>
+</Modal>
       <Modal
         visible={isScheduleSheetVisible}
         transparent
@@ -2733,5 +2801,176 @@ homeAttendanceSummary: {
   color: "#8E8178",
 
   letterSpacing: -0.3,
+},
+trainingRecordBanner: {
+  minHeight: 62,
+  borderRadius: 20,
+  borderWidth: 1,
+  borderColor: "#E8D7C4",
+  backgroundColor: "#FFFDF9",
+  paddingHorizontal: 16,
+  paddingVertical: 12,
+  flexDirection: "row",
+  alignItems: "center",
+  overflow: "hidden",
+  position: "relative",
+},
+
+trainingRecordBannerIcon: {
+  width: 38,
+  height: 38,
+  marginRight: 12,
+  opacity: 0.82,
+},
+
+trainingRecordBannerBrush: {
+  position: "absolute",
+  right: -18,
+  top: -22,
+  width: 92,
+  height: 92,
+  opacity: 0.18,
+},
+
+trainingRecordBannerTextBlock: {
+  flex: 1,
+  zIndex: 2,
+},
+
+trainingRecordBannerTitle: {
+  fontSize: 17,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+},
+
+trainingRecordBannerSub: {
+  marginTop: 4,
+  fontSize: 12,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+trainingRecordBannerArrow: {
+  fontSize: 12,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+  zIndex: 2,
+},
+recordSelectCard: {
+  backgroundColor: colors.card,
+  borderRadius: 24,
+  padding: 20,
+  borderWidth: 1,
+  borderColor: colors.border,
+},
+
+recordSelectTitle: {
+  fontSize: 22,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+  marginBottom: 14,
+},
+
+recordSelectItem: {
+  paddingVertical: 15,
+  borderBottomWidth: 1,
+  borderBottomColor: colors.border,
+},
+
+recordSelectItemTitle: {
+  fontSize: 17,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+},
+
+recordSelectItemSub: {
+  marginTop: 4,
+  fontSize: 12,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+recordSelectCancel: {
+  marginTop: 16,
+  height: 46,
+  borderRadius: 14,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+recordSelectCancelText: {
+  fontSize: 14,
+  fontFamily: fonts.bold,
+  color: colors.white,
+},
+
+recordSelectClose: {
+  position: "absolute",
+  top: 10,
+  right: 12,
+  width: 28,
+  height: 28,
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 5,
+},
+
+recordSelectCloseText: {
+  fontSize: 22,
+  fontFamily: fonts.medium,
+  color: colors.softBrown,
+},
+
+recordSelectCardThin: {
+  backgroundColor: "#FFFDF9",
+  borderRadius: 22,
+  paddingHorizontal: 18,
+  paddingTop: 5,
+  paddingBottom: 5,
+  borderWidth: 1,
+  borderColor: "#E8D7C4",
+},
+
+recordSelectThinRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  minHeight: 32,
+},
+
+recordSelectThinItem: {
+  flex: 1,
+  alignItems: "center",
+  justifyContent: "center",
+  paddingVertical: 10,
+},
+
+recordSelectThinText: {
+  fontSize: 17,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+},
+
+recordSelectDivider: {
+  width: 1,
+  height: 24,
+  backgroundColor: "#E8D7C4",
+},
+
+recordSelectClose: {
+  position: "absolute",
+  top: 8,
+  right: 10,
+  width: 28,
+  height: 28,
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 5,
+},
+
+recordSelectCloseText: {
+  fontSize: 21,
+  fontFamily: fonts.medium,
+  color: colors.softBrown,
 },
 });

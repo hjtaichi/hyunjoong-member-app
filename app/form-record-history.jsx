@@ -40,18 +40,7 @@ export default function FormRecordHistoryScreen() {
         throw new Error(result.message || "지난 투로 기록 불러오기 실패");
       }
 
-const now = new Date();
-const currentYear = now.getFullYear();
-const currentHalf = now.getMonth() + 1 <= 6 ? 1 : 2;
-
-const pastHistory = (result.data || []).filter((period) => {
-  return !(
-    Number(period.periodYear) === currentYear &&
-    Number(period.periodHalf) === currentHalf
-  );
-});
-
-setHistory(pastHistory);
+setHistory(result.data || []);
     } catch (error) {
       console.log("지난 투로 기록 불러오기 실패:", error);
     } finally {
@@ -105,6 +94,11 @@ setHistory(pastHistory);
                   <Text style={styles.recordCount}>
                     {current} / {target}회
                   </Text>
+                  {item.completedAt ? (
+  <Text style={styles.recordDate}>
+    {new Date(item.completedAt).toLocaleDateString("ko-KR")} 완료
+  </Text>
+) : null}
 
                   <View style={styles.progressTrack}>
                     <View
@@ -216,4 +210,9 @@ const styles = StyleSheet.create({
     color: colors.textSub,
     textAlign: "center",
   },
+  recordDate: {
+  marginTop: 4,
+  fontSize: 12,
+  color: colors.textSub,
+},
 });
