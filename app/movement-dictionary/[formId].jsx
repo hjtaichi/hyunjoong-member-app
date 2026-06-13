@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   movementRow: {
-    minHeight: 96,
+    minHeight: 85,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
@@ -209,8 +209,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   numberCircle: {
-    width: 38,
-    height: 38,
+    width: 36,
+    height: 36,
     borderRadius: 19,
     backgroundColor: colors.bronzeGold,
     alignItems: "center",
@@ -218,8 +218,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   numberText: {
-    fontSize: 15,
-    fontWeight: "800",
+    fontSize: 16,
+    fontWeight: "700",
     color: "#FFFFFF",
   },
   
@@ -227,8 +227,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   movementName: {
-    fontSize: 17,
-    fontWeight: "900",
+    fontSize: 18,
+    fontWeight: "700",
     color: colors.textMain,
     marginBottom: 5,
   },
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     color: colors.textMain,
   },
   arrow: {
-    fontSize: 24,
+    fontSize: 20,
     color: colors.warmBrown,
     marginLeft: 8,
   },

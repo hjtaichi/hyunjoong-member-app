@@ -672,7 +672,7 @@ heroBgImage: {
 
 heroPersonTouch: {
   position: "absolute",
-  right: 44,
+  right: 25,
   bottom: 45,
   width: 175,
   height: 275,
@@ -805,7 +805,7 @@ hanjaHorizontalWrap: {
 
 hanjaSquareCard: {
   flex: 1,
-  minHeight: 78,
+  minHeight: 79,
   borderRadius: 14,
   borderWidth: 1,
   borderColor: colors.border,
@@ -819,7 +819,7 @@ hanjaSquareCard: {
 
 hanjaBrush: {
   position: "absolute",
-  top: 3,
+  top: 1,
   width: 64,
   height: 64,
   opacity: 0.72,
