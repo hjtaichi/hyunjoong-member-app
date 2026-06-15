@@ -35,9 +35,9 @@ const steps = [
     icon: "芽",
     title: "입관후 건강증진 수련",
     badge: "1년",
-    desc:      "현중공법을 통해 골격평형, 경락평형, 장부평형, 정신평형을 수련한다.\n\n" +
-      "투로는 현중태극권29식과 현중태극선29식 수련으로 진식현중태극권의 기본기와 건강을 다진다.\n\n" +
-      "이후 세수경으로 심화 수련을 들어간다.",
+    desc:      "현중공법을 통해 골격평형, 경락평형, 장부평형, 정신평형을 수련합니다.\n\n" +
+      "투로는 현중태극권29식과 현중태극선29식 수련으로 진식현중태극권의 기본기와 건강을 다집니다.\n\n" +
+      "이후 세수경으로 심화 수련을 들어갑니다.",
     infoTitle: "수련 기간",
     infoText: "입관 후 1년",
   },
@@ -47,71 +47,64 @@ const steps = [
     icon: "一",
     imageKey: "rankExam",
     title: "1단 심사 안내",
-    desc: "입관 후 1년부터 심사에 응시할 수 있습니다.",
+    desc: "입관 후 1년, 최소 출석 147일을 충족하면 심사에 응시할 수 있습니다.",
     bullets: [
       "현중태극권 역사와 원리 구술",
       "현중태극권 29식 투로",
-      "투로명 구술",
     ],
     note: "수련이 충분히 쌓였다면, 한 번쯤 도전해보셔도 좋습니다.",
   },
   {
     no: 3,
-    tone: "blue",
-    icon: "岐",
-    imageKey: "pathChoice",
-    title: "1단 이후 선택",
-    desc: "두 가지 길 중 자신에게 맞는 수련을 선택할 수 있습니다.",
-    choices: [
-      {
-        imageKey: "yudanjaTraining",
-        icon: "人",
-        title: "유단자회 심화 수련",
-        text: "추수와 다양한 심화 수련을 배웁니다.",
-      },
-      {
-        imageKey: "healthTraining",
-        icon: "心",
-        title: "건강 수련 지속",
-        text: "승단과 관계없이 자신의 속도로 수련을 이어갑니다.",
-      },
-    ],
-    bottom: "어느 길을 선택해도 현중태극검 52식을 배울 수 있습니다.",
-  },
-  {
-    no: 4,
     tone: "olive",
     icon: "劍",
     imageKey: "sword",
     title: "현중태극검 52식 수련",
-    desc: "1단 이후부터 배울 수 있는 검 과정입니다. 유단자회 가입 여부와 관계없이 수련 가능합니다.",
+    desc: "1단 이후부터 배울 수 있는 검 과정입니다.",
   },
   {
-    no: 5,
+    no: 4,
     tone: "brown",
     icon: "二",
     imageKey: "rankExam2",
     title: "2단 심사 안내",
-    desc: "1단 이후 2년 후 심사에 응시할 수 있습니다.",
-    bullets: ["현중태극검 52식", "낮은 자세 오행전사 100개"],
+    desc: "1단 승단일 기준 2년, 추가 출석 300일을 충족하면 심사에 응시할 수 있습니다.",
+    bullets: ["현중태극검 52식", "공력심사"],
   },
   {
-    no: 6,
+    no: 5,
     tone: "olive",
     icon: "太",
     imageKey: "taiji",
     title: "현중태극권 대가1로 79식 수련",
-    desc: "더 깊은 흐름과 힘의 운용을 익히는 과정입니다.",
+    desc: "진가태극권의 전통 투로인 대가1로를 수련합니다.",
   },
   {
-    no: 7,
+    no: 6,
     tone: "brown",
     icon: "三",
     imageKey: "rankExam3",
     title: "3단 심사 안내",
-    desc: "2단 이후 3년 후 심사에 응시할 수 있습니다.",
-    bullets: ["현중태극권 대가1로 79식", "낮은 자세 오행전사 300개"],
+    desc: "2단 승단일 기준 3년, 추가 출석 450일을 충족하면 심사에 응시할 수 있습니다.",
+    bullets: ["현중태극권 대가1로 79식", "공력심사"],
   },
+  {
+  no: 7,
+  tone: "olive",
+  icon: "大",
+  imageKey: "taiji",
+  title: "현중태극권 대가2로 수련",
+  desc: "진가태극권의 전통 투로인 대가2로를 수련합니다.",
+},
+{
+  no: 8,
+  tone: "brown",
+  icon: "四",
+  imageKey: "rankExam3",
+  title: "4단 심사 안내",
+  desc: "3단 승단일 기준 3년, 추가 출석 600일을 충족하면 심사에 응시할 수 있습니다.",
+  bullets: ["현중태극권 대가2로", "공력심사"],
+},
 
 ];
 const STEP_IMAGES = {
@@ -168,38 +161,38 @@ const personalProgress = data?.personalProgress || null;
 
 const currentJourney = useMemo(() => {
   if (rankLevel >= 2) {
-    return {
-      stepNo: 6,
-      title: "현중태극권 대가1로 79식 수련",
-      desc: "현중태극권 대가1로 79식",
-      progressTitle: "2단 이후 심화 수련 중",
-      progressCount: "6 / 7단계",
-      progressPercent: 86,
-      progressDesc: "3단 심사 준비 과정에 해당합니다.",
-    };
-  }
+  return {
+  stepNo: 5,
+  title: "현중태극권 대가1로 79식 수련",
+  desc: "현중태극권 대가1로 79식",
+  progressTitle: "2단 이후 심화 수련 중",
+  progressCount: "5 / 8단계",
+  progressPercent: 63,
+  progressDesc: "3단 심사 준비 과정에 해당합니다.",
+};
+}
 
   if (rankLevel >= 1) {
     return {
-      stepNo: 4,
-      title: "현중태극검 52식 수련",
-      desc: "현중태극검 52식",
-      progressTitle: "1단 이후 검 수련 중",
-      progressCount: "4 / 7단계",
-      progressPercent: 57,
-      progressDesc: "2단 심사 준비 과정에 해당합니다.",
-    };
+  stepNo: 3,
+  title: "현중태극검 52식 수련",
+  desc: "현중태극검 52식",
+  progressTitle: "1단 이후 검 수련 중",
+  progressCount: "3 / 8단계",
+  progressPercent: 38,
+  progressDesc: "2단 심사 준비 과정에 해당합니다.",
+};
   }
 
   return {
-    stepNo: 1,
-    title: "입관 후 기본 수련",
-    desc: "현중태극권 29식 · 현중태극선 29식",
-    progressTitle: "입관 후 기본 수련 중",
-    progressCount: "1 / 7단계",
-    progressPercent: 14,
-    progressDesc: "1단 심사 응시 가능 시점까지 수련을 쌓아가는 과정입니다.",
-  };
+  stepNo: 1,
+  title: "입관 후 기본 수련",
+  desc: "현중태극권 29식 · 현중태극선 29식",
+  progressTitle: "입관 후 기본 수련 중",
+  progressCount: "1 / 8단계",
+  progressPercent: 13,
+  progressDesc: "1단 심사 응시 가능 시점까지 수련을 쌓아가는 과정입니다.",
+};
 }, [rankLevel]);
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -271,14 +264,19 @@ const currentJourney = useMemo(() => {
 
       <Text style={styles.sectionTitle}>전체 수련 여정</Text>
 
+      
       {steps.map((step, index) => (
-        <StepCard
-          key={step.no}
-          step={step}
-          isLast={index === steps.length - 1}
-        />
-      ))}
+  <React.Fragment key={step.no}>
+    <StepCard
+      step={step}
+      isLast={index === steps.length - 1}
+    />
 
+    {step.no === 2 ? <HealthTrainingNoticeCard /> : null}
+  </React.Fragment>
+))}
+
+      <YudanjaNoticeCard />
       <View style={styles.noticeCard}>
         <View style={styles.noticeIcon}>
   <Image
@@ -291,7 +289,8 @@ const currentJourney = useMemo(() => {
           <Text style={styles.noticeTitle}>안내 사항</Text>
           <Text style={styles.noticeText}>
             각 과정의 수련 기간은 개인의 속도와 상황에 따라 달라질 수 있습니다.
-            궁금한 점이 있으시면 관장님께 문의해주세요.
+            수련 내용은 현중태극문 지도진의 판단에 의해 변경될 수 있습니다. 
+            궁금한 점이 있으시면 관장님께 문의해주세요.            
           </Text>
         </View>
       </View>
@@ -410,7 +409,60 @@ function StepCard({ step, isLast }) {
     </View>
   );
 }
+function YudanjaNoticeCard() {
+  return (
+    <View style={styles.yudanjaNoticeCard}>
+      <View style={styles.yudanjaNoticeIcon}>
+        <Image
+          source={STEP_IMAGES.star}
+          style={styles.yudanjaNoticeIconImage}
+          resizeMode="contain"
+        />
+      </View>
 
+      <View style={styles.yudanjaNoticeContent}>
+        <Text style={styles.yudanjaNoticeTitle}>
+          현중태극문 유단자회 안내
+        </Text>
+
+        <Text style={styles.yudanjaNoticeText}>
+          유단자는 선택에 의해 유단자회 가입이 가능합니다.{"\n\n"}
+          유단자회에서는 발경, 추수, 편간 등 공력 심화수련을 진행합니다.{"\n\n"}
+          수련은 매주 월요일 저녁 7시부터 2시간 진행됩니다.{"\n\n"}
+          ※ 유단자회는 별도 회비가 있습니다.
+        </Text>
+      </View>
+    </View>
+  );
+}
+function HealthTrainingNoticeCard() {
+  return (
+    <View style={styles.healthNoticeWrap}>
+      <View style={styles.healthNoticeCard}>
+        <View style={styles.healthNoticeTop}>
+          <View style={styles.healthNoticeIcon}>
+            <Image
+              source={STEP_IMAGES.noticeInfo}
+              style={styles.healthNoticeIconImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          <View style={styles.healthNoticeTextWrap}>
+            <Text style={styles.healthNoticeTitle}>건강관리 중심 수련 안내</Text>
+            <Text style={styles.healthNoticeText}>
+              승단은 필수가 아닙니다.{"\n\n"}
+              건강관리 중심으로 수련하실 경우 현중태극권 29식과
+              현중태극선 29식을 반복하며 몸의 균형을 다져갑니다.{"\n\n"}
+              승단 없이 다른 투로 진도를 원하실 경우에는 별도 개인지도
+              신청을 통해 가능합니다.
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
 const styles = StyleSheet.create({
   screen: {
   flex: 1,
@@ -736,11 +788,11 @@ noteIconImage: {
     color: COLORS.sub,
   },
   infoValue: {
-    marginTop: 4,
-    fontSize: 16,
-    fontWeight: "900",
-    color: COLORS.ink,
-  },
+  marginTop: 4,
+  fontSize: 15,
+  fontFamily: fonts.semiBold,
+  color: COLORS.ink,
+},
   bulletBox: {
     marginTop: 12,
     borderRadius: 16,
@@ -902,5 +954,102 @@ choiceIconImage: {
 noticeIconImage: {
   width: 34,
   height: 34,
+},
+healthNoticeWrap: {
+  marginLeft: 42,
+  marginBottom: 12,
+},
+
+healthNoticeCard: {
+  borderRadius: radius.lg,
+  borderWidth: 1,
+  borderColor: "#E8D7C1",
+  backgroundColor: "#FFF9EF",
+  padding: 15,
+  ...shadow.card,
+},
+
+healthNoticeTop: {
+  flexDirection: "row",
+  gap: 12,
+},
+
+healthNoticeIcon: {
+  width: 44,
+  height: 44,
+  borderRadius: 22,
+  backgroundColor: "#EFE8D8",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+healthNoticeIconImage: {
+  width: 28,
+  height: 28,
+  opacity: 0.9,
+},
+
+healthNoticeTextWrap: {
+  flex: 1,
+},
+
+healthNoticeTitle: {
+  fontSize: 16,
+  lineHeight: 22,
+  fontFamily: fonts.bold,
+  color: COLORS.ink,
+},
+
+healthNoticeText: {
+  marginTop: 7,
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
+  color: COLORS.sub,
+},
+yudanjaNoticeCard: {
+  flexDirection: "row",
+  gap: 12,
+  borderRadius: 20,
+  borderWidth: 1,
+  borderColor: "#D8E1D2",
+  backgroundColor: "#FBFDF8",
+  padding: 15,
+  marginTop: 4,
+  marginBottom: 12,
+  ...shadow.card,
+},
+
+yudanjaNoticeIcon: {
+  width: 48,
+  height: 48,
+  borderRadius: 24,
+  backgroundColor: "#EDF2E6",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+yudanjaNoticeIconImage: {
+  width: 30,
+  height: 30,
+  opacity: 0.9,
+},
+
+yudanjaNoticeContent: {
+  flex: 1,
+},
+
+yudanjaNoticeTitle: {
+  fontSize: 17,
+  fontFamily: fonts.bold,
+  color: COLORS.ink,
+},
+
+yudanjaNoticeText: {
+  marginTop: 7,
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
+  color: COLORS.sub,
 },
 });

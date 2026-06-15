@@ -476,6 +476,11 @@ setGongbeopEditMode(false);
 }, []);
 
   const member = taegukwonData?.member || null;
+  useEffect(() => {
+  if (member?.favoriteFormKey) {
+    setFeaturedFormId(member.favoriteFormKey);
+  }
+}, [member?.favoriteFormKey]);
 const memberRank = Number(member?.rankLevel || 0);
 const now = new Date();
 const currentPeriodYear = now.getFullYear();
@@ -585,11 +590,14 @@ const lockedForms = mergedForms.filter(
   (item) => memberRank < Number(item.minRank || 0)
 );
 
-const activeForms = accessibleForms.filter((item) => item.isActive);
-
 const featuredForm =
-  activeForms.find((item) => item.id === featuredFormId) ||
-  activeForms[0] ||
+  accessibleForms.find((item) => item.id === featuredFormId) ||
+  accessibleForms.find(
+    (item) =>
+      Number(item.targetCount || 0) > 0 ||
+      Number(item.currentCount || 0) > 0
+  ) ||
+  accessibleForms[0] ||
   null;
 
 const otherForms = [
@@ -1147,11 +1155,15 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 
     {featuredForm ? (() => {
       const target = Number(featuredForm.targetCount || 0);
-      const current = Number(featuredForm.currentCount || 0);
+      const current = Number(
+  featuredForm.currentCount ||
+  featuredForm.completedCount ||
+  0
+);
       const remain = Math.max(target - current, 0);
       const percent = target
-        ? Math.min(Math.round((current / target) * 100), 100)
-        : 0;
+  ? Math.round((current / target) * 100)
+  : 0;
 
       return (
         <View style={styles.featuredFormCard}>
@@ -1237,7 +1249,11 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
       contentContainerStyle={styles.otherFormScrollContent}
     >
       {otherForms.map((item) => {
-  const current = Number(item.currentCount || 0);
+  const current = Number(
+  item.currentCount ||
+  item.completedCount ||
+  0
+);
   const target = Number(item.targetCount || 0);
   const locked = memberRank < Number(item.minRank || 0);
 
@@ -1500,27 +1516,27 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
   </View>
   
 ) : null}
-<TouchableOpacity
-  style={styles.awardEntryMiniCard}
-  activeOpacity={0.86}
-  onPress={() => router.push("/training-awards")}
->
-  <Image
-    source={require("../../assets/images/awards/award-icon-hall.png")}
-    style={styles.awardEntryIcon}
-    resizeMode="contain"
-  />
+{activeTab === "training" ? (
+  <TouchableOpacity
+    style={styles.awardEntryMiniCard}
+    activeOpacity={0.86}
+    onPress={() => router.push("/training-awards")}
+  >
+    <Image
+      source={require("../../assets/images/awards/award-icon-hall.png")}
+      style={styles.awardEntryIcon}
+      resizeMode="contain"
+    />
 
-  <View style={styles.awardEntryTextBox}>
-    <Text style={styles.awardEntryEyebrow}>현중 수련 기록</Text>
-    <Text style={styles.awardEntryTitle}>수련 시상식</Text>
-    <Text style={styles.awardEntryDesc}>
-      반기별 목표달성률과 연말 명예의 전당
-    </Text>
-  </View>
+    <View style={styles.awardEntryTextBox}>
 
-  <Text style={styles.awardEntryArrow}>›</Text>
-</TouchableOpacity>
+      <Text style={styles.awardEntryTitle}>명예의 전당을 향한 나의 수련 도전 기록</Text>
+   
+    </View>
+
+    <Text style={styles.awardEntryArrow}>›</Text>
+  </TouchableOpacity>
+) : null}
 {false && (
       <View style={[styles.card, styles.menuCard]}>
         <Text style={styles.cardTitle}>수련 과정 로드맵</Text>
@@ -2263,9 +2279,25 @@ if (result.data?.completedGoal) {
           isFeatured && styles.featuredStarButtonActive,
         ]}
         activeOpacity={0.8}
-        onPress={() => {
-          setFeaturedFormId(item.id);
-        }}
+        onPress={async () => {
+  try {
+    setFeaturedFormId(item.id);
+
+    await fetch(`${API_BASE_URL}/api/member/me/favorite-form`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      body: JSON.stringify({
+        formKey: item.id,
+      }),
+    });
+  } catch (error) {
+    console.log("대표 투로 저장 실패:", error);
+  }
+}}
       >
         <Text
           style={[
@@ -4966,7 +4998,7 @@ awardEntryEyebrow: {
 },
 awardEntryTitle: {
   fontSize: 16,
-  fontWeight: "900",
+  fontWeight: "700",
   color: colors.textMain,
 },
 awardEntryDesc: {

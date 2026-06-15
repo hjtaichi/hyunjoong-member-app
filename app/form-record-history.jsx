@@ -4,12 +4,14 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { colors, radius, shadow, spacing } from "../src/theme";
 import { useAuth } from "../src/contexts/AuthContext";
 import { API_BASE_URL } from "../src/config/env";
 import ScreenHeader from "../src/components/ScreenHeader";
+import { router } from "expo-router";
 
 export default function FormRecordHistoryScreen() {
   const { token } = useAuth();
@@ -69,50 +71,61 @@ setHistory(result.data || []);
           <Text style={styles.emptyText}>아직 지난 기록이 없습니다.</Text>
         </View>
       ) : (
-        history.map((period) => (
-          <View
-            key={`${period.periodYear}-${period.periodHalf}`}
-            style={styles.historyCard}
-          >
-            <Text style={styles.periodTitle}>{period.periodLabel}</Text>
-            <Text style={styles.periodSub}>{period.periodSub}</Text>
+        <>
+  {history.map((period) => (
+    <View
+      key={`${period.periodYear}-${period.periodHalf}`}
+      style={styles.historyCard}
+    >
+      <Text style={styles.periodTitle}>{period.periodLabel}</Text>
+      <Text style={styles.periodSub}>{period.periodSub}</Text>
 
-            {period.forms.map((item) => {
-              const target = Number(item.targetCount || 0);
-              const current = Number(item.currentCount || 0);
-              const percent = target
-                ? Math.min(Math.round((current / target) * 100), 100)
-                : 0;
+      {period.forms.map((item) => {
+        const target = Number(item.targetCount || 0);
+        const current = Number(item.currentCount || 0);
+        const percent = target
+          ? Math.min(Math.round((current / target) * 100), 100)
+          : 0;
 
-              return (
-                <View key={item.formKey} style={styles.recordRow}>
-                  <View style={styles.recordTopRow}>
-                    <Text style={styles.recordName}>{item.name}</Text>
-                    <Text style={styles.recordPercent}>{percent}%</Text>
-                  </View>
+        return (
+          <View key={item.formKey} style={styles.recordRow}>
+            <View style={styles.recordTopRow}>
+              <Text style={styles.recordName}>{item.name}</Text>
+              <Text style={styles.recordPercent}>{percent}%</Text>
+            </View>
 
-                  <Text style={styles.recordCount}>
-                    {current} / {target}회
-                  </Text>
-                  {item.completedAt ? (
-  <Text style={styles.recordDate}>
-    {new Date(item.completedAt).toLocaleDateString("ko-KR")} 완료
-  </Text>
-) : null}
+            <Text style={styles.recordCount}>
+              {current} / {target}회
+            </Text>
 
-                  <View style={styles.progressTrack}>
-                    <View
-                      style={[
-                        styles.progressFill,
-                        { width: `${percent}%` },
-                      ]}
-                    />
-                  </View>
-                </View>
-              );
-            })}
+            {item.completedAt ? (
+              <Text style={styles.recordDate}>
+                {new Date(item.completedAt).toLocaleDateString("ko-KR")} 완료
+              </Text>
+            ) : null}
+
+            <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${percent}%` },
+                ]}
+              />
+            </View>
           </View>
-        ))
+        );
+      })}
+    </View>
+  ))}
+
+  <TouchableOpacity
+    activeOpacity={0.88}
+    style={styles.statsButton}
+    onPress={() => router.push("/form-stats")}
+  >
+    <Text style={styles.statsButtonText}>내 위치 보기</Text>
+  </TouchableOpacity>
+</>
       )}
     </ScrollView>
   );
@@ -214,5 +227,19 @@ const styles = StyleSheet.create({
   marginTop: 4,
   fontSize: 12,
   color: colors.textSub,
+},
+statsButton: {
+  marginTop: 2,
+  height: 52,
+  borderRadius: 18,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+statsButtonText: {
+  fontSize: 15,
+  fontWeight: "800",
+  color: "#FFFFFF",
 },
 });

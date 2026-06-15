@@ -97,30 +97,40 @@ export default function GongbeopRecordHistoryScreen() {
           <Text style={styles.emptyText}>아직 완료 기록이 없습니다.</Text>
         </View>
       ) : (
-        <View style={styles.recordList}>
-          {completedGoals.map((item) => {
-            const info = GONGBEOP_LABELS[item.type] || {
-              name: item.type,
-              unit: "회",
-            };
+        <>
+          <View style={styles.recordList}>
+            {completedGoals.map((item) => {
+              const info = GONGBEOP_LABELS[item.type] || {
+                name: item.type,
+                unit: "회",
+              };
 
-            return (
-              <View key={item.id} style={styles.recordCard}>
-                <View>
-                  <Text style={styles.recordTitle}>{info.name}</Text>
-                  <Text style={styles.recordDate}>
-                    {formatDate(item.completedAt)} 완료
+              return (
+                <View key={item.id} style={styles.recordCard}>
+                  <View>
+                    <Text style={styles.recordTitle}>{info.name}</Text>
+                    <Text style={styles.recordDate}>
+                      {formatDate(item.completedAt)} 완료
+                    </Text>
+                  </View>
+
+                  <Text style={styles.recordCount}>
+                    {item.current} / {item.target}
+                    <Text style={styles.recordUnit}>{info.unit}</Text>
                   </Text>
                 </View>
+              );
+            })}
+          </View>
 
-                <Text style={styles.recordCount}>
-                  {item.current} / {item.target}
-                  <Text style={styles.recordUnit}>{info.unit}</Text>
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+          <TouchableOpacity
+            activeOpacity={0.88}
+            style={styles.statsButton}
+            onPress={() => router.push("/gongbeop-stats")}
+          >
+            <Text style={styles.statsButtonText}>내 위치 보기</Text>
+          </TouchableOpacity>
+        </>
       )}
     </ScrollView>
   );
@@ -223,5 +233,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: fonts.medium,
     color: colors.textSub,
+  },
+
+  statsButton: {
+    marginTop: 16,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: colors.warmBrown,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  statsButtonText: {
+    fontSize: 15,
+    fontFamily: fonts.semiBold,
+    color: "#FFFFFF",
   },
 });

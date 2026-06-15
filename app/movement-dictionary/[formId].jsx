@@ -52,9 +52,6 @@ export default function MovementFormDetailScreen() {
         <View style={styles.tabActive}>
           <Text style={styles.tabActiveText}>목록</Text>
         </View>
-        <TouchableOpacity style={styles.tabButton} activeOpacity={0.85}>
-          <Text style={styles.tabText}>슬라이드 보기</Text>
-        </TouchableOpacity>
       </View>
 
       {movements.length > 0 ? (

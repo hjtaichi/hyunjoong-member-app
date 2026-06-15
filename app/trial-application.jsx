@@ -19,6 +19,13 @@ const fonts = {
   title: "MaruBuriBold",
   titleSemi: "MaruBuriSemiBold",
 };
+
+const HOPE_TIME_OPTIONS = [
+  { label: "오전 10시", value: "10:00" },
+  { label: "오후 4시", value: "16:00" },
+  { label: "오후 7시", value: "19:00" },
+];
+
 import { submitTrialApplication } from "../src/api/member";
 import { Image } from "react-native";
 
@@ -27,6 +34,7 @@ export default function TrialApplicationScreen() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [hopeDate, setHopeDate] = useState("");
+  const [hopeTime, setHopeTime] = useState("");
   const [dateModalVisible, setDateModalVisible] = useState(false);
   const [calendarBaseDate, setCalendarBaseDate] = useState(new Date());
   const [shoeSize, setShoeSize] = useState("");
@@ -97,27 +105,39 @@ function handleSelectHopeDate(date) {
       return;
     }
 
+    if (!hopeDate.trim()) {
+  Alert.alert("안내", "희망 날짜를 입력해주세요.");
+  return;
+}
+
+if (!hopeTime) {
+  Alert.alert("안내", "희망 시간을 선택해주세요.");
+  return;
+}
+
     await submitTrialApplication({
-      name,
-      gender,
-      phone: onlyNumbers(phone),
-      hopeDate,
-      shoeSize,
-      height,
-      memo,
-    });
+  name,
+  gender,
+  phone: onlyNumbers(phone),
+  hopeDate,
+  hopeTime,
+  shoeSize,
+  height,
+  memo,
+});
 
     router.push({
       pathname: "/trial-application-complete",
       params: {
-        name,
-        gender,
-        phone,
-        hopeDate,
-        shoeSize,
-        height,
-        memo,
-      },
+  name,
+  gender,
+  phone,
+  hopeDate,
+  hopeTime,
+  shoeSize,
+  height,
+  memo,
+},
     });
   } catch (error) {
   console.log("체험 신청 에러:", error?.response?.data || error);
@@ -176,25 +196,6 @@ function handleSelectHopeDate(date) {
         ))}
       </View>
 
-      <Text style={styles.label}>이름 *</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="체험 신청자 이름을 입력해주세요."
-        placeholderTextColor="#A99F98"
-        value={name}
-        onChangeText={setName}
-      />
-
-      <Text style={styles.label}>연락처 *</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="010-1234-5678 형식으로 입력해주세요."
-        placeholderTextColor="#A99F98"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
-      />
-
       <Text style={styles.label}>희망 날짜 *</Text>
 
 <Pressable
@@ -210,7 +211,29 @@ function handleSelectHopeDate(date) {
     {hopeDate || "날짜를 선택해주세요."}
   </Text>
 </Pressable>
+<Text style={styles.label}>희망 시간 *</Text>
 
+<View style={styles.timeRow}>
+  {HOPE_TIME_OPTIONS.map((option) => (
+    <Pressable
+      key={option.value}
+      style={[
+        styles.timeButton,
+        hopeTime === option.value && styles.timeButtonActive,
+      ]}
+      onPress={() => setHopeTime(option.value)}
+    >
+      <Text
+        style={[
+          styles.timeText,
+          hopeTime === option.value && styles.timeTextActive,
+        ]}
+      >
+        {option.label}
+      </Text>
+    </Pressable>
+  ))}
+</View>
       <Text style={styles.label}>신발 사이즈 (mm)</Text>
       <TextInput
         style={styles.input}
@@ -578,5 +601,36 @@ sectionTitle: {
   fontFamily: fonts.titleSemi,
   color: colors.textMain,
   marginBottom: 12,
-}
+},
+timeRow: {
+  flexDirection: "row",
+  gap: 8,
+},
+
+timeButton: {
+  flex: 1,
+  minHeight: 50,
+  borderRadius: 14,
+  borderWidth: 1,
+  borderColor: colors.border,
+  backgroundColor: "#FFFEFC",
+  alignItems: "center",
+  justifyContent: "center",
+  paddingHorizontal: 8,
+},
+
+timeButtonActive: {
+  backgroundColor: "#241E1A",
+  borderColor: "#241E1A",
+},
+
+timeText: {
+  fontSize: 13,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
+
+timeTextActive: {
+  color: "#E9C98A",
+},
 });
