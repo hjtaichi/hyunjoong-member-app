@@ -11,6 +11,7 @@ import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberHome } from "../src/api/memberHome";
 import { colors } from "../src/theme/colors";
+import ScreenHeader from "../src/components/ScreenHeader";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -68,16 +69,9 @@ export default function TrainingStatsScreen() {
   return (
     <View style={styles.bg}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-        <View style={styles.headerRow}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>‹</Text>
-          </Pressable>
+        <ScreenHeader title="내 수련 통계" />
 
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.title}>내 수련 통계</Text>
-            <Text style={styles.subtitle}>최근 1년간의 수련 흐름</Text>
-          </View>
-        </View>
+<Text style={styles.subtitle}>최근 1년간의 수련 흐름</Text>
 
         <View style={styles.summaryCard}>
           <View style={styles.summaryItem}>
@@ -207,11 +201,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 44,
-    paddingBottom: 40,
-    gap: 16,
-  },
+  paddingHorizontal: 16,
+  paddingTop: 22,
+  paddingBottom: 40,
+  gap: 16,
+},
   center: {
     flex: 1,
     alignItems: "center",
@@ -223,41 +217,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSub,
   },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.card,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  backButtonText: {
-    fontSize: 30,
-    color: colors.warmBrown,
-    marginTop: -2,
-  },
-  headerTextWrap: {
-    flex: 1,
-    alignItems: "center",
-    marginRight: 42,
-  },
-  title: {
-    fontSize: 25,
-    fontWeight: "800",
-    color: colors.textMain,
-  },
   subtitle: {
-    marginTop: 5,
-    fontSize: 14,
-    color: colors.textSub,
-  },
+  marginTop: -14,
+  marginBottom: 10,
+  fontSize: 14,
+  color: colors.textSub,
+  textAlign: "center",
+},
   summaryCard: {
     flexDirection: "row",
     borderRadius: 28,

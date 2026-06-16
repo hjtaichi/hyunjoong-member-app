@@ -31,6 +31,7 @@ const formIcons = {
 };
 const lockIcon = require("../../assets/images/menu-lock.png");
 const cardBrush = require("../../assets/images/movement-card-brush.png");
+const heroFigure = require("../../assets/images/movement-dictionary-hero.png");
 
 export default function MovementDictionaryHomeScreen() {
   const { token } = useAuth();
@@ -71,12 +72,14 @@ export default function MovementDictionaryHomeScreen() {
       <ScreenHeader title="동작명 사전" />
 
       <View style={styles.hero}>
-  <Image source={cardBrush} style={styles.heroBrush} resizeMode="contain" />
+  <Image source={heroFigure} style={styles.heroFigure} resizeMode="contain" />
 
-  <Text style={styles.heroTitle}>투로명이 궁금해요?</Text>
-  <Text style={styles.heroDesc}>
-    수련 중 들은 동작 이름과 뜻을 그림, 설명, 포인트와 함께 확인해보세요.
-  </Text>
+  <View style={styles.heroTextWrap}>
+    <Text style={styles.heroTitle}>투로명이 궁금해요?</Text>
+    <Text style={styles.heroDesc}>
+      수련 중 들은 동작 이름과 뜻을 그림, 설명, 포인트와 함께 확인해보세요.
+    </Text>
+  </View>
 </View>
 
       <View style={styles.searchBox}>
@@ -208,6 +211,7 @@ const styles = StyleSheet.create({
 
 hero: {
   marginTop: 6,
+  minHeight: 150,
   paddingHorizontal: 20,
   paddingVertical: 24,
   borderRadius: 24,
@@ -215,9 +219,25 @@ hero: {
   borderWidth: 1,
   borderColor: colors.border,
   overflow: "hidden",
+  justifyContent: "center",
 },
-  heroTitle: {
-  fontSize: 28,
+
+heroTextWrap: {
+  width: "64%",
+  zIndex: 2,
+},
+
+heroFigure: {
+  position: "absolute",
+  right: -12,
+  bottom: -12,
+  width: 170,
+  height: 170,
+  opacity: 0.9,
+},
+
+heroTitle: {
+  fontSize: 27,
   fontFamily: fonts.title,
   color: colors.textMain,
   marginBottom: 10,
@@ -225,8 +245,8 @@ hero: {
 },
 
 heroDesc: {
-  fontSize: 15,
-  lineHeight: 24,
+  fontSize: 14,
+  lineHeight: 23,
   fontFamily: fonts.medium,
   color: colors.textMain,
 },
