@@ -26,7 +26,7 @@ const formIcons = {
   "fan-29": require("../../assets/images/fan.png"),
   "sword-52": require("../../assets/images/sword.png"),
   "daega-79": require("../../assets/images/taiji1.png"),
-  "single-sword-24": require("../../assets/images/single-sword.png"),
+  "dando-24": require("../../assets/images/single-sword.png"),
   "daga-2-62": require("../../assets/images/taiji2.png"),
 };
 const lockIcon = require("../../assets/images/menu-lock.png");
