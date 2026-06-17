@@ -64,6 +64,12 @@ const avatarImages = {
   avatar6: require("../../assets/images/avatar6.png"),
   avatar7: require("../../assets/images/avatar7.png"),
   avatar8: require("../../assets/images/avatar8.png"),
+  avatar9: require("../../assets/images/avatar9.png"),
+  avatar10: require("../../assets/images/avatar10.png"),
+  avatar11: require("../../assets/images/avatar11.png"),
+  avatar12: require("../../assets/images/avatar12.png"),
+  avatar13: require("../../assets/images/avatar13.png"),
+  avatar14: require("../../assets/images/avatar14.png"),
 };
 const cameraIcon = require("../../assets/images/camera-icon.png");
 const yudanjaIcon = require("../../assets/images/yudanja-icon.png");
@@ -644,10 +650,14 @@ const joinedAtText =
   homeData?.member?.joinedAt ||
   null;
 
-const attendanceCount =
+const attendanceSessionCount =
+  homeData?.member?.totalAttendanceSessionCount ??
   homeData?.member?.totalAttendanceCount ??
   homeData?.member?.attendanceCount ??
-  homeData?.totalAttendanceCount ??
+  0;
+
+const attendanceDayCount =
+  homeData?.member?.totalAttendanceCount ??
   0;
 
   const isYudanja = homeData?.member?.canAccessYudanjaClass === true;
@@ -821,8 +831,10 @@ function MenuDivider() {
 
 <Text style={styles.heroSubText}>입관 {joinedDateLabel}</Text>
 
+<Text style={styles.heroMetaText}>{joinedPeriodLabel}</Text>
+
 <Text style={styles.heroMetaText}>
-  {joinedPeriodLabel} · 누적 출석 {attendanceCount}일
+  출석횟수 {attendanceSessionCount}회 ({attendanceDayCount}일)
 </Text>
     </View>
 
@@ -2115,7 +2127,7 @@ heroLevelBadgeText: {
 
 heroSubText: {
   marginTop: 8,
-  fontSize: 13,
+  fontSize: 14,
   lineHeight: 19,
   color: "#7D746D",
 },
@@ -2404,7 +2416,7 @@ heroYudanjaBadgeText: {
 heroMetaText: {
   marginTop: 4,
   fontSize: 12,
-  lineHeight: 18,
+  lineHeight: 13,
   color: "#A78D83",
 },
 
@@ -2537,9 +2549,12 @@ defaultAvatarTitle: {
 },
 
 defaultAvatarGrid: {
+  marginTop: 18,
+  marginBottom: 18,
   flexDirection: "row",
   flexWrap: "wrap",
-  gap: 10,
+  justifyContent: "flex-start",
+  gap: 14,
 },
 
 defaultAvatarOption: {

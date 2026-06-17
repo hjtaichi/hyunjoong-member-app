@@ -121,84 +121,84 @@ const JOURNEY_IMAGES = {
   },
 };
 
-
+const promotionScroll = require("../assets/images/promotion-scroll.png");
 
 const JOURNEY_PATH_POINTS = {
   start: [
     { progress: 0, x: 0.4, y: 0.671, scale: 1.4 }, //0
-    { progress: 0.5, x: 0.4, y: 0.585, scale: 1.2 }, //25
-    { progress: 0.8, x: 0.42, y: 0.530, scale: 0.9 }, //40
-    { progress: 1, x: 0.361, y: 0.512, scale: 0.7 },
+    { progress: 0.5, x: 0.4, y: 0.585, scale: 1.1 }, //25
+    { progress: 0.8, x: 0.36, y: 0.530, scale: 0.6 }, //40
+    { progress: 1, x: 0.361, y: 0.512, scale: 0.4 },
   ],
   1: [
     { progress: 0, x: 0.403, y: 0.74, scale: 2 }, //50
     { progress: 0.5, x: 0.35, y: 0.57, scale: 1.3 },//175
     { progress: 0.803, x: 0.34, y: 0.46, scale: 1 },//250
-    { progress: 1, x: 0.38, y: 0.40, scale: 0.6 }, //300
+    { progress: 1, x: 0.35, y: 0.40, scale: 0.6 }, //300
   ],
   2: [
     { progress: 0, x: 0.597, y: 0.780, scale: 2 }, //300
     { progress: 0.5, x: 0.71, y: 0.561, scale: 1.4 }, //425
-    { progress: 0.72, x: 0.55, y: 0.488, scale: 1 },
-    { progress: 0.9, x: 0.67, y: 0.402, scale: 0.8 },
-    { progress: 1, x: 0.5, y: 0.376, scale: 0.6 },
+    { progress: 0.72, x: 0.58, y: 0.488, scale: 1 },
+    { progress: 0.88, x: 0.68, y: 0.412, scale: 0.8 }, //520
+    { progress: 1, x: 0.5, y: 0.392, scale: 0.6 },
   ],
   3: [
     { progress: 0, x: 0.35, y: 0.74, scale: 2 }, //550
     { progress: 0.25, x: 0.36, y: 0.622, scale: 1.7 },
     { progress: 0.5, x: 0.472, y: 0.494, scale: 1.4 },
-    { progress: 0.76, x: 0.64, y: 0.350, scale: 1 },
-    { progress: 0.92, x: 0.63, y: 0.256, scale: 0.7 },
-    { progress: 1, x: 0.62, y: 0.220, scale: 0.6 }, //799
+    { progress: 0.76, x: 0.74, y: 0.350, scale: 1 },
+    { progress: 0.92, x: 0.67, y: 0.256, scale: 0.7 },
+    { progress: 1, x: 0.71, y: 0.220, scale: 0.6 }, //799
   ],
   4: [
     { progress: 0, x: 0.35, y: 0.74, scale: 2 },  //800
     { progress: 0.25, x: 0.3, y: 0.622, scale: 1.7 },
     { progress: 0.5, x: 0.444, y: 0.494, scale: 1.4 },
-    { progress: 0.73, x: 0.68, y: 0.311, scale: 1 },
-    { progress: 0.92, x: 0.63, y: 0.256, scale: 0.7 },
-    { progress: 1, x: 0.65, y: 0.220, scale: 0.6 }, //1049
+    { progress: 0.73, x: 0.75, y: 0.311, scale: 1 }, //982
+    { progress: 0.92, x: 0.69, y: 0.286, scale: 0.7 }, //1029
+    { progress: 1, x: 0.7, y: 0.220, scale: 0.6 }, //1049
   ],
   5: [
     { progress: 0, x: 0.42, y: 0.74, scale: 2 },  //1050
-    { progress: 0.48, x: 0.444, y: 0.494, scale: 1.4 },
-    { progress: 0.68, x: 0.62, y: 0.36, scale: 1.4 },
-    { progress: 0.84, x: 0.49, y: 0.26, scale: 1 },
-    { progress: 0.92, x: 0.56, y: 0.21, scale: 0.8},
-    { progress: 1, x: 0.5, y: 0.16, scale: 0.6 }, // 1299
+    { progress: 0.48, x: 0.444, y: 0.494, scale: 1.4 }, //1170
+    { progress: 0.68, x: 0.68, y: 0.4, scale: 1.2 }, //1219
+    { progress: 0.84, x: 0.49, y: 0.29, scale: 1 }, //1259
+    { progress: 0.92, x: 0.62, y: 0.23, scale: 0.8}, //1279
+    { progress: 1, x: 0.48, y: 0.185, scale: 0.6 }, // 1299
   ],
 6: [
     { progress: 0, x: 0.47, y: 0.74, scale: 2 }, //1300
-    { progress: 0.44, x: 0.64, y: 0.44, scale: 1.5 },
-    { progress: 0.64, x: 0.51, y: 0.34, scale: 1 }, //1410
-    { progress: 0.752, x: 0.605, y: 0.27, scale: 0.9 }, //1438
-    { progress: 0.9, x: 0.655, y: 0.18, scale: 0.8 }, //1475
-    { progress: 1, x: 0.57, y: 0.115, scale: 0.6 }, //1549
+    { progress: 0.44, x: 0.71, y: 0.48, scale: 1.5 }, //1410
+    { progress: 0.64, x: 0.55, y: 0.36, scale: 1 }, //1459
+    { progress: 0.752, x: 0.655, y: 0.282, scale: 0.9 }, //1487
+    { progress: 0.9, x: 0.7, y: 0.19, scale: 0.8 }, //1524
+    { progress: 1, x: 0.58, y: 0.125, scale: 0.6 }, //1549
   ],
 7: [
   { progress: 0,    x: 0.4,  y: 0.74,  scale: 2 },    // 1550
   { progress: 0.32, x: 0.5,  y: 0.45,  scale: 1.35 }, // 1630
-  { progress: 0.48, x: 0.48, y: 0.36,  scale: 1.15 }, // 1670
-  { progress: 0.68, x: 0.57, y: 0.25,  scale: 0.8 },  // 1720
-  { progress: 0.84, x: 0.64,  y: 0.198, scale: 0.65 }, // 1760
-  { progress: 1,    x: 0.71, y: 0.165, scale: 0.6 },  // 1799~1800
+  { progress: 0.48, x: 0.48, y: 0.38,  scale: 1.15 }, // 1670
+  { progress: 0.68, x: 0.82, y: 0.26,  scale: 0.8 },  // 1719
+  { progress: 0.84, x: 0.67,  y: 0.23, scale: 0.65 }, // 1759
+  { progress: 1,    x: 0.763, y: 0.2, scale: 0.6 },  // 1799~1800
 ],
 8:  [ 
     { progress: 0, x: 0.45, y: 0.74, scale: 2 }, //1800
-    { progress: 0.4, x: 0.6, y: 0.5, scale: 1.6 }, //1900
-    { progress: 0.6, x: 0.51, y: 0.4, scale: 1.2 }, //1950
-    { progress: 0.88, x: 0.7, y: 0.24, scale: 0.9 }, //2020
-    { progress: 1, x: 0.55, y: 0.18, scale: 0.6 }, //2049 
+    { progress: 0.4, x: 0.64, y: 0.54, scale: 1.6 }, //1900
+    { progress: 0.6, x: 0.48, y: 0.45, scale: 1.2 }, //1950
+    { progress: 0.88, x: 0.75, y: 0.3, scale: 0.9 }, //2020
+    { progress: 1, x: 0.53, y: 0.2, scale: 0.6 }, //2049 
   ],
   end: [
     { progress: 0, x: 0.389, y: 0.74, scale: 2 }, //2050
-    { progress: 0.2, x: 0.395, y: 0.63, scale: 1.7 }, //2080
-    { progress: 0.3667, x: 0.175, y: 0.55, scale: 1.6 }, //2105
-    { progress: 0.533, x: 0.39, y: 0.43, scale: 1.5 }, //2130
-    { progress: 0.733, x: 0.19, y: 0.31, scale: 1.1 }, //2130
-    { progress: 0.87, x: 0.43, y: 0.232, scale: 0.8 }, //2180
-    { progress: 0.92, x: 0.35, y: 0.2, scale: 0.72 }, //2188
-    { progress: 1, x: 0.45, y: 0.15, scale: 0.6 }, //2200
+    { progress: 0.35, x: 0.395, y: 0.63, scale: 1.7 }, //2080
+    { progress: 0.3667, x: 0.1, y: 0.59, scale: 1.6 }, //2105
+    { progress: 0.533, x: 0.39, y: 0.49, scale: 1.5 }, //2130
+    { progress: 0.733, x: 0.13, y: 0.35, scale: 1.1 }, //2160
+    { progress: 0.87, x: 0.43, y: 0.272, scale: 0.8 }, //2180
+    { progress: 0.92, x: 0.33, y: 0.235, scale: 0.72 }, //2188
+    { progress: 1, x: 0.42, y: 0.19, scale: 0.6 }, //2200
   ],
   
 };
@@ -441,7 +441,7 @@ export default function TrainingHistoryScreen() {
   const [commonMilestones, setCommonMilestones] = useState([]);
   const { token } = useAuth();
 
-const COLLAPSED_HEIGHT = 96;
+const COLLAPSED_HEIGHT = 82;
 const EXPANDED_HEIGHT = 320;
 
 const [statsExpanded, setStatsExpanded] = useState(false);
@@ -525,6 +525,7 @@ const sheetPanResponder = useMemo(
 
 const attendanceCount = Number(realAttendanceCount || 0);
 
+
   const joinedAt = member?.joinDate || member?.joinedAt || null;
 
   const nextStage = useMemo(() => {
@@ -559,7 +560,7 @@ const segment = getJourneySegment(attendanceCount);
 const currentJourneyImage = JOURNEY_IMAGES[season][segment];
 const range = getJourneyRange(attendanceCount);
 
-const sceneHeight = 920;
+const sceneHeight = 930;
 
 function getStageTop(index) {
   return sceneHeight - START_BOTTOM_OFFSET - index * STAGE_GAP;
@@ -606,10 +607,15 @@ return {
 
   const position = getPositionByDay(stage.days);
 
-  return {
-    top: Math.max(120, position.top - 20),
-    right: 16,
-  };
+const BOTTOM_SHEET_SAFE_TOP = sceneHeight - COLLAPSED_HEIGHT - 150;
+
+return {
+  top: Math.min(
+    Math.max(120, position.top - 20),
+    BOTTOM_SHEET_SAFE_TOP
+  ),
+  right: 16,
+};
 }
 
 
@@ -744,6 +750,15 @@ const promotionRemainDays = Math.max(
   0,
   promotionTargetDays - attendanceCount
 );
+
+const shouldShowPromotionScroll =
+  promotionRemainDays <= 0 &&
+  attendanceCount >= promotionTargetDays &&
+  attendanceCount <= promotionTargetDays + 10;
+
+const shouldHidePromotionStage =
+  promotionRemainDays <= 0 &&
+  attendanceCount >= promotionTargetDays;
 
 const nextDanEvent = promotionGoal
   ? {
@@ -953,6 +968,19 @@ locations={[0, 0.28, 0.66, 1]}
           resizeMode="contain"
         />
       </Pressable>
+{shouldShowPromotionScroll ? (
+  <View style={styles.promotionScrollWrap} pointerEvents="none">
+    <Image
+      source={promotionScroll}
+      style={styles.promotionScrollImage}
+      resizeMode="stretch"
+    />
+
+    <Text style={styles.promotionScrollText}>
+      {nextDanEvent?.title || "승단심사"} 자격이 되었습니다.
+    </Text>
+  </View>
+) : null}
 
       <View style={styles.headerTextWrap}>
         <Text style={styles.title}>수련의 길</Text>
@@ -1040,6 +1068,10 @@ locations={[0, 0.28, 0.66, 1]}
 
       const layout = getStageLayout(stage);
 
+      if (stage.kind === "promotion") {
+  return null;
+}
+      
       if (future) {
         return (
           <View
@@ -1080,24 +1112,6 @@ locations={[0, 0.28, 0.66, 1]}
             },
           ]}
         >
-          <View
-            style={[
-              styles.sceneDot,
-              completed && styles.sceneDotCompleted,
-              current && styles.sceneDotCurrent,
-              future && styles.sceneDotFuture,
-              future && styles.sceneDotFutureSmall,
-            ]}
-          >
-            <Text
-              style={[
-                styles.sceneDotText,
-                current && styles.sceneDotTextCurrent,
-              ]}
-            >
-              {completed ? "✓" : ""}
-            </Text>
-          </View>
 
           <View
             style={[
@@ -1183,10 +1197,9 @@ locations={[0, 0.28, 0.66, 1]}
   {statsExpanded ? (
     <View style={styles.bottomSheetFullContent}>
       <View style={styles.trainingStatsFullHeader}>
-  <Text style={styles.trainingStatsFullTitle}>수련 통계 자세히 보기</Text>
 
   <Pressable onPress={() => router.push("/training-stats")}>
-    <Text style={styles.trainingStatsInlineLink}>보기</Text>
+    <Text style={styles.trainingStatsInlineLink}>자세히 보기</Text>
   </Pressable>
 </View>
       <View style={styles.trainingStatsMainRow}>
@@ -1625,55 +1638,16 @@ sceneMilestone: {
   zIndex: 6,
 },
 
-sceneDot: {
-  width: 38,
-  height: 38,
-  borderRadius: 19,
-  backgroundColor: "rgba(242, 238, 232, 0.92)",
-  borderWidth: 2,
-  borderColor: "#D8CEC2",
-  alignItems: "center",
-  justifyContent: "center",
-  marginBottom: 6,
-},
-
-sceneDotCompleted: {
-  backgroundColor: "#F4E2B5",
-  borderColor: "#C9A25B",
-},
-
-sceneDotCurrent: {
-  backgroundColor: "#2B2522",
-  borderColor: "#D6AA55",
-  shadowColor: "#D6AA55",
-  shadowOpacity: 0.45,
-  shadowRadius: 10,
-  shadowOffset: { width: 0, height: 3 },
-  elevation: 8,
-},
-
-sceneDotFuture: {
-  opacity: 0.75,
-},
-
-sceneDotText: {
-  fontSize: 13,
-  fontWeight: "900",
-  color: "#8C6330",
-},
-
-sceneDotTextCurrent: {
-  color: "#F1D39A",
-},
 
 sceneTextBox: {
   width: 110,
   borderRadius: 13,
   paddingHorizontal: 9,
-  paddingVertical: 7,
+  paddingVertical: 5,
   backgroundColor: "rgba(255, 253, 249, 0.72)",
   borderWidth: 1,
   borderColor: "rgba(214, 170, 85, 0.45)",
+  opacity:0.85,
 },
 
 sceneTextBoxCurrent: {
@@ -1683,8 +1657,8 @@ sceneTextBoxCurrent: {
   paddingVertical: 8,
   borderWidth: 1,
   borderColor: "#D6AA55",
+  opacity:0.85,
 },
-
 
 sceneMilestoneTitle: {
   fontSize: 16,
@@ -1977,14 +1951,14 @@ journeySceneWrap: {
 },
 
 trainingStatsMiniTitle: {
-  fontSize: 16,
+  fontSize: 18,
   lineHeight: 23,
   fontFamily: fonts.bold,
   color: "#2E2118",
 },
 
 trainingStatsMiniSub: {
-  fontSize: 14,
+  fontSize: 15,
   lineHeight: 20,
   fontFamily: fonts.medium,
   color: "#8A7663",
@@ -2009,11 +1983,12 @@ trainingStatsTitleTextRow: {
 },
 
 trainingStatsInlineLink: {
-  fontSize: 12,
-  lineHeight: 18,
-  fontFamily: fonts.bold,
+  fontSize: 13,
+  lineHeight: 16,
+  fontFamily: fonts.medium,
   color: "#8C6330",
   textDecorationLine: "underline",
+  textAlign: "right",
 },
 
 journeySpeechBubble: {
@@ -2027,7 +2002,7 @@ journeySpeechBubble: {
   borderRadius: 14,
 
   paddingHorizontal: 16,
-  paddingVertical: 8,
+  paddingVertical: 7,
 
   minWidth: 170,
 
@@ -2040,10 +2015,10 @@ journeySpeechBubble: {
 },
 
 journeySpeechText: {
-  fontSize: 16,
-  lineHeight: 22,
+  fontSize: 15,
+  lineHeight: 18,
 
-  fontWeight: "700",
+  fontWeight: "600",
 
   color: "#5E4528",
 
@@ -2086,8 +2061,8 @@ statsBottomSheetExpanded: {
 },
 bottomSheetHandleArea: {
   alignItems: "center",
-  paddingTop: 2,
-  paddingBottom: 12,
+  paddingTop: 7,
+  paddingBottom: 7,
 },
 
 bottomSheetHandle: {
@@ -2125,13 +2100,6 @@ sceneFutureGoalWrap: {
   overflow: "visible",
   opacity: 0.9,
 },
-sceneDotFutureSmall: {
-  width: 26,
-  height: 26,
-  borderRadius: 13,
-  marginBottom: 0,
-  opacity :0.8,
-},
 
 sceneTextBoxFuture: {
   position: "absolute",
@@ -2142,11 +2110,12 @@ sceneTextBoxFuture: {
   paddingVertical: 7,
   backgroundColor: "rgba(43, 37, 34, 0.68)",
   borderColor: "rgba(214, 170, 85, 0.58)",
+  opacity:0.85,
 },
 roadmapRail: {
   position: "absolute",
-  left: 12,
-  bottom: 85,
+  left: 14,
+  bottom: 90,
   zIndex: 20,
 },
 
@@ -2162,8 +2131,8 @@ roadmapMarkerWrap: {
 },
 
 roadmapDot: {
-  width: 17,
-  height: 17,
+  width: 18,
+  height: 18,
   borderRadius: 999,
   borderWidth: 2,
   borderColor: "rgba(214, 170, 85, 0.78)",
@@ -2176,8 +2145,8 @@ roadmapDotCompleted: {
 },
 
 roadmapDotCurrent: {
-  width: 26,
-  height: 26,
+  width: 27,
+  height: 27,
   borderRadius: 999,
   backgroundColor: "#2B2522",
   borderColor: "#D6AA55",
@@ -2187,13 +2156,13 @@ roadmapDotCurrent: {
 },
 
 roadmapCurrentText: {
-  fontSize: 12,
-  fontWeight: "900",
+  fontSize: 14,
+  fontWeight: "700",
   color: "#F1D39A",
 },
 
 roadmapLine: {
-  width: 2,
+  width: 2.5,
   flex: 1,
   minHeight: 34,
   backgroundColor: "rgba(214, 170, 85, 0.62)",
@@ -2218,9 +2187,9 @@ roadmapLabelCurrent: {
 },
 
 roadmapTitle: {
-  fontSize: 12,
+  fontSize: 13.5,
   lineHeight: 15,
-  fontWeight: "900",
+  fontWeight: "700",
   color: "#F1D39A",
 },
 
@@ -2230,9 +2199,9 @@ roadmapTitleCurrent: {
 
 roadmapDesc: {
   marginTop: 2,
-  fontSize: 10,
+  fontSize: 11,
   lineHeight: 12,
-  fontWeight: "700",
+  fontWeight: "600",
   color: "rgba(255,253,249,0.72)",
 },
 
@@ -2308,9 +2277,9 @@ statsSheetBackdrop: {
 },
 trainingStatsFullHeader: {
   flexDirection: "row",
+  justifyContent: "flex-end",
   alignItems: "center",
-  justifyContent: "space-between",
-  marginBottom: 10,
+  marginBottom: 8,
 },
 
 trainingStatsFullTitle: {
@@ -2318,5 +2287,32 @@ trainingStatsFullTitle: {
   lineHeight: 22,
   fontFamily: fonts.semiBold,
   color: "#2E2118",
+},
+promotionScrollWrap: {
+  position: "absolute",
+  top: 90,
+  left: 34,
+  right: 34,
+  height: 58,
+  zIndex: 80,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+promotionScrollImage: {
+  position: "absolute",
+  width: "115%",
+  height: "100%",
+  opacity: 0.8,
+},
+
+promotionScrollText: {
+  fontSize: 17,
+  lineHeight: 24,
+  fontFamily: fonts.titleSemi,
+  color: "#3A2A1E",
+  textAlign: "center",
+  textShadowColor: "rgba(255,255,255,0.7)",
+  textShadowRadius: 6,
 },
 });

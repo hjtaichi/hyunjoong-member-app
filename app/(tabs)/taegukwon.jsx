@@ -1516,7 +1516,7 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
   </View>
   
 ) : null}
-{activeTab === "training" ? (
+{false && activeTab === "training" ? (
   <TouchableOpacity
     style={styles.awardEntryMiniCard}
     activeOpacity={0.86}
@@ -1529,14 +1529,15 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
     />
 
     <View style={styles.awardEntryTextBox}>
-
-      <Text style={styles.awardEntryTitle}>명예의 전당을 향한 나의 수련 도전 기록</Text>
-   
+      <Text style={styles.awardEntryTitle}>
+        명예의 전당을 향한 나의 수련 도전 기록
+      </Text>
     </View>
 
     <Text style={styles.awardEntryArrow}>›</Text>
   </TouchableOpacity>
 ) : null}
+
 {false && (
       <View style={[styles.card, styles.menuCard]}>
         <Text style={styles.cardTitle}>수련 과정 로드맵</Text>

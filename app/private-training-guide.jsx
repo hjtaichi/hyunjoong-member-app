@@ -203,7 +203,7 @@ export default function PrivateTrainingGuideScreen() {
   resizeMode="contain"
 />
             <Text style={styles.lotusText}>
-              수련기간이나 유단자 여부와 관계없이, 현중태극권 회원이라면 신청할 수 있습니다.
+              수련기간이나 유단자 여부와 관계없이, {"\n"}현중태극권 회원이라면 신청할 수 있습니다.
             </Text>
           </View>
 
@@ -219,7 +219,7 @@ export default function PrivateTrainingGuideScreen() {
 
             <View style={styles.infoTextWrap}>
               <Text style={styles.infoText}>
-                • 개인지도란 : 회원이 희망하는 수련내용을 관장이 1:1로 지도하는 수업
+                개인지도란? {"\n"}회원이 희망하는 수련내용을 관장이 1:1로 지도하는 수업
               </Text>
               <Text style={styles.infoText}>
                 • 개인지도 신청 : 1회 1시간 기준 최소 4회 이상  (일정은 별도 협의)
@@ -228,10 +228,10 @@ export default function PrivateTrainingGuideScreen() {
               <Text style={styles.infoSubText}>- 학습한 투로의 심화 교정</Text>
               <Text style={styles.infoSubText}>- 기본공법 심화 교정 학습</Text>
               <Text style={styles.infoSubText}>
-                - 투로진도 완성 (편간, 검술, 도술, 권법, 세수경 등 기타)
+                - 투로진도 완성 (편간, 검술, {"\n"}  도술, 권법, 세수경 등 기타)
               </Text>
               <Text style={styles.infoSubText}>
-                → 개인지도의 투로는 유단자 유무/순서와 상관없이 학습 가능
+                → 개인지도의 투로는 유단자 유무/{"\n"}    순서와 상관없이 학습 가능
               </Text>
               <Text style={styles.infoSubText}>- 기타</Text>
               <Text style={styles.infoText}>
@@ -437,7 +437,7 @@ kicker: {
 },
   heroDesc: {
   width: "56%",
-  fontSize: 14,
+  fontSize: 15,
   lineHeight: 23,
   marginLeft: 12,
   fontFamily: fonts.titleSemi,
@@ -446,7 +446,7 @@ kicker: {
 },
 heroImage: {
   position: "absolute",
-  right: 20,
+  right: 30,
   bottom: 18,
   width: 135,
   height: 155,
@@ -455,7 +455,7 @@ heroImage: {
 },
 
   mainCard: {
-  marginTop: 0,
+  marginTop: -18,
   borderRadius: radius.lg,
   padding: 16,
   backgroundColor: colors.card,
@@ -640,8 +640,8 @@ fontSize: 13,
     flex: 1,
   },
 infoText: {
-  fontSize: 14,
-  lineHeight: 24,
+  fontSize: 15,
+  lineHeight: 22,
   fontFamily: fonts.medium,
 },
 

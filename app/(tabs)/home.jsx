@@ -550,7 +550,9 @@ const joinDays = joinDateString
   : null;
 
 const attendanceCount =
-  homeData?.member?.totalAttendanceCount || 0;
+  homeData?.member?.totalAttendanceSessionCount ??
+  homeData?.member?.totalAttendanceCount ??
+  0;
 
 const isYudanja = homeData?.member?.canAccessYudanjaClass === true;
 const rankLevel = Number(homeData?.member?.rankLevel || 0);
@@ -2838,14 +2840,14 @@ trainingRecordBannerTextBlock: {
 },
 
 trainingRecordBannerTitle: {
-  fontSize: 17,
+  fontSize: 19,
   fontFamily: fonts.title,
   color: colors.textMain,
 },
 
 trainingRecordBannerSub: {
-  marginTop: 4,
-  fontSize: 12,
+  marginTop: 3,
+  fontSize: 14,
   fontFamily: fonts.medium,
   color: colors.textSub,
 },

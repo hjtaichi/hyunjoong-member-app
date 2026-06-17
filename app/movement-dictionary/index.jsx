@@ -75,9 +75,9 @@ export default function MovementDictionaryHomeScreen() {
   <Image source={heroFigure} style={styles.heroFigure} resizeMode="contain" />
 
   <View style={styles.heroTextWrap}>
-    <Text style={styles.heroTitle}>투로명이 궁금해요?</Text>
+    <Text style={styles.heroTitle}>투로명이{"\n"}궁금해요?</Text>
     <Text style={styles.heroDesc}>
-      수련 중 들은 동작 이름과 뜻을 그림, 설명, 포인트와 함께 확인해보세요.
+      수련 중 들은 동작 이름과 뜻을 그림,{"\n"}설명, 포인트와 함께 확인해보세요.
     </Text>
   </View>
 </View>
@@ -229,19 +229,19 @@ heroTextWrap: {
 
 heroFigure: {
   position: "absolute",
-  right: -12,
-  bottom: -12,
-  width: 170,
-  height: 170,
+  right: -38,
+  bottom: -38,
+  width: 240,
+  height: 240,
   opacity: 0.9,
 },
 
 heroTitle: {
-  fontSize: 27,
+  fontSize: 28,
   fontFamily: fonts.title,
   color: colors.textMain,
   marginBottom: 10,
-  letterSpacing: -0.8,
+  letterSpacing: -0.9,
 },
 
 heroDesc: {

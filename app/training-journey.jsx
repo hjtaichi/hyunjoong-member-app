@@ -77,7 +77,7 @@ const steps = [
     icon: "太",
     imageKey: "taiji",
     title: "현중태극권 대가1로 79식 수련",
-    desc: "진가태극권의 전통 투로인 대가1로를 수련합니다.",
+    desc: "진가태극권의 전통 투로인 대가1로를\n수련합니다.",
   },
   {
     no: 6,
@@ -94,7 +94,7 @@ const steps = [
   icon: "大",
   imageKey: "taiji",
   title: "현중태극권 대가2로 수련",
-  desc: "진가태극권의 전통 투로인 대가2로를 수련합니다.",
+  desc: "진가태극권의 전통 투로인 대가2로를\n수련합니다.",
 },
 {
   no: 8,
@@ -288,8 +288,8 @@ const currentJourney = useMemo(() => {
         <View style={styles.noticeContent}>
           <Text style={styles.noticeTitle}>안내 사항</Text>
           <Text style={styles.noticeText}>
-            각 과정의 수련 기간은 개인의 속도와 상황에 따라 달라질 수 있습니다.
-            수련 내용은 현중태극문 지도진의 판단에 의해 변경될 수 있습니다. 
+            각 과정의 수련 기간은 개인의 속도와 상황에 따라 달라질 수 있으며, 수련 내용은 현중태극문 지도진의
+            판단에 의해 변경될 수 있습니다.{"\n"}
             궁금한 점이 있으시면 관장님께 문의해주세요.            
           </Text>
         </View>
@@ -426,9 +426,9 @@ function YudanjaNoticeCard() {
         </Text>
 
         <Text style={styles.yudanjaNoticeText}>
-          유단자는 선택에 의해 유단자회 가입이 가능합니다.{"\n\n"}
+          유단자는 선택에 의해 유단자회 가입이 가능합니다.{"\n"}
           유단자회에서는 발경, 추수, 편간 등 공력 심화수련을 진행합니다.{"\n\n"}
-          수련은 매주 월요일 저녁 7시부터 2시간 진행됩니다.{"\n\n"}
+          ※ 수련은 매주 월요일 저녁 7시부터 진행됩니다.{"\n"}
           ※ 유단자회는 별도 회비가 있습니다.
         </Text>
       </View>
@@ -918,6 +918,7 @@ noteIconImage: {
     lineHeight: 22,
     fontWeight: "700",
     color: COLORS.sub,
+    letterSpacing: -0.4,
   },
   heroImage: {
   opacity: 0.36,
@@ -1047,9 +1048,10 @@ yudanjaNoticeTitle: {
 
 yudanjaNoticeText: {
   marginTop: 7,
-  fontSize: 14,
+  fontSize: 15,
   lineHeight: 22,
   fontFamily: fonts.medium,
   color: COLORS.sub,
+  letterSpacing: -0.3,
 },
 });
