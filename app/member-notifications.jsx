@@ -12,6 +12,7 @@ import {
   getMemberNotifications,
   markMemberNotificationRead,
 } from "../src/api/memberNotifications";
+import ScreenHeader from "../src/components/ScreenHeader";
 
 export default function MemberNotificationsScreen() {
   const { token } = useAuth();
@@ -39,16 +40,28 @@ export default function MemberNotificationsScreen() {
     }
 
     if (item.type === "inquiry_reply") {
-      const roomId = item.metadata?.roomId;
+  const metadata =
+    typeof item.metadata === "string"
+      ? JSON.parse(item.metadata || "{}")
+      : item.metadata || {};
 
-      if (roomId) {
-        router.push({
-          pathname: "/(tabs)/inquiry/[roomId]",
-          params: { roomId: String(roomId) },
-        });
-        return;
-      }
-    }
+  let roomId =
+    metadata.roomId ||
+    metadata.inquiryRoomId ||
+    item.targetId;
+
+  if (!roomId && item.targetUrl) {
+    roomId = String(item.targetUrl).split("/").pop();
+  }
+
+  if (roomId) {
+    router.push({
+      pathname: "/(tabs)/inquiry/[roomId]",
+      params: { roomId: String(roomId) },
+    });
+    return;
+  }
+}
 
     if (item.targetUrl?.startsWith("/coaching-detail")) {
       const query = item.targetUrl.split("?")[1] || "";
@@ -69,10 +82,12 @@ export default function MemberNotificationsScreen() {
 }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>‹</Text>
-      </Pressable>
+    <ScrollView
+  style={styles.screen}
+  contentContainerStyle={styles.content}
+  keyboardShouldPersistTaps="handled"
+>
+      <ScreenHeader title="알림" />
 
       <Text style={styles.title}>알림</Text>
 
@@ -83,10 +98,15 @@ export default function MemberNotificationsScreen() {
       ) : (
         items.map((item) => (
           <Pressable
-            key={item.id}
-            style={[styles.card, !item.isRead && styles.unreadCard]}
-            onPress={() => handleOpen(item)}
-          >
+  key={item.id}
+  style={({ pressed }) => [
+    styles.card,
+    !item.isRead && styles.unreadCard,
+    pressed && styles.cardPressed,
+  ]}
+  onPressIn={() => console.log("카드 눌림 시작:", item.id)}
+  onPress={() => handleOpen(item)}
+>
             <View style={styles.cardTop}>
               <Text style={styles.badge}>
                 {item.type === "coaching_comment"
@@ -121,25 +141,10 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 44,
+    paddingTop: 22,
     paddingBottom: 40,
   },
-  backButton: {
-    width: 36,
-    height: 36,
-    justifyContent: "center",
-    marginBottom: 4,
-  },
-  backText: {
-    fontSize: 34,
-    color: "#2B221D",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "900",
-    color: "#3A2C27",
-    marginBottom: 18,
-  },
+  
   emptyBox: {
     padding: 24,
     borderRadius: 18,
@@ -154,13 +159,14 @@ const styles = StyleSheet.create({
     color: "#9B8D84",
   },
   card: {
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#EFE5DE",
-    padding: 16,
-    marginBottom: 12,
-  },
+  borderRadius: 18,
+  backgroundColor: "#FFFFFF",
+  borderWidth: 1,
+  borderColor: "#EFE5DE",
+  padding: 16,
+  marginBottom: 12,
+  cursor: "pointer",
+},
   unreadCard: {
     backgroundColor: "#FFF8EA",
     borderColor: "#E7C98F",
@@ -204,4 +210,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#A99F98",
   },
+  cardPressed: {
+  opacity: 0.75,
+},
 });

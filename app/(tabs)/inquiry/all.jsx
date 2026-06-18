@@ -10,8 +10,11 @@ import {
   View,
 } from "react-native";
 import { Stack, router } from "expo-router";
+import ScreenHeader from "../../../src/components/ScreenHeader";
+import { colors, radius, shadow } from "../../../src/theme";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { getMemberInquiries } from "../../../src/api/memberInquiry";
+
 
 function formatDateTime(value) {
   if (!value) return "";
@@ -72,31 +75,28 @@ export default function InquiryAllScreen() {
     loadRooms({ silent: true });
   }, [loadRooms]);
 
-  return (
-    <>
-      <Stack.Screen
-        options={{
-          title: "전체 문의",
-          headerLeft: () => (
-            <Pressable
-              onPress={() => router.replace("/(tabs)/inquiry")}
-              style={{ paddingHorizontal: 8 }}
-            >
-              <Text style={{ fontSize: 24 }}>‹</Text>
-            </Pressable>
-          ),
-        }}
-      />
+ return (
+  <>
+    <Stack.Screen options={{ headerShown: false }} />
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <Text style={styles.title}>전체 문의</Text>
-        <Text style={styles.subtitle}>총 {rooms.length}건의 문의가 있어요.</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      <ScreenHeader
+  title="전체 문의"
+  onBack={() =>
+    router.replace({
+      pathname: "/(tabs)/inquiry",
+      params: { tab: "inquiry" },
+    })
+  }
+/>
+
+    <Text style={styles.subtitle}>총 {rooms.length}건의 문의가 있어요.</Text>
 
         {loading ? (
           <View style={styles.center}>
@@ -158,42 +158,48 @@ export default function InquiryAllScreen() {
           </View>
         )}
       </ScrollView>
-    </>
+       </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#f6f3ee",
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 42,
-    paddingBottom: 28,
-  },
+  flex: 1,
+  backgroundColor: colors.background,
+},
+content: {
+  paddingHorizontal: 16,
+  paddingTop: 24,
+  paddingBottom: 40,
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+},
   title: {
     fontSize: 28,
     fontWeight: "900",
     color: "#2f2a24",
     marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 14,
-    color: "#6b6257",
-    marginBottom: 18,
-  },
+subtitle: {
+  marginTop: -6,
+  marginBottom: 18,
+  fontSize: 14,
+  color: colors.textSub,
+  textAlign: "center",
+},
   center: {
     paddingVertical: 40,
     alignItems: "center",
   },
-  card: {
-    backgroundColor: "#fffdf9",
-    borderRadius: 20,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#ece4d8",
-  },
+card: {
+  backgroundColor: colors.card,
+  borderRadius: radius.lg,
+  padding: 16,
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
+},
   emptyText: {
     fontSize: 14,
     color: "#6b6257",

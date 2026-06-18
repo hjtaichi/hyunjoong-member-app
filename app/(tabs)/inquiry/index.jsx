@@ -11,7 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { colors, spacing, radius, shadow } from "../../../src/theme";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { getMemberInquiries } from "../../../src/api/memberInquiry";
@@ -67,17 +67,29 @@ function getStatusStyle(status) {
 
 export default function InquiryScreen() {
   const { token, user, logout } = useAuth();
+  const { tab } = useLocalSearchParams();
+
   const authUser = user || {};
   const memberStatus = authUser?.memberStatus || authUser?.status;
   const isPausedMember = memberStatus === "paused";
 
-  const [activeTab, setActiveTab] = useState("notice");
+  const [activeTab, setActiveTab] = useState(
+    tab === "inquiry" ? "inquiry" : "notice"
+  );
+
+  useEffect(() => {
+    if (tab === "inquiry") {
+      setActiveTab("inquiry");
+    }
+  }, [tab]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [starting, setStarting] = useState(false);
   const [rooms, setRooms] = useState([]);
 
-  const previewRooms = rooms.slice(0, 3);
+
+  const activeRooms = rooms.filter((room) => room.status !== "closed");
+const previewRooms = activeRooms.slice(0, 1);
 
   async function handleLogout() {
     Alert.alert("로그아웃", "로그아웃하시겠습니까?", [
@@ -370,13 +382,19 @@ export default function InquiryScreen() {
   />
 </View>
 
-<Text style={styles.countText}>문의 {rooms.length}건</Text>
+<View style={styles.inquiryHeaderRow}>
+  <Text style={styles.countText}>문의 {rooms.length}건</Text>
+
+  <Pressable onPress={() => router.push("/(tabs)/inquiry/all")}>
+    <Text style={styles.allInquiryLink}>전체 문의 보기 ›</Text>
+  </Pressable>
+</View>
 
           <View style={styles.inquiryCard}>
-            {rooms.length === 0 ? (
+            {activeRooms.length === 0 ? (
               <Text style={styles.emptyText}>
-                아직 남긴 문의가 없습니다.{"\n"}
-                궁금한 점이 있다면 문답을 남겨주세요.
+                현재 진행 중인 문의가 없습니다.{"\n"}
+                새 문의가 있다면 아래 버튼을 눌러주세요.
               </Text>
             ) : (
               previewRooms.map((room, index) => {
@@ -630,15 +648,6 @@ divider: {
     alignItems: "center",
     justifyContent: "space-between",
   },
-  countText: {
-  alignSelf: "flex-start",
-  marginTop: -16,
-  marginLeft: 4,
-  marginBottom: 4,
-  fontSize: 13,
-  fontFamily: fonts.bold,
-  color: colors.warmBrown,
-},
   emptyText: {
     paddingVertical: 24,
     fontSize: 14,
@@ -888,5 +897,25 @@ shopMiniTopButtonText: {
   color: "#F7E5C3",
   fontSize: 11,
   fontWeight: "800",
+},
+inquiryHeaderRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginTop: -16,
+  marginBottom: 4,
+  paddingHorizontal: 4,
+},
+
+countText: {
+  fontSize: 13,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+},
+
+allInquiryLink: {
+  fontSize: 12,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
 },
 });

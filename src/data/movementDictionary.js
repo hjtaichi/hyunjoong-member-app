@@ -201,7 +201,7 @@ export const movementForms = [
   id: "hyunjung-29",
   requiredRank: 0,
   title: "현중태극권 29식",
-  subtitle: "29식의 투로명 뜻과 동작 설명을 살펴보세요.",
+  subtitle: "29식의 투로명 뜻과 동작 설명을\n살펴보세요.",
   badge: "전체 수록",
   totalCount: 33,
   description: "현중태극권 29식의 글자별 풀이, 투로명 뜻, \n동작 설명을 정리했습니다.",

@@ -738,6 +738,28 @@ function getPositionByDay(day) {
     : "수련의 길은 계속 이어집니다";
 const promotionGoal = homeData?.trainingGoals?.promotion;
 
+const danPromotions = Array.isArray(member?.danPromotions)
+  ? member.danPromotions
+  : [];
+
+const latestPromotion = [...danPromotions]
+  .sort((a, b) => Number(b.danRank || 0) - Number(a.danRank || 0))[0];
+
+const latestPromotionRank = Number(latestPromotion?.danRank || 0);
+const latestPromotionAttendanceDay = Number(
+  latestPromotion?.attendanceDay || 0
+);
+
+const afterPromotionCount = latestPromotion
+  ? Math.max(0, attendanceCount - latestPromotionAttendanceDay)
+  : attendanceCount;
+
+const requiredAfterPromotionCount =
+  Number(promotionGoal?.requiredAttendanceCount || 0);
+
+const remainingAfterPromotionCount =
+  Math.max(0, requiredAfterPromotionCount - afterPromotionCount);
+
 const promotionRequiredDays = Number(
   promotionGoal?.requiredAttendanceCount || 0
 );
@@ -771,6 +793,7 @@ const nextDanEvent = promotionGoal
       kind: "promotion",
     }
   : getNextDanEvent(member);
+  
 
 const mergedStages = [
   {
@@ -828,14 +851,14 @@ const walkerScale = walkerPosition.transform?.[0]?.scale || 1;
 const speechBubblePosition = {
   top: Math.max(
     70,
-    walkerPosition.top - 55 * walkerScale
+    walkerPosition.top - 80 * walkerScale
   ),
 
   left: Math.max(
     16,
     Math.min(
       sceneSize.width - 190,
-      walkerPosition.left - 120 * walkerScale
+      walkerPosition.left - 30 * walkerScale
     )
   ),
 };
@@ -855,10 +878,6 @@ const roadmapItems = useMemo(() => {
       current: false,
     });
   }
-
-  const danPromotions = Array.isArray(member?.danPromotions)
-    ? member.danPromotions
-    : [];
 
   danPromotions.forEach((promotion) => {
     items.push({
@@ -985,7 +1004,7 @@ locations={[0, 0.28, 0.66, 1]}
       <View style={styles.headerTextWrap}>
         <Text style={styles.title}>수련의 길</Text>
         <Text style={styles.subtitle}>
-          고수를 향해, {attendanceCount}일째 걷는 중
+          고수를 향해, {attendanceCount}회째 수련 중
         </Text>
       </View>
     </View>
@@ -1189,7 +1208,7 @@ locations={[0, 0.28, 0.66, 1]}
   <Text style={styles.trainingStatsMiniTitle}>내 수련 통계</Text>
 
   <Text style={styles.trainingStatsMiniSub}>
-    {attendanceCount}일 · {expectedTrainingHours}시간
+    {attendanceCount}회 · {expectedTrainingHours}시간
   </Text>
 </View>
   </View>
@@ -1204,8 +1223,8 @@ locations={[0, 0.28, 0.66, 1]}
 </View>
       <View style={styles.trainingStatsMainRow}>
         <View style={styles.trainingStatsMainItem}>
-          <Text style={styles.trainingStatsMainValue}>{attendanceCount}일</Text>
-          <Text style={styles.trainingStatsMainLabel}>총 출석일</Text>
+          <Text style={styles.trainingStatsMainValue}>{attendanceCount}회</Text>
+          <Text style={styles.trainingStatsMainLabel}>총 출석횟수</Text>
         </View>
 
         <View style={styles.trainingStatsCenterDot} />
@@ -1240,11 +1259,13 @@ locations={[0, 0.28, 0.66, 1]}
 
         <Text style={styles.trainingStatsGoalDesc}>
           {statsNextGoal
-            ? `현재 ${attendanceCount}일 · 목표 ${statsNextGoal.days}일 · 앞으로 ${Math.max(
-                0,
-                statsNextGoal.days - attendanceCount
-              )}일`
-            : "꾸준히 한 걸음씩 나아가고 있어요"}
+  ? latestPromotion
+    ? `${latestPromotionRank}단 승단 후 ${afterPromotionCount}회째 · 목표 ${requiredAfterPromotionCount}회 · 앞으로 ${remainingAfterPromotionCount}회`
+    : `현재 ${attendanceCount}회 · 목표 ${statsNextGoal.days}회 · 앞으로 ${Math.max(
+        0,
+        statsNextGoal.days - attendanceCount
+      )}회`
+  : "꾸준히 한 걸음씩 나아가고 있어요"}
         </Text>
       </View>
     </View>
@@ -2164,7 +2185,7 @@ roadmapCurrentText: {
 roadmapLine: {
   width: 2.5,
   flex: 1,
-  minHeight: 34,
+  minHeight: 30,
   backgroundColor: "rgba(214, 170, 85, 0.62)",
   marginTop: 4,
 },
@@ -2187,7 +2208,7 @@ roadmapLabelCurrent: {
 },
 
 roadmapTitle: {
-  fontSize: 13.5,
+  fontSize: 13,
   lineHeight: 15,
   fontWeight: "700",
   color: "#F1D39A",
@@ -2199,7 +2220,7 @@ roadmapTitleCurrent: {
 
 roadmapDesc: {
   marginTop: 2,
-  fontSize: 11,
+  fontSize: 10.5,
   lineHeight: 12,
   fontWeight: "600",
   color: "rgba(255,253,249,0.72)",

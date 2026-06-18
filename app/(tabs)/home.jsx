@@ -2644,8 +2644,8 @@ moreLinkArrow: {
 },
 homeNoticeBell: {
   position: "absolute",
-  top: -18,
-  right: -1,
+  top: -10,
+  right: 4,
   width: 28,
   height: 28,
   borderRadius: 14,
@@ -2656,8 +2656,8 @@ homeNoticeBell: {
 },
 
 homeNoticeBellIcon: {
-  width: 22,
-  height: 22,
+  width: 23,
+  height: 23,
   opacity: 0.9,
 },
 

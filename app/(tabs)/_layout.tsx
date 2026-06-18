@@ -76,7 +76,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.softBrown,
         tabBarHideOnKeyboard: true,
         tabBarLabelStyle: {
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: "700",
   marginTop: 0,
 },
@@ -86,7 +86,7 @@ tabBarIconStyle: {
 tabBarStyle: {
   height: Platform.OS === "web" ? 72 : 88,
   paddingTop: 4,
-  paddingBottom: Platform.OS === "web" ? 8 : 18,
+  paddingBottom: Platform.OS === "web" ? 12 : 18,
   backgroundColor: colors.card,
   borderTopColor: colors.border,
   borderTopWidth: 1,
@@ -138,7 +138,7 @@ tabBarStyle: {
       <Tabs.Screen
         name="inquiry"
         options={{
-          title: "문의",
+          title: "공지/문의",
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="chatbubble-ellipses-outline"

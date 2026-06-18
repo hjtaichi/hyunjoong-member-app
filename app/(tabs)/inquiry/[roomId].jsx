@@ -20,7 +20,7 @@ import {
   View,
 } from "react-native";
 
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import {
   getMemberInquiryDetail,
@@ -188,7 +188,10 @@ export default function InquiryDetailScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
       <View style={styles.content}>
-        <ScreenHeader title="1:1 문의" />
+        <ScreenHeader
+  title="1:1 문의"
+  onBack={() => router.replace("/(tabs)/inquiry/all")}
+/>
 
         <View style={styles.infoCard}>
           <View style={styles.infoTopRow}>
@@ -350,14 +353,14 @@ const styles = StyleSheet.create({
   },
 
   infoTitle: {
-    fontSize: 16,
+    fontSize: 17,
     lineHeight: 23,
     fontFamily: fonts.titleSemi,
     color: colors.textMain,
   },
 
   headerSubtitle: {
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 23,
     fontFamily: fonts.medium,
     color: colors.textMain,

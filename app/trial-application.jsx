@@ -157,7 +157,7 @@ if (!hopeTime) {
 
       <View style={styles.hero}>
   <View style={styles.heroTextArea}>
-    <Text style={styles.heroTitle}>함께 수련해보세요</Text>
+    <Text style={styles.heroTitle}>함께{"\n"}수련해보세요</Text>
     <Text style={styles.heroDesc}>
       소중한 분의 건강한 변화를{"\n"}
       현중태극권이 함께하겠습니다.

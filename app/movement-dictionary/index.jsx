@@ -246,7 +246,7 @@ heroTitle: {
 
 heroDesc: {
   fontSize: 14,
-  lineHeight: 23,
+  lineHeight: 19,
   fontFamily: fonts.medium,
   color: colors.textMain,
 },

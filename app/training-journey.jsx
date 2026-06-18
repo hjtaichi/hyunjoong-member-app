@@ -689,8 +689,8 @@ heroDesc: {
     zIndex: 2,
   },
   stepNumberText: {
-    fontSize: 17,
-    fontWeight: "900",
+    fontSize: 19,
+    fontWeight: "700",
     color: "#FFFFFF",
   },
   timelineLine: {
@@ -752,7 +752,7 @@ heroDesc: {
     color: COLORS.brownDark,
   },
   stepDesc: {
-  fontSize: 14,
+  fontSize: 13,
   lineHeight: 22,
   fontFamily: fonts.medium,
   color: colors.textSub,
@@ -789,7 +789,7 @@ noteIconImage: {
   },
   infoValue: {
   marginTop: 4,
-  fontSize: 15,
+  fontSize: 14,
   fontFamily: fonts.semiBold,
   color: COLORS.ink,
 },
@@ -808,7 +808,7 @@ noteIconImage: {
     marginBottom: 6,
   },
   bulletText: {
-    fontSize: 14,
+    fontSize: 13.5,
     lineHeight: 22,
     fontWeight: "600",
     color: COLORS.ink,
@@ -829,9 +829,9 @@ noteIconImage: {
   },
   noteText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13.5,
     lineHeight: 22,
-    fontWeight: "800",
+    fontWeight: "700",
     color: COLORS.brownDark,
   },
   choiceWrap: {
@@ -914,11 +914,11 @@ noteIconImage: {
   },
   noticeText: {
     marginTop: 6,
-    fontSize: 14,
+    fontSize: 13.5,
     lineHeight: 22,
     fontWeight: "700",
     color: COLORS.sub,
-    letterSpacing: -0.4,
+    letterSpacing: -0.35,
   },
   heroImage: {
   opacity: 0.36,
@@ -1048,10 +1048,10 @@ yudanjaNoticeTitle: {
 
 yudanjaNoticeText: {
   marginTop: 7,
-  fontSize: 15,
+  fontSize: 13.5,
   lineHeight: 22,
   fontFamily: fonts.medium,
   color: COLORS.sub,
-  letterSpacing: -0.3,
+  letterSpacing: -0.35,
 },
 });

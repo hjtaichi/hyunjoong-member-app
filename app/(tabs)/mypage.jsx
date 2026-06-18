@@ -693,7 +693,7 @@ const promotionSummary = (() => {
         return "승단심사 가능 조건을 채웠어요";
       }
 
-      return `${remaining}일 더 출석하면 가능`;
+      return `${remaining}회 더 출석하면 승단 가능`;
     }
 
     return "수련 목표 확인";
@@ -710,7 +710,7 @@ const promotionSummary = (() => {
     null;
 
   if (typeof remainingCount === "number") {
-    return `${remainingCount}일 더 출석하면 가능`;
+    return `${remainingCount}회 더 출석하면 승단 가능`;
   }
 
   return "수련 목표 확인";
@@ -1459,10 +1459,11 @@ center: {
   color: colors.textMain,
 },
   subtitle: {
-  fontSize: 14,
+  fontSize: 15,
   fontFamily: fonts.medium,
   color: colors.textSub,
-  marginBottom: 6,
+  marginTop: -8,
+  marginBottom: 10,
   marginLeft: 4,
   lineHeight: 20,
 },
@@ -2646,15 +2647,6 @@ defaultAvatarModalCard: {
   paddingBottom: 20,
   borderWidth: 1,
   borderColor: "#E8DED2",
-},
-
-defaultAvatarGrid: {
-  marginTop: 18,
-  marginBottom: 18,
-  flexDirection: "row",
-  flexWrap: "wrap",
-  justifyContent: "space-between",
-  rowGap: 16,
 },
 
 defaultAvatarButton: {
