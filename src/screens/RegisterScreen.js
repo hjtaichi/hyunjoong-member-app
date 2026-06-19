@@ -41,7 +41,29 @@ export default function RegisterScreen() {
   function onlyNumbers(value) {
     return value.replace(/[^0-9]/g, "");
   }
+function showAlert(title, message, buttons) {
+  if (Platform.OS === "web") {
+    window.alert(`${title}\n\n${message}`);
 
+    const confirmButton = buttons?.find((button) => button.text === "확인");
+    if (confirmButton?.onPress) {
+      confirmButton.onPress();
+    }
+
+    return;
+  }
+
+  Alert.alert(title, message, buttons);
+}
+
+function getErrorMessage(error) {
+  return (
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.message ||
+    "다시 시도해주세요."
+  );
+}
   async function handleRegister() {
     const cleanPhone = onlyNumbers(phone);
     const cleanLoginId = loginId.trim().toLowerCase();
@@ -102,17 +124,14 @@ export default function RegisterScreen() {
         confirmStudent,
       });
 
-      Alert.alert("회원가입 신청 완료", "관리자 승인 후 앱을 이용할 수 있습니다.", [
-        {
-          text: "확인",
-          onPress: () => router.replace("/login"),
-        },
-      ]);
+      showAlert("회원가입 신청 완료", "관리자 승인 후 앱을 이용할 수 있습니다.", [
+  {
+    text: "확인",
+    onPress: () => router.replace("/login"),
+  },
+]);
     } catch (error) {
-      Alert.alert(
-        "회원가입 실패",
-        error?.response?.data?.message || error?.message || "다시 시도해주세요."
-      );
+      showAlert("회원가입 실패", getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }

@@ -67,7 +67,13 @@ export default function LoginScreen() {
     }
 
     if (!result.ok) {
-      const message = result.message || "다시 시도해주세요.";
+      const message =
+  error?.response?.data?.message ||
+  error?.response?.data?.error ||
+  error?.message ||
+  "가입 신청에 실패했습니다.";
+
+Alert.alert("가입 신청 실패", message);
 
       if (result.code === "APPROVAL_PENDING" || message.includes("승인 대기")) {
         router.replace("/approval-pending");
