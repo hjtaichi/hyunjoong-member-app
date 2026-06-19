@@ -12,6 +12,8 @@ import {
 import { router } from "expo-router";
 import { colors, radius, shadow } from "../src/theme";
 import ScreenHeader from "../src/components/ScreenHeader";
+import { useAuth } from "../src/contexts/AuthContext";
+
 const fonts = {
   medium: "PretendardMedium",
   semiBold: "PretendardSemiBold",
@@ -31,8 +33,6 @@ import { Image } from "react-native";
 
 export default function TrialApplicationScreen() {
   const [gender, setGender] = useState("남성");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
   const [hopeDate, setHopeDate] = useState("");
   const [hopeTime, setHopeTime] = useState("");
   const [dateModalVisible, setDateModalVisible] = useState(false);
@@ -41,6 +41,7 @@ export default function TrialApplicationScreen() {
   const [height, setHeight] = useState("");
   const [memo, setMemo] = useState("");
   const trialTogetherImage = require("../assets/images/trial-together.png");
+  const { isAuthenticated } = useAuth();
 
   function onlyNumbers(value) {
     return String(value || "").replace(/[^0-9]/g, "");
@@ -86,29 +87,17 @@ function handleSelectHopeDate(date) {
 }
 
   async function handleSubmit() {
+    if (!isAuthenticated) {
+  Alert.alert("안내", "로그인 후 이용할 수 있습니다.");
+  router.push("/login");
+  return;
+}
   try {
-    if (!name.trim()) {
-      Alert.alert("안내", "이름을 입력해주세요.");
-      return;
-    }
-
-    if (!/^010\d{8}$/.test(onlyNumbers(phone))) {
-      Alert.alert(
-        "안내",
-        "연락처는 010으로 시작하는 숫자 11자리로 입력해주세요."
-      );
-      return;
-    }
-
+    
     if (!hopeDate.trim()) {
       Alert.alert("안내", "희망 날짜를 입력해주세요.");
       return;
     }
-
-    if (!hopeDate.trim()) {
-  Alert.alert("안내", "희망 날짜를 입력해주세요.");
-  return;
-}
 
 if (!hopeTime) {
   Alert.alert("안내", "희망 시간을 선택해주세요.");
@@ -116,9 +105,7 @@ if (!hopeTime) {
 }
 
     await submitTrialApplication({
-  name,
   gender,
-  phone: onlyNumbers(phone),
   hopeDate,
   hopeTime,
   shoeSize,
@@ -129,9 +116,7 @@ if (!hopeTime) {
     router.push({
       pathname: "/trial-application-complete",
       params: {
-  name,
   gender,
-  phone,
   hopeDate,
   hopeTime,
   shoeSize,

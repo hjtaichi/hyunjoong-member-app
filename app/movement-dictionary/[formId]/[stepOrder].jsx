@@ -672,10 +672,10 @@ heroBgImage: {
 
 heroPersonTouch: {
   position: "absolute",
-  right: 25,
+  right: 13,
   bottom: 45,
-  width: 175,
-  height: 275,
+  width: 170,
+  height: 265,
   opacity: 0.9,
   alignItems: "center",
   justifyContent: "flex-end",
@@ -819,7 +819,7 @@ hanjaSquareCard: {
 
 hanjaBrush: {
   position: "absolute",
-  top: 1,
+  top: 2,
   width: 64,
   height: 64,
   opacity: 0.72,

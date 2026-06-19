@@ -73,7 +73,8 @@ content: {
   lineHeight: 22,
   fontFamily: fonts.medium,
   color: colors.textSub,
-  marginBottom: 14,
+  marginBottom: 6,
+  marginLeft: 14,
 },
 
 card: {
@@ -94,17 +95,17 @@ itemRow: {
 },
 
 checkbox: {
-  width: 14,
-  height: 14,
-  marginTop: 5,
+  width: 10,
+  height: 10,
+  marginTop: 6,
   borderWidth: 1.4,
   borderColor: colors.softBrown,
   borderRadius: 3,
 },
 itemText: {
   flex: 1,
-  fontSize: 15,
-  lineHeight: 24,
+  fontSize: 16,
+  lineHeight: 22,
   fontFamily: fonts.medium,
   color: colors.textMain,
 },
@@ -112,7 +113,7 @@ itemText: {
 footer: {
   marginTop: 22,
   textAlign: "center",
-  fontSize: 16,
+  fontSize: 18,
   fontFamily: fonts.titleSemi,
   color: colors.textMain,
 },

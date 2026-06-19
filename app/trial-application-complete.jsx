@@ -30,30 +30,35 @@ export default function TrialApplicationCompleteScreen() {
         </View>
       </View>
 
-      <Text style={styles.title}>체험 신청이 완료되었습니다.</Text>
+      <Text style={styles.title}>체험 추천이 접수되었습니다.</Text>
 
       <Text style={styles.desc}>
-        빠른 시일 내에 도장에서{"\n"}
-        연락드리겠습니다.
+        추천해주신 내용을 확인한 뒤{"\n"}
+        도장에서 안내드리겠습니다.
       </Text>
 
       <View style={styles.summaryCard}>
         <Text style={styles.summaryTitle}>신청 정보 요약</Text>
 
-        <InfoRow label="이름" value={params.name || "-"} />
         <InfoRow label="성별" value={params.gender || "-"} />
-        <InfoRow label="연락처" value={params.phone || "-"} />
-        <InfoRow label="희망 날짜" value={params.hopeDate || "-"} />
-        <InfoRow label="신발 사이즈" value={params.shoeSize ? `${params.shoeSize} mm` : "-"} />
-        <InfoRow label="키" value={params.height ? `${params.height} cm` : "-"} />
-        <InfoRow label="메모" value={params.memo || "-"} />
+<InfoRow label="희망 날짜" value={params.hopeDate || "-"} />
+<InfoRow label="희망 시간" value={params.hopeTime || "-"} />
+<InfoRow
+  label="신발 사이즈"
+  value={params.shoeSize ? `${params.shoeSize} mm` : "-"}
+/>
+<InfoRow
+  label="키"
+  value={params.height ? `${params.height} cm` : "-"}
+/>
+<InfoRow label="메모" value={params.memo || "-"} />
       </View>
 
       <View style={styles.thanksBox}>
-        <Text style={styles.thanksTitle}>추천해주셔서 감사합니다.</Text>
-        <Text style={styles.thanksText}>
-          함께 수련하는 즐거움을 나누어 주세요.
-        </Text>
+        <Text style={styles.thanksTitle}>추천이 접수되었습니다.</Text>
+<Text style={styles.thanksText}>
+  개인정보는 받지 않고, 체험 준비에 필요한 정보만 전달됩니다.
+</Text>
       </View>
 
       <Pressable

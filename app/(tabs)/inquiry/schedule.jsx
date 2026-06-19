@@ -94,14 +94,14 @@ noticeBox: {
 },
 
 noticeText: {
-  fontSize: 13,
-  lineHeight: 20,
+  fontSize: 14,
+  lineHeight: 21,
   fontFamily: fonts.semiBold,
   color: colors.warmBrown,
 },
 
 table: {
-  marginTop: 16,
+  marginTop: 18,
   borderRadius: radius.lg,
   overflow: "hidden",
   borderWidth: 1,
@@ -120,7 +120,7 @@ table: {
 
 cell: {
   flex: 1,
-  minHeight: 58,
+  minHeight: 56,
   paddingHorizontal: 5,
   paddingVertical: 10,
   textAlign: "center",
@@ -137,7 +137,7 @@ timeCell: {
 },
 
 headerText: {
-  fontSize: 12,
+  fontSize: 14,
   fontFamily: fonts.bold,
   color: colors.textMain,
 },

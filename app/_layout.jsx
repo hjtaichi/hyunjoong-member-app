@@ -11,7 +11,7 @@ import { CartProvider } from "../src/contexts/CartContext";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
-import { Platform } from "react-native";
+import { Platform, View, ActivityIndicator } from "react-native";
 
 import { useColorScheme } from "../hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
@@ -172,7 +172,9 @@ function PushInitializer() {
 }, []);
   return null;
 }
-SplashScreen.preventAutoHideAsync();
+if (Platform.OS !== "web") {
+  SplashScreen.preventAutoHideAsync();
+}
 // 🔥 루트
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -193,12 +195,20 @@ const [fontsLoaded] = useFonts({
   ZhaoKai: require("../assets/fonts/ZhaoCaiKaiShu.otf"),
 });
   useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
+  if (!fontsLoaded) return;
 
-  if (!fontsLoaded) return null;
+  if (Platform.OS !== "web") {
+    SplashScreen.hideAsync();
+  }
+}, [fontsLoaded]);
+
+if (!fontsLoaded) {
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <ActivityIndicator size="large" />
+    </View>
+  );
+}
   return (
   <AuthProvider>
     <CartProvider>

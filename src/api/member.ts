@@ -154,10 +154,9 @@ export async function updateMyProfileAvatar(profileAvatar: string) {
 }
 
 export async function submitTrialApplication(payload: {
-  name: string;
   gender: string;
-  phone: string;
   hopeDate: string;
+  hopeTime: string;
   shoeSize?: string;
   height?: string;
   memo?: string;

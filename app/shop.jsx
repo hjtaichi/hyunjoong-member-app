@@ -67,10 +67,6 @@ const SHOP_CATEGORIES = [
   },
 ];
 
-function formatPrice(value) {
-  return `₩${Number(value || 0).toLocaleString("ko-KR")}`;
-}
-
 function getImageUrl(imageUrl) {
   if (!imageUrl) return null;
   if (imageUrl.startsWith("http")) return imageUrl;
@@ -78,17 +74,25 @@ function getImageUrl(imageUrl) {
 }
 
 function getStockLabel(product) {
-  if (product.stockQuantity > 0) {
+  if (product.stockStatus === "available") {
     return {
       label: "재고 있음",
-      desc: "오늘 도장에서 구매 가능",
+      desc: "구매는 문의창 혹은 도장에서 관장님께 문의해주세요.",
       tone: "available",
     };
   }
 
+  if (product.stockStatus === "unavailable") {
+    return {
+      label: "재고 없음",
+      desc: "입고 여부는 관장님께 문의해주세요.",
+      tone: "order",
+    };
+  }
+
   return {
-    label: "주문 요청",
-    desc: "관리자 확인 후 안내",
+    label: "문의 필요",
+    desc: "자세한 상태는 관장님께 문의해주세요.",
     tone: "order",
   };
 }
@@ -159,10 +163,6 @@ function ProductCard({ product }) {
           </View>
         </View>
 
-        <Text style={styles.productPrice}>
-          {formatPrice(product.price)}
-        </Text>
-
         <Text style={styles.stockDesc}>{stock.desc}</Text>
       </View>
     </Pressable>
@@ -203,7 +203,7 @@ function SmallProductCard({ product, badge }) {
       <Text style={styles.smallName} numberOfLines={1}>
         {product.name}
       </Text>
-      <Text style={styles.smallPrice}>{formatPrice(product.price)}</Text>
+      
     </Pressable>
   );
 }
@@ -233,11 +233,9 @@ export default function ShopScreen() {
     loadProducts();
   }, [loadProducts]);
 
-  const bestProducts = useMemo(() => {
-    return [...products]
-      .sort((a, b) => Number(b.stockQuantity || 0) - Number(a.stockQuantity || 0))
-      .slice(0, 5);
-  }, [products]);
+const bestProducts = useMemo(() => {
+  return [...products].slice(0, 5);
+}, [products]);
 
   const newProducts = useMemo(() => {
     return [...products].slice(0, 5);
@@ -262,8 +260,7 @@ export default function ShopScreen() {
       <View style={styles.topContent}>
   <View style={styles.shopHeader}>
   <ScreenHeader title="현중 Shop" />
-
-  <Pressable style={styles.cartButton} onPress={() => router.push("/cart")}>
+ <Pressable style={styles.cartButton} onPress={() => router.push("/cart")}>
     <Image
       source={require("../assets/images/icon-shop-cart.png")}
       style={styles.cartImage}
@@ -283,9 +280,9 @@ export default function ShopScreen() {
     수련에 필요한 도장 물품과 용품 안내
   </Text>
 
-  <Text style={styles.noticeText}>
-    도장 회원만 구매 및 주문 문의가 가능합니다.
-  </Text>
+<Text style={styles.noticeText}>
+  상품 구매는 문의창 혹은 도장에서 관장님께 문의해주세요.
+</Text>
 </View>
 </View>
 
@@ -779,5 +776,12 @@ cartImage: {
   width: 24,
   height: 24,
   opacity: 0.82,
+},
+productPriceMuted: {
+  marginTop: 2,
+  fontSize: 16,
+  lineHeight: 24,
+  fontFamily: fonts.semiBold,
+  color: colors.textSub,
 },
 });

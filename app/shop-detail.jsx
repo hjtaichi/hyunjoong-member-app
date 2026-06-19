@@ -25,10 +25,6 @@ import { useCart } from "../src/contexts/CartContext";
 
 const API_ORIGIN = "http://172.30.1.16:5000";
 
-function formatPrice(value) {
-  return `₩${Number(value || 0).toLocaleString("ko-KR")}`;
-}
-
 function getImageUrl(imageUrl) {
   if (!imageUrl) return null;
   if (imageUrl.startsWith("http")) return imageUrl;
@@ -36,19 +32,28 @@ function getImageUrl(imageUrl) {
 }
 
 function getStockInfo(product) {
-  if (product?.stockQuantity > 0) {
+  if (product?.stockStatus === "available") {
     return {
       label: "재고 있음",
-      desc: "도장에서 바로 구매 가능",
-      detail: "오늘 방문 시 구매할 수 있어요.",
+      desc: "구매는 문의창 혹은 도장에서 관장님께 문의해주세요.",
+      detail: "도장에서 관장님께 문의 후 구매할 수 있어요.",
       tone: "available",
     };
   }
 
+  if (product?.stockStatus === "unavailable") {
+    return {
+      label: "재고 없음",
+      desc: "입고 여부는 관장님께 문의해주세요.",
+      detail: "현재 바로 구매 가능한 재고가 없습니다.",
+      tone: "order",
+    };
+  }
+
   return {
-    label: "주문 요청",
-    desc: "관리자 확인 후 안내",
-    detail: "주문 요청 후 수령 일정을 안내드려요.",
+    label: "문의 필요",
+    desc: "자세한 상태는 관장님께 문의해주세요.",
+    detail: "도장 상황에 따라 구매 가능 여부를 안내드려요.",
     tone: "order",
   };
 }
@@ -143,7 +148,7 @@ export default function ShopDetailScreen() {
         <View style={styles.titleRow}>
           <View style={styles.titleBlock}>
             <Text style={styles.productName}>{product.name}</Text>
-            <Text style={styles.productPrice}>{formatPrice(product.price)}</Text>
+            
           </View>
 
           <View
@@ -237,7 +242,7 @@ export default function ShopDetailScreen() {
           <View style={styles.specRow}>
             <Text style={styles.specIcon}>☑</Text>
             <Text style={styles.specLabel}>재고</Text>
-            <Text style={styles.specValue}>{product.stockQuantity || 0}개</Text>
+            <Text style={styles.specValue}>{stock.label}</Text>
           </View>
         </View>
 
@@ -275,8 +280,8 @@ export default function ShopDetailScreen() {
         <View style={styles.stockGuideItem}>
           <View style={[styles.statusDot, styles.darkDot]} />
           <View>
-            <Text style={styles.statusTitle}>주문 요청</Text>
-            <Text style={styles.statusDesc}>관리자 확인 후 수령 일정 안내</Text>
+            <Text style={styles.statusTitle}>문의 필요</Text>
+<Text style={styles.statusDesc}>관장님 확인 후 구매 가능 여부 안내</Text>
           </View>
         </View>
 

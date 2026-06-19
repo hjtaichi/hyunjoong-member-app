@@ -438,8 +438,8 @@ kicker: {
   heroDesc: {
   width: "56%",
   fontSize: 15,
-  lineHeight: 23,
-  marginLeft: 12,
+  lineHeight: 21,
+  marginLeft: 6,
   fontFamily: fonts.titleSemi,
   color: colors.textMain,
   zIndex: 3,

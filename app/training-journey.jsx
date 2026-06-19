@@ -160,39 +160,47 @@ const rankLevel = Number(member.rankLevel || 0);
 const personalProgress = data?.personalProgress || null;
 
 const currentJourney = useMemo(() => {
-  if (rankLevel >= 2) {
-  return {
-  stepNo: 5,
-  title: "현중태극권 대가1로 79식 수련",
-  desc: "현중태극권 대가1로 79식",
-  progressTitle: "2단 이후 심화 수련 중",
-  progressCount: "5 / 8단계",
-  progressPercent: 63,
-  progressDesc: "3단 심사 준비 과정에 해당합니다.",
-};
-}
+  const totalSteps = steps.length;
 
-  if (rankLevel >= 1) {
-    return {
-  stepNo: 3,
-  title: "현중태극검 52식 수련",
-  desc: "현중태극검 52식",
-  progressTitle: "1단 이후 검 수련 중",
-  progressCount: "3 / 8단계",
-  progressPercent: 38,
-  progressDesc: "2단 심사 준비 과정에 해당합니다.",
-};
-  }
+  const journeyByRank = {
+    0: {
+      stepNo: 1,
+      title: "입관 후 기본 수련",
+      desc: "현중태극권 29식 · 현중태극선 29식",
+      progressTitle: "입관 후 기본 수련 중",
+      progressDesc: "1단 심사 응시 가능 시점까지 수련을 쌓아가는 과정입니다.",
+    },
+    1: {
+      stepNo: 3,
+      title: "현중태극검 52식 수련",
+      desc: "현중태극검 52식",
+      progressTitle: "1단 이후 검 수련 중",
+      progressDesc: "2단 심사 준비 과정에 해당합니다.",
+    },
+    2: {
+      stepNo: 5,
+      title: "현중태극권 대가1로 79식 수련",
+      desc: "현중태극권 대가1로 79식",
+      progressTitle: "2단 이후 심화 수련 중",
+      progressDesc: "3단 심사 준비 과정에 해당합니다.",
+    },
+    3: {
+      stepNo: 7,
+      title: "현중태극권 대가2로 수련",
+      desc: "현중태극권 대가2로",
+      progressTitle: "3단 이후 심화 수련 중",
+      progressDesc: "4단 심사 준비 과정에 해당합니다.",
+    },
+  };
+
+  const safeRankLevel = Math.max(0, Math.min(rankLevel, 3));
+  const journey = journeyByRank[safeRankLevel] || journeyByRank[0];
 
   return {
-  stepNo: 1,
-  title: "입관 후 기본 수련",
-  desc: "현중태극권 29식 · 현중태극선 29식",
-  progressTitle: "입관 후 기본 수련 중",
-  progressCount: "1 / 8단계",
-  progressPercent: 13,
-  progressDesc: "1단 심사 응시 가능 시점까지 수련을 쌓아가는 과정입니다.",
-};
+    ...journey,
+    progressCount: `${journey.stepNo} / ${totalSteps}단계`,
+    progressPercent: Math.round((journey.stepNo / totalSteps) * 100),
+  };
 }, [rankLevel]);
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>

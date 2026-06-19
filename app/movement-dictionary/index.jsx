@@ -229,7 +229,7 @@ heroTextWrap: {
 
 heroFigure: {
   position: "absolute",
-  right: -38,
+  right: -35,
   bottom: -38,
   width: 240,
   height: 240,

@@ -89,8 +89,6 @@ export default function MemberNotificationsScreen() {
 >
       <ScreenHeader title="알림" />
 
-      <Text style={styles.title}>알림</Text>
-
       {items.length === 0 ? (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyText}>도착한 알림이 없습니다.</Text>
@@ -109,10 +107,16 @@ export default function MemberNotificationsScreen() {
 >
             <View style={styles.cardTop}>
               <Text style={styles.badge}>
-                {item.type === "coaching_comment"
+                {item.type === "coaching_comment" ||
+item.type === "coaching_video_uploaded" ||
+item.type === "coaching_member_comment"
   ? "코칭"
   : item.type === "inquiry_reply"
   ? "문의"
+  : item.type === "notice_popup"
+  ? "공지"
+  : item.type === "product_order"
+  ? "상품"
   : "알림"}
               </Text>
 

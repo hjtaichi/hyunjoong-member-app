@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import { router } from 'expo-router';
-import { useAuth } from '../src/contexts/AuthContext';
+import React, { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
+import { router } from "expo-router";
+import { useAuth } from "../src/contexts/AuthContext";
 
 export default function IndexPage() {
   const { isAuthenticated, isBootLoading, user } = useAuth();
@@ -9,22 +9,23 @@ export default function IndexPage() {
   useEffect(() => {
     if (isBootLoading) return;
 
-    if (isAuthenticated) {
-  const authUser = user || {};
-  const memberStatus = authUser?.memberStatus || authUser?.status;
+    if (!isAuthenticated) {
+      router.replace("/login");
+      return;
+    }
 
-  if (memberStatus === "paused") {
-    router.replace("/(tabs)/inquiry");
-  } else {
+    const memberStatus = user?.memberStatus || user?.status;
+
+    if (memberStatus === "paused") {
+      router.replace("/(tabs)/inquiry");
+      return;
+    }
+
     router.replace("/(tabs)/home");
-  }
-} else {
-  router.replace("/login");
-}
-  }, [isAuthenticated, isBootLoading]);
+  }, [isAuthenticated, isBootLoading, user]);
 
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <ActivityIndicator size="large" />
     </View>
   );

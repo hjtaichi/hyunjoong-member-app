@@ -169,7 +169,7 @@ export default function CartScreen() {
               onPress={handleSubmitOrder}
             >
               <Text style={styles.submitButtonText}>
-                {submitting ? "요청 중..." : "주문 요청하기"}
+                {submitting ? "요청 중..." : "구매 문의하기"}
               </Text>
             </Pressable>
           </View>
