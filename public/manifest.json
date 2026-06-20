@@ -1,7 +1,8 @@
 {
+  "id": "/",
   "name": "현중태극권",
   "short_name": "현중태극권",
-  "start_url": "/",
+  "start_url": "/login",
   "scope": "/",
   "display": "standalone",
   "background_color": "#F6F2EC",
