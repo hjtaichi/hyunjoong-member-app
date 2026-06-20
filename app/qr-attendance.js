@@ -48,8 +48,12 @@ function showAlert(title, message, buttons) {
   if (Platform.OS === "web") {
     window.alert(`${title}\n\n${message}`);
 
-    const confirmButton = buttons?.find((button) => button.text === "확인");
-    if (confirmButton?.onPress) confirmButton.onPress();
+    const actionButton =
+      buttons?.find((button) => button.text === "확인") ||
+      buttons?.find((button) => button.text === "다시 스캔") ||
+      buttons?.[0];
+
+    if (actionButton?.onPress) actionButton.onPress();
 
     return;
   }
@@ -189,22 +193,18 @@ export default function QrAttendanceScreen() {
         },
       ]);
     } catch (error) {
-      showAlert("출석 실패", error.message || "출석 처리에 실패했습니다.", [
-        {
-          text: "다시 스캔",
-          onPress: () => {
-            setScanned(false);
-            setSubmitting(false);
-          },
-        },
-        {
-          text: "홈으로",
-          onPress: () => router.replace("/(tabs)/home"),
-        },
-      ]);
-    } finally {
-      setSubmitting(false);
-    }
+  showAlert("출석 실패", error.message || "출석 처리에 실패했습니다.", [
+    {
+      text: "확인",
+      onPress: () => {
+        setScanned(false);
+        setSubmitting(false);
+      },
+    },
+  ]);
+} finally {
+  setSubmitting(false);
+}
   }
 
   if (Platform.OS !== "web" && !permission) {
