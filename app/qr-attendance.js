@@ -29,8 +29,9 @@ function parseQrData(data) {
         };
       }
     }
-  } catch (error) {
-    console.log("[parseQrData] deeplink parse error:", error);
+   } catch (error) {
+    console.log("[parseQrData] json parse error:", raw, error);
+    return null;
   }
 
   // 2) 기존 JSON QR도 계속 지원
@@ -64,9 +65,13 @@ export default function QrAttendanceScreen() {
   }, [permission, requestPermission]);
 
   async function handleBarcodeScanned({ data }) {
-    if (scanned || submitting) return;
+  console.log("🔥 QR RAW DATA:", data);
 
-    const parsed = parseQrData(data);
+  if (scanned || submitting) return;
+
+  const parsed = parseQrData(data);
+
+  console.log("🔥 QR PARSED:", parsed);
 
     if (!parsed?.sessionId) {
       setScanned(true);
