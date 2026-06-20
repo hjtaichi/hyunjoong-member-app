@@ -197,8 +197,9 @@ export default function QrAttendanceScreen() {
     {
       text: "확인",
       onPress: () => {
-        setScanned(false);
+        setScanned(true);
         setSubmitting(false);
+        router.replace("/(tabs)/home");
       },
     },
   ]);
