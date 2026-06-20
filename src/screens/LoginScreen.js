@@ -67,22 +67,16 @@ export default function LoginScreen() {
     }
 
     if (!result.ok) {
-      const message =
-  error?.response?.data?.message ||
-  error?.response?.data?.error ||
-  error?.message ||
-  "가입 신청에 실패했습니다.";
+  const message = result.message || "로그인에 실패했습니다.";
 
-Alert.alert("가입 신청 실패", message);
+  if (result.code === "APPROVAL_PENDING" || message.includes("승인 대기")) {
+    router.replace("/approval-pending");
+    return;
+  }
 
-      if (result.code === "APPROVAL_PENDING" || message.includes("승인 대기")) {
-        router.replace("/approval-pending");
-        return;
-      }
-
-      Alert.alert("로그인 실패", message);
-      return;
-    }
+  Alert.alert("로그인 실패", message);
+  return;
+}
 
     router.replace("/(tabs)/home");
   }
@@ -327,6 +321,9 @@ const styles = StyleSheet.create({
   height: "100%",
 },
 inputWrap: {
+  width: "100%",
+  maxWidth: "100%",
+  overflow: "hidden",
   flexDirection: "row",
   alignItems: "center",
   height: 50,
@@ -347,9 +344,13 @@ inputIcon: {
 
 inputWithIcon: {
   flex: 1,
+  minWidth: 0,
+  height: "100%",
   fontSize: 18,
   fontFamily: "PretendardMedium",
   color: "#3A2C27",
+  outlineStyle: "none",
+  outlineWidth: 0,
 },
 
 registerContent: {
