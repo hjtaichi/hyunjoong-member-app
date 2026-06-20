@@ -29,9 +29,8 @@ function parseQrData(data) {
         };
       }
     }
-   } catch (error) {
-    console.log("[parseQrData] json parse error:", raw, error);
-    return null;
+     } catch (error) {
+    console.log("[parseQrData] deeplink parse error:", raw, error);
   }
 
   // 2) 기존 JSON QR도 계속 지원
@@ -148,13 +147,20 @@ export default function QrAttendanceScreen() {
   return (
     <View style={styles.screen}>
       <CameraView
-        style={styles.camera}
-        facing="back"
-        barcodeScannerSettings={{
-          barcodeTypes: ["qr"],
-        }}
-        onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
-      />
+  style={styles.camera}
+  facing="back"
+  barcodeScannerSettings={{
+    barcodeTypes: ["qr"],
+  }}
+  onBarcodeScanned={
+    scanned
+      ? undefined
+      : (result) => {
+          console.log("🔥 QR DETECTED:", result);
+          handleBarcodeScanned(result);
+        }
+  }
+/>
 
       <View style={styles.overlay}>
         <View style={styles.topPanel}>
