@@ -178,56 +178,70 @@ if (Platform.OS !== "web") {
 // 🔥 루트
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-const [fontsLoaded] = useFonts({
-  ChosunCentennial: require("../assets/fonts/ChosunCentennial.ttf"),
 
-  PretendardRegular: require("../assets/fonts/Pretendard-Regular.otf"),
-  PretendardMedium: require("../assets/fonts/Pretendard-Medium.otf"),
-  PretendardSemiBold: require("../assets/fonts/Pretendard-SemiBold.otf"),
-  PretendardBold: require("../assets/fonts/Pretendard-Bold.otf"),
+  const [fontsLoaded] = useFonts({
+    ChosunCentennial: require("../assets/fonts/ChosunCentennial.ttf"),
 
-  MaruBuriRegular: require("../assets/fonts/MaruBuri-Regular.ttf"),
-  MaruBuriSemiBold: require("../assets/fonts/MaruBuri-SemiBold.ttf"),
-  MaruBuriBold: require("../assets/fonts/MaruBuri-Bold.ttf"),
+    PretendardRegular: require("../assets/fonts/Pretendard-Regular.otf"),
+    PretendardMedium: require("../assets/fonts/Pretendard-Medium.otf"),
+    PretendardSemiBold: require("../assets/fonts/Pretendard-SemiBold.otf"),
+    PretendardBold: require("../assets/fonts/Pretendard-Bold.otf"),
 
-  SimKyungha: require("../assets/fonts/SimKyungha.ttf"),
-  KyoboHandwriting2025lyb: require("../assets/fonts/KyoboHandwriting2025lyb.ttf"),
-  ZhaoKai: require("../assets/fonts/ZhaoCaiKaiShu.otf"),
-});
+    MaruBuriRegular: require("../assets/fonts/MaruBuri-Regular.ttf"),
+    MaruBuriSemiBold: require("../assets/fonts/MaruBuri-SemiBold.ttf"),
+    MaruBuriBold: require("../assets/fonts/MaruBuri-Bold.ttf"),
+
+    SimKyungha: require("../assets/fonts/SimKyungha.ttf"),
+    KyoboHandwriting2025lyb: require("../assets/fonts/KyoboHandwriting2025lyb.ttf"),
+    ZhaoKai: require("../assets/fonts/ZhaoCaiKaiShu.otf"),
+  });
+
   useEffect(() => {
-  if (!fontsLoaded) return;
+    if (!fontsLoaded) return;
 
-  if (Platform.OS !== "web") {
-    SplashScreen.hideAsync();
+    if (Platform.OS !== "web") {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    if (typeof navigator === "undefined") return;
+    if (!("serviceWorker" in navigator)) return;
+
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then(() => console.log("✅ service worker registered"))
+      .catch((error) => console.log("❌ service worker failed:", error));
+  }, []);
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
-}, [fontsLoaded]);
 
-if (!fontsLoaded) {
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <ActivityIndicator size="large" />
-    </View>
+    <AuthProvider>
+      <CartProvider>
+        <PushInitializer />
+
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="login" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen
+              name="modal"
+              options={{ presentation: "modal", title: "Modal" }}
+            />
+          </Stack>
+
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </CartProvider>
+    </AuthProvider>
   );
-}
-  return (
-  <AuthProvider>
-    <CartProvider>
-      <PushInitializer />
-
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          />
-        </Stack>
-
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </CartProvider>
-  </AuthProvider>
-);
 }
