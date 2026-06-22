@@ -243,7 +243,22 @@ export default function QrAttendanceScreen() {
 
   return (
   <View style={styles.screen}>
-    <View style={styles.overlay}>
+    {Platform.OS === "web" ? (
+      <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
+    ) : !scanned ? (
+      <CameraView
+        style={StyleSheet.absoluteFill}
+        facing="back"
+        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+        onBarcodeScanned={handleBarcodeScanned}
+      />
+    ) : (
+      <View style={styles.cameraStopped} />
+    )}
+
+    <View style={styles.darkLayer} pointerEvents="none" />
+
+    <View style={styles.overlay} pointerEvents="box-none">
       <View style={styles.topPanel}>
         <Text style={styles.title}>QR 출석</Text>
         <Text style={styles.helperText}>
@@ -252,26 +267,10 @@ export default function QrAttendanceScreen() {
       </View>
 
       <View style={styles.scanFrame}>
-        {Platform.OS === "web" ? (
-          <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
-        ) : !scanned ? (
-          <CameraView
-  style={StyleSheet.absoluteFill}
-  facing="back"
-  resizeMode="cover"
-  barcodeScannerSettings={{
-    barcodeTypes: ["qr"],
-  }}
-  onBarcodeScanned={handleBarcodeScanned}
-/>
-        ) : (
-          <View style={styles.cameraStopped} />
-        )}
-
-        <View pointerEvents="none" style={styles.cornerTopLeft} />
-        <View pointerEvents="none" style={styles.cornerTopRight} />
-        <View pointerEvents="none" style={styles.cornerBottomLeft} />
-        <View pointerEvents="none" style={styles.cornerBottomRight} />
+        <View style={styles.cornerTopLeft} />
+        <View style={styles.cornerTopRight} />
+        <View style={styles.cornerBottomLeft} />
+        <View style={styles.cornerBottomRight} />
       </View>
 
       <View style={styles.bottomPanel}>
@@ -294,11 +293,6 @@ const styles = StyleSheet.create({
   screen: {
   flex: 1,
   backgroundColor: "#000",
-},
-  
-  cameraStopped: {
-  ...StyleSheet.absoluteFillObject,
-  backgroundColor: "#1F1A17",
 },
 cornerTopLeft: {
   position: "absolute",
@@ -366,13 +360,20 @@ cornerBottomRight: {
   paddingBottom: 40,
   justifyContent: "space-between",
 },
+darkLayer: {
+  ...StyleSheet.absoluteFillObject,
+  backgroundColor: "rgba(0,0,0,0.35)",
+},
 scanFrame: {
   alignSelf: "center",
   width: 290,
   height: 290,
   borderRadius: 28,
-  overflow: "hidden",
-  backgroundColor: "#111",
+  backgroundColor: "transparent",
+},
+cameraStopped: {
+  ...StyleSheet.absoluteFillObject,
+  backgroundColor: "#1F1A17",
 },
   topPanel: {
     borderRadius: 24,
