@@ -53,8 +53,7 @@ function showAlert(title, message, buttons) {
 
 function WebQrScanner({ onScan, disabled }) {
   const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const frameRef = useRef(null);
+  const controlsRef = useRef(null);
   const [webError, setWebError] = useState("");
 
   useEffect(() => {
@@ -64,71 +63,49 @@ function WebQrScanner({ onScan, disabled }) {
 
     async function start() {
       try {
-        if (!("BarcodeDetector" in window)) {
-          setWebError("이 브라우저에서는 QR 인식을 지원하지 않습니다.");
-          return;
-        }
+        const { BrowserQRCodeReader } = await import("@zxing/browser");
 
-        const detector = new window.BarcodeDetector({
-          formats: ["qr_code"],
-        });
+        const codeReader = new BrowserQRCodeReader();
 
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "environment",
+        controlsRef.current = await codeReader.decodeFromConstraints(
+          {
+            video: {
+              facingMode: { ideal: "environment" },
+            },
+            audio: false,
           },
-          audio: false,
-        });
+          videoRef.current,
+          (result) => {
+            if (cancelled || disabled) return;
 
-        if (cancelled) {
-          stream.getTracks().forEach((track) => track.stop());
-          return;
-        }
+            const text = result?.getText?.();
 
-        streamRef.current = stream;
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-        }
-
-        const scan = async () => {
-          if (cancelled || disabled) return;
-
-          try {
-            if (videoRef.current) {
-              const codes = await detector.detect(videoRef.current);
-              if (codes?.[0]?.rawValue) {
-                onScan({ data: codes[0].rawValue });
-                return;
-              }
+            if (text) {
+              onScan({ data: text });
             }
-          } catch {}
-
-          frameRef.current = requestAnimationFrame(scan);
-        };
-
-        scan();
+          }
+        );
       } catch (error) {
+        console.log("❌ zxing qr scanner error:", error);
         setWebError(
-          error?.message || "카메라를 시작하지 못했습니다. 권한을 확인해주세요."
+          error?.message ||
+            "카메라를 시작하지 못했습니다. Safari에서 카메라 권한을 확인해주세요."
         );
       }
     }
 
-    start();
+    if (videoRef.current) {
+      start();
+    }
 
     return () => {
       cancelled = true;
 
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-      }
+      try {
+        controlsRef.current?.stop?.();
+      } catch {}
 
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
+      controlsRef.current = null;
     };
   }, [disabled, onScan]);
 
@@ -144,6 +121,7 @@ function WebQrScanner({ onScan, disabled }) {
           height: "100%",
           objectFit: "cover",
           display: "block",
+          backgroundColor: "#000",
         }}
       />
 
