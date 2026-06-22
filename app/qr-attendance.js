@@ -247,11 +247,11 @@ export default function QrAttendanceScreen() {
       <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
     ) : !scanned ? (
       <CameraView
-        style={StyleSheet.absoluteFill}
-        facing="back"
-        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-        onBarcodeScanned={handleBarcodeScanned}
-      />
+  style={styles.camera}
+  facing="back"
+  barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+  onBarcodeScanned={handleBarcodeScanned}
+/>
     ) : (
       <View style={styles.cameraStopped} />
     )}
@@ -291,6 +291,9 @@ const styles = StyleSheet.create({
   screen: {
   flex: 1,
   backgroundColor: "#000",
+},
+camera: {
+  ...StyleSheet.absoluteFillObject,
 },
 cornerTopLeft: {
   position: "absolute",
