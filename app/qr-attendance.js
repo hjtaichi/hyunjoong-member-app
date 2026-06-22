@@ -256,13 +256,14 @@ export default function QrAttendanceScreen() {
           <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
         ) : !scanned ? (
           <CameraView
-            style={StyleSheet.absoluteFill}
-            facing="back"
-            barcodeScannerSettings={{
-              barcodeTypes: ["qr"],
-            }}
-            onBarcodeScanned={handleBarcodeScanned}
-          />
+  style={StyleSheet.absoluteFill}
+  facing="back"
+  resizeMode="cover"
+  barcodeScannerSettings={{
+    barcodeTypes: ["qr"],
+  }}
+  onBarcodeScanned={handleBarcodeScanned}
+/>
         ) : (
           <View style={styles.cameraStopped} />
         )}
@@ -368,7 +369,7 @@ cornerBottomRight: {
 scanFrame: {
   alignSelf: "center",
   width: 290,
-  height: 360,
+  height: 290,
   borderRadius: 28,
   overflow: "hidden",
   backgroundColor: "#111",
@@ -388,8 +389,7 @@ scanFrame: {
     fontSize: 14,
     lineHeight: 20,
     color: "#6B6258",
-  },
-  
+  },  
   bottomPanel: {
     alignItems: "center",
   },
