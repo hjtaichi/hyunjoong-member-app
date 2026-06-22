@@ -242,59 +242,102 @@ export default function QrAttendanceScreen() {
   }
 
   return (
-    <View style={styles.screen}>
-      {Platform.OS === "web" ? (
-  <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
-) : !scanned ? (
-  <CameraView
-    style={styles.camera}
-    facing="back"
-    barcodeScannerSettings={{
-      barcodeTypes: ["qr"],
-    }}
-    onBarcodeScanned={handleBarcodeScanned}
-  />
-) : (
-  <View style={styles.cameraStopped} />
-)}
+  <View style={styles.screen}>
+    <View style={styles.overlay}>
+      <View style={styles.topPanel}>
+        <Text style={styles.title}>QR 출석</Text>
+        <Text style={styles.helperText}>
+          관리자 화면의 출석 QR을 카메라 중앙에 맞춰주세요.
+        </Text>
+      </View>
 
-      <View style={styles.overlay} pointerEvents="box-none">
-        <View style={styles.topPanel}>
-          <Text style={styles.title}>QR 출석</Text>
-          <Text style={styles.helperText}>
-            관리자 화면의 출석 QR을 카메라 중앙에 맞춰주세요.
-          </Text>
-        </View>
+      <View style={styles.scanFrame}>
+        {Platform.OS === "web" ? (
+          <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
+        ) : !scanned ? (
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr"],
+            }}
+            onBarcodeScanned={handleBarcodeScanned}
+          />
+        ) : (
+          <View style={styles.cameraStopped} />
+        )}
 
-        {Platform.OS !== "web" ? <View style={styles.scanBox} /> : <View />}
+        <View pointerEvents="none" style={styles.cornerTopLeft} />
+        <View pointerEvents="none" style={styles.cornerTopRight} />
+        <View pointerEvents="none" style={styles.cornerBottomLeft} />
+        <View pointerEvents="none" style={styles.cornerBottomRight} />
+      </View>
 
-        <View style={styles.bottomPanel}>
-          {submitting ? (
-            <Text style={styles.processingText}>출석 처리 중...</Text>
-          ) : (
-            <Text style={styles.bottomText}>QR을 스캔하면 자동 출석됩니다.</Text>
-          )}
+      <View style={styles.bottomPanel}>
+        {submitting ? (
+          <Text style={styles.processingText}>출석 처리 중...</Text>
+        ) : (
+          <Text style={styles.bottomText}>QR을 스캔하면 자동 출석됩니다.</Text>
+        )}
 
-          <Pressable style={styles.closeButton} onPress={() => router.back()}>
-            <Text style={styles.closeButtonText}>닫기</Text>
-          </Pressable>
-        </View>
+        <Pressable style={styles.closeButton} onPress={() => router.back()}>
+          <Text style={styles.closeButtonText}>닫기</Text>
+        </Pressable>
       </View>
     </View>
-  );
+  </View>
+);
 }
 
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-  camera: {
-    flex: 1,
-  },
-  cameraStopped: {
   flex: 1,
+  backgroundColor: "#000",
+},
+  
+  cameraStopped: {
+  ...StyleSheet.absoluteFillObject,
   backgroundColor: "#1F1A17",
+},
+cornerTopLeft: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  width: 44,
+  height: 44,
+  borderTopWidth: 5,
+  borderLeftWidth: 5,
+  borderColor: "#FFFFFF",
+},
+cornerTopRight: {
+  position: "absolute",
+  top: 0,
+  right: 0,
+  width: 44,
+  height: 44,
+  borderTopWidth: 5,
+  borderRightWidth: 5,
+  borderColor: "#FFFFFF",
+},
+cornerBottomLeft: {
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  width: 44,
+  height: 44,
+  borderBottomWidth: 5,
+  borderLeftWidth: 5,
+  borderColor: "#FFFFFF",
+},
+cornerBottomRight: {
+  position: "absolute",
+  bottom: 0,
+  right: 0,
+  width: 44,
+  height: 44,
+  borderBottomWidth: 5,
+  borderRightWidth: 5,
+  borderColor: "#FFFFFF",
 },
   webCameraBox: {
     flex: 1,
@@ -316,12 +359,20 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
-    paddingHorizontal: 24,
-    paddingTop: 70,
-    paddingBottom: 40,
-    justifyContent: "space-between",
-  },
+  flex: 1,
+  paddingHorizontal: 24,
+  paddingTop: 70,
+  paddingBottom: 40,
+  justifyContent: "space-between",
+},
+scanFrame: {
+  alignSelf: "center",
+  width: 290,
+  height: 360,
+  borderRadius: 28,
+  overflow: "hidden",
+  backgroundColor: "#111",
+},
   topPanel: {
     borderRadius: 24,
     backgroundColor: "rgba(255,255,255,0.92)",
@@ -338,15 +389,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: "#6B6258",
   },
-  scanBox: {
-    alignSelf: "center",
-    width: 250,
-    height: 250,
-    borderRadius: 28,
-    borderWidth: 4,
-    borderColor: "#FFFFFF",
-    backgroundColor: "transparent",
-  },
+  
   bottomPanel: {
     alignItems: "center",
   },
