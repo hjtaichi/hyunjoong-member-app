@@ -256,8 +256,6 @@ export default function QrAttendanceScreen() {
       <View style={styles.cameraStopped} />
     )}
 
-    <View style={styles.darkLayer} pointerEvents="none" />
-
     <View style={styles.overlay} pointerEvents="box-none">
       <View style={styles.topPanel}>
         <Text style={styles.title}>QR 출석</Text>
@@ -266,7 +264,7 @@ export default function QrAttendanceScreen() {
         </Text>
       </View>
 
-      <View style={styles.scanFrame}>
+      <View style={styles.scanFrame} pointerEvents="none">
         <View style={styles.cornerTopLeft} />
         <View style={styles.cornerTopRight} />
         <View style={styles.cornerBottomLeft} />
@@ -354,32 +352,35 @@ cornerBottomRight: {
     textAlign: "center",
   },
   overlay: {
-  flex: 1,
+  ...StyleSheet.absoluteFillObject,
   paddingHorizontal: 24,
   paddingTop: 70,
   paddingBottom: 40,
   justifyContent: "space-between",
 },
-darkLayer: {
-  ...StyleSheet.absoluteFillObject,
-  backgroundColor: "rgba(0,0,0,0.35)",
-},
+
 scanFrame: {
   alignSelf: "center",
   width: 290,
   height: 290,
-  borderRadius: 28,
   backgroundColor: "transparent",
+},
+
+topPanel: {
+  borderRadius: 24,
+  backgroundColor: "rgba(255,255,255,0.92)",
+  padding: 18,
+},
+
+bottomPanel: {
+  alignItems: "center",
+  paddingBottom: 8,
 },
 cameraStopped: {
   ...StyleSheet.absoluteFillObject,
   backgroundColor: "#1F1A17",
 },
-  topPanel: {
-    borderRadius: 24,
-    backgroundColor: "rgba(255,255,255,0.92)",
-    padding: 18,
-  },
+
   title: {
     fontSize: 24,
     fontWeight: "900",
@@ -391,9 +392,7 @@ cameraStopped: {
     lineHeight: 20,
     color: "#6B6258",
   },  
-  bottomPanel: {
-    alignItems: "center",
-  },
+
   bottomText: {
     marginBottom: 14,
     fontSize: 14,
