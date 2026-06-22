@@ -148,6 +148,7 @@ export default function QrAttendanceScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const scannedRef = useRef(false);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
@@ -159,54 +160,58 @@ export default function QrAttendanceScreen() {
   }, [permission, requestPermission]);
 
   async function handleBarcodeScanned({ data }) {
-    console.log("🔥 QR RAW DATA:", data);
+  if (scannedRef.current) return;
 
-    if (scanned || submitting) return;
+  scannedRef.current = true;
+  setScanned(true);
 
-    const parsed = parseQrData(data);
+  console.log("🔥 QR RAW DATA:", data);
 
-    console.log("🔥 QR PARSED:", parsed);
+  const parsed = parseQrData(data);
 
-    if (!parsed?.sessionId) {
-      setScanned(true);
-      showAlert("안내", "현중태극권 출석 QR이 아닙니다.", [
-        {
-          text: "다시 스캔",
-          onPress: () => setScanned(false),
+  console.log("🔥 QR PARSED:", parsed);
+
+  if (!parsed?.sessionId) {
+    showAlert("안내", "현중태극권 출석 QR이 아닙니다.", [
+      {
+        text: "다시 스캔",
+        onPress: () => {
+          scannedRef.current = false;
+          setScanned(false);
         },
-      ]);
-      return;
-    }
-
-    try {
-      setScanned(true);
-      setSubmitting(true);
-
-      await markAttendance(token, {
-        sessionId: parsed.sessionId,
-      });
-
-      showAlert("출석 완료", "출석이 정상 처리되었습니다.", [
-        {
-          text: "확인",
-          onPress: () => router.replace("/(tabs)/home"),
-        },
-      ]);
-    } catch (error) {
-  showAlert("출석 실패", error.message || "출석 처리에 실패했습니다.", [
-    {
-      text: "확인",
-      onPress: () => {
-        setScanned(true);
-        setSubmitting(false);
-        router.replace("/(tabs)/home");
       },
-    },
-  ]);
-} finally {
-  setSubmitting(false);
-}
+    ]);
+    return;
   }
+
+  try {
+    setSubmitting(true);
+
+    await markAttendance(token, {
+      sessionId: parsed.sessionId,
+    });
+
+    showAlert("출석 완료", "출석이 정상 처리되었습니다.", [
+      {
+        text: "확인",
+        onPress: () => {
+          router.replace("/(tabs)/home");
+        },
+      },
+    ]);
+  } catch (error) {
+    showAlert("출석 실패", error.message || "출석 처리에 실패했습니다.", [
+      {
+        text: "확인",
+        onPress: () => {
+          router.replace("/(tabs)/home");
+        },
+      },
+    ]);
+  } finally {
+    setSubmitting(false);
+  }
+}
 
   if (Platform.OS !== "web" && !permission) {
     return (
@@ -239,17 +244,19 @@ export default function QrAttendanceScreen() {
   return (
     <View style={styles.screen}>
       {Platform.OS === "web" ? (
-        <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
-      ) : (
-        <CameraView
-          style={styles.camera}
-          facing="back"
-          barcodeScannerSettings={{
-            barcodeTypes: ["qr"],
-          }}
-          onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
-        />
-      )}
+  <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
+) : !scanned ? (
+  <CameraView
+    style={styles.camera}
+    facing="back"
+    barcodeScannerSettings={{
+      barcodeTypes: ["qr"],
+    }}
+    onBarcodeScanned={handleBarcodeScanned}
+  />
+) : (
+  <View style={styles.cameraStopped} />
+)}
 
       <View style={styles.overlay} pointerEvents="box-none">
         <View style={styles.topPanel}>
@@ -285,6 +292,10 @@ const styles = StyleSheet.create({
   camera: {
     flex: 1,
   },
+  cameraStopped: {
+  flex: 1,
+  backgroundColor: "#1F1A17",
+},
   webCameraBox: {
     flex: 1,
     backgroundColor: "#000",
@@ -334,7 +345,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     borderWidth: 4,
     borderColor: "#FFFFFF",
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "transparent",
   },
   bottomPanel: {
     alignItems: "center",
