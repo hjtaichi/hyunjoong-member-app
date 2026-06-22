@@ -21,40 +21,30 @@ function parseQrData(data) {
     if (raw.startsWith("memberapp://")) {
       const url = new URL(raw);
       const sessionId = url.searchParams.get("sessionId");
-
       if (url.hostname === "attendance-check" && sessionId) {
         return { sessionId: String(sessionId) };
       }
     }
-  } catch (error) {
-    console.log("[parseQrData] deeplink parse error:", raw, error);
-  }
+  } catch {}
 
   try {
     const parsed = JSON.parse(raw);
-
     if (parsed?.type === "attendance" && parsed?.sessionId) {
       return { sessionId: String(parsed.sessionId) };
     }
+  } catch {}
 
-    return null;
-  } catch (error) {
-    console.log("[parseQrData] json parse error:", raw, error);
-    return null;
-  }
+  return null;
 }
 
 function showAlert(title, message, buttons) {
   if (Platform.OS === "web") {
     window.alert(`${title}\n\n${message}`);
-
     const actionButton =
       buttons?.find((button) => button.text === "확인") ||
       buttons?.find((button) => button.text === "다시 스캔") ||
       buttons?.[0];
-
-    if (actionButton?.onPress) actionButton.onPress();
-
+    actionButton?.onPress?.();
     return;
   }
 
@@ -62,75 +52,98 @@ function showAlert(title, message, buttons) {
 }
 
 function WebQrScanner({ onScan, disabled }) {
-  const scannerRef = useRef(null);
-  const startedRef = useRef(false);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const frameRef = useRef(null);
   const [webError, setWebError] = useState("");
 
   useEffect(() => {
     if (disabled) return;
 
-    let mounted = true;
+    let cancelled = false;
 
-    async function startScanner() {
+    async function start() {
       try {
-        const { Html5Qrcode } = await import("html5-qrcode");
+        if (!("BarcodeDetector" in window)) {
+          setWebError("이 브라우저에서는 QR 인식을 지원하지 않습니다.");
+          return;
+        }
 
-        if (!mounted || startedRef.current) return;
+        const detector = new window.BarcodeDetector({
+          formats: ["qr_code"],
+        });
 
-        const scanner = new Html5Qrcode("qr-reader");
-        scannerRef.current = scanner;
-
-        await scanner.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 260, height: 260 },
-            aspectRatio: 1,
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "environment",
           },
-          (decodedText) => {
-            console.log("🔥 WEB QR RAW DATA:", decodedText);
-            onScan({ data: decodedText });
-          },
-          () => {}
-        );
+          audio: false,
+        });
 
-        startedRef.current = true;
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+
+        const scan = async () => {
+          if (cancelled || disabled) return;
+
+          try {
+            if (videoRef.current) {
+              const codes = await detector.detect(videoRef.current);
+              if (codes?.[0]?.rawValue) {
+                onScan({ data: codes[0].rawValue });
+                return;
+              }
+            }
+          } catch {}
+
+          frameRef.current = requestAnimationFrame(scan);
+        };
+
+        scan();
       } catch (error) {
-        console.log("❌ web qr scanner error:", error);
         setWebError(
-          error?.message ||
-            "웹 QR 스캐너를 시작하지 못했습니다. 카메라 권한을 확인해주세요."
+          error?.message || "카메라를 시작하지 못했습니다. 권한을 확인해주세요."
         );
       }
     }
 
-    startScanner();
+    start();
 
     return () => {
-      mounted = false;
+      cancelled = true;
 
-      if (scannerRef.current && startedRef.current) {
-        scannerRef.current
-          .stop()
-          .then(() => scannerRef.current?.clear())
-          .catch((error) => console.log("web qr scanner stop error:", error))
-          .finally(() => {
-            startedRef.current = false;
-            scannerRef.current = null;
-          });
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+      }
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
       }
     };
   }, [disabled, onScan]);
 
   return (
     <View style={styles.webCameraBox}>
-      <div
-        id="qr-reader"
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
         style={{
           width: "100%",
-          minHeight: 320,
-          overflow: "hidden",
-          borderRadius: 28,
+          height: "100%",
+          objectFit: "cover",
+          display: "block",
         }}
       />
 
@@ -160,58 +173,50 @@ export default function QrAttendanceScreen() {
   }, [permission, requestPermission]);
 
   async function handleBarcodeScanned({ data }) {
-  if (scannedRef.current) return;
+    if (scannedRef.current) return;
 
-  scannedRef.current = true;
-  setScanned(true);
+    scannedRef.current = true;
+    setScanned(true);
 
-  console.log("🔥 QR RAW DATA:", data);
+    const parsed = parseQrData(data);
 
-  const parsed = parseQrData(data);
-
-  console.log("🔥 QR PARSED:", parsed);
-
-  if (!parsed?.sessionId) {
-    showAlert("안내", "현중태극권 출석 QR이 아닙니다.", [
-      {
-        text: "다시 스캔",
-        onPress: () => {
-          scannedRef.current = false;
-          setScanned(false);
+    if (!parsed?.sessionId) {
+      showAlert("안내", "현중태극권 출석 QR이 아닙니다.", [
+        {
+          text: "다시 스캔",
+          onPress: () => {
+            scannedRef.current = false;
+            setScanned(false);
+          },
         },
-      },
-    ]);
-    return;
+      ]);
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      await markAttendance(token, {
+        sessionId: parsed.sessionId,
+      });
+
+      showAlert("출석 완료", "출석이 정상 처리되었습니다.", [
+        {
+          text: "확인",
+          onPress: () => router.replace("/(tabs)/home"),
+        },
+      ]);
+    } catch (error) {
+      showAlert("출석 실패", error?.message || "출석 처리에 실패했습니다.", [
+        {
+          text: "확인",
+          onPress: () => router.replace("/(tabs)/home"),
+        },
+      ]);
+    } finally {
+      setSubmitting(false);
+    }
   }
-
-  try {
-    setSubmitting(true);
-
-    await markAttendance(token, {
-      sessionId: parsed.sessionId,
-    });
-
-    showAlert("출석 완료", "출석이 정상 처리되었습니다.", [
-      {
-        text: "확인",
-        onPress: () => {
-          router.replace("/(tabs)/home");
-        },
-      },
-    ]);
-  } catch (error) {
-    showAlert("출석 실패", error.message || "출석 처리에 실패했습니다.", [
-      {
-        text: "확인",
-        onPress: () => {
-          router.replace("/(tabs)/home");
-        },
-      },
-    ]);
-  } finally {
-    setSubmitting(false);
-  }
-}
 
   if (Platform.OS !== "web" && !permission) {
     return (
@@ -242,161 +247,129 @@ export default function QrAttendanceScreen() {
   }
 
   return (
-  <View style={styles.screen}>
-    {Platform.OS === "web" ? (
-      <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
-    ) : !scanned ? (
-      <CameraView
-        style={styles.camera}
-        facing="back"
-        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-        onBarcodeScanned={handleBarcodeScanned}
-      />
-    ) : (
-      <View style={styles.cameraStopped} />
-    )}
+    <View style={styles.screen}>
+      {Platform.OS === "web" ? (
+        <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
+      ) : !scanned ? (
+        <CameraView
+          style={styles.camera}
+          facing="back"
+          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+          onBarcodeScanned={handleBarcodeScanned}
+        />
+      ) : (
+        <View style={styles.cameraStopped} />
+      )}
 
-    <View style={styles.topPanel}>
-      <Text style={styles.title}>QR 출석</Text>
-      <Text style={styles.helperText}>
-        관리자 화면의 출석 QR을 카메라 중앙에 맞춰주세요.
-      </Text>
+      <View style={styles.topPanel}>
+        <Text style={styles.title}>QR 출석</Text>
+        <Text style={styles.helperText}>
+          관리자 화면의 출석 QR을 카메라 중앙에 맞춰주세요.
+        </Text>
+      </View>
+
+      <View pointerEvents="none" style={styles.scanGuide}>
+        <View style={styles.cornerTopLeft} />
+        <View style={styles.cornerTopRight} />
+        <View style={styles.cornerBottomLeft} />
+        <View style={styles.cornerBottomRight} />
+      </View>
+
+      <View style={styles.bottomPanel}>
+        <Text style={submitting ? styles.processingText : styles.bottomText}>
+          {submitting ? "출석 처리 중..." : "QR을 스캔하면 자동 출석됩니다."}
+        </Text>
+
+        <Pressable style={styles.closeButton} onPress={() => router.back()}>
+          <Text style={styles.closeButtonText}>닫기</Text>
+        </Pressable>
+      </View>
     </View>
-
-    <View pointerEvents="none" style={styles.scanGuide}>
-      <View style={styles.cornerTopLeft} />
-      <View style={styles.cornerTopRight} />
-      <View style={styles.cornerBottomLeft} />
-      <View style={styles.cornerBottomRight} />
-    </View>
-
-    <View style={styles.bottomPanel}>
-      <Text style={submitting ? styles.processingText : styles.bottomText}>
-        {submitting ? "출석 처리 중..." : "QR을 스캔하면 자동 출석됩니다."}
-      </Text>
-
-      <Pressable style={styles.closeButton} onPress={() => router.back()}>
-        <Text style={styles.closeButtonText}>닫기</Text>
-      </Pressable>
-    </View>
-  </View>
-);
+  );
 }
 
 const styles = StyleSheet.create({
   screen: {
-  flex: 1,
-  backgroundColor: "#000",
-},
-
-camera: {
-  ...StyleSheet.absoluteFillObject,
-},
-
-cornerTopLeft: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  width: 44,
-  height: 44,
-  borderTopWidth: 5,
-  borderLeftWidth: 5,
-  borderColor: "#FFFFFF",
-},
-cornerTopRight: {
-  position: "absolute",
-  top: 0,
-  right: 0,
-  width: 44,
-  height: 44,
-  borderTopWidth: 5,
-  borderRightWidth: 5,
-  borderColor: "#FFFFFF",
-},
-cornerBottomLeft: {
-  position: "absolute",
-  bottom: 0,
-  left: 0,
-  width: 44,
-  height: 44,
-  borderBottomWidth: 5,
-  borderLeftWidth: 5,
-  borderColor: "#FFFFFF",
-},
-cornerBottomRight: {
-  position: "absolute",
-  bottom: 0,
-  right: 0,
-  width: 44,
-  height: 44,
-  borderBottomWidth: 5,
-  borderRightWidth: 5,
-  borderColor: "#FFFFFF",
-},
-  webCameraBox: {
     flex: 1,
     backgroundColor: "#000",
+  },
+  camera: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  webCameraBox: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#000",
+  },
+  cameraStopped: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#1F1A17",
+  },
+  topPanel: {
+    position: "absolute",
+    top: 92,
+    left: 24,
+    right: 24,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.94)",
+    padding: 18,
+    zIndex: 10,
+  },
+  scanGuide: {
+    position: "absolute",
+    left: 52,
+    right: 52,
+    top: "39%",
+    height: 260,
+    zIndex: 9,
+  },
+  cornerTopLeft: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: 44,
+    height: 44,
+    borderTopWidth: 5,
+    borderLeftWidth: 5,
+    borderColor: "#FFFFFF",
+  },
+  cornerTopRight: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 44,
+    height: 44,
+    borderTopWidth: 5,
+    borderRightWidth: 5,
+    borderColor: "#FFFFFF",
+  },
+  cornerBottomLeft: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    width: 44,
+    height: 44,
+    borderBottomWidth: 5,
+    borderLeftWidth: 5,
+    borderColor: "#FFFFFF",
+  },
+  cornerBottomRight: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 44,
+    height: 44,
+    borderBottomWidth: 5,
+    borderRightWidth: 5,
+    borderColor: "#FFFFFF",
+  },
+  bottomPanel: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    bottom: 54,
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
+    zIndex: 10,
   },
-  webErrorBox: {
-    marginTop: 16,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.92)",
-    padding: 14,
-  },
-  webErrorText: {
-    fontSize: 14,
-    color: "#B91C1C",
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  
-topPanel: {
-  position: "absolute",
-  top: 92,
-  left: 24,
-  right: 24,
-  borderRadius: 24,
-  backgroundColor: "rgba(255,255,255,0.94)",
-  padding: 18,
-  zIndex: 10,
-},
-scanGuide: {
-  position: "absolute",
-  left: 52,
-  right: 52,
-  top: "38%",
-  height: 260,
-  zIndex: 9,
-},
-
-bottomPanel: {
-  position: "absolute",
-  left: 24,
-  right: 24,
-  bottom: 54,
-  alignItems: "center",
-  zIndex: 10,
-},
-cameraStopped: {
-  ...StyleSheet.absoluteFillObject,
-  backgroundColor: "#1F1A17",
-},
-
-  title: {
-    fontSize: 24,
-    fontWeight: "900",
-    color: "#1F1A17",
-  },
-  helperText: {
-    marginTop: 8,
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#6B6258",
-  },  
-
   bottomText: {
     marginBottom: 14,
     fontSize: 14,
@@ -421,6 +394,32 @@ cameraStopped: {
     fontSize: 15,
     fontWeight: "800",
     color: "#1F1A17",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#1F1A17",
+  },
+  helperText: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#6B6258",
+  },
+  webErrorBox: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    top: "45%",
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    padding: 14,
+  },
+  webErrorText: {
+    fontSize: 14,
+    color: "#B91C1C",
+    fontWeight: "700",
+    textAlign: "center",
   },
   center: {
     flex: 1,
