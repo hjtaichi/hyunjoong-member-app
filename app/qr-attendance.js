@@ -247,41 +247,37 @@ export default function QrAttendanceScreen() {
       <WebQrScanner onScan={handleBarcodeScanned} disabled={scanned} />
     ) : !scanned ? (
       <CameraView
-  style={styles.camera}
-  facing="back"
-  barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-  onBarcodeScanned={handleBarcodeScanned}
-/>
+        style={styles.camera}
+        facing="back"
+        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+        onBarcodeScanned={handleBarcodeScanned}
+      />
     ) : (
       <View style={styles.cameraStopped} />
     )}
 
-    <View style={styles.overlay} pointerEvents="box-none">
-      <View style={styles.topPanel}>
-        <Text style={styles.title}>QR 출석</Text>
-        <Text style={styles.helperText}>
-          관리자 화면의 출석 QR을 카메라 중앙에 맞춰주세요.
-        </Text>
-      </View>
+    <View style={styles.topPanel}>
+      <Text style={styles.title}>QR 출석</Text>
+      <Text style={styles.helperText}>
+        관리자 화면의 출석 QR을 카메라 중앙에 맞춰주세요.
+      </Text>
+    </View>
 
-      <View style={styles.scanFrame} pointerEvents="none">
-        <View style={styles.cornerTopLeft} />
-        <View style={styles.cornerTopRight} />
-        <View style={styles.cornerBottomLeft} />
-        <View style={styles.cornerBottomRight} />
-      </View>
+    <View pointerEvents="none" style={styles.scanGuide}>
+      <View style={styles.cornerTopLeft} />
+      <View style={styles.cornerTopRight} />
+      <View style={styles.cornerBottomLeft} />
+      <View style={styles.cornerBottomRight} />
+    </View>
 
-      <View style={styles.bottomPanel}>
-        {submitting ? (
-          <Text style={styles.processingText}>출석 처리 중...</Text>
-        ) : (
-          <Text style={styles.bottomText}>QR을 스캔하면 자동 출석됩니다.</Text>
-        )}
+    <View style={styles.bottomPanel}>
+      <Text style={submitting ? styles.processingText : styles.bottomText}>
+        {submitting ? "출석 처리 중..." : "QR을 스캔하면 자동 출석됩니다."}
+      </Text>
 
-        <Pressable style={styles.closeButton} onPress={() => router.back()}>
-          <Text style={styles.closeButtonText}>닫기</Text>
-        </Pressable>
-      </View>
+      <Pressable style={styles.closeButton} onPress={() => router.back()}>
+        <Text style={styles.closeButtonText}>닫기</Text>
+      </Pressable>
     </View>
   </View>
 );
@@ -292,9 +288,11 @@ const styles = StyleSheet.create({
   flex: 1,
   backgroundColor: "#000",
 },
+
 camera: {
   ...StyleSheet.absoluteFillObject,
 },
+
 cornerTopLeft: {
   position: "absolute",
   top: 0,
@@ -354,30 +352,33 @@ cornerBottomRight: {
     fontWeight: "700",
     textAlign: "center",
   },
-  overlay: {
-  ...StyleSheet.absoluteFillObject,
-  paddingHorizontal: 24,
-  paddingTop: 70,
-  paddingBottom: 40,
-  justifyContent: "space-between",
-},
-
-scanFrame: {
-  alignSelf: "center",
-  width: 290,
-  height: 290,
-  backgroundColor: "transparent",
-},
-
+  
 topPanel: {
+  position: "absolute",
+  top: 92,
+  left: 24,
+  right: 24,
   borderRadius: 24,
-  backgroundColor: "rgba(255,255,255,0.92)",
+  backgroundColor: "rgba(255,255,255,0.94)",
   padding: 18,
+  zIndex: 10,
+},
+scanGuide: {
+  position: "absolute",
+  left: 52,
+  right: 52,
+  top: "38%",
+  height: 260,
+  zIndex: 9,
 },
 
 bottomPanel: {
+  position: "absolute",
+  left: 24,
+  right: 24,
+  bottom: 54,
   alignItems: "center",
-  paddingBottom: 8,
+  zIndex: 10,
 },
 cameraStopped: {
   ...StyleSheet.absoluteFillObject,
