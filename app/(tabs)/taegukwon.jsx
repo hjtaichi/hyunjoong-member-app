@@ -476,6 +476,11 @@ setGongbeopEditMode(false);
 }, []);
 
   const member = taegukwonData?.member || null;
+  const isYudanjaMember =
+  !!member?.isYudanja ||
+  !!member?.canAccessYudanjaClass ||
+  Number(member?.rankLevel || 0) > 0;
+  
   useEffect(() => {
   if (member?.favoriteFormKey) {
     setFeaturedFormId(member.favoriteFormKey);
@@ -1490,8 +1495,20 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 </TouchableOpacity>
 
 <TouchableOpacity
-  style={[styles.menuRow, styles.menuRowLast, !member?.isYudanja && styles.menuRowLocked]}
+  style={[
+    styles.menuRow,
+    styles.menuRowLast,
+    !isYudanjaMember && styles.menuRowLocked,
+  ]}
   activeOpacity={0.85}
+  onPress={() => {
+    if (!isYudanjaMember) {
+      Alert.alert("안내", "유단자 전용 콘텐츠입니다.");
+      return;
+    }
+
+    router.push("/yudanja");
+  }}
 >
   <Image
   source={require("../../assets/images/menu-yudanja.png")}
@@ -1503,7 +1520,7 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
     <Text style={styles.menuDesc}>유단자 전용 콘텐츠</Text>
   </View>
 
- {member?.isYudanja ? (
+ {isYudanjaMember ? (
   <Text style={styles.menuArrow}>〉</Text>
 ) : (
   <Image

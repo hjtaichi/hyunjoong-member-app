@@ -24,6 +24,7 @@ const fonts = {
 
 const HOPE_TIME_OPTIONS = [
   { label: "오전 10시", value: "10:00" },
+  { label: "13시 30분(토)", value: "13:30" },
   { label: "오후 4시", value: "16:00" },
   { label: "오후 7시", value: "19:00" },
 ];
@@ -589,11 +590,12 @@ sectionTitle: {
 },
 timeRow: {
   flexDirection: "row",
+  flexWrap: "wrap",
   gap: 8,
 },
 
 timeButton: {
-  flex: 1,
+  width: "48%",
   minHeight: 50,
   borderRadius: 14,
   borderWidth: 1,
