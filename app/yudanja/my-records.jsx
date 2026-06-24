@@ -63,7 +63,7 @@ export default function MyYudanjaRecordsScreen() {
         if (!silent) setLoading(true);
         setError("");
 
-        const result = await getMyYudanjaRecords(token);
+        const result = await getMyYudanjaRecords(token, selectedYear);
         setData(result || null);
       } catch (err) {
         setError(err?.message || "내 수련기록을 불러오지 못했습니다.");
