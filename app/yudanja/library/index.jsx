@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
+  ImageBackground,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -13,13 +15,19 @@ import ScreenHeader from "../../../src/components/ScreenHeader";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { getYudanjaLibrary } from "../../../src/api/yudanjaContent";
 import { colors } from "../../../src/theme";
-
+const heroBg = require("../../../assets/images/yudanja/library-hero-bg.png");
+const cardMountain = require("../../../assets/images/yudanja/library-bamboo.png");
+const bamboo = require("../../../assets/images/yudanja/library-bamboo.png");
 const fonts = {
-  title: "MaruBuriBold",
-  semi: "PretendardSemiBold",
+  regular: "PretendardRegular",
   medium: "PretendardMedium",
+  semi: "PretendardSemiBold",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+  hanja: "ZhaoKai",
 };
-
 const CATEGORIES = [
   { key: "all", label: "전체" },
   { key: "chusu", label: "추수" },
@@ -49,11 +57,20 @@ export default function YudanjaLibraryScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const PAGE_SIZE = 5;
+const [page, setPage] = useState(1);
 
   const filteredItems = useMemo(() => {
     if (selectedCategory === "all") return items;
     return items.filter((item) => item.libraryCategory === selectedCategory);
   }, [items, selectedCategory]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
+
+const pagedItems = useMemo(() => {
+  const start = (page - 1) * PAGE_SIZE;
+  return filteredItems.slice(start, start + PAGE_SIZE);
+}, [filteredItems, page]);
 
   const loadData = useCallback(
     async ({ silent = false } = {}) => {
@@ -95,7 +112,7 @@ export default function YudanjaLibraryScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="유단자 자료실" />
+      <ScreenHeader title="자료실" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -104,13 +121,19 @@ export default function YudanjaLibraryScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.heroCard}>
-          <Text style={styles.heroLabel}>YUDANJA LIBRARY</Text>
-          <Text style={styles.heroTitle}>유단자 자료실</Text>
-          <Text style={styles.heroDesc}>
-            추수, 투로, 발경, 용형편간, 이론 자료를 본문으로 열람합니다.
-          </Text>
-        </View>
+  <View style={styles.heroCard}>
+  <Text style={styles.heroTitle}>유단자{"\n"}전용자료실</Text>
+  <Text style={styles.heroDesc}>
+    태극권과 관련된 다양한 {"\n"}
+    자료들을 열람할 수 있습니다.
+  </Text>
+
+  <Image
+    source={require("../../../assets/images/yudanja/card-mountain.png")}
+    style={styles.heroBamboo}
+    resizeMode="contain"
+  />
+</View>
 
         <ScrollView
           horizontal
@@ -124,7 +147,10 @@ export default function YudanjaLibraryScreen() {
               <Pressable
                 key={category.key}
                 style={[styles.categoryButton, active && styles.categoryButtonActive]}
-                onPress={() => setSelectedCategory(category.key)}
+                onPress={() => {
+  setSelectedCategory(category.key);
+  setPage(1);
+}}
               >
                 <Text
                   style={[
@@ -135,6 +161,7 @@ export default function YudanjaLibraryScreen() {
                   {category.label}
                 </Text>
               </Pressable>
+              
             );
           })}
         </ScrollView>
@@ -152,8 +179,9 @@ export default function YudanjaLibraryScreen() {
             </Text>
           </View>
         ) : (
+           <>
           <View style={styles.listWrap}>
-            {filteredItems.map((item) => (
+            {pagedItems.map((item) => (
               <Pressable
                 key={item.id}
                 style={styles.itemCard}
@@ -172,25 +200,58 @@ export default function YudanjaLibraryScreen() {
                   {item.isPinned ? (
                     <Text style={styles.pinPill}>상단 고정</Text>
                   ) : null}
+                  
                 </View>
 
-                <Text style={styles.itemTitle}>{item.title}</Text>
+                <Text style={styles.itemTitle} numberOfLines={2}>
+  {item.title}
+</Text>
 
                 {item.summary ? (
-                  <Text style={styles.itemSummary} numberOfLines={2}>
+                  <Text style={styles.itemSummary} numberOfLines={1}>
                     {item.summary}
                   </Text>
                 ) : null}
+                
 
                 <View style={styles.itemBottomRow}>
-                  <Text style={styles.itemMeta}>
-                    수정일 {formatDate(item.updatedAt)}
-                  </Text>
-                  <Text style={styles.itemArrow}>›</Text>
-                </View>
+  <Text style={styles.itemMeta}>
+    수정일 {formatDate(item.updatedAt)}
+  </Text>
+  <Text style={styles.itemArrow}>›</Text>
+</View>
+
+<Image source={cardMountain} style={styles.cardMountain} />
               </Pressable>
             ))}
           </View>
+          {filteredItems.length > PAGE_SIZE ? (
+  <View style={styles.pagination}>
+    <Pressable
+      style={[styles.pageButton, page <= 1 && styles.pageButtonDisabled]}
+      disabled={page <= 1}
+      onPress={() => setPage((prev) => Math.max(1, prev - 1))}
+    >
+      <Text style={styles.pageButtonText}>이전</Text>
+    </Pressable>
+
+    <Text style={styles.pageInfo}>
+      {page} / {totalPages}
+    </Text>
+
+    <Pressable
+      style={[
+        styles.pageButton,
+        page >= totalPages && styles.pageButtonDisabled,
+      ]}
+      disabled={page >= totalPages}
+      onPress={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+    >
+      <Text style={styles.pageButtonText}>다음</Text>
+    </Pressable>
+  </View>
+) : null}
+ </>
         )}
       </ScrollView>
     </View>
@@ -218,26 +279,21 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     color: "#7A6C63",
   },
-  heroCard: {
-    borderRadius: 28,
-    padding: 22,
-    backgroundColor: "#F7EFE4",
-    borderWidth: 1,
-    borderColor: "#E8D8C4",
-  },
+  
   heroLabel: {
-    fontFamily: fonts.semi,
-    fontSize: 11,
-    letterSpacing: 1,
-    color: "#A47C4F",
-  },
+  fontFamily: fonts.hanja,
+  fontSize: 18,
+  letterSpacing: 2,
+  color: "#A47C4F",
+  zIndex: 2,
+},
   heroTitle: {
-    marginTop: 8,
-    fontFamily: fonts.title,
-    fontSize: 26,
-    lineHeight: 34,
-    color: colors.textMain || "#3A2C27",
-  },
+  marginTop: 8,
+  fontFamily: fonts.title,
+  fontSize: 28,
+  lineHeight: 40,
+  color: colors.textMain || "#3A2C27",
+},
   heroDesc: {
     marginTop: 8,
     fontFamily: fonts.medium,
@@ -262,39 +318,85 @@ const styles = StyleSheet.create({
     borderColor: "#3A2C27",
   },
   categoryText: {
-    fontFamily: fonts.semi,
-    fontSize: 13,
-    color: "#6F625A",
-  },
+  fontFamily: fonts.semiBold,
+  fontSize: 13,
+  color: "#6F625A",
+},
   categoryTextActive: {
     color: "#FFFFFF",
   },
   listWrap: {
-    gap: 10,
-  },
-  itemCard: {
-    borderRadius: 24,
-    padding: 18,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#EEE3D8",
-  },
+  gap: 10,
+},
+
+itemCard: {
+  position: "relative",
+  overflow: "hidden",
+  borderRadius: 22,
+  paddingHorizontal: 16,
+  paddingTop: 14,
+  paddingBottom: 14,
+  backgroundColor: "#FFFFFF",
+  borderWidth: 1,
+  borderColor: "#EEE3D8",
+  minHeight: 132,
+},
+
+cardMountain: {
+  position: "absolute",
+  right: 8,
+  bottom: 0,
+  width: 78,
+  height: 86,
+  opacity: 0.38,
+},
+heroCard: {
+  marginTop: 8,
+  borderRadius: 20,
+  padding: 22,
+  minHeight: 205,
+  backgroundColor: "#FFFDF8",
+  borderWidth: 0,
+  overflow: "hidden",
+  position: "relative",
+
+  shadowColor: "#7A5B3D",
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.18,
+  shadowRadius: 12,
+  elevation: 4,
+},
+
+heroImage: {
+  opacity: 0,
+},
+
+heroBamboo: {
+  position: "absolute",
+  right: 0,
+  bottom: 0,
+  width: 205,
+  height: 150,
+  opacity: 0.72,
+  zIndex: 1,
+},
   itemTopRow: {
-    flexDirection: "row",
-    gap: 6,
-    marginBottom: 10,
-  },
-  categoryPill: {
-    alignSelf: "flex-start",
-    borderRadius: 999,
-    overflow: "hidden",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: "#F7EFE4",
-    fontFamily: fonts.semi,
-    fontSize: 11,
-    color: "#8A6238",
-  },
+  flexDirection: "row",
+  gap: 6,
+  marginBottom: 8,
+},
+
+categoryPill: {
+  alignSelf: "flex-start",
+  borderRadius: 999,
+  overflow: "hidden",
+  paddingHorizontal: 10,
+  paddingVertical: 4,
+  backgroundColor: "#F7EFE4",
+  fontFamily: fonts.semi,
+  fontSize: 11,
+  color: "#9A744D",
+},
   pinPill: {
     alignSelf: "flex-start",
     borderRadius: 999,
@@ -307,33 +409,40 @@ const styles = StyleSheet.create({
     color: "#9A6B18",
   },
   itemTitle: {
-    fontFamily: fonts.title,
-    fontSize: 20,
-    lineHeight: 28,
-    color: colors.textMain || "#3A2C27",
-  },
-  itemSummary: {
-    marginTop: 7,
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#6F625A",
-  },
-  itemBottomRow: {
-    marginTop: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  itemMeta: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: "#A79A90",
-  },
-  itemArrow: {
-    fontSize: 26,
-    color: "#B7A89B",
-  },
+  fontFamily: fonts.titleSemi,
+  fontSize: 19,
+  lineHeight: 27,
+  color: colors.textMain || "#3A2C27",
+  paddingRight: 70,
+},
+
+itemSummary: {
+  marginTop: 4,
+  fontFamily: fonts.medium,
+  fontSize: 13,
+  lineHeight: 19,
+  color: "#6F625A",
+  paddingRight: 72,
+},
+
+itemBottomRow: {
+  marginTop: 10,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+itemMeta: {
+  fontFamily: fonts.medium,
+  fontSize: 12,
+  color: "#A79A90",
+},
+
+
+itemArrow: {
+  fontSize: 26,
+  color: "#B7A89B",
+},
   emptyCard: {
     borderRadius: 24,
     padding: 24,
@@ -355,4 +464,34 @@ const styles = StyleSheet.create({
     color: "#7A6C63",
     textAlign: "center",
   },
+  pagination: {
+  marginTop: 16,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 12,
+},
+
+pageButton: {
+  borderRadius: 999,
+  paddingHorizontal: 16,
+  paddingVertical: 9,
+  backgroundColor: "#3A2C27",
+},
+
+pageButtonDisabled: {
+  opacity: 0.28,
+},
+
+pageButtonText: {
+  fontFamily: fonts.semiBold,
+  fontSize: 13,
+  color: "#FFFFFF",
+},
+
+pageInfo: {
+  fontFamily: fonts.semiBold,
+  fontSize: 13,
+  color: "#6F625A",
+},
 });

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -12,7 +13,7 @@ import ScreenHeader from "../../../src/components/ScreenHeader";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { getYudanjaLibraryDetail } from "../../../src/api/yudanjaContent";
 import { colors } from "../../../src/theme";
-
+const cloud = require("../../../assets/images/yudanja/library-cloud.png");
 const fonts = {
   title: "MaruBuriBold",
   semi: "PretendardSemiBold",
@@ -56,15 +57,19 @@ export default function YudanjaLibraryDetailScreen() {
       .split("\n")
       .map((line) => line.trimEnd());
   }, [item]);
+  
 const contentBlocks = useMemo(() => {
+  const text = String(item?.content || "");
+  const normalized = text.replace(/\r\n/g, "\n");
   const blocks = [];
 
-  for (let i = 0; i < lines.length; i += 8) {
-    blocks.push(lines.slice(i, i + 8));
+  for (let i = 0; i < normalized.length; i += 260) {
+    blocks.push(normalized.slice(i, i + 260));
   }
 
   return blocks;
-}, [lines]);
+}, [item?.content]);
+
   const watermarkText = useMemo(() => {
     return getWatermarkText(watermark?.memberName || user?.name);
   }, [watermark, user]);
@@ -119,7 +124,7 @@ const contentBlocks = useMemo(() => {
       <ScreenHeader title="자료 상세" />
 
       <ScrollView
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -139,22 +144,7 @@ const contentBlocks = useMemo(() => {
           </View>
         ) : (
           <View style={styles.paperCard}>
-            <View style={styles.watermarkLayer} pointerEvents="none">
-  {Array.from({ length: 90 }).map((_, index) => (
-    <Text
-      key={index}
-      style={[
-        styles.watermarkText,
-        {
-          top: 20 + Math.floor(index / 3) * 90,
-          left: [-40, 95, 230][index % 3],
-        },
-      ]}
-    >
-      {watermarkText}
-    </Text>
-  ))}
-</View>
+            
 
             <View style={styles.topRow}>
               <Text style={styles.categoryPill}>
@@ -171,38 +161,37 @@ const contentBlocks = useMemo(() => {
             {item.summary ? (
               <Text style={styles.summary}>{item.summary}</Text>
             ) : null}
+                        <View style={styles.divider} />
 
-            <View style={styles.divider} />
+            <View style={styles.noticeBox}>
+              <Text style={styles.noticeText}>
+                이 자료는 유단자회 내부 열람용입니다. {"\n"}자료실 상세 화면에서만
+                워터마크가 표시됩니다.
+              </Text>
+            </View>
 
-            <View style={styles.body}>
+
+
+  <View style={styles.body}>
   {contentBlocks.map((block, blockIndex) => (
     <View key={`block-${blockIndex}`} style={styles.watermarkBlock}>
-      <Text style={[styles.blockWatermark, { left: -10, top: 30 }]}>
+      <Text style={[styles.blockWatermark, { left: 10, top: 22 }]}>
         {watermarkText}
       </Text>
-      <Text style={[styles.blockWatermark, { right: -4, top: 95 }]}>
+      <Text style={[styles.blockWatermark, { left: 120, top: 76 }]}>
+        {watermarkText}
+      </Text>
+      <Text style={[styles.blockWatermark, { right: 20, top: 130 }]}>
         {watermarkText}
       </Text>
 
-      {block.map((line, index) =>
-        line.trim() ? (
-          <Text key={`${blockIndex}-${index}-${line}`} style={styles.paragraph}>
-            {line}
-          </Text>
-        ) : (
-          <View key={`space-${blockIndex}-${index}`} style={styles.blankLine} />
-        ),
-      )}
+      <Text style={styles.paragraph}>{block}</Text>
     </View>
   ))}
 </View>
 
-            <View style={styles.noticeBox}>
-              <Text style={styles.noticeText}>
-                이 자료는 유단자회 내부 열람용입니다. 자료실 상세 화면에서만
-                워터마크가 표시됩니다.
-              </Text>
-            </View>
+<Image source={cloud} style={styles.detailCloud} />
+            
           </View>
         )}
       </ScrollView>
@@ -231,27 +220,29 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     color: "#7A6C63",
   },
-  paperCard: {
-    position: "relative",
-    overflow: "hidden",
-    borderRadius: 28,
-    padding: 22,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#EEE3D8",
-  },
-  watermarkLayer: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.1,
-  },
-  watermarkText: {
-    position: "absolute",
-    width: 120,
-    transform: [{ rotate: "-24deg" }],
-    fontFamily: fonts.semi,
-    fontSize: 18,
-    color: "#8A7A68",
-  },
+  watermarkBlock: {
+  position: "relative",
+  overflow: "hidden",
+  paddingVertical: 8,
+},
+
+blockWatermark: {
+  position: "absolute",
+  fontFamily: fonts.semi,
+  fontSize: 22,
+  color: "rgba(111, 98, 90, 0.14)",
+  transform: [{ rotate: "-24deg" }],
+  zIndex: 0,
+},
+
+paragraph: {
+  position: "relative",
+  zIndex: 2,
+  fontFamily: fonts.medium,
+  fontSize: 18,
+  lineHeight: 27,
+  color: "#4D403A",
+},
   topRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -276,14 +267,14 @@ const styles = StyleSheet.create({
   title: {
     marginTop: 14,
     fontFamily: fonts.title,
-    fontSize: 25,
+    fontSize: 24,
     lineHeight: 34,
     color: colors.textMain || "#3A2C27",
   },
   summary: {
     marginTop: 10,
     fontFamily: fonts.medium,
-    fontSize: 14,
+    fontSize: 16,
     lineHeight: 22,
     color: "#6F625A",
   },
@@ -295,17 +286,13 @@ const styles = StyleSheet.create({
   body: {
     gap: 0,
   },
-  paragraph: {
-    fontFamily: fonts.medium,
-    fontSize: 18,
-    lineHeight: 28,
-    color: "#4D403A",
-  },
+
   blankLine: {
     height: 12,
   },
   noticeBox: {
-    marginTop: 24,
+    marginTop: 2,
+    marginBottom: 18,
     borderRadius: 18,
     padding: 14,
     backgroundColor: "#FFFCFA",
@@ -314,8 +301,8 @@ const styles = StyleSheet.create({
   },
   noticeText: {
     fontFamily: fonts.medium,
-    fontSize: 12,
-    lineHeight: 19,
+    fontSize: 15,
+    lineHeight: 21,
     color: "#8A7A68",
   },
   emptyCard: {
@@ -339,27 +326,26 @@ const styles = StyleSheet.create({
     color: "#7A6C63",
     textAlign: "center",
   },
-  watermarkBlock: {
+  paperCard: {
   position: "relative",
   overflow: "hidden",
-  paddingVertical: 2,
+  borderRadius: 24,
+  padding: 24,
+  backgroundColor: "#FFFFFF",
+  borderWidth: 1,
+  borderColor: "#EEE3D8",
+  shadowColor: "#3A2C27",
+  shadowOpacity: 0.08,
+  shadowRadius: 16,
+  shadowOffset: { width: 0, height: 8 },
+  elevation: 3,
 },
-
-blockWatermark: {
+detailCloud: {
   position: "absolute",
-  fontFamily: fonts.semi,
-  fontSize: 18,
-  color: "rgba(111, 98, 90, 0.08)",
-  transform: [{ rotate: "-24deg" }],
-  zIndex: 0,
-},
-
-paragraph: {
-  position: "relative",
-  zIndex: 2,
-  fontFamily: fonts.medium,
-  fontSize: 14,
-  lineHeight: 24,
-  color: "#4D403A",
+  right: 12,
+  bottom: 8,
+  width: 130,
+  height: 54,
+  opacity: 0.28,
 },
 });

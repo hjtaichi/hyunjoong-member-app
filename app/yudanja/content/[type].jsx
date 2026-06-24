@@ -92,7 +92,7 @@ export default function YudanjaContentScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="유단자회 소개" />
+      <ScreenHeader title="유단자회 안내" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -138,65 +138,83 @@ function ContentCard({ content, lines, type }) {
   const isIntro = type === "intro";
 
   const firstTitleIndex = lines.findIndex((line) => line.trim() === "수련일");
-  const hasSchedule = firstTitleIndex >= 0;
+  const hasSchedule = isIntro && firstTitleIndex >= 0;
 
   const scheduleLines = hasSchedule
     ? lines.slice(firstTitleIndex + 1).filter((line) => line.trim())
     : [];
 
-  const bodyLines = hasSchedule
-    ? lines.slice(0, firstTitleIndex)
-    : lines;
+  const bodyLines = hasSchedule ? lines.slice(0, firstTitleIndex) : lines;
 
   return (
-    <View style={styles.introCard}>
+    <View style={styles.pageBody}>
       <Image
         source={
           isIntro
-            ? require("../../../assets/images/yudanja/yudanja-intro-scene.png")
-            : require("../../../assets/images/yudanja/yudanja-pavilion.png")
+            ? require("../../../assets/images/yudanja/intro-scene-wide.png")
+            : require("../../../assets/images/yudanja/rules-scroll.png")
         }
-        style={isIntro ? styles.cardTopImage : styles.cardTopImageSmall}
-        resizeMode={isIntro ? "cover" : "contain"}
+        style={isIntro ? styles.introTopImage : styles.rulesTopImage}
+        resizeMode="cover"
       />
 
-      <Text style={styles.cardTitle}>
-        {content.title || (isIntro ? "유단자회 소개" : "유단자회 회칙")}
+      <Text style={isIntro ? styles.introTitle : styles.rulesTitle}>
+        {content.title || (isIntro ? "유단자회란?" : "현중태극문 유단자회 회칙")}
       </Text>
 
       {content.summary ? (
-        <Text style={styles.introSummary}>{content.summary}</Text>
+        <Text style={styles.mainSummary}>{content.summary}</Text>
       ) : null}
 
       {bodyLines.some((line) => line.trim()) ? (
-        <View style={styles.extraBody}>
-          {bodyLines.map((line, index) =>
-            line.trim() ? (
-              <Text key={`${index}-${line}`} style={styles.paragraph}>
-                {line}
-              </Text>
-            ) : (
-              <View key={`space-${index}`} style={styles.blankLine} />
-            ),
-          )}
+        <View style={styles.mainBody}>
+          {bodyLines.map((line, index) => {
+  const trimmed = line.trim();
+ const isSignature =
+  trimmed === "현중태극문" || trimmed === "유단자회";
+
+const isFirstSignature = trimmed === "현중태극문";
+
+  return trimmed ? (
+    <Text
+      key={`${index}-${line}`}
+      style={[
+  styles.paragraph,
+  isSignature && styles.signatureText,
+  isFirstSignature && styles.signatureFirstText,
+]}
+    >
+      {line}
+    </Text>
+  ) : (
+    <View key={`space-${index}`} style={styles.blankLine} />
+  );
+})}
         </View>
       ) : null}
 
       {hasSchedule ? (
         <View style={styles.scheduleCard}>
-          <View style={styles.scheduleTextWrap}>
-            <Text style={styles.scheduleTitle}>수련일</Text>
+          <Text style={styles.scheduleTitle}>수련일</Text>
 
-            {scheduleLines.map((line, index) => (
-              <Text key={`${index}-${line}`} style={styles.scheduleText}>
-                {line}
-              </Text>
-            ))}
+          <View style={styles.scheduleDivider}>
+            <View style={styles.scheduleLine} />
+            <Text style={styles.scheduleDiamond}>◇</Text>
+            <View style={styles.scheduleLine} />
           </View>
+
+          {scheduleLines.map((line, index) => (
+            <Text
+              key={`${index}-${line}`}
+              style={index === scheduleLines.length - 1 ? styles.scheduleTime : styles.scheduleText}
+            >
+              {line}
+            </Text>
+          ))}
 
           <Image
             source={require("../../../assets/images/yudanja/yudanja-pavilion.png")}
-            style={styles.pavilionImage}
+            style={styles.scheduleDecoration}
             resizeMode="contain"
           />
         </View>
@@ -236,75 +254,33 @@ const styles = StyleSheet.create({
     color: "#7A6C63",
   },
   tabWrap: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 14,
-    padding: 5,
-    borderRadius: 999,
-    backgroundColor: "#F7EFE4",
-    borderWidth: 1,
-    borderColor: "#E8D8C4",
-  },
+  flexDirection: "row",
+  marginHorizontal: -20,
+  marginBottom: 22,
+  borderBottomWidth: 1,
+  borderBottomColor: "#E5D8C8",
+},
   tabButton: {
-    flex: 1,
-    borderRadius: 999,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
+  flex: 1,
+  height: 58,
+  alignItems: "center",
+  justifyContent: "center",
+  position: "relative",
+},
   tabButtonActive: {
-    backgroundColor: "#3A2C27",
-  },
+  borderBottomWidth: 3,
+  borderBottomColor: "#8A6238",
+},
   tabText: {
-    fontFamily: fonts.semi,
-    fontSize: 14,
-    color: "#7A6C63",
-  },
-  tabTextActive: {
-    color: "#FFFFFF",
-  },
-
-  introCard: {
-  backgroundColor: "transparent",
-  borderWidth: 0,
-  padding: 0,
-},
-  cardTopImage: {
-  width: "100%",
-  height: 155,
-  marginBottom: 18,
-  borderRadius: 0,
-  opacity: 0.96,
+  fontFamily: fonts.titleSemi || fonts.title,
+  fontSize: 18,
+  color: "#5F5148",
 },
 
-cardTopImageSmall: {
-  alignSelf: "center",
-  width: "100%",
-  height: 110,
-  marginBottom: 16,
-  opacity: 0.9,
-},
-  
-  cardTitle: {
-  paddingHorizontal: 4,
-  fontFamily: fonts.title,
-  fontSize: 22,
-  color: colors.textMain || "#3A2C27",
-  lineHeight: 30,
+tabTextActive: {
+  color: "#2F241F",
 },
 
-introSummary: {
-  paddingHorizontal: 4,
-  marginTop: 8,
-  fontFamily: fonts.medium,
-  fontSize: 14,
-  lineHeight: 22,
-  color: "#4D403A",
-},
-
-extraBody: {
-  marginTop: 18,
-  paddingHorizontal: 4,
-},
   pointList: {
     marginTop: 18,
     gap: 14,
@@ -344,19 +320,70 @@ extraBody: {
     lineHeight: 19,
     color: "#6F625A",
   },
-  scheduleCard: {
-  marginTop: 22,
-  borderRadius: 22,
-  paddingLeft: 16,
-  paddingVertical: 16,
-  paddingRight: 6,
-  backgroundColor: "#FFFCFA",
+scheduleCard: {
+  marginTop: 34,
+  borderRadius: 20,
+  paddingHorizontal: 16,
+  paddingTop: 10,
+  paddingBottom: 20,
+  backgroundColor: "rgba(255,253,248,0.76)",
   borderWidth: 1,
-  borderColor: "#EEE3D8",
+  borderColor: "#D8BE9D",
+  alignItems: "center",
+  overflow: "hidden",
+},
+
+scheduleTitle: {
+  fontFamily: fonts.title,
+  fontSize: 26,
+  color: "#9A6F37",
+  marginBottom: 18,
+},
+
+scheduleDivider: {
   flexDirection: "row",
   alignItems: "center",
-  justifyContent: "space-between",
-  overflow: "hidden",
+  marginBottom: 10,
+},
+
+scheduleLine: {
+  width: 86,
+  height: 1,
+  borderStyle: "dashed",
+  borderWidth: 0.5,
+  borderColor: "#C9AA7A",
+},
+
+scheduleDiamond: {
+  marginHorizontal: 8,
+  fontSize: 13,
+  color: "#C19B62",
+},
+
+scheduleText: {
+  fontFamily: fonts.medium,
+  fontSize: 20,
+  lineHeight: 20,
+  color: "#4D403A",
+  textAlign: "center",
+},
+
+scheduleTime: {
+  marginTop: 8,
+  fontFamily: fonts.title,
+  fontSize: 22,
+  lineHeight: 22,
+  color: "#2F241F",
+  textAlign: "center",
+},
+
+scheduleDecoration: {
+  position: "absolute",
+  right: -7,
+  bottom: -1,
+  width: 106,
+  height: 80,
+  opacity: 0.22,
 },
 
 scheduleTextWrap: {
@@ -366,23 +393,26 @@ scheduleTextWrap: {
 
 scheduleTitle: {
   fontFamily: fonts.semi,
-  fontSize: 15,
+  fontSize: 18,
   color: "#3A2C27",
-  marginBottom: 8,
+  marginBottom: 6,
+  marginTop: 12,
 },
 
 scheduleText: {
   fontFamily: fonts.medium,
-  fontSize: 14,
+  fontSize: 17,
   lineHeight: 22,
   color: "#4D403A",
 },
 
 pavilionImage: {
-  width: 118,
-  height: 82,
-  opacity: 0.86,
-  marginRight: -8,
+  position: "absolute",
+  right: -10,
+  bottom: -8,
+  width: 96,
+  height: 72,
+  opacity: 0.22,
 },
 
   paperCard: {
@@ -420,15 +450,65 @@ pavilionImage: {
   body: {
     gap: 0,
   },
-  paragraph: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    lineHeight: 26,
-    color: "#4D403A",
-  },
-  blankLine: {
-    height: 12,
-  },
+pageBody: {
+  paddingTop: 4,
+},
+
+introTopImage: {
+  width: "100%",
+  height: 230,
+  marginTop: 4,
+  marginBottom: 24,
+  transform: [{ scaleX: 1.14 }, { scaleY: 1.08 }],
+},
+
+rulesTopImage: {
+  alignSelf: "center",
+  width: "58%",
+  height: 200,
+  marginTop: 4,
+  marginBottom: 28,
+},
+
+introTitle: {
+  fontFamily: fonts.title,
+  fontSize: 28,
+  lineHeight: 42,
+  color: "#2F241F",
+  marginBottom: 12,
+},
+
+rulesTitle: {
+  fontFamily: fonts.title,
+  fontSize: 28,
+  lineHeight: 42,
+  color: "#2F241F",
+  textAlign: "center",
+  marginBottom: 20,
+},
+
+mainSummary: {
+  fontFamily: fonts.medium,
+  fontSize: 17,
+  lineHeight: 28,
+  color: "#4D403A",
+  marginBottom: 10,
+},
+
+mainBody: {
+  gap: 0,
+},
+
+paragraph: {
+  fontFamily: fonts.medium,
+  fontSize: 18,
+  lineHeight: 34,
+  color: "#4D403A",
+},
+
+blankLine: {
+  height: 20,
+},
   emptyCard: {
     borderRadius: 24,
     padding: 24,
@@ -450,10 +530,15 @@ pavilionImage: {
     color: "#7A6C63",
     textAlign: "center",
   },
+signatureText: {
+  textAlign: "center",
+  fontFamily: fonts.title,
+  fontSize: 22,
+  lineHeight: 28,
+  marginTop: 5,
+},
 
-pavilionImage: {
-  width: 96,
-  height: 72,
-  opacity: 0.85,
+signatureFirstText: {
+  marginTop: 24,
 },
 });

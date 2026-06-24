@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -12,10 +13,22 @@ import { useAuth } from "../../src/contexts/AuthContext";
 import { getMyYudanjaRecords } from "../../src/api/yudanjaContent";
 import { colors } from "../../src/theme";
 
+const recordsMountain = require("../../assets/images/yudanja/records-mountain.png");
+const iconLotus = require("../../assets/images/yudanja/records-lotus.png");
+const iconMountain = require("../../assets/images/yudanja/records-small-mountain.png");
+const iconDragon = require("../../assets/images/yudanja/records-dragon.png");
+const iconSword = require("../../assets/images/yudanja/records-sword.png");
+const iconWave = require("../../assets/images/yudanja/records-wave.png");
+const iconScroll = require("../../assets/images/yudanja/records-scroll.png");
+const iconFan = require("../../assets/images/yudanja/records-fan.png");
+const decoBamboo = require("../../assets/images/yudanja/deco-bamboo.png");
+
 const fonts = {
   title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
   semi: "PretendardSemiBold",
   medium: "PretendardMedium",
+  hanja: "ZhaoKai",
 };
 
 function formatDate(value) {
@@ -23,6 +36,11 @@ function formatDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString("ko-KR");
+}
+
+function getIconImage(index) {
+  const icons = [iconLotus, iconMountain, iconWave, iconDragon, iconSword];
+  return icons[index % icons.length];
 }
 
 export default function MyYudanjaRecordsScreen() {
@@ -36,10 +54,6 @@ export default function MyYudanjaRecordsScreen() {
   const itemSummary = useMemo(() => data?.itemSummary || [], [data]);
   const categorySummary = useMemo(() => data?.categorySummary || [], [data]);
   const recentRecords = useMemo(() => data?.recentRecords || [], [data]);
-
-  const maxItemCount = useMemo(() => {
-    return Math.max(...itemSummary.map((item) => Number(item.count || 0)), 1);
-  }, [itemSummary]);
 
   const loadData = useCallback(
     async ({ silent = false } = {}) => {
@@ -81,7 +95,7 @@ export default function MyYudanjaRecordsScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="내 수련기록" />
+      <ScreenHeader title="기록" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -91,11 +105,17 @@ export default function MyYudanjaRecordsScreen() {
         }
       >
         <View style={styles.heroCard}>
-          <Text style={styles.heroLabel}>MY YUDANJA RECORDS</Text>
-          <Text style={styles.heroTitle}>나의 유단자회 기록</Text>
+          <Text style={styles.heroTitle}>나의 수련기록</Text>
           <Text style={styles.heroDesc}>
-            출석한 유단자회에서 어떤 항목을 얼마나 수련했는지 확인합니다.
+            유단자회에서 {"\n"}
+            내 수련 기록을 확인합니다.
           </Text>
+
+          <Image
+  source={recordsMountain}
+  style={styles.heroMountain}
+  resizeMode="contain"
+/>
         </View>
 
         {error ? (
@@ -114,16 +134,34 @@ export default function MyYudanjaRecordsScreen() {
           <>
             <View style={styles.statGrid}>
               <View style={styles.statCard}>
-                <Text style={styles.statLabel}>총 수련기록</Text>
-                <Text style={styles.statValue}>{data.totalRecords || 0}</Text>
-                <Text style={styles.statUnit}>건</Text>
-              </View>
+  <View style={styles.statIconCircle}>
+    <Image source={iconScroll} style={styles.statIconImage} resizeMode="contain" />
+  </View>
+
+  <Text style={styles.statLabel}>총 수련기록</Text>
+
+  <View style={styles.statBigValueWrap}>
+    <Text style={styles.statBigValue}>{data.totalRecords || 0}</Text>
+    <Text style={styles.statBigUnit}>건</Text>
+  </View>
+
+  <Image source={decoBamboo} style={styles.statBambooDeco} resizeMode="contain" />
+</View>
 
               <View style={styles.statCard}>
-                <Text style={styles.statLabel}>수련항목</Text>
-                <Text style={styles.statValue}>{data.totalItemKinds || 0}</Text>
-                <Text style={styles.statUnit}>종</Text>
-              </View>
+  <View style={styles.statIconCircle}>
+    <Image source={iconFan} style={styles.statIconImage} resizeMode="contain" />
+  </View>
+
+  <Text style={styles.statLabel}>수련항목</Text>
+
+  <View style={styles.statBigValueWrap}>
+    <Text style={styles.statBigValue}>{data.totalItemKinds || 0}</Text>
+    <Text style={styles.statBigUnit}>종</Text>
+  </View>
+
+  <Image source={decoBamboo} style={styles.statBambooDeco} resizeMode="contain" />
+</View>
             </View>
 
             <View style={styles.sectionCard}>
@@ -132,38 +170,29 @@ export default function MyYudanjaRecordsScreen() {
               {itemSummary.length === 0 ? (
                 <Text style={styles.emptyInlineText}>아직 항목 기록이 없습니다.</Text>
               ) : (
-                <View style={styles.summaryList}>
-                  {itemSummary.map((item) => {
-                    const percent = Math.max(
-                      6,
-                      Math.round((Number(item.count || 0) / maxItemCount) * 100),
-                    );
-
-                    return (
-                      <View key={item.itemId} style={styles.summaryRow}>
-                        <View style={styles.summaryTopRow}>
-                          <View style={styles.summaryTextWrap}>
-                            <Text style={styles.summaryName}>{item.itemName}</Text>
-                            <Text style={styles.summaryCategory}>
-                              {item.categoryName}
-                            </Text>
-                          </View>
-
-                          <Text style={styles.summaryCount}>{item.count}회</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={styles.itemMedalRow}>
+                    {itemSummary.map((item, index) => (
+                      <View key={item.itemId} style={styles.medalCard}>
+                        <Image
+  source={getIconImage(index)}
+  style={styles.medalIconImage}
+  resizeMode="contain"
+/>
+                        <View style={styles.medalCircle}>
+                          <Text style={styles.medalCount}>{item.count}</Text>
+                          <Text style={styles.medalUnit}>회</Text>
                         </View>
-
-                        <View style={styles.progressTrack}>
-                          <View
-                            style={[
-                              styles.progressFill,
-                              { width: `${percent}%` },
-                            ]}
-                          />
-                        </View>
+                        <Text style={styles.medalName} numberOfLines={2}>
+                          {item.itemName}
+                        </Text>
+                        <Text style={styles.medalCategory} numberOfLines={1}>
+                          {item.categoryName}
+                        </Text>
                       </View>
-                    );
-                  })}
-                </View>
+                    ))}
+                  </View>
+                </ScrollView>
               )}
             </View>
 
@@ -174,44 +203,59 @@ export default function MyYudanjaRecordsScreen() {
                 <Text style={styles.emptyInlineText}>아직 카테고리 기록이 없습니다.</Text>
               ) : (
                 <View style={styles.categoryWrap}>
-                  {categorySummary.map((item) => (
+                  {categorySummary.map((item, index) => (
                     <View key={item.categoryName} style={styles.categoryPill}>
+                      <Image
+  source={getIconImage(index)}
+  style={styles.categoryIconImage}
+  resizeMode="contain"
+/>
                       <Text style={styles.categoryName}>{item.categoryName}</Text>
                       <Text style={styles.categoryCount}>{item.count}회</Text>
                     </View>
                   ))}
                 </View>
               )}
+
+              <Image source={recordsMountain} style={styles.statBambooImage} resizeMode="contain" />
             </View>
 
-            <View style={styles.sectionCard}>
+            <View style={styles.timelineCard}>
               <Text style={styles.sectionTitle}>최근 수련기록</Text>
 
               {recentRecords.length === 0 ? (
                 <Text style={styles.emptyInlineText}>최근 기록이 없습니다.</Text>
               ) : (
-                <View style={styles.recentList}>
-                  {recentRecords.map((record) => (
-                    <View key={record.id} style={styles.recentRow}>
-                      <View>
-                        <Text style={styles.recentDate}>
-                          {formatDate(record.recordDate)}
-                        </Text>
-                        <Text style={styles.recentTitle}>
+                <View style={styles.timelineList}>
+                  {recentRecords.map((record, index) => (
+                    <View key={record.id} style={styles.timelineRow}>
+                      <View style={styles.timelineMarkWrap}>
+                        <View style={index === 0 ? styles.timelineDotActive : styles.timelineDot} />
+                        {index < recentRecords.length - 1 ? (
+                          <View style={styles.timelineLine} />
+                        ) : null}
+                      </View>
+
+                      <Text style={styles.timelineDate}>
+                        {formatDate(record.recordDate)}
+                      </Text>
+
+                      <View style={styles.timelineTextWrap}>
+                        <Text style={styles.timelineTitle} numberOfLines={1}>
                           {record.item?.name || "항목 없음"}
                         </Text>
-                        <Text style={styles.recentSub}>
+                        <Text style={styles.timelineSub} numberOfLines={1}>
                           {record.item?.category?.name || "기타"}
                         </Text>
                       </View>
 
-                      <Text style={styles.recentProgressTitle} numberOfLines={1}>
-                        {record.progress?.title || "유단자회"}
-                      </Text>
+                      <Text style={styles.timelineArrow}>›</Text>
                     </View>
                   ))}
                 </View>
               )}
+
+              <Image source={recordsMountain} style={styles.categoryBgImage} resizeMode="contain" />
             </View>
           </>
         )}
@@ -228,7 +272,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   content: {
-    paddingBottom: 40,
+    paddingBottom: 44,
   },
   center: {
     flex: 1,
@@ -241,138 +285,246 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     color: "#7A6C63",
   },
+
   heroCard: {
-    borderRadius: 28,
-    padding: 22,
-    backgroundColor: "#F7EFE4",
-    borderWidth: 1,
-    borderColor: "#E8D8C4",
-    marginBottom: 16,
+    minHeight: 190,
+    borderRadius: 24,
+    padding: 24,
+    backgroundColor: "#FFFDF8",
+    overflow: "hidden",
+    position: "relative",
+    shadowColor: "#7A5B3D",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
+    elevation: 4,
+    marginBottom: 14,
   },
   heroLabel: {
-    fontFamily: fonts.semi,
-    fontSize: 11,
-    letterSpacing: 1,
+    fontFamily: fonts.hanja,
+    fontSize: 16,
+    letterSpacing: 2,
     color: "#A47C4F",
+    zIndex: 2,
   },
   heroTitle: {
-    marginTop: 8,
+    marginTop: 10,
     fontFamily: fonts.title,
-    fontSize: 26,
-    lineHeight: 34,
-    color: colors.textMain || "#3A2C27",
+    fontSize: 31,
+    lineHeight: 42,
+    color: "#3A2C27",
+    zIndex: 2,
   },
   heroDesc: {
-    marginTop: 8,
+    marginTop: 12,
     fontFamily: fonts.medium,
-    fontSize: 14,
-    lineHeight: 22,
-    color: "#6F625A",
+    fontSize: 16,
+    lineHeight: 27,
+    color: "#5E524B",
+    zIndex: 2,
   },
+heroMountain: {
+  position: "absolute",
+  right: -30,
+  bottom: -10,
+  width: 280,
+  height: 210,
+  opacity: 0.55,
+},
+  
   statGrid: {
     flexDirection: "row",
     gap: 10,
     marginBottom: 12,
   },
   statCard: {
-    flex: 1,
-    borderRadius: 24,
-    padding: 18,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#EEE3D8",
+  flex: 1,
+  minHeight: 104,
+  borderRadius: 20,
+  padding: 14,
+  backgroundColor: "#FFFDF8",
+  borderWidth: 1,
+  borderColor: "#EADCCB",
+  overflow: "hidden",
+  position: "relative",
+},
+
+statIconCircle: {
+  width: 42,
+  height: 42,
+  borderRadius: 21,
+  borderWidth: 1,
+  borderColor: "#C9A46F",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#F8EFE2",
+  zIndex: 2,
+  marginTop: 6,
+  marginLeft: 3,
+},
+  statIcon: {
+    fontFamily: fonts.hanja,
+    fontSize: 22,
+    color: "#9A744D",
   },
   statLabel: {
-    fontFamily: fonts.semi,
-    fontSize: 12,
-    color: "#8A7A68",
+  position: "absolute",
+  left: 14,
+  bottom: 15,
+  fontFamily: fonts.semi,
+  fontSize: 14,
+  color: "#3A2C27",
+  zIndex: 3,
+},
+  statBigValueWrap: {
+  position: "absolute",
+  left: 93,
+  top: 28,
+  flexDirection: "row",
+  alignItems: "flex-end",
+  zIndex: 3,
+},
+
+statBigValue: {
+  fontFamily: fonts.title,
+  fontSize: 40,
+  lineHeight: 48,
+  color: "#3A2C27",
+},
+
+statBigUnit: {
+  marginBottom: 8,
+  marginLeft: 3,
+  fontFamily: fonts.semi,
+  fontSize: 16,
+  color: "#3A2C27",
+},
+  statBgImage: {
+    position: "absolute",
+    right: -14,
+    bottom: -16,
+    width: 130,
+    height: 90,
+    opacity: 0.28,
   },
-  statValue: {
-    marginTop: 8,
+  statBambooImage: {
+    position: "absolute",
+    right: -4,
+    bottom: -16,
+    width: 220,
+    height: 190,
+    opacity: 0.25,
+  },
+
+sectionCard: {
+  borderRadius: 22,
+  paddingHorizontal: 16,
+  paddingTop: 14,
+  paddingBottom: 14,
+  backgroundColor: "#FFFDF8",
+  borderWidth: 1,
+  borderColor: "#EADCCB",
+  marginBottom: 12,
+  overflow: "hidden",
+  position: "relative",
+},
+
+sectionTitle: {
+  fontFamily: fonts.title,
+  fontSize: 21,
+  lineHeight: 28,
+  color: "#3A2C27",
+  marginBottom: 10,
+},
+
+itemMedalRow: {
+   flexDirection: "row",
+   gap: 10,
+   paddingBottom: 2,
+  },
+
+  medalCard: {
+  width: 100,
+  minHeight: 128,
+  borderRadius: 15,
+  padding: 8,
+  alignItems: "center",
+  backgroundColor: "rgba(255,255,255,0.72)",
+  borderWidth: 1,
+  borderColor: "#E3D3C1",
+},
+  medalIcon: {
+    fontFamily: fonts.hanja,
+    fontSize: 24,
+    color: "#B98A52",
+    marginBottom: 4,
+  },
+  medalCircle: {
+  width: 46,
+  height: 46,
+  borderRadius: 23,
+  borderWidth: 2,
+  borderColor: "#C9A46F",
+  alignItems: "center",
+  justifyContent: "center",
+  flexDirection: "row",
+  backgroundColor: "#FFFDF8",
+  marginBottom: 6,
+},
+  medalCount: {
     fontFamily: fonts.title,
-    fontSize: 34,
+    fontSize: 23,
     color: "#3A2C27",
-    lineHeight: 40,
   },
-  statUnit: {
+  medalUnit: {
+    marginTop: 5,
+    marginLeft: 1,
     fontFamily: fonts.medium,
+    fontSize: 12,
+    color: "#5E524B",
+  },
+  medalName: {
+    fontFamily: fonts.titleSemi,
     fontSize: 13,
-    color: "#8A7A68",
-  },
-  sectionCard: {
-    borderRadius: 24,
-    padding: 18,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#EEE3D8",
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontFamily: fonts.title,
-    fontSize: 21,
+    lineHeight: 20,
     color: "#3A2C27",
-    marginBottom: 14,
+    textAlign: "center",
   },
-  summaryList: {
-    gap: 14,
-  },
-  summaryRow: {
-    gap: 8,
-  },
-  summaryTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  summaryTextWrap: {
-    flex: 1,
-  },
-  summaryName: {
-    fontFamily: fonts.semi,
-    fontSize: 15,
-    color: "#3A2C27",
-  },
-  summaryCategory: {
-    marginTop: 3,
+  medalCategory: {
+    marginTop: 4,
     fontFamily: fonts.medium,
     fontSize: 12,
     color: "#8A7A68",
+    textAlign: "center",
   },
-  summaryCount: {
-    fontFamily: fonts.semi,
-    fontSize: 14,
-    color: "#8A6238",
-  },
-  progressTrack: {
-    height: 8,
-    borderRadius: 999,
-    backgroundColor: "#F1E8DE",
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 999,
-    backgroundColor: "#C89E6A",
-  },
+
   categoryWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 10,
+    paddingRight: 40,
   },
   categoryPill: {
+    minWidth: 132,
     borderRadius: 999,
-    paddingHorizontal: 13,
-    paddingVertical: 8,
-    backgroundColor: "#F7EFE4",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: "rgba(255,255,255,0.72)",
     borderWidth: 1,
-    borderColor: "#E8D8C4",
+    borderColor: "#E3D3C1",
     flexDirection: "row",
-    gap: 6,
+    alignItems: "center",
+    gap: 7,
+  },
+  categoryIcon: {
+    fontFamily: fonts.hanja,
+    fontSize: 17,
+    color: "#B98A52",
   },
   categoryName: {
+    flex: 1,
     fontFamily: fonts.semi,
-    fontSize: 13,
+    fontSize: 14,
     color: "#3A2C27",
   },
   categoryCount: {
@@ -380,42 +532,97 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#8A6238",
   },
-  recentList: {
+  categoryBgImage: {
+    position: "absolute",
+    right: -4,
+    bottom: -16,
+    width: 220,
+    height: 190,
+    opacity: 0.25,
+  },
+
+  timelineCard: {
+    borderRadius: 22,
+    padding: 18,
+    backgroundColor: "#FFFDF8",
+    borderWidth: 1,
+    borderColor: "#EADCCB",
+    overflow: "hidden",
+    position: "relative",
+  },
+  timelineList: {
     gap: 0,
   },
-  recentRow: {
-    paddingVertical: 13,
-    borderTopWidth: 1,
-    borderTopColor: "#F1E8DE",
+  timelineRow: {
+    minHeight: 60,
     flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 14,
+    alignItems: "center",
+    position: "relative",
   },
-  recentDate: {
+  timelineMarkWrap: {
+    width: 22,
+    alignSelf: "stretch",
+    alignItems: "center",
+  },
+  timelineDotActive: {
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    backgroundColor: "#B98A52",
+    marginTop: 24,
+    zIndex: 2,
+  },
+  timelineDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "#B98A52",
+    backgroundColor: "#FFFDF8",
+    marginTop: 26,
+    zIndex: 2,
+  },
+  timelineLine: {
+    width: 1,
+    flex: 1,
+    backgroundColor: "#C9A46F",
+    marginTop: -1,
+  },
+  timelineDate: {
+    width: 88,
     fontFamily: fonts.medium,
-    fontSize: 12,
-    color: "#A79A90",
+    fontSize: 13,
+    color: "#7A6C63",
   },
-  recentTitle: {
-    marginTop: 4,
-    fontFamily: fonts.semi,
-    fontSize: 15,
+  timelineTextWrap: {
+    flex: 1,
+  },
+  timelineTitle: {
+    fontFamily: fonts.titleSemi,
+    fontSize: 17,
+    lineHeight: 24,
     color: "#3A2C27",
   },
-  recentSub: {
-    marginTop: 3,
+  timelineSub: {
+    marginTop: 2,
     fontFamily: fonts.medium,
-    fontSize: 12,
+    fontSize: 13,
     color: "#8A7A68",
   },
-  recentProgressTitle: {
-    maxWidth: 120,
-    alignSelf: "center",
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: "#8A7A68",
-    textAlign: "right",
+  timelineArrow: {
+    fontSize: 28,
+    color: "#3A2C27",
+    marginLeft: 8,
   },
+  timelineBgImage: {
+    position: "absolute",
+    right: -20,
+    bottom: -20,
+    width: 170,
+    height: 120,
+    opacity: 0.18,
+  },
+
   emptyCard: {
     borderRadius: 24,
     padding: 24,
@@ -443,4 +650,47 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: "#8A7A68",
   },
+  statIconImage: {
+  width: 47,
+  height: 47,
+},
+
+medalIconImage: {
+  width: 33,
+  height: 33,
+  marginBottom: 2,
+},
+
+categoryIconImage: {
+  width: 20,
+  height: 20,
+},
+statInlineRow: {
+  marginTop: 6,
+  flexDirection: "row",
+  alignItems: "flex-end",
+  gap: 4,
+},
+
+statInlineValue: {
+  fontFamily: fonts.title,
+  fontSize: 24,
+  lineHeight: 28,
+  color: "#3A2C27",
+},
+
+statInlineUnit: {
+  marginBottom: 3,
+  fontFamily: fonts.medium,
+  fontSize: 12,
+  color: "#5E524B",
+},
+statBambooDeco: {
+  position: "absolute",
+  right: -10,
+  bottom: -6,
+  width: 86,
+  height: 75,
+  opacity: 0.45,
+},
 });
