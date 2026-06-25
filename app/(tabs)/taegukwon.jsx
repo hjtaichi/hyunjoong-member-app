@@ -22,6 +22,7 @@ import { getMemberTaegukwon } from "../../src/api/memberTaegukwon";
 import { API_BASE_URL } from "../../src/config/env";
 import Svg, { Circle } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
+import { getMyPrivateLessons } from "../../src/api/privateLessons";
 
 
 function getStatusLabel(status) {
@@ -96,6 +97,7 @@ export default function TaegukwonScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [taegukwonData, setTaegukwonData] = useState(null);
+  const [privateLessonData, setPrivateLessonData] = useState(null);
 
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -108,6 +110,7 @@ export default function TaegukwonScreen() {
   const [savingMemo, setSavingMemo] = useState(false);
   const [memoEditModalVisible, setMemoEditModalVisible] = useState(false);
   const [editMemberMemo, setEditMemberMemo] = useState("");
+  const MEMBER_MEMO_MAX_LENGTH = 60;
   const memberTracks = taegukwonData?.memberTracks || [];
   const memberTrackMap = useMemo(() => {
   return new Map(memberTracks.map((track) => [track.curriculumId, track]));
@@ -119,6 +122,7 @@ const [recordModalVisible, setRecordModalVisible] = useState(false);
 const [goalModalVisible, setGoalModalVisible] = useState(false);
 const [completionModalVisible, setCompletionModalVisible] = useState(false);
 const [completedGoalNames, setCompletedGoalNames] = useState([]);
+const [completionModalType, setCompletionModalType] = useState("gongbeop");
 const [memoHistoryModalVisible, setMemoHistoryModalVisible] = useState(false);
 const [formRecordModalVisible, setFormRecordModalVisible] = useState(false);
 const [formGoalModalVisible, setFormGoalModalVisible] = useState(false);
@@ -313,7 +317,14 @@ try {
 } catch (formRecordError) {
   console.log("투로 기록 불러오기 실패:", formRecordError);
 }
-
+try {
+  const privateLessonResult = await getMyPrivateLessons(token);
+  console.log("개인지도 API", privateLessonResult);
+  setPrivateLessonData(privateLessonResult);
+} catch (privateLessonError) {
+  console.log("개인지도 정보 불러오기 실패:", privateLessonError);
+  setPrivateLessonData(null);
+}
 
 const payload = taegukwonResult?.data ? taegukwonResult.data : taegukwonResult;
         console.log("TAEGUKWON payload:", payload);
@@ -447,7 +458,8 @@ await loadGongbeopGoals();
 
 setTimeout(() => {
   if (completedNames.length > 0) {
-    setCompletedGoalNames(completedNames);
+setCompletedGoalNames(completedNames);
+setCompletionModalType("gongbeop");
 setCompletionModalVisible(true);
   } else {
     Alert.alert("완료", "공법 기록이 저장되었습니다.");
@@ -464,8 +476,52 @@ setGongbeopEditMode(false);
   }
 }, [token, gongbeopRecord, loadGongbeopGoals]);
 
+const handleSaveGongbeopGoals = useCallback(async () => {
+  const entries = [
+    ["ilsimyangui", gongbeopGoals.ilsimyangui],
+    ["yobujeonsa", gongbeopGoals.yobujeonsa],
+    ["duyoMinutes", gongbeopGoals.duyoMinutes],
+    ["ohaengjeonsa", gongbeopGoals.ohaengjeonsa],
+  ].filter(([, target]) => target && Number(target) > 0);
 
+  try {
+    console.log("공력 목표 저장 버튼 눌림");
+    console.log("저장할 목표:", gongbeopGoals);
 
+    // 창은 바로 닫기
+    setGoalModalVisible(false);
+
+    // 저장은 안정적으로 순서대로
+    for (const [type, target] of entries) {
+      const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop-goals`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({
+          type,
+          target: Number(target),
+        }),
+      });
+
+      const result = await response.json();
+      console.log("공력 목표 저장 응답:", type, response.status, result);
+
+      if (!response.ok) {
+        throw new Error(result.message || "공력 목표 저장 실패");
+      }
+    }
+
+    await loadGongbeopGoals();
+
+    Alert.alert("완료", "공력 목표가 저장되었습니다.");
+  } catch (error) {
+    console.log("공력 목표 저장 오류:", error);
+    Alert.alert("오류", error.message || "공력 목표 저장 중 오류가 발생했습니다.");
+  }
+}, [gongbeopGoals, token, loadGongbeopGoals]);
   const scrollToEditSection = useCallback(() => {
   setTimeout(() => {
     scrollRef.current?.scrollTo({
@@ -486,6 +542,17 @@ setGongbeopEditMode(false);
     setFeaturedFormId(member.favoriteFormKey);
   }
 }, [member?.favoriteFormKey]);
+const hasPrivateLessonMenu =
+  privateLessonData?.isActive === true ||
+  privateLessonData?.hasHistory === true ||
+  !!privateLessonData?.currentPackage;
+
+const privateLessonMenuTitle =
+  privateLessonData?.menuLabel || "개인지도";
+
+const privateLessonMenuDesc = privateLessonData?.isActive
+  ? `잔여 ${privateLessonData?.currentPackage?.remainingCount ?? 0}회 · 최근 수업 확인`
+  : "지난 개인지도 기록 보기";
 const memberRank = Number(member?.rankLevel || 0);
 const now = new Date();
 const currentPeriodYear = now.getFullYear();
@@ -771,9 +838,21 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
         throw new Error(result.message || "내 수련 메모 저장 실패");
       }
 
-      Alert.alert("완료", "수련 메모가 저장되었습니다.");
-      setMemoEditMode(false);
-      await loadData({ silent: true });
+      setTaegukwonData((prev) => ({
+  ...prev,
+  personalProgress: {
+    ...(prev?.personalProgress || {}),
+    memberMemo: editMemberMemo,
+  },
+}));
+
+setMemoEditMode(false);
+setMemoEditModalVisible(false);
+Alert.alert("완료", "수련 메모가 저장되었습니다.");
+
+loadData({ silent: true }).catch((error) => {
+  console.log("메모 저장 후 새로고침 실패:", error);
+});
     } catch (error) {
       Alert.alert(
         "오류",
@@ -1081,9 +1160,13 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
       resizeMode="stretch"
     />
 
-    <Text style={styles.memoPreviewText} numberOfLines={2}>
-      {personalProgress?.memberMemo || "아직 작성한 메모가 없습니다."}
-    </Text>
+    <Text
+  style={styles.memoPreviewText}
+  numberOfLines={3}
+
+>
+  {personalProgress?.memberMemo || "아직 작성한 메모가 없습니다."}
+</Text>
 
     <TouchableOpacity
   style={styles.memoEditHotspot}
@@ -1476,25 +1559,6 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
 </TouchableOpacity>
 
 <TouchableOpacity
-  style={styles.menuRow}
-  activeOpacity={0.85}
-  onPress={() => router.push("/private-training-guide")}
->
-  <Image
-    source={require("../../assets/images/menu-private-training.png")}
-    style={styles.menuIcon}
-    resizeMode="contain"
-  />
-
-  <View style={styles.menuTextWrap}>
-    <Text style={styles.menuTitle}>개별 수련 지도</Text>
-    <Text style={styles.menuDesc}>정리부터 심화 수련까지</Text>
-  </View>
-
-  <Text style={styles.menuArrow}>〉</Text>
-</TouchableOpacity>
-
-<TouchableOpacity
   style={[
     styles.menuRow,
     styles.menuRowLast,
@@ -1529,6 +1593,59 @@ const riverGlowTranslateY = riverGlowAnim.interpolate({
     resizeMode="contain"
   />
 )}
+</TouchableOpacity>
+<TouchableOpacity
+  style={[
+    styles.menuRow,
+    !hasPrivateLessonMenu && styles.menuRowLocked,
+  ]}
+  activeOpacity={0.85}
+  onPress={() => {
+    if (!hasPrivateLessonMenu) {
+      return;
+    }
+
+    router.push("/private-lessons");
+  }}
+>
+  <Image
+    source={require("../../assets/images/menu-private-training.png")}
+    style={styles.menuIcon}
+    resizeMode="contain"
+  />
+
+  <View style={styles.menuTextWrap}>
+    <Text style={styles.menuTitle}>{privateLessonMenuTitle}</Text>
+    <Text style={styles.menuDesc}>
+      {hasPrivateLessonMenu
+        ? privateLessonMenuDesc
+        : "개인지도 이용 회원 전용"}
+    </Text>
+  </View>
+
+  {hasPrivateLessonMenu ? (
+    <Text style={styles.menuArrow}>〉</Text>
+  ) : (
+    <Image
+      source={require("../../assets/images/menu-lock.png")}
+      style={styles.menuLockIcon}
+      resizeMode="contain"
+    />
+  )}
+</TouchableOpacity>
+<TouchableOpacity
+  style={styles.privateGuideBanner}
+  activeOpacity={0.88}
+  onPress={() => router.push("/private-training-guide")}
+>
+  <View>
+    <Text style={styles.privateGuideBannerTitle}>개인지도 안내</Text>
+    <Text style={styles.privateGuideBannerDesc}>
+      1:1 자세교정과 심화 수련이 필요하다면 확인해보세요.
+    </Text>
+  </View>
+
+  <Text style={styles.privateGuideBannerArrow}>〉</Text>
 </TouchableOpacity>
   </View>
   
@@ -1932,7 +2049,7 @@ setTimeout(async () => {
       <Text style={styles.completionTitle}>축하합니다!</Text>
 
       <Text style={styles.completionText}>
-        {completedGoalNames.join(", ")} 목표를 달성하셨습니다.
+        {completedGoalNames.join(", ")}{"\n"}목표를 달성하셨습니다.
       </Text>
 
       <Text style={styles.completionSubText}>
@@ -1950,8 +2067,13 @@ setTimeout(async () => {
         <TouchableOpacity
           style={styles.completionSaveButton}
           onPress={() => {
-            setCompletionModalVisible(false);
-            setGoalModalVisible(true);
+setCompletionModalVisible(false);
+
+if (completionModalType === "form") {
+  setFormGoalModalVisible(true);
+} else {
+  setGoalModalVisible(true);
+}
           }}
         >
           <Text style={styles.completionSaveText}>목표 재설정</Text>
@@ -2007,52 +2129,15 @@ setTimeout(async () => {
 />
 
       <TouchableOpacity
-        style={styles.modalCancelHotspot}
-        onPress={() => setGoalModalVisible(false)}
-      />
+  style={styles.modalCancelHotspot}
+  onPress={() => setGoalModalVisible(false)}
+/>
 
-      <TouchableOpacity
-        style={styles.modalSaveHotspot}
-        onPress={async () => {
-  try {
-    const entries = [
-      ["ilsimyangui", gongbeopGoals.ilsimyangui],
-      ["yobujeonsa", gongbeopGoals.yobujeonsa],
-      ["duyoMinutes", gongbeopGoals.duyoMinutes],
-      ["ohaengjeonsa", gongbeopGoals.ohaengjeonsa],
-    ];
-
-    for (const [type, target] of entries) {
-      if (!target || Number(target) <= 0) continue;
-
-      const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop-goals`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        body: JSON.stringify({
-          type,
-          target: Number(target),
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "공력 목표 저장 실패");
-      }
-    }
-
-    Alert.alert("완료", "공력 목표가 저장되었습니다.");
-    setGoalModalVisible(false);
-    await loadGongbeopGoals();
-  } catch (error) {
-    Alert.alert("오류", error.message || "공력 목표 저장 중 오류가 발생했습니다.");
-  }
-}}
-      />
+<TouchableOpacity
+  style={[styles.modalSaveHotspot, { zIndex: 30, elevation: 30 }]}
+  activeOpacity={0.8}
+  onPress={handleSaveGongbeopGoals}
+/>
     </View>
   </View>
 </Modal>
@@ -2106,15 +2191,20 @@ setTimeout(async () => {
         <Text style={styles.memoHistoryCloseText}>×</Text>
       </TouchableOpacity>
 
-      <TextInput
-        value={editMemberMemo}
-        onChangeText={setEditMemberMemo}
-        style={styles.memoEditModalInput}
-        placeholder="오늘 수련하며 느낀 점을 적어보세요."
-        placeholderTextColor="#a99585"
-        multiline
-        textAlignVertical="top"
-      />
+<TextInput
+  value={editMemberMemo}
+  onChangeText={setEditMemberMemo}
+  maxLength={MEMBER_MEMO_MAX_LENGTH}
+  style={styles.memoEditModalInput}
+  placeholder="오늘 수련하며 느낀 점을 적어보세요."
+  placeholderTextColor="#a99585"
+  multiline
+  textAlignVertical="top"
+/>
+
+<Text style={styles.memoLimitText}>
+  최대 {MEMBER_MEMO_MAX_LENGTH}자까지 적을 수 있어요. ({editMemberMemo.length}/{MEMBER_MEMO_MAX_LENGTH})
+</Text>
 
       <View style={styles.memoEditModalButtonRow}>
         <TouchableOpacity
@@ -2125,14 +2215,17 @@ setTimeout(async () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.memoEditSaveButton}
-          onPress={async () => {
-            await handleSaveMemberMemo();
-            setMemoEditModalVisible(false);
-          }}
-        >
-          <Text style={styles.memoEditSaveText}>저장</Text>
-        </TouchableOpacity>
+  style={styles.memoEditSaveButton}
+  disabled={savingMemo}
+  onPress={async () => {
+    console.log("내 수련 메모 저장 버튼 눌림");
+    await handleSaveMemberMemo();
+  }}
+>
+  <Text style={styles.memoEditSaveText}>
+    {savingMemo ? "저장 중..." : "저장"}
+  </Text>
+</TouchableOpacity>
       </View>
     </View>
   </View>
@@ -2237,6 +2330,7 @@ await loadFormRecords();
 
 if (result.data?.completedGoal) {
   setCompletedGoalNames([selectedForm?.name || "투로"]);
+  setCompletionModalType("form");
   setCompletionModalVisible(true);
 } else {
   Alert.alert("완료", "투로 기록이 저장되었습니다.");
@@ -4021,9 +4115,9 @@ memoPreviewText: {
   position: "absolute",
   left: 28,
   right: 78,
-  top: 62,
-  fontSize: 13,
-  lineHeight: 20,
+  top: 58,
+  fontSize: 14.5,
+  lineHeight: 19,
   color: "#4c3a31",
 },
 
@@ -5029,5 +5123,43 @@ awardEntryArrow: {
   fontSize: 24,
   color: colors.bronzeGold,
   marginLeft: 8,
+},
+memoLimitText: {
+  marginTop: 8,
+  marginBottom: 10,
+  fontSize: 12,
+  fontFamily: fonts.medium,
+  color: "#9A8578",
+  textAlign: "right",
+},
+privateGuideBanner: {
+  marginTop: 12,
+  paddingVertical: 14,
+  paddingHorizontal: 16,
+  borderRadius: 18,
+  borderWidth: 1,
+  borderColor: "rgba(200,158,106,0.35)",
+  backgroundColor: "rgba(255,248,235,0.8)",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+privateGuideBannerTitle: {
+  fontSize: 14,
+  fontFamily: "PretendardSemiBold",
+  color: "#3A2C27",
+},
+
+privateGuideBannerDesc: {
+  marginTop: 4,
+  fontSize: 12,
+  fontFamily: "PretendardMedium",
+  color: "#8A7568",
+},
+
+privateGuideBannerArrow: {
+  fontSize: 22,
+  color: "#C89E6A",
 },
 });

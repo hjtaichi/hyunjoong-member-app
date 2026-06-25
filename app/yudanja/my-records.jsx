@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -54,6 +55,47 @@ export default function MyYudanjaRecordsScreen() {
   const itemSummary = useMemo(() => data?.itemSummary || [], [data]);
   const categorySummary = useMemo(() => data?.categorySummary || [], [data]);
   const recentRecords = useMemo(() => data?.recentRecords || [], [data]);
+  const recentSessions = useMemo(() => {
+  const map = new Map();
+
+  recentRecords.forEach((record) => {
+    const dateKey = record.recordDate
+      ? new Date(record.recordDate).toISOString().slice(0, 10)
+      : "unknown";
+
+    const key = record.progressId || `${dateKey}-${record.progress?.title || "유단자회"}`;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        recordDate: record.recordDate,
+        title: record.progress?.title || "유단자회 수련",
+        items: [],
+      });
+    }
+
+    map.get(key).items.push({
+      id: record.id,
+      name: record.item?.name || "항목 없음",
+      categoryName: record.item?.category?.name || "기타",
+    });
+  });
+
+  return Array.from(map.values());
+}, [recentRecords]);
+
+    const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [expandedRecordKey, setExpandedRecordKey] = useState(null);
+  
+  const availableYears = useMemo(() => {
+  if (Array.isArray(data?.availableYears) && data.availableYears.length > 0) {
+    return data.availableYears;
+  }
+
+  return [selectedYear];
+}, [data, selectedYear]);
+
 
   const loadData = useCallback(
     async ({ silent = false } = {}) => {
@@ -72,7 +114,7 @@ export default function MyYudanjaRecordsScreen() {
         setRefreshing(false);
       }
     },
-    [token],
+    [token, selectedYear],
   );
 
   useEffect(() => {
@@ -105,11 +147,13 @@ export default function MyYudanjaRecordsScreen() {
         }
       >
         <View style={styles.heroCard}>
-          <Text style={styles.heroTitle}>나의 수련기록</Text>
+          <Text style={styles.heroTitle}>
+  {selectedYear}년 {"\n"}유단자회 수련기록
+</Text>
           <Text style={styles.heroDesc}>
-            유단자회에서 {"\n"}
-            내 수련 기록을 확인합니다.
-          </Text>
+  {selectedYear}년 유단자회에서{"\n"}
+  내 수련 기록을 확인합니다.
+</Text>
 
           <Image
   source={recordsMountain}
@@ -117,6 +161,28 @@ export default function MyYudanjaRecordsScreen() {
   resizeMode="contain"
 />
         </View>
+
+{availableYears.length > 1 ? (
+  <ScrollView
+    horizontal
+    showsHorizontalScrollIndicator={false}
+    contentContainerStyle={styles.yearTabs}
+  >
+    {availableYears.map((year) => {
+      const active = Number(year) === Number(selectedYear);
+
+      return (
+        <Text
+          key={year}
+          onPress={() => setSelectedYear(Number(year))}
+          style={[styles.yearTab, active && styles.yearTabActive]}
+        >
+          {year}년
+        </Text>
+      );
+    })}
+  </ScrollView>
+) : null}
 
         {error ? (
           <View style={styles.emptyCard}>
@@ -138,11 +204,11 @@ export default function MyYudanjaRecordsScreen() {
     <Image source={iconScroll} style={styles.statIconImage} resizeMode="contain" />
   </View>
 
-  <Text style={styles.statLabel}>총 수련기록</Text>
+  <Text style={styles.statLabel}>총 수련일수</Text>
 
   <View style={styles.statBigValueWrap}>
-    <Text style={styles.statBigValue}>{data.totalRecords || 0}</Text>
-    <Text style={styles.statBigUnit}>건</Text>
+    <Text style={styles.statBigValue}>{data.totalTrainingDays || 0}</Text>
+<Text style={styles.statBigUnit}>일</Text>
   </View>
 
   <Image source={decoBamboo} style={styles.statBambooDeco} resizeMode="contain" />
@@ -227,35 +293,63 @@ export default function MyYudanjaRecordsScreen() {
                 <Text style={styles.emptyInlineText}>최근 기록이 없습니다.</Text>
               ) : (
                 <View style={styles.timelineList}>
-                  {recentRecords.map((record, index) => (
-                    <View key={record.id} style={styles.timelineRow}>
-                      <View style={styles.timelineMarkWrap}>
-                        <View style={index === 0 ? styles.timelineDotActive : styles.timelineDot} />
-                        {index < recentRecords.length - 1 ? (
-                          <View style={styles.timelineLine} />
-                        ) : null}
-                      </View>
+                  {recentSessions.map((session, index) => {
+  const expanded = expandedRecordKey === session.key;
 
-                      <Text style={styles.timelineDate}>
-                        {formatDate(record.recordDate)}
-                      </Text>
+  return (
+    <View key={session.key}>
+      <Pressable
+        style={styles.timelineRow}
+        onPress={() =>
+          setExpandedRecordKey(expanded ? null : session.key)
+        }
+      >
+        <View style={styles.timelineMarkWrap}>
+          <View
+            style={index === 0 ? styles.timelineDotActive : styles.timelineDot}
+          />
+          {index < recentSessions.length - 1 ? (
+            <View style={styles.timelineLine} />
+          ) : null}
+        </View>
 
-                      <View style={styles.timelineTextWrap}>
-                        <Text style={styles.timelineTitle} numberOfLines={1}>
-                          {record.item?.name || "항목 없음"}
-                        </Text>
-                        <Text style={styles.timelineSub} numberOfLines={1}>
-                          {record.item?.category?.name || "기타"}
-                        </Text>
-                      </View>
+        <Text style={styles.timelineDate}>
+          {formatDate(session.recordDate)}
+        </Text>
 
-                      <Text style={styles.timelineArrow}>›</Text>
-                    </View>
-                  ))}
+        <View style={styles.timelineTextWrap}>
+          <Text style={styles.timelineTitle} numberOfLines={1}>
+            유단자회 수련
+          </Text>
+          <Text style={styles.timelineSub} numberOfLines={1}>
+            {session.items.length}개 항목 수련
+          </Text>
+        </View>
+
+        <Text style={styles.timelineArrow}>{expanded ? "︿" : "﹀"}</Text>
+      </Pressable>
+
+      {expanded ? (
+        <View style={styles.sessionDetailBox}>
+          {session.items.map((item) => (
+            <Text key={item.id} style={styles.sessionDetailText}>
+              · {item.name} <Text style={styles.sessionDetailCategory}>{item.categoryName}</Text>
+            </Text>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+})}
                 </View>
               )}
 
-              <Image source={recordsMountain} style={styles.categoryBgImage} resizeMode="contain" />
+              <Image
+  pointerEvents="none"
+  source={recordsMountain}
+  style={styles.categoryBgImage}
+  resizeMode="contain"
+/>
             </View>
           </>
         )}
@@ -310,8 +404,8 @@ const styles = StyleSheet.create({
   heroTitle: {
     marginTop: 10,
     fontFamily: fonts.title,
-    fontSize: 31,
-    lineHeight: 42,
+    fontSize: 28,
+    lineHeight: 40,
     color: "#3A2C27",
     zIndex: 2,
   },
@@ -319,7 +413,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontFamily: fonts.medium,
     fontSize: 16,
-    lineHeight: 27,
+    lineHeight: 23,
     color: "#5E524B",
     zIndex: 2,
   },
@@ -339,9 +433,9 @@ heroMountain: {
   },
   statCard: {
   flex: 1,
-  minHeight: 104,
+  minHeight: 95,
   borderRadius: 20,
-  padding: 14,
+  padding: 8,
   backgroundColor: "#FFFDF8",
   borderWidth: 1,
   borderColor: "#EADCCB",
@@ -350,8 +444,8 @@ heroMountain: {
 },
 
 statIconCircle: {
-  width: 42,
-  height: 42,
+  width: 38,
+  height: 38,
   borderRadius: 21,
   borderWidth: 1,
   borderColor: "#C9A46F",
@@ -359,14 +453,18 @@ statIconCircle: {
   justifyContent: "center",
   backgroundColor: "#F8EFE2",
   zIndex: 2,
-  marginTop: 6,
-  marginLeft: 3,
+  marginTop: 7,
+  marginLeft: 7,
 },
   statIcon: {
     fontFamily: fonts.hanja,
     fontSize: 22,
     color: "#9A744D",
   },
+  statIconImage: {
+  width: 38,
+  height: 38,
+},
   statLabel: {
   position: "absolute",
   left: 14,
@@ -378,8 +476,8 @@ statIconCircle: {
 },
   statBigValueWrap: {
   position: "absolute",
-  left: 93,
-  top: 28,
+  left: 98,
+  top: 21,
   flexDirection: "row",
   alignItems: "flex-end",
   zIndex: 3,
@@ -387,7 +485,7 @@ statIconCircle: {
 
 statBigValue: {
   fontFamily: fonts.title,
-  fontSize: 40,
+  fontSize: 30,
   lineHeight: 48,
   color: "#3A2C27",
 },
@@ -444,11 +542,12 @@ itemMedalRow: {
   },
 
   medalCard: {
-  width: 100,
-  minHeight: 128,
+  width: 90,
+  minHeight: 115,
   borderRadius: 15,
-  padding: 8,
+  padding: 5,
   alignItems: "center",
+  paddingTop: 13,
   backgroundColor: "rgba(255,255,255,0.72)",
   borderWidth: 1,
   borderColor: "#E3D3C1",
@@ -469,7 +568,7 @@ itemMedalRow: {
   justifyContent: "center",
   flexDirection: "row",
   backgroundColor: "#FFFDF8",
-  marginBottom: 6,
+  marginBottom: 8,
 },
   medalCount: {
     fontFamily: fonts.title,
@@ -485,15 +584,15 @@ itemMedalRow: {
   },
   medalName: {
     fontFamily: fonts.titleSemi,
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 20,
     color: "#3A2C27",
     textAlign: "center",
   },
   medalCategory: {
-    marginTop: 4,
+    marginTop: 2,
     fontFamily: fonts.medium,
-    fontSize: 12,
+    fontSize: 13,
     color: "#8A7A68",
     textAlign: "center",
   },
@@ -508,7 +607,7 @@ itemMedalRow: {
     minWidth: 132,
     borderRadius: 999,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 8,
     backgroundColor: "rgba(255,255,255,0.72)",
     borderWidth: 1,
     borderColor: "#E3D3C1",
@@ -554,11 +653,12 @@ itemMedalRow: {
     gap: 0,
   },
   timelineRow: {
-    minHeight: 60,
-    flexDirection: "row",
-    alignItems: "center",
-    position: "relative",
-  },
+  minHeight: 60,
+  flexDirection: "row",
+  alignItems: "center",
+  position: "relative",
+  zIndex: 3,
+},
   timelineMarkWrap: {
     width: 22,
     alignSelf: "stretch",
@@ -610,7 +710,7 @@ itemMedalRow: {
     color: "#8A7A68",
   },
   timelineArrow: {
-    fontSize: 28,
+    fontSize: 16,
     color: "#3A2C27",
     marginLeft: 8,
   },
@@ -650,11 +750,6 @@ itemMedalRow: {
     lineHeight: 22,
     color: "#8A7A68",
   },
-  statIconImage: {
-  width: 47,
-  height: 47,
-},
-
 medalIconImage: {
   width: 33,
   height: 33,
@@ -692,5 +787,50 @@ statBambooDeco: {
   width: 86,
   height: 75,
   opacity: 0.45,
+},
+yearTabs: {
+  gap: 8,
+  paddingBottom: 14,
+},
+
+yearTab: {
+  overflow: "hidden",
+  borderRadius: 999,
+  paddingHorizontal: 14,
+  paddingVertical: 8,
+  backgroundColor: "#FFFFFF",
+  borderWidth: 1,
+  borderColor: "#EEE3D8",
+  fontFamily: fonts.semi,
+  fontSize: 13,
+  color: "#6F625A",
+},
+
+yearTabActive: {
+  backgroundColor: "#3A2C27",
+  borderColor: "#3A2C27",
+  color: "#FFFFFF",
+},
+sessionDetailBox: {
+  marginLeft: 110,
+  marginBottom: 10,
+  paddingVertical: 8,
+  paddingHorizontal: 10,
+  borderRadius: 14,
+  backgroundColor: "rgba(255,255,255,0.68)",
+  borderWidth: 1,
+  borderColor: "#EADCCB",
+  zIndex: 3,
+},
+
+sessionDetailText: {
+  fontFamily: fonts.medium,
+  fontSize: 13,
+  lineHeight: 22,
+  color: "#3A2C27",
+},
+
+sessionDetailCategory: {
+  color: "#8A7A68",
 },
 });

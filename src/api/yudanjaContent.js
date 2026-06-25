@@ -49,9 +49,13 @@ export async function getYudanjaTrainingItems(token) {
 
   return result.data || result;
 }
-export async function getMyYudanjaRecords(token) {
+export async function getMyYudanjaRecords(token, year) {
+  const query = year
+    ? `?year=${encodeURIComponent(year)}&t=${Date.now()}`
+    : `?t=${Date.now()}`;
+
   const result = await apiFetch(
-    `/member/yudanja-my-records?t=${Date.now()}`,
+    `/member/yudanja-my-records${query}`,
     {
       method: "GET",
     },

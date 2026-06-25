@@ -55,6 +55,7 @@ const [loginIdModalVisible, setLoginIdModalVisible] = useState(false);
 const [newLoginId, setNewLoginId] = useState("");
 const [verifyModalVisible, setVerifyModalVisible] = useState(false);
 const [verifyPassword, setVerifyPassword] = useState("");
+const [avatarTab, setAvatarTab] = useState("animal");
 const avatarImages = {
   avatar1: require("../../assets/images/avatar1.png"),
   avatar2: require("../../assets/images/avatar2.png"),
@@ -70,6 +71,28 @@ const avatarImages = {
   avatar12: require("../../assets/images/avatar12.png"),
   avatar13: require("../../assets/images/avatar13.png"),
   avatar14: require("../../assets/images/avatar14.png"),
+  avatar15: require("../../assets/images/avatar15.png"),
+  avatar16: require("../../assets/images/avatar16.png"),
+  avatar17: require("../../assets/images/avatar17.png"),
+  avatar18: require("../../assets/images/avatar18.png"),
+  avatar19: require("../../assets/images/avatar19.png"),
+  avatar20: require("../../assets/images/avatar20.png"),
+  avatar21: require("../../assets/images/avatar21.png"),
+  avatar22: require("../../assets/images/avatar22.png"),
+  avatar23: require("../../assets/images/avatar23.png"),
+  avatar24: require("../../assets/images/avatar24.png"),
+  avatar25: require("../../assets/images/avatar25.png"),
+};
+const avatarGroups = {
+  animal: [
+    "avatar1", "avatar2", "avatar3", "avatar4", "avatar5",
+    "avatar6", "avatar7", "avatar8", "avatar9", "avatar10", 
+    "avatar11", "avatar12", "avatar13", "avatar14","avatar21",
+    "avatar22", "avatar23", "avatar24", "avatar25",
+  ],
+  person: [
+    "avatar15", "avatar16", "avatar17", "avatar18", "avatar19", "avatar20",
+  ],
 };
 const cameraIcon = require("../../assets/images/camera-icon.png");
 const yudanjaIcon = require("../../assets/images/yudanja-icon.png");
@@ -82,7 +105,7 @@ const paymentBankIcon = require("../../assets/images/payment-bank-icon.png");
 const paymentSeoulPayIcon = require("../../assets/images/payment-seoulpay-icon.png");
 const paymentCardIcon = require("../../assets/images/payment-card-icon.png");
 
-const avatarKeys = Object.keys(avatarImages);
+const avatarKeys = avatarGroups[avatarTab] || [];
 function getAvatarSource(profileAvatar) {
   if (!profileAvatar) {
     return profilePlaceholder;
@@ -387,16 +410,24 @@ async function handleSaveAvatar() {
 async function uploadProfileImageAsync(imageUri) {
   const formData = new FormData();
 
-  const fileName = imageUri.split("/").pop() || "profile.jpg";
-  const fileType = fileName.split(".").pop();
+  if (Platform.OS === "web") {
+    const blob = await fetch(imageUri).then((res) => res.blob());
+    formData.append("image", blob, "profile.jpg");
+  } else {
+    const fileName = imageUri.split("/").pop() || "profile.jpg";
+    const fileType = fileName.split(".").pop() || "jpg";
 
-  formData.append("image", {
-    uri: imageUri,
-    name: fileName,
-    type: `image/${fileType || "jpeg"}`,
-  });
+    formData.append("image", {
+      uri: imageUri,
+      name: fileName,
+      type: `image/${fileType === "jpg" ? "jpeg" : fileType}`,
+    });
+  }
 
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/member/me/profile-image`, {
+  const rawApiBase = String(process.env.EXPO_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+  const apiBase = rawApiBase.endsWith("/api") ? rawApiBase : `${rawApiBase}/api`;
+
+  const response = await fetch(`${apiBase}/member/me/profile-image`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -408,10 +439,10 @@ async function uploadProfileImageAsync(imageUri) {
   const result = await response.json();
 
   if (!response.ok) {
-  throw new Error(result?.message || "프로필 이미지 업로드에 실패했습니다.");
-}
+    throw new Error(result?.message || "프로필 이미지 업로드에 실패했습니다.");
+  }
 
-return result?.profileAvatar || result?.data?.profileAvatar;
+  return result?.profileAvatar || result?.data?.profileAvatar;
 }
 
 async function handlePickProfileFromCamera() {
@@ -1207,6 +1238,42 @@ function MenuDivider() {
       <Text style={styles.modalDesc}>
         사용할 기본 이미지를 선택해주세요.
       </Text>
+
+      <View style={styles.avatarTabRow}>
+  <Pressable
+    style={[
+      styles.avatarTabButton,
+      avatarTab === "animal" && styles.avatarTabButtonActive,
+    ]}
+    onPress={() => setAvatarTab("animal")}
+  >
+    <Text
+      style={[
+        styles.avatarTabText,
+        avatarTab === "animal" && styles.avatarTabTextActive,
+      ]}
+    >
+      동물
+    </Text>
+  </Pressable>
+
+  <Pressable
+    style={[
+      styles.avatarTabButton,
+      avatarTab === "person" && styles.avatarTabButtonActive,
+    ]}
+    onPress={() => setAvatarTab("person")}
+  >
+    <Text
+      style={[
+        styles.avatarTabText,
+        avatarTab === "person" && styles.avatarTabTextActive,
+      ]}
+    >
+      사람
+    </Text>
+  </Pressable>
+</View>
 
       <View style={styles.defaultAvatarGrid}>
         {avatarKeys.map((avatarKey) => {
@@ -2134,8 +2201,8 @@ heroSubText: {
 },
 
 heroAvatarButton: {
-  width: 72,
-  height: 72,
+  width: 80,
+  height: 80,
   borderRadius: 36,
   backgroundColor: "#F5EAE4",
   borderWidth: 1,
@@ -2145,8 +2212,8 @@ heroAvatarButton: {
 },
 
 heroAvatarImage: {
-  width: 66,
-  height: 66,
+  width: 80,
+  height: 80,
   borderRadius: 33,
 },
 
@@ -2828,5 +2895,36 @@ historyStatLabel: {
 },
 paymentMethodTextWrap: {
   paddingLeft: 20,
+},
+avatarTabRow: {
+  flexDirection: "row",
+  gap: 8,
+  marginTop: 16,
+},
+
+avatarTabButton: {
+  flex: 1,
+  height: 38,
+  borderRadius: 999,
+  backgroundColor: "#F4EEE5",
+  borderWidth: 1,
+  borderColor: "#E4D8C8",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+avatarTabButtonActive: {
+  backgroundColor: "#2B2522",
+  borderColor: "#2B2522",
+},
+
+avatarTabText: {
+  fontSize: 14,
+  fontFamily: fonts.bold,
+  color: "#7D746D",
+},
+
+avatarTabTextActive: {
+  color: "#FFFFFF",
 },
 });

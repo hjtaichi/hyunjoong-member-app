@@ -302,11 +302,11 @@ heroBg: {
 },
 
 heroEmblem: {
-  width: 70,
-  height: 70,
+  width: 60,
+  height: 60,
   marginBottom: 3,
   marginTop: 22,
-  opacity: 0.8,
+  opacity: 0.9,
 },
 
   heroLabel: {
@@ -317,7 +317,7 @@ heroEmblem: {
   },
 heroTitle: {
   fontFamily: fonts.title,
-  fontSize: 32,
+  fontSize: 30,
   lineHeight: 48,
   color: "#F5E6D0",
   letterSpacing: 0.5,
@@ -345,7 +345,7 @@ heroDividerLine: {
 },
 
 heroDividerIcon: {
-  fontSize: 15,
+  fontSize: 16,
   color: "#D9B982",
 },
 
@@ -572,16 +572,16 @@ recentEmptyText: {
   elevation: 3,
 },
 menuIcon: {
-  width: 44,
-  height: 44,
+  width: 40,
+  height: 40,
   alignItems: "center",
   justifyContent: "center",
   marginBottom: 10,
 },
 
 menuIconImage: {
-  width: 38,
-  height: 38,
+  width: 36,
+  height: 36,
 },
 
 menuTitle: {
@@ -601,11 +601,11 @@ menuDesc: {
 
 menuMountainImage: {
   position: "absolute",
-  right: -2,
+  right: 2,
   bottom: 5,
-  width: 75,
-  height: 75,
-  opacity: 0.35,
+  width: 65,
+  height: 65,
+  opacity: 0.25,
 },
   heroBackButton: {
   position: "absolute",
@@ -629,8 +629,8 @@ heroInfoPill: {
   gap: 9,
   marginTop: 8,
   borderRadius: 10,
-  paddingHorizontal: 15,
-  paddingVertical: 7.5,
+  paddingHorizontal: 14,
+  paddingVertical: 7,
   backgroundColor: "rgba(255,255,255,0.9)",
   zIndex: 5,
 },

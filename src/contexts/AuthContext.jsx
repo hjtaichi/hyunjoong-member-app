@@ -80,7 +80,7 @@ function AuthProvider({ children }) {
   }
 }
 
-  async function login(email, password) {
+  async function login(email, password, autoLogin = true) {
   setIsLoginLoading(true);
 
   try {
@@ -109,26 +109,31 @@ function AuthProvider({ children }) {
     }
   : null;
 
-    await setAccessToken(nextToken);
+    if (autoLogin) {
+  await setAccessToken(nextToken);
 
-    if (nextUser) {
-      await setUser(nextUser);
-    }
+  if (nextUser) {
+    await setUser(nextUser);
+  }
+} else {
+  await clearAuthStorage();
+}
 
-    setToken(nextToken);
-    setUserState(nextUser);
+setToken(nextToken);
+setUserState(nextUser);
 
     return { ok: true };
   } catch (error) {
     console.log("login failed:", error?.response?.data || error.message);
 
     return {
-      ok: false,
-      message:
-        error?.response?.data?.message ||
-        error?.message ||
-        "로그인에 실패했습니다.",
-    };
+  ok: false,
+  code: error?.response?.data?.code || error?.code,
+  message:
+    error?.response?.data?.message ||
+    error?.message ||
+    "로그인에 실패했습니다.",
+};
   } finally {
     setIsLoginLoading(false);
   }

@@ -1,6 +1,18 @@
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { movementForms } from "../../src/data/movementDictionary";
+
+const fonts = {
+  regular: "PretendardRegular",
+  medium: "PretendardMedium",
+  semi: "PretendardSemiBold",
+  semiBold: "PretendardSemiBold",
+  bold: "PretendardBold",
+  title: "MaruBuriBold",
+  titleSemi: "MaruBuriSemiBold",
+  hanja: "ZhaoKai",
+};
 
 const CURRICULUM_STEP_MAP = {
   "현중태극권 29식": [
@@ -203,7 +215,31 @@ const CURRICULUM_STEP_MAP = {
   { ko: "태극환원", hanja: "太極還原" },
 ],
 };
+const MOVEMENT_FORM_TITLE_MAP = {
+  "현중태극권 29식": "현중태극권 29식",
+  "현중태극선 29식": "현중태극선 29식",
+  "현중태극검 52식": "현중태극검 52식",
+  "현중태극권 대가1로 79식": "현중태극권 대가1로",
+  "현중태극단도 24식": "현중태극단도",
+  "현중태극권 대가2로 62식": "현중태극권 대가2로",
+};
 
+function getCurriculumSteps(name) {
+  const mappedTitle = MOVEMENT_FORM_TITLE_MAP[name] || name;
+
+  const movementForm = movementForms.find(
+    (form) => form.title === mappedTitle
+  );
+
+  if (movementForm?.movements?.length) {
+    return movementForm.movements.map((item) => ({
+      ko: item.name,
+      hanja: item.hanja,
+    }));
+  }
+
+  return CURRICULUM_STEP_MAP[name] || [];
+}
 export default function TaegukwonCurriculumDetailScreen() {
   const params = useLocalSearchParams();
 
@@ -212,10 +248,13 @@ export default function TaegukwonCurriculumDetailScreen() {
   const currentStep = Number(params.currentStep || 0);
   const totalSteps = Number(params.totalSteps || 0);
   const source = String(params.source || "personal");
+  const startStep = Number(params.startStep || 0);
+const endStep = Number(params.endStep || 0);
+const isGroupSource = source === "group";
 
-  const steps = useMemo(() => {
-    return CURRICULUM_STEP_MAP[name] || [];
-  }, [name]);
+const steps = useMemo(() => {
+  return getCurriculumSteps(name);
+}, [name]);
 
   const effectiveTotalSteps = totalSteps || steps.length || 0;
 
@@ -237,10 +276,17 @@ export default function TaegukwonCurriculumDetailScreen() {
         </Text>
         <Text style={styles.title}>{name || "투로 상세"}</Text>
         <Text style={styles.subTitle}>
-          현재 진도: {currentStep} / {effectiveTotalSteps}식
-        </Text>
+  
+</Text>
 
-        {currentStep > 0 && steps[currentStep - 1] ? (
+        {isGroupSource && startStep > 0 && endStep > 0 ? (
+  <View style={styles.currentStepBox}>
+    <Text style={styles.currentStepLabel}>이번 주 수련</Text>
+    <Text style={styles.currentStepName}>
+      {startStep}식 ~ {endStep}식
+    </Text>
+  </View>
+) : currentStep > 0 && steps[currentStep - 1] ? (
   <View style={styles.currentStepBox}>
     <Text style={styles.currentStepLabel}>현재 배우는 식</Text>
     <Text style={styles.currentStepName}>
@@ -261,9 +307,15 @@ export default function TaegukwonCurriculumDetailScreen() {
         {steps.length > 0 ? (
           steps.map((stepItem, index) => {
   const stepNo = index + 1;
-  const isCurrent = currentStep === stepNo;
-  const isDone = currentStep > stepNo;
-  const isUpcoming = currentStep < stepNo;
+const isCurrent = !isGroupSource && currentStep === stepNo;
+const isDone = !isGroupSource && currentStep > stepNo;
+const isUpcoming = !isGroupSource && currentStep < stepNo;
+  const isGroupCurrent =
+  isGroupSource &&
+  startStep > 0 &&
+  endStep > 0 &&
+  stepNo >= startStep &&
+  stepNo <= endStep;
 
   return (
     <View
@@ -272,6 +324,7 @@ export default function TaegukwonCurriculumDetailScreen() {
         styles.stepRow,
         isCurrent && styles.stepRowCurrent,
         isDone && styles.stepRowDone,
+        isGroupCurrent && styles.stepRowGroupCurrent,
       ]}
     >
       <View
@@ -280,6 +333,7 @@ export default function TaegukwonCurriculumDetailScreen() {
           isCurrent && styles.stepNoBadgeCurrent,
           isDone && styles.stepNoBadgeDone,
           isUpcoming && styles.stepNoBadgeUpcoming,
+          isGroupCurrent && styles.stepNoBadgeGroupCurrent,
         ]}
       >
         <Text
@@ -299,16 +353,18 @@ export default function TaegukwonCurriculumDetailScreen() {
     styles.stepName,
     isCurrent && styles.stepNameCurrent,
     isDone && styles.stepNameDone,
+    isGroupCurrent && styles.stepNameGroupCurrent,
   ]}
 >
   {stepItem.ko}
   {!!stepItem.hanja ? (
     <Text
       style={[
-        styles.stepNameHanjaInline,
-        isCurrent && styles.stepNameHanjaInlineCurrent,
-        isDone && styles.stepNameHanjaInlineDone,
-      ]}
+  styles.stepNameHanjaInline,
+  isCurrent && styles.stepNameHanjaInlineCurrent,
+  isDone && styles.stepNameHanjaInlineDone,
+  isGroupCurrent && styles.stepNameHanjaInlineGroupCurrent,
+]}
     >
       {" "}{stepItem.hanja}
     </Text>
@@ -316,12 +372,14 @@ export default function TaegukwonCurriculumDetailScreen() {
 </Text>
 
         <Text style={styles.stepStateText}>
-          {isCurrent
-            ? "현재 배우는 식"
-            : isDone
-            ? "이미 배운 식"
-            : "앞으로 배울 식"}
-        </Text>
+  {isGroupCurrent
+    ? "이번 주 수련"
+    : isCurrent
+    ? "현재 배우는 식"
+    : isDone
+    ? "이미 배운 식"
+    : "앞으로 배울 식"}
+</Text>
       </View>
     </View>
   );
@@ -354,23 +412,25 @@ const styles = StyleSheet.create({
     borderColor: "#ece4d8",
   },
   eyebrow: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#7a6f61",
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#2f2a24",
-    marginBottom: 8,
-  },
-  subTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#7c4f21",
-    marginBottom: 14,
-  },
+  fontSize: 13,
+  fontFamily: fonts.semiBold,
+  color: "#7a6f61",
+  marginBottom: 8,
+},
+
+title: {
+  fontSize: 26,
+  fontFamily: fonts.title,
+  color: "#2f2a24",
+  marginBottom: 8,
+},
+
+subTitle: {
+  fontSize: 15,
+  fontFamily: fonts.semiBold,
+  color: "#7c4f21",
+  marginBottom: 5,
+},
   currentStepBox: {
     backgroundColor: "#f7efe2",
     borderRadius: 16,
@@ -379,16 +439,17 @@ const styles = StyleSheet.create({
     borderColor: "#ead7b8",
   },
   currentStepLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#8a5a21",
-    marginBottom: 6,
-  },
-  currentStepName: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#5e3b13",
-  },
+  fontSize: 13,
+  fontFamily: fonts.semiBold,
+  color: "#8a5a21",
+  marginBottom: 6,
+},
+
+currentStepName: {
+  fontSize: 20,
+  fontFamily: fonts.titleSemi,
+  color: "#5e3b13",
+},
   listCard: {
     backgroundColor: "#fffdf9",
     borderRadius: 24,
@@ -397,11 +458,12 @@ const styles = StyleSheet.create({
     borderColor: "#ece4d8",
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#2f2a24",
-    marginBottom: 12,
-  },
+  fontSize: 18,
+  fontFamily: fonts.titleSemi,
+  color: "#2f2a24",
+  marginBottom: 12,
+},
+
   stepRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -436,10 +498,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#ede6db",
   },
   stepNoText: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#6b6257",
-  },
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: "#6b6257",
+},
   stepNoTextCurrent: {
     color: "#ffffff",
   },
@@ -450,11 +512,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stepName: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#2f2a24",
-    marginBottom: 4,
-  },
+  fontSize: 17,
+  fontFamily: fonts.semiBold,
+  color: "#2f2a24",
+  marginBottom: 4,
+},
   stepNameCurrent: {
     color: "#314E67",
   },
@@ -462,9 +524,10 @@ const styles = StyleSheet.create({
     color: "#4f7144",
   },
   stepStateText: {
-    fontSize: 12,
-    color: "#7b7266",
-  },
+  fontSize: 12,
+  fontFamily: fonts.medium,
+  color: "#7b7266",
+},
   emptyText: {
     fontSize: 14,
     color: "#7b7266",
@@ -484,11 +547,13 @@ stepHanjaCurrent: {
 stepHanjaDone: {
   color: "#4f7144",
 },
+
 stepNameHanjaInline: {
-  fontSize: 14,
-  fontWeight: "600",
+  fontSize: 17,
+  fontFamily: fonts.hanja,
   color: "#7b7266",
 },
+
 
 stepNameHanjaInlineCurrent: {
   color: "#314E67",
@@ -498,8 +563,8 @@ stepNameHanjaInlineDone: {
   color: "#4f7144",
 },
 currentStepHanjaInline: {
-  fontSize: 16,
-  fontWeight: "600",
+  fontSize: 18,
+  fontFamily: fonts.hanja,
   color: "#8a5a21",
 },
 topHeader: {
@@ -524,7 +589,7 @@ topTitleRow: {
 
 topTitle: {
   fontSize: 20,
-  fontWeight: "900",
+  fontFamily: fonts.title,
   color: "#2f2a24",
 },
 
@@ -533,5 +598,21 @@ topSubTitle: {
   fontWeight: "700",
   color: "#7a6f61",
   marginTop: 2,
+},
+stepRowGroupCurrent: {
+  backgroundColor: "#FFF4DD",
+  borderRadius: 14,
+  paddingHorizontal: 10,
+},
+
+stepNoBadgeGroupCurrent: {
+  backgroundColor: "#C89E6A",
+},
+
+stepNameGroupCurrent: {
+  color: "#8A5A1F",
+},
+stepNameHanjaInlineGroupCurrent: {
+  color: "#8A5A1F",
 },
 });

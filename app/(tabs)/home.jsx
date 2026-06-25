@@ -584,6 +584,23 @@ const avatarImages = {
   avatar6: require("../../assets/images/avatar6.png"),
   avatar7: require("../../assets/images/avatar7.png"),
   avatar8: require("../../assets/images/avatar8.png"),
+  avatar9: require("../../assets/images/avatar9.png"),
+  avatar10: require("../../assets/images/avatar10.png"),
+  avatar11: require("../../assets/images/avatar11.png"),
+  avatar12: require("../../assets/images/avatar12.png"),
+  avatar13: require("../../assets/images/avatar13.png"),
+  avatar14: require("../../assets/images/avatar14.png"),
+  avatar15: require("../../assets/images/avatar15.png"),
+  avatar16: require("../../assets/images/avatar16.png"),
+  avatar17: require("../../assets/images/avatar17.png"),
+  avatar18: require("../../assets/images/avatar18.png"),
+  avatar19: require("../../assets/images/avatar19.png"),
+  avatar20: require("../../assets/images/avatar20.png"),
+  avatar21: require("../../assets/images/avatar21.png"),
+  avatar22: require("../../assets/images/avatar22.png"),
+  avatar23: require("../../assets/images/avatar23.png"),
+  avatar24: require("../../assets/images/avatar24.png"),
+  avatar25: require("../../assets/images/avatar25.png"),
 };
 
 const profileAvatarKey = homeData?.member?.profileAvatar || "avatar1";
@@ -636,23 +653,38 @@ const hasUnreadMemberNotification = unreadMemberNotificationCount > 0;
 
   const hasTodayReserved = todayReservableSessions.length > 0;
 
-  function canCheckInTodaySession(item) {
+function canCheckInTodaySession(item) {
   const start = parseKoreanStartTimeToDate(todayString, item?.startTime);
   if (!start) return false;
 
   const now = new Date();
+  const startText = item?.startTime || "";
 
-  // 시작 1시간 전
   const checkInStart = new Date(start);
-  checkInStart.setHours(checkInStart.getHours() - 1);
-
-  // 수업 종료 (1시간 30분 후)
   const checkInEnd = new Date(start);
-  checkInEnd.setMinutes(checkInEnd.getMinutes() + 90);
+
+  if (startText.includes("오전 10:00")) {
+    checkInStart.setHours(9, 0, 0, 0);
+    checkInEnd.setHours(13, 0, 0, 0);
+  } else if (startText.includes("오후 4:00")) {
+    checkInStart.setHours(15, 0, 0, 0);
+    checkInEnd.setHours(18, 0, 0, 0);
+  } else if (startText.includes("오후 7:00")) {
+    checkInStart.setHours(18, 0, 0, 0);
+    checkInEnd.setHours(21, 0, 0, 0);
+  } else if (startText.includes("오후 1:30")) {
+    checkInStart.setHours(13, 0, 0, 0);
+    checkInEnd.setHours(15, 30, 0, 0);
+  } else {
+    checkInStart.setHours(checkInStart.getHours() - 1);
+    checkInEnd.setMinutes(checkInEnd.getMinutes() + 90);
+  }
 
   return now >= checkInStart && now <= checkInEnd;
 }
-
+function isWithinTodayAttendanceLockWindow(item) {
+  return canCheckInTodaySession(item);
+}
 function canCancelAttendance(item) {
   if (item?.attendanceStatus !== "present") return false;
 
@@ -689,6 +721,18 @@ const hasTodayCheckInSession = todayCheckInSessions.length > 0;
 
   return new Date(`${dateString}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`);
 }
+const todayCompletedSession = todaySchedules.find((item) => {
+  return (
+    item?.attendanceStatus === "present" &&
+    isWithinTodayAttendanceLockWindow(item)
+  );
+});
+
+const hasTodayCompletedSession = !!todayCompletedSession;
+
+const todayAttendanceButtonText = hasTodayCompletedSession
+  ? `${getSessionDisplayLabel(todayCompletedSession)} 출석 완료`
+  : "☑  출석하기";
 
 function getNearestCheckInSession(sessions, todayString) {
   const now = new Date();
@@ -1317,7 +1361,50 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
   <View style={styles.todayTrainingHeader}>
     <Text style={styles.todayTrainingLabel}>오늘의 수련</Text>
 
-    <Pressable onPress={() => router.push("/(tabs)/taegukwon")}>
+   <Pressable
+  onPress={() => {
+    const curriculumId =
+      homeGroupProgress?.curriculumId ||
+      homeGroupProgress?.curriculum?.id ||
+      homeData?.groupProgress?.curriculumId ||
+      homeData?.groupProgress?.curriculum?.id;
+
+    if (!curriculumId) {
+      Alert.alert("안내", "현재 단체 수련 진도 정보가 없습니다.");
+      return;
+    }
+
+    const startStep =
+      homeGroupProgress?.startStep ??
+      homeGroupProgress?.currentStartStep ??
+      homeGroupProgress?.fromStep ??
+      "";
+
+    const endStep =
+      homeGroupProgress?.endStep ??
+      homeGroupProgress?.currentEndStep ??
+      homeGroupProgress?.toStep ??
+      homeGroupProgress?.currentStep ??
+      "";
+
+    router.push({
+      pathname: "/taegukwon/[curriculumId]",
+      params: {
+        curriculumId,
+        name:
+          homeGroupProgress?.curriculumName ||
+          homeGroupProgress?.curriculum?.name ||
+          homeGroupProgress?.curriculumTitle ||
+          "현중태극권 29식",
+        currentStep: String(endStep || 0),
+        totalSteps: String(homeGroupProgress?.totalSteps || 29),
+        startStep: String(startStep || ""),
+        endStep: String(endStep || ""),
+        source: "group",
+      },
+    });
+  }}
+>
       <View style={styles.moreLinkRow}>
         <Text style={styles.todayTrainingMore}>자세히 보기</Text>
       </View>
@@ -1344,19 +1431,24 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
   />
 
   <Pressable
-    style={[
-      styles.todayTrainingButton,
-      isYudanja && styles.todayTrainingButtonYudanja,
-    ]}
-    onPress={() => router.push("/qr-attendance")}
-  >
+  disabled={hasTodayCompletedSession}
+  style={[
+    styles.todayTrainingButton,
+    isYudanja && styles.todayTrainingButtonYudanja,
+    hasTodayCompletedSession && styles.todayTrainingButtonDone,
+  ]}
+  onPress={() => {
+    if (hasTodayCompletedSession) return;
+    router.push("/qr-attendance");
+  }}
+>
     <Text
       style={[
         styles.todayTrainingButtonText,
         isYudanja && styles.todayTrainingButtonTextYudanja,
       ]}
     >
-      ☑  출석하기
+      {todayAttendanceButtonText}
     </Text>
   </Pressable>
 </LinearGradient>
@@ -1860,20 +1952,20 @@ homeHeaderTextBlock: {
 },
 
   homeGreeting: {
-  fontSize: isWeb ? 15 : 15,
+  fontSize: isWeb ? 16 : 15,
   fontFamily: fonts.semiBold,
   lineHeight: isWeb ? 20 : 20,
   color: colors.textSub,
   marginTop: 14,
-  marginBottom: 3,
+  marginBottom: 4,
 },
 
 homeName: {
-  fontSize: isWeb ? 33 : 38,
+  fontSize: isWeb ? 35 : 38,
   fontFamily: fonts.title,
-  letterSpacing: -1.0,
+  letterSpacing: 0.1,
   color: colors.textMain,
-  marginBottom: 4,
+  marginBottom: 10,
 },
 
   homeBadgeRow: {
@@ -1911,7 +2003,7 @@ homeBadgeTextYudanja: {
 },
 
  todayTrainingCard: {
-  marginTop: isWeb ? -18 : -28,
+  marginTop: isWeb ? -24 : -28,
   backgroundColor: colors.card,
   borderRadius: radius.lg,
   borderWidth: 1,
@@ -2467,15 +2559,15 @@ noticeSummaryDate: {
   },
 
   noticeModalLabel: {
-    fontSize: 12,
-    fontWeight: "800",
+    fontSize: 13,
+    fontWeight: "700",
     color: colors.textSub,
   },
 
   noticeModalTitle: {
     marginTop: 8,
     fontSize: 22,
-    fontWeight: "800",
+    fontWeight: "700",
     color: colors.textMain,
   },
 
@@ -2713,37 +2805,37 @@ yudanjaFlowLine: {
   display: "none",
 },
 homeProfileWrap: {
-  width: isWeb ? 132 : 104,
-  height: isWeb ? 132 : 104,
-  marginTop: isWeb ? 10 : 28,
-  marginRight: isWeb ? 20 : 8,
+  width: isWeb ? 145 : 104,
+  height: isWeb ? 145 : 104,
+  marginTop: isWeb ? 20 : 28,
+  marginRight: isWeb ? -7 : 8,
   alignItems: "center",
   justifyContent: "center",
   position: "relative",
 },
 
 homeProfileWrapYudanja: {
-  width: isWeb ? 132 : 132,
-  height: isWeb ? 132 : 132,
+  width: isWeb ? 145 : 132,
+  height: isWeb ? 145 : 132,
   marginTop: isWeb ? 20 : 18,
   marginRight: isWeb ? -7 : -2,
   marginBottom: isWeb ? -10 : 18,
 },
 
 homeProfileCircle: {
-  width: isWeb ? 88 : 90,
-  height: isWeb ? 88 : 90,
+  width: isWeb ? 110  : 90,
+  height: isWeb ? 110 : 90,
   borderRadius: 999,
   overflow: "hidden",
   backgroundColor: "#F7EFE8",
 },
 
 homeProfileCircleYudanja: {
-  width: isWeb ? 88 : 98,
-  height: isWeb ? 88 : 98,
+  width: isWeb ? 98 : 98,
+  height: isWeb ? 98 : 98,
    transform: [
-    { translateX: isWeb ? -17 : 0 },
-    { translateY: isWeb ? -23 : 0 },
+    { translateX: isWeb ? -4 : 0 },
+    { translateY: isWeb ? -22 : 0 },
   ],
 },
 homeProfileInnerCircle: {
@@ -2765,10 +2857,10 @@ homeProfileImage: {
 
 homeYudanjaEmblemFrame: {
   position: "absolute",
-  width: isWeb ? 130 : 138,
-  height: isWeb ? 130 : 138,
-  top: isWeb ? -14 : -20,
-  left: isWeb ? -16 : -20,
+  width: isWeb ? 135 : 138,
+  height: isWeb ? 135 : 138,
+  top: isWeb ? -7 : -20,
+  left: isWeb ? 1 : -20,
 },
 
 
@@ -2793,10 +2885,10 @@ todayYudanjaBgImage: {
   opacity: 0.9,
 },
 homeAttendanceSummary: {
-  marginTop: 8,
+  marginTop: 12,
   marginLeft: 2,
 
-  fontSize: isWeb ? 12 : 14,
+  fontSize: isWeb ? 13 : 14,
   lineHeight: isWeb ? 18 : 20,
 
   fontFamily: fonts.medium,
@@ -2974,5 +3066,9 @@ recordSelectCloseText: {
   fontSize: 21,
   fontFamily: fonts.medium,
   color: colors.softBrown,
+},
+todayTrainingButtonDone: {
+  backgroundColor: "#9A8A80",
+  opacity: 0.85,
 },
 });

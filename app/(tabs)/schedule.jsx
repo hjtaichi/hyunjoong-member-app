@@ -496,19 +496,32 @@ const thisWeekDates = useMemo(() => {
   });
 }, [todayString]);
 
-  function canCheckInTodaySession(item) {
+function canCheckInTodaySession(item) {
   const start = parseKoreanStartTimeToDate(todayString, item?.startTime);
   if (!start) return false;
 
   const now = new Date();
+  const startText = item?.startTime || "";
 
-  // 시작 1시간 전
   const checkInStart = new Date(start);
-  checkInStart.setHours(checkInStart.getHours() - 1);
-
-  // 수업 종료 (1시간 30분 후)
   const checkInEnd = new Date(start);
-  checkInEnd.setMinutes(checkInEnd.getMinutes() + 90);
+
+  if (startText.includes("오전 10:00")) {
+    checkInStart.setHours(9, 0, 0, 0);
+    checkInEnd.setHours(13, 0, 0, 0);
+  } else if (startText.includes("오후 4:00")) {
+    checkInStart.setHours(15, 0, 0, 0);
+    checkInEnd.setHours(18, 0, 0, 0);
+  } else if (startText.includes("오후 7:00")) {
+    checkInStart.setHours(18, 0, 0, 0);
+    checkInEnd.setHours(21, 0, 0, 0);
+  } else if (startText.includes("오후 1:30")) {
+    checkInStart.setHours(13, 0, 0, 0);
+    checkInEnd.setHours(15, 30, 0, 0);
+  } else {
+    checkInStart.setHours(checkInStart.getHours() - 1);
+    checkInEnd.setMinutes(checkInEnd.getMinutes() + 90);
+  }
 
   return now >= checkInStart && now <= checkInEnd;
 }

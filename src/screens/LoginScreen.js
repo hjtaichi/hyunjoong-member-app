@@ -7,11 +7,11 @@ import {
   TextInput,
   Pressable,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ImageBackground,
   Image,
+  Modal,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
@@ -32,7 +32,11 @@ export default function LoginScreen() {
 
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
-  const [saveLoginId, setSaveLoginId] = useState(false);
+const [saveLoginId, setSaveLoginId] = useState(false);
+const [autoLogin, setAutoLogin] = useState(true);
+  const [loginAlertVisible, setLoginAlertVisible] = useState(false);
+const [loginAlertTitle, setLoginAlertTitle] = useState("");
+const [loginAlertMessage, setLoginAlertMessage] = useState("");
 
   useEffect(() => {
     async function loadSavedLoginId() {
@@ -47,39 +51,64 @@ export default function LoginScreen() {
     loadSavedLoginId();
   }, []);
 
+  function showLoginAlert(title, message) {
+  setLoginAlertTitle(title);
+  setLoginAlertMessage(message);
+  setLoginAlertVisible(true);
+}
+
   async function handleLogin() {
-    if (!loginId.trim()) {
-      Alert.alert("안내", "아이디를 입력해주세요.");
-      return;
-    }
-
-    if (!password.trim()) {
-      Alert.alert("안내", "비밀번호를 입력해주세요.");
-      return;
-    }
-
-    const result = await login(loginId.trim().toLowerCase(), password);
-
-    if (saveLoginId) {
-      await setSavedLoginId(loginId.trim().toLowerCase());
-    } else {
-      await removeSavedLoginId();
-    }
-
-    if (!result.ok) {
-  const message = result.message || "로그인에 실패했습니다.";
-
-  if (result.code === "APPROVAL_PENDING" || message.includes("승인 대기")) {
-    router.replace("/approval-pending");
+  if (!loginId.trim()) {
+    showLoginAlert("안내", "아이디를 입력해주세요.");
     return;
   }
 
-  Alert.alert("로그인 실패", message);
-  return;
+  if (!password.trim()) {
+    showLoginAlert("안내", "비밀번호를 입력해주세요.");
+    return;
+  }
+
+  try {
+    const cleanLoginId = loginId.trim().toLowerCase();
+
+    const result = await login(cleanLoginId, password, autoLogin);
+
+    if (!result?.ok) {
+      const message =
+        result?.message ||
+        result?.error ||
+        "아이디 또는 비밀번호를 확인해주세요.";
+
+      if (
+        result?.code === "APPROVAL_PENDING" ||
+        message.includes("승인 대기")
+      ) {
+        router.replace("/approval-pending");
+        return;
+      }
+
+      showLoginAlert("로그인 실패", message);
+      return;
+    }
+
+    if (saveLoginId || autoLogin) {
+  await setSavedLoginId(cleanLoginId);
+} else {
+  await removeSavedLoginId();
 }
 
     router.replace("/(tabs)/home");
+  } catch (error) {
+    console.log("로그인 실패:", error);
+
+showLoginAlert(
+  "로그인 실패",
+  error?.response?.data?.message ||
+    error?.message ||
+    "아이디 또는 비밀번호를 확인해주세요."
+);
   }
+}
 
   return (
     <ImageBackground
@@ -136,16 +165,28 @@ export default function LoginScreen() {
   />
 </View>
 
-            <Pressable
-              style={styles.optionRow}
-              onPress={() => setSaveLoginId((prev) => !prev)}
-            >
-              <View style={[styles.checkbox, saveLoginId && styles.checkboxChecked]}>
-                {saveLoginId ? <View style={styles.checkMark} /> : null}
-              </View>
-              <Text style={styles.optionText}>아이디 저장</Text>
-            </Pressable>
-          </View>
+            <View style={styles.optionRowGroup}>
+  <Pressable
+    style={styles.optionRow}
+    onPress={() => setSaveLoginId((prev) => !prev)}
+  >
+    <View style={[styles.checkbox, saveLoginId && styles.checkboxChecked]}>
+      {saveLoginId ? <View style={styles.checkMark} /> : null}
+    </View>
+    <Text style={styles.optionText}>아이디 저장</Text>
+  </Pressable>
+
+  <Pressable
+    style={styles.optionRow}
+    onPress={() => setAutoLogin((prev) => !prev)}
+  >
+    <View style={[styles.checkbox, autoLogin && styles.checkboxChecked]}>
+      {autoLogin ? <View style={styles.checkMark} /> : null}
+    </View>
+    <Text style={styles.optionText}>자동 로그인</Text>
+  </Pressable>
+</View>
+</View>
 
           <Pressable
             style={[styles.button, isLoginLoading && styles.buttonDisabled]}
@@ -175,6 +216,21 @@ export default function LoginScreen() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+<Modal visible={loginAlertVisible} transparent animationType="fade">
+  <View style={styles.loginAlertOverlay}>
+    <View style={styles.loginAlertCard}>
+      <Text style={styles.loginAlertTitle}>{loginAlertTitle}</Text>
+      <Text style={styles.loginAlertMessage}>{loginAlertMessage}</Text>
+
+      <Pressable
+        style={styles.loginAlertButton}
+        onPress={() => setLoginAlertVisible(false)}
+      >
+        <Text style={styles.loginAlertButtonText}>확인</Text>
+      </Pressable>
+    </View>
+  </View>
+</Modal>
     </ImageBackground>
   );
 }
@@ -364,5 +420,60 @@ signupIcon: {
   height: 24,
   tintColor: "#B18A52",
   marginRight: 10,
+},
+loginAlertOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(58, 44, 39, 0.35)",
+  alignItems: "center",
+  justifyContent: "center",
+  paddingHorizontal: 28,
+},
+
+loginAlertCard: {
+  width: "100%",
+  maxWidth: 340,
+  borderRadius: 24,
+  backgroundColor: "#FFFDF8",
+  borderWidth: 1,
+  borderColor: "#E6D8C8",
+  paddingHorizontal: 24,
+  paddingVertical: 24,
+},
+
+loginAlertTitle: {
+  fontSize: 22,
+  fontFamily: "MaruBuriBold",
+  color: "#2E261F",
+  textAlign: "center",
+},
+
+loginAlertMessage: {
+  marginTop: 14,
+  fontSize: 15,
+  lineHeight: 22,
+  fontFamily: "PretendardMedium",
+  color: "#5F554B",
+  textAlign: "center",
+},
+
+loginAlertButton: {
+  marginTop: 24,
+  height: 50,
+  borderRadius: 14,
+  backgroundColor: "#2C251F",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+loginAlertButtonText: {
+  fontSize: 16,
+  fontFamily: "PretendardSemiBold",
+  color: "#FFFFFF",
+},
+optionRowGroup: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 22,
+  marginTop: 2,
 },
 });
