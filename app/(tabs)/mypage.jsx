@@ -536,16 +536,51 @@ function openDefaultAvatarPicker() {
 
 async function handleUseDefaultAvatar(avatarKey) {
   try {
+    console.log("프로필 아바타 선택:", avatarKey);
     setSubmittingAccount(true);
 
-    await updateMyProfileAvatar(avatarKey);
+    const rawApiBase = String(process.env.EXPO_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+    const apiBase = rawApiBase.endsWith("/api") ? rawApiBase : `${rawApiBase}/api`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(`${apiBase}/member/me/profile-avatar`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      body: JSON.stringify({
+        profileAvatar: avatarKey,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    const result = await response.json();
+    console.log("프로필 아바타 변경 응답:", response.status, result);
+
+    if (!response.ok) {
+      throw new Error(result?.message || "프로필 사진 변경에 실패했습니다.");
+    }
+
     setSelectedAvatar(avatarKey);
+    setDefaultAvatarModalVisible(false);
 
     Alert.alert("완료", "기본 프로필 이미지로 변경했습니다.");
-    setDefaultAvatarModalVisible(false);
     await loadProfile({ silent: true });
   } catch (error) {
-    Alert.alert("오류", error?.message || "프로필 사진 변경에 실패했습니다.");
+    console.log("프로필 아바타 변경 오류:", error);
+
+    Alert.alert(
+      "오류",
+      error?.name === "AbortError"
+        ? "서버 응답이 너무 오래 걸립니다. 백엔드 서버를 재시작해보세요."
+        : error?.message || "프로필 사진 변경에 실패했습니다."
+    );
   } finally {
     setSubmittingAccount(false);
   }

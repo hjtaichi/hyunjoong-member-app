@@ -1560,10 +1560,9 @@ loadData({ silent: true }).catch((error) => {
 
 <TouchableOpacity
   style={[
-    styles.menuRow,
-    styles.menuRowLast,
-    !isYudanjaMember && styles.menuRowLocked,
-  ]}
+  styles.menuRow,
+  !isYudanjaMember && styles.menuRowLocked,
+]}
   activeOpacity={0.85}
   onPress={() => {
     if (!isYudanjaMember) {
@@ -1596,9 +1595,10 @@ loadData({ silent: true }).catch((error) => {
 </TouchableOpacity>
 <TouchableOpacity
   style={[
-    styles.menuRow,
-    !hasPrivateLessonMenu && styles.menuRowLocked,
-  ]}
+  styles.menuRow,
+  styles.menuRowLast,
+  !hasPrivateLessonMenu && styles.menuRowLocked,
+]}
   activeOpacity={0.85}
   onPress={() => {
     if (!hasPrivateLessonMenu) {
@@ -1633,6 +1633,11 @@ loadData({ silent: true }).catch((error) => {
     />
   )}
 </TouchableOpacity>
+
+  </View>
+  
+) : null}
+
 <TouchableOpacity
   style={styles.privateGuideBanner}
   activeOpacity={0.88}
@@ -1647,9 +1652,6 @@ loadData({ silent: true }).catch((error) => {
 
   <Text style={styles.privateGuideBannerArrow}>〉</Text>
 </TouchableOpacity>
-  </View>
-  
-) : null}
 {false && activeTab === "training" ? (
   <TouchableOpacity
     style={styles.awardEntryMiniCard}
