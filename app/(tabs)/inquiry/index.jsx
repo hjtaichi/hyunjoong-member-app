@@ -19,7 +19,7 @@ import { createMemberInquiry } from "../../../src/api/memberInquiryCreate";
 import RecentNoticesSection from "../../../src/components/RecentNoticesSection";
 
 const TABS = [
-  { key: "notice", label: "공지" },
+  { key: "notice", label: "도장 소식" },
   { key: "guide", label: "도장 안내" },
   { key: "inquiry", label: "문의" },
 ];
@@ -254,6 +254,21 @@ const previewRooms = activeRooms.slice(0, 1);
 </View>
 
 <RecentNoticesSection />
+
+<Pressable
+  style={styles.albumBanner}
+  onPress={() => router.push("/dojang-album")}
+>
+  <View style={styles.albumBannerText}>
+    <Text style={styles.albumBannerLabel}>도장 앨범</Text>
+    <Text style={styles.albumBannerTitle}>함께 수련한 시간들</Text>
+    <Text style={styles.albumBannerDesc}>
+      행사, 수련회, 승급과 도장의 추억을 사진으로 확인해보세요.
+    </Text>
+  </View>
+
+  <Text style={styles.albumBannerArrow}>›</Text>
+</Pressable>
         </View>
       ) : null}
 
@@ -917,5 +932,54 @@ allInquiryLink: {
   fontSize: 12,
   fontFamily: fonts.semiBold,
   color: colors.warmBrown,
+},
+albumBanner: {
+  marginTop: 14,
+  minHeight: 118,
+  borderRadius: 24,
+  padding: 18,
+  backgroundColor: "#FFF9EF",
+  borderWidth: 1,
+  borderColor: "#E8D6B8",
+  flexDirection: "row",
+  alignItems: "center",
+  overflow: "hidden",
+
+  shadowColor: "#BFA79B",
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.06,
+  shadowRadius: 12,
+  elevation: 2,
+},
+
+albumBannerText: {
+  flex: 1,
+},
+
+albumBannerLabel: {
+  fontSize: 12,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+},
+
+albumBannerTitle: {
+  marginTop: 6,
+  fontSize: 21,
+  fontFamily: fonts.titleSemi,
+  color: colors.textMain,
+},
+
+albumBannerDesc: {
+  marginTop: 6,
+  fontSize: 13,
+  lineHeight: 19,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+albumBannerArrow: {
+  marginLeft: 12,
+  fontSize: 28,
+  color: colors.softBrown,
 },
 });

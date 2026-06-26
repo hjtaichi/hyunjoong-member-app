@@ -51,6 +51,13 @@ const MENU = [
     bgImage: require("../../assets/images/yudanja/menu-book-bg.png"),
   },
   {
+  title: "유단자회 앨범",
+  desc: "사진 · 기록",
+  path: "/yudanja/album",
+  iconImage: require("../../assets/images/yudanja/menu-library.png"),
+  bgImage: require("../../assets/images/yudanja/menu-bamboo-bg.png"),
+},
+  {
     title: "내 수련기록",
     desc: "출석 · 항목별 기록",
     path: "/yudanja/my-records",
