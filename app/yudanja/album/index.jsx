@@ -128,12 +128,12 @@ export default function YudanjaAlbumScreen() {
 
         {featuredAlbum ? (
           <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>최근 앨범</Text>
-              <Pressable onPress={() => {}}>
-                <Text style={styles.viewAllText}>전체 보기 ›</Text>
-              </Pressable>
-            </View>
+           <View style={[styles.sectionHeader, styles.recentSectionHeader]}>
+  <Text style={styles.sectionTitle}>최근 앨범</Text>
+  <Pressable onPress={() => {}}>
+    <Text style={styles.viewAllText}>전체 보기 ›</Text>
+  </Pressable>
+</View>
 
             <Pressable
               style={styles.featuredCard}
@@ -180,11 +180,13 @@ export default function YudanjaAlbumScreen() {
                 </View>
               </View>
 
-              <Image
-                source={require("../../../assets/images/yudanja/card-mountain.png")}
-                style={styles.featuredMountain}
-                resizeMode="contain"
-              />
+              <View style={styles.featuredMountainWrap} pointerEvents="none">
+  <Image
+    source={require("../../../assets/images/yudanja/card-mountain.png")}
+    style={styles.featuredMountain}
+    resizeMode="stretch"
+  />
+</View>
             </Pressable>
           </>
         ) : (
@@ -239,13 +241,20 @@ export default function YudanjaAlbumScreen() {
             </Pressable>
           ))}
         </View>
-
+<View style={styles.footerSpacer} />
         <View style={styles.footer}>
-  <Image
-    source={yudanjaAlbumEmblem}
-    style={styles.footerEmblem}
-    resizeMode="contain"
-  />
+  <View style={styles.footerInner}>
+    <Image
+      source={yudanjaAlbumEmblem}
+      style={styles.footerEmblem}
+      resizeMode="contain"
+    />
+
+    <View>
+      <Text style={styles.footerTitle}>현중태극권 유단자회</Text>
+      <Text style={styles.footerSubText}>HYUNJOONG TAIJI · YUDANJAHOE</Text>
+    </View>
+  </View>
 </View>
       </ScrollView>
     </View>
@@ -275,16 +284,17 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     color: SUB,
   },
-  content: {
-    width: "100%",
-    maxWidth: 430,
-    alignSelf: "center",
-    minHeight: "100%",
-    paddingHorizontal: 18,
-    paddingTop: 20,
-    paddingBottom: 44,
-    backgroundColor: PAPER,
-  },
+content: {
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+  flexGrow: 1,
+  minHeight: "100%",
+  paddingHorizontal: 18,
+  paddingTop: 20,
+  paddingBottom: 28,
+  backgroundColor: PAPER,
+},
 
   topBar: {
     height: 42,
@@ -326,7 +336,7 @@ heroBrushWrap: {
   position: "absolute",
   left: -24,
   right: -24,
-  bottom: 30,
+  bottom: 35,
   height: 135,
   opacity: 0.52,
 },
@@ -336,14 +346,14 @@ heroBrush: {
   height: "100%",
 },
 heroEmblem: {
-  width: 110,
-  height: 110,
+  width: 150,
+  height: 150,
 },
 
 heroDesc: {
-  marginTop: 20,
+  marginTop: 4,
   fontFamily: fonts.titleSemi,
-  fontSize: 18,
+  fontSize: 16.5,
   lineHeight: 28,
   color: INK,
 },
@@ -393,13 +403,14 @@ heroDesc: {
     overflow: "hidden",
     ...shadow.card,
   },
-  featuredThumb: {
-    width: 112,
-    height: 112,
-    borderRadius: 18,
-    backgroundColor: "#F1E8DC",
-    overflow: "hidden",
-  },
+featuredThumb: {
+  width: 112,
+  height: 112,
+  borderRadius: 18,
+  backgroundColor: "#F1E8DC",
+  overflow: "hidden",
+  zIndex: 2,
+},
   featuredThumbImage: {
     width: "100%",
     height: "100%",
@@ -457,13 +468,18 @@ heroDesc: {
     fontSize: 13,
     color: GOLD,
   },
-  featuredMountain: {
+  featuredMountainWrap: {
   position: "absolute",
-  right: -10,
-  bottom: 10,
-  width: 180,
-  height: 80,
-  opacity: 0.26,
+  left: 200,
+  right: -80,
+  bottom: -40,
+  height: 125,
+  opacity: 0.35,
+},
+
+featuredMountain: {
+  width: "70%",
+  height: "70%",
 },
 
   albumList: {
@@ -541,17 +557,47 @@ heroDesc: {
     color: SUB,
   },
 
-  footer: {
-  marginTop: 54,
-  paddingTop: 26,
+footer: {
+  marginTop: 0,
+  paddingTop: 15,
+  paddingBottom: -10,
   borderTopWidth: 1,
   borderTopColor: LINE,
   alignItems: "center",
 },
 
+footerInner: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 10,
+},
+
 footerEmblem: {
-  width: 96,
-  height: 96,
-  opacity: 0.88,
+  width: 38,
+  height: 38,
+  opacity: 0.9,
+},
+
+footerTitle: {
+  fontFamily: fonts.titleSemi,
+  fontSize: 14,
+  color: GOLD,
+  letterSpacing: 1,
+},
+
+footerSubText: {
+  marginTop: 2,
+  fontFamily: fonts.medium,
+  fontSize: 9,
+  color: "#C3A27A",
+  letterSpacing: 1.2,
+},
+footerSpacer: {
+  flexGrow: 1,
+  minHeight: 36,
+},
+recentSectionHeader: {
+  marginTop: -4,
 },
 });

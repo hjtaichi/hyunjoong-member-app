@@ -259,12 +259,19 @@ const previewRooms = activeRooms.slice(0, 1);
   style={styles.albumBanner}
   onPress={() => router.push("/dojang-album")}
 >
+  <Image
+    source={require("../../../assets/images/dojang-album-banner.png")}
+    style={styles.albumBannerImage}
+    resizeMode="contain"
+  />
+
   <View style={styles.albumBannerText}>
     <Text style={styles.albumBannerLabel}>도장 앨범</Text>
     <Text style={styles.albumBannerTitle}>함께 수련한 시간들</Text>
-    <Text style={styles.albumBannerDesc}>
-      행사, 수련회, 승급과 도장의 추억을 사진으로 확인해보세요.
-    </Text>
+
+    <View style={styles.albumBannerCta}>
+      <Text style={styles.albumBannerCtaText}>앨범 보기</Text>
+    </View>
   </View>
 
   <Text style={styles.albumBannerArrow}>›</Text>
@@ -935,8 +942,8 @@ allInquiryLink: {
 },
 albumBanner: {
   marginTop: 14,
-  minHeight: 118,
-  borderRadius: 24,
+  minHeight: 132,
+  borderRadius: 26,
   padding: 18,
   backgroundColor: "#FFF9EF",
   borderWidth: 1,
@@ -946,14 +953,25 @@ albumBanner: {
   overflow: "hidden",
 
   shadowColor: "#BFA79B",
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.06,
-  shadowRadius: 12,
-  elevation: 2,
+  shadowOffset: { width: 0, height: 5 },
+  shadowOpacity: 0.08,
+  shadowRadius: 14,
+  elevation: 3,
+},
+
+albumBannerImage: {
+  position: "absolute",
+  right: -42,
+  bottom: -24,
+  width: 250,
+  height: 140,
+  opacity: 0.55,
 },
 
 albumBannerText: {
   flex: 1,
+  zIndex: 2,
+  paddingRight: 118,
 },
 
 albumBannerLabel: {
@@ -963,23 +981,41 @@ albumBannerLabel: {
 },
 
 albumBannerTitle: {
-  marginTop: 6,
-  fontSize: 21,
+  marginTop: 7,
+  fontSize: 22,
   fontFamily: fonts.titleSemi,
   color: colors.textMain,
 },
 
 albumBannerDesc: {
-  marginTop: 6,
+  marginTop: 7,
   fontSize: 13,
   lineHeight: 19,
   fontFamily: fonts.medium,
   color: colors.textSub,
 },
 
+albumBannerCta: {
+  marginTop: 11,
+  alignSelf: "flex-start",
+  borderRadius: 999,
+  backgroundColor: "#2B2118",
+  paddingHorizontal: 14,
+  paddingVertical: 7,
+},
+
+albumBannerCtaText: {
+  fontSize: 12,
+  fontFamily: fonts.bold,
+  color: "#F7E5C3",
+},
+
 albumBannerArrow: {
-  marginLeft: 12,
-  fontSize: 28,
+  position: "absolute",
+  right: 16,
+  top: 16,
+  zIndex: 3,
+  fontSize: 25,
   color: colors.softBrown,
 },
 });

@@ -12,7 +12,8 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { getDojangAlbums } from "../../src/api/dojangAlbum";
-import { colors, radius, shadow } from "../../src/theme";
+import { API_BASE_URL } from "../../src/config/env";
+import { colors, shadow } from "../../src/theme";
 
 const fonts = {
   medium: "PretendardMedium",
@@ -20,7 +21,18 @@ const fonts = {
   bold: "PretendardBold",
   title: "MaruBuriBold",
   titleSemi: "MaruBuriSemiBold",
+  hanja: "ZhaoKai",
 };
+
+const albumHeroWide = require("../../assets/images/album-hero-wide.png");
+const cardMountain = require("../../assets/images/yudanja/card-mountain.png");
+
+const PAPER = "#FFFCF6";
+const CARD = "#FFFDF8";
+const INK = "#2F241F";
+const SUB = "#7A6C63";
+const GOLD = "#B9894A";
+const LINE = "#EFE3D8";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -33,6 +45,17 @@ function formatDate(value) {
   const d = String(date.getDate()).padStart(2, "0");
 
   return `${y}.${m}.${d}`;
+}
+
+function getImageUri(value) {
+  if (!value) return "";
+
+  if (value.startsWith("http://") || value.startsWith("https://")) {
+    return value;
+  }
+
+  const cleanPath = value.startsWith("/") ? value : `/${value}`;
+  return `${API_BASE_URL}${cleanPath}`;
 }
 
 export default function DojangAlbumScreen() {
@@ -83,10 +106,6 @@ export default function DojangAlbumScreen() {
 
   return (
     <View style={styles.container}>
-      <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>‹</Text>
-      </Pressable>
-
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
@@ -94,96 +113,150 @@ export default function DojangAlbumScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>도장 앨범</Text>
-        <Text style={styles.subtitle}>함께 수련한 시간들을 기록합니다.</Text>
+        <View style={styles.topBar}>
+          <Pressable style={styles.iconButton} onPress={() => router.back()}>
+            <Text style={styles.topIcon}>‹</Text>
+          </Pressable>
 
-        <Pressable
-          style={styles.heroCard}
-          disabled={!featuredAlbum}
-          onPress={() => {
-            if (!featuredAlbum) return;
-            router.push(`/dojang-album/${featuredAlbum.id}`);
-          }}
-        >
-          <View style={styles.heroTextBlock}>
-            <Text style={styles.heroLabel}>최근 도장 이야기</Text>
-            <Text style={styles.heroTitle}>
-              {featuredAlbum?.title || "아직 등록된 앨범이 없습니다"}
-            </Text>
-            <Text style={styles.heroMeta}>
-              {featuredAlbum
-                ? `사진 ${featuredAlbum.photoCount || 0}장 · ${formatDate(
-                    featuredAlbum.eventDate
-                  )}`
-                : "관리자가 사진을 올리면 이곳에 표시됩니다."}
-            </Text>
+          <Text style={styles.topTitle}>앨범</Text>
 
-            {featuredAlbum ? (
-              <View style={styles.heroButton}>
-                <Text style={styles.heroButtonText}>사진 보기 ›</Text>
-              </View>
-            ) : null}
-          </View>
-
-          <Image
-            source={require("../../assets/images/notice-bg.png")}
-            style={styles.heroImage}
-            resizeMode="contain"
-          />
-        </Pressable>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>앨범 목록</Text>
-          <Text style={styles.sectionCount}>앨범 {albums.length}개</Text>
+          <Pressable style={styles.iconButton}>
+            <Text style={styles.searchIcon}>⌕</Text>
+          </Pressable>
         </View>
 
-        {albums.length === 0 ? (
+        <View style={styles.hero}>
+  <Image
+    source={albumHeroWide}
+    style={styles.heroWideBg}
+    resizeMode="cover"
+  />
+
+  <Text style={styles.heroPhrase}>
+    함께한 순간들을{"\n"}사진으로 남겨보세요.
+  </Text>
+</View>
+
+        {featuredAlbum ? (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>최근 앨범</Text>
+              <Pressable>
+                <Text style={styles.viewAllText}>전체 보기 ›</Text>
+              </Pressable>
+            </View>
+
+            <Pressable
+              style={styles.featuredCard}
+              onPress={() => router.push(`/dojang-album/${featuredAlbum.id}`)}
+            >
+              <Image
+                source={cardMountain}
+                style={styles.featuredBg}
+                resizeMode="stretch"
+              />
+
+              <View style={styles.featuredThumb}>
+                {featuredAlbum.coverThumbnailUrl ||
+                featuredAlbum.coverImageUrl ? (
+                  <Image
+                    source={{
+                      uri: getImageUri(
+                        featuredAlbum.coverThumbnailUrl ||
+                          featuredAlbum.coverImageUrl
+                      ),
+                    }}
+                    style={styles.featuredThumbImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Image
+                    source={cardMountain}
+                    style={styles.featuredPlaceholder}
+                    resizeMode="contain"
+                  />
+                )}
+              </View>
+
+              <View style={styles.featuredText}>
+                <View style={styles.featuredTitleRow}>
+                  <Text style={styles.featuredTitle} numberOfLines={1}>
+                    {featuredAlbum.title}
+                  </Text>
+
+                  <View style={styles.newBadge}>
+                    <Text style={styles.newBadgeText}>최신</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.featuredMeta}>
+                  사진 {featuredAlbum.photoCount || 0}장 ·{" "}
+                  {formatDate(featuredAlbum.eventDate)}
+                </Text>
+
+                <View style={styles.albumButton}>
+                  <Text style={styles.albumButtonText}>앨범 보기 ›</Text>
+                </View>
+              </View>
+            </Pressable>
+          </>
+        ) : (
           <View style={styles.emptyCard}>
             <Text style={styles.emptyTitle}>아직 공개된 앨범이 없습니다.</Text>
             <Text style={styles.emptyText}>
-              도장의 추억이 올라오면 이곳에서 확인할 수 있어요.
+              도장 사진이 올라오면 이곳에서 확인할 수 있습니다.
             </Text>
           </View>
-        ) : (
-          <View style={styles.albumList}>
-            {albums.map((album) => (
-              <Pressable
-                key={album.id}
-                style={styles.albumCard}
-                onPress={() => router.push(`/dojang-album/${album.id}`)}
-              >
-                <View style={styles.albumThumb}>
-                  {album.coverThumbnailUrl || album.coverImageUrl ? (
-                    <Image
-                      source={{
-                        uri: album.coverThumbnailUrl || album.coverImageUrl,
-                      }}
-                      style={styles.albumThumbImage}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <Image
-                      source={require("../../assets/images/notice-bg.png")}
-                      style={styles.albumPlaceholder}
-                      resizeMode="contain"
-                    />
-                  )}
-                </View>
-
-                <View style={styles.albumTextBlock}>
-                  <Text style={styles.albumTitle} numberOfLines={1}>
-                    {album.title}
-                  </Text>
-                  <Text style={styles.albumMeta}>
-                    {formatDate(album.eventDate)} · 사진 {album.photoCount || 0}장
-                  </Text>
-                </View>
-
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
-            ))}
-          </View>
         )}
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>앨범 목록</Text>
+          <Text style={styles.sectionCount}>전체 {albums.length}개</Text>
+        </View>
+
+        <View style={styles.albumListCard}>
+          {albums.map((album, index) => (
+            <Pressable
+              key={album.id}
+              style={[
+                styles.albumRow,
+                index === albums.length - 1 && styles.albumRowLast,
+              ]}
+              onPress={() => router.push(`/dojang-album/${album.id}`)}
+            >
+              <View style={styles.albumThumb}>
+                {album.coverThumbnailUrl || album.coverImageUrl ? (
+                  <Image
+                    source={{
+                      uri: getImageUri(
+                        album.coverThumbnailUrl || album.coverImageUrl
+                      ),
+                    }}
+                    style={styles.albumThumbImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Image
+                    source={cardMountain}
+                    style={styles.albumPlaceholder}
+                    resizeMode="contain"
+                  />
+                )}
+              </View>
+
+              <View style={styles.albumText}>
+                <Text style={styles.albumTitle} numberOfLines={1}>
+                  {album.title}
+                </Text>
+                <Text style={styles.albumMeta}>
+                  {formatDate(album.eventDate)} · 사진 {album.photoCount || 0}장
+                </Text>
+              </View>
+
+              <Text style={styles.chevron}>›</Text>
+            </Pressable>
+          ))}
+        </View>
       </ScrollView>
     </View>
   );
@@ -192,111 +265,91 @@ export default function DojangAlbumScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background || "#FFFCFA",
+    backgroundColor: colors.background || PAPER,
   },
   center: {
     flex: 1,
-    backgroundColor: colors.background || "#FFFCFA",
+    backgroundColor: colors.background || PAPER,
     alignItems: "center",
     justifyContent: "center",
   },
   loadingText: {
     marginTop: 10,
     fontFamily: fonts.medium,
-    color: "#7A6C63",
-  },
-  backButton: {
-    position: "absolute",
-    top: 22,
-    left: 14,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backText: {
-    fontSize: 34,
-    color: "#3A2C27",
+    color: SUB,
   },
   content: {
-    paddingHorizontal: 18,
-    paddingTop: 58,
-    paddingBottom: 42,
     width: "100%",
     maxWidth: 430,
     alignSelf: "center",
-  },
-  title: {
-    textAlign: "center",
-    fontFamily: fonts.title,
-    fontSize: 30,
-    color: "#3A2C27",
-  },
-  subtitle: {
-    marginTop: 8,
-    textAlign: "center",
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: "#7A6C63",
-  },
-  heroCard: {
-    marginTop: 28,
-    minHeight: 190,
-    borderRadius: 26,
-    backgroundColor: "#FFF9EF",
-    borderWidth: 1,
-    borderColor: "#E8D6B8",
-    overflow: "hidden",
-    padding: 22,
-    ...shadow.card,
-  },
-  heroTextBlock: {
-    zIndex: 2,
-    width: "68%",
-  },
-  heroLabel: {
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-    color: "#8A6A4D",
-  },
-  heroTitle: {
-    marginTop: 16,
-    fontFamily: fonts.titleSemi,
-    fontSize: 25,
-    lineHeight: 34,
-    color: "#2F241F",
-  },
-  heroMeta: {
-    marginTop: 10,
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: "#7A6C63",
-    lineHeight: 20,
-  },
-  heroButton: {
-    marginTop: 18,
-    alignSelf: "flex-start",
-    borderRadius: 999,
-    backgroundColor: "#3A2C27",
+    minHeight: "100%",
     paddingHorizontal: 18,
-    paddingVertical: 10,
+    paddingTop: 18,
+    paddingBottom: 52,
+    backgroundColor: PAPER,
   },
-  heroButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 13,
-    color: "#F7E5C3",
+
+  topBar: {
+    height: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  heroImage: {
-    position: "absolute",
-    right: -18,
-    bottom: -8,
-    width: 210,
-    height: 145,
-    opacity: 0.55,
+  iconButton: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
   },
+  topIcon: {
+    fontSize: 35,
+    color: INK,
+    marginTop: -2,
+  },
+  searchIcon: {
+    fontSize: 30,
+    color: INK,
+    marginTop: -2,
+  },
+  topTitle: {
+    fontFamily: fonts.titleSemi,
+    fontSize: 21,
+    color: INK,
+  },
+
+heroWideBg: {
+  position: "absolute",
+  left: 0,
+  top: 45,
+  width: "100%",
+  height: 145,
+  opacity: 0.3,
+},
+
+hero: {
+  minHeight: 150,
+  marginHorizontal: -18,
+  paddingHorizontal: 18,
+  paddingTop: 18,
+  paddingBottom: 10,
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+  position: "relative",
+},
+heroPhrase: {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  top: 60,
+  textAlign: "center",
+  fontFamily: fonts.titleSemi,
+  fontSize: 18,
+  lineHeight: 27,
+  color: INK,
+},
   sectionHeader: {
-    marginTop: 26,
+    marginTop: 24,
     marginBottom: 12,
     paddingHorizontal: 4,
     flexDirection: "row",
@@ -305,52 +358,131 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.titleSemi,
-    fontSize: 23,
-    color: "#3A2C27",
+    fontSize: 18,
+    color: INK,
   },
   sectionCount: {
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-    color: "#8A6A4D",
-  },
-  emptyCard: {
-    borderRadius: 24,
-    backgroundColor: "#FFFDF8",
-    borderWidth: 1,
-    borderColor: "#EFE3D8",
-    padding: 22,
-  },
-  emptyTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: "#3A2C27",
-  },
-  emptyText: {
-    marginTop: 8,
     fontFamily: fonts.medium,
     fontSize: 13,
-    lineHeight: 20,
-    color: "#7A6C63",
+    color: SUB,
   },
-  albumList: {
-    gap: 12,
+  viewAllText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 13,
+    color: GOLD,
   },
-  albumCard: {
-    minHeight: 96,
-    borderRadius: 22,
-    backgroundColor: "#FFFDF8",
+
+  featuredCard: {
+    minHeight: 166,
+    borderRadius: 24,
+    backgroundColor: CARD,
     borderWidth: 1,
-    borderColor: "#EFE3D8",
+    borderColor: LINE,
     padding: 12,
     flexDirection: "row",
     alignItems: "center",
+    overflow: "hidden",
     ...shadow.card,
   },
+  featuredBg: {
+    position: "absolute",
+    right: -42,
+    bottom: -28,
+    width: 230,
+    height: 126,
+    opacity: 0.28,
+  },
+  featuredThumb: {
+    width: 116,
+    height: 116,
+    borderRadius: 18,
+    backgroundColor: "#F1E8DC",
+    overflow: "hidden",
+    zIndex: 2,
+  },
+  featuredThumbImage: {
+    width: "100%",
+    height: "100%",
+  },
+  featuredPlaceholder: {
+    width: "100%",
+    height: "100%",
+    opacity: 0.45,
+  },
+  featuredText: {
+    flex: 1,
+    marginLeft: 16,
+    zIndex: 2,
+  },
+  featuredTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  featuredTitle: {
+    flex: 1,
+    fontFamily: fonts.titleSemi,
+    fontSize: 20,
+    color: INK,
+  },
+  newBadge: {
+    borderRadius: 999,
+    backgroundColor: "#F5E5CC",
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  newBadgeText: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    color: GOLD,
+  },
+  featuredMeta: {
+    marginTop: 10,
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: SUB,
+  },
+  albumButton: {
+    marginTop: 16,
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#CDA873",
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    backgroundColor: "rgba(255,255,255,0.72)",
+  },
+  albumButtonText: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: GOLD,
+  },
+
+  albumListCard: {
+    borderRadius: 24,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: LINE,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    ...shadow.card,
+  },
+  albumRow: {
+    minHeight: 92,
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: LINE,
+    paddingVertical: 12,
+  },
+  albumRowLast: {
+    borderBottomWidth: 0,
+  },
   albumThumb: {
-    width: 96,
-    height: 72,
+    width: 74,
+    height: 74,
     borderRadius: 16,
-    backgroundColor: "#F5EEE5",
+    backgroundColor: "#F1E8DC",
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
@@ -360,28 +492,50 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   albumPlaceholder: {
-    width: 96,
-    height: 72,
-    opacity: 0.55,
+    width: 74,
+    height: 74,
+    opacity: 0.45,
   },
-  albumTextBlock: {
+  albumText: {
     flex: 1,
-    marginLeft: 14,
+    marginLeft: 16,
   },
   albumTitle: {
     fontFamily: fonts.titleSemi,
     fontSize: 18,
-    color: "#2F241F",
+    color: INK,
   },
   albumMeta: {
     marginTop: 8,
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: "#7A6C63",
+    color: SUB,
   },
   chevron: {
-    fontSize: 28,
-    color: "#B8A79A",
     marginLeft: 8,
+    fontSize: 28,
+    color: GOLD,
+  },
+
+  emptyCard: {
+    marginTop: 22,
+    borderRadius: 22,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: LINE,
+    padding: 22,
+    ...shadow.card,
+  },
+  emptyTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    color: INK,
+  },
+  emptyText: {
+    marginTop: 8,
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    lineHeight: 20,
+    color: SUB,
   },
 });

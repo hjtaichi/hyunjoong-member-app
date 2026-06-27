@@ -185,47 +185,67 @@ export default function YudanjaAlbumDetailScreen() {
         </View>
 
         <View style={styles.hero}>
-          <Image
-            source={require("../../../assets/images/yudanja/card-mountain.png")}
-            style={styles.heroMountain}
-            resizeMode="contain"
-          />
+  <Image
+    source={require("../../../assets/images/yudanja/card-mountain.png")}
+    style={styles.heroMountain}
+    resizeMode="contain"
+  />
 
-          <View style={styles.emblemWrap}>
-            <Text style={styles.emblemHanja}>玄</Text>
-            <Text style={styles.emblemLabel}>玄中太極門</Text>
-          </View>
+  <View style={styles.heroTextBlock}>
+  <Text style={styles.title}>{album?.title || "유단자회 앨범"}</Text>
 
-          <Text style={styles.title}>{album?.title || "유단자회 앨범"}</Text>
+  <Text style={styles.meta}>
+    {formatDate(album?.eventDate)} · 사진 {album?.photoCount || 0}장
+  </Text>
 
-          <Text style={styles.meta}>
-            {formatDate(album?.eventDate)} · 사진 {album?.photoCount || 0}장
-          </Text>
-        </View>
+  <View style={styles.detailBrand}>
+    <Image
+      source={require("../../../assets/images/yudanja/yudanja-album-emblem.png")}
+      style={styles.detailBrandEmblem}
+      resizeMode="contain"
+    />
+
+    <View>
+      <Text style={styles.detailBrandTitle}>현중태극권 유단자회</Text>
+      <Text style={styles.detailBrandSub}>HYUNJOONG TAIJI · YUDANJAHOE</Text>
+    </View>
+  </View>
+</View>
+</View>
 
         <View style={styles.infoCard}>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>▧</Text>
-            <Text style={styles.infoLabel}>사진 수</Text>
-            <Text style={styles.infoValue}>{album?.photoCount || 0}장</Text>
-          </View>
+  <View style={styles.infoItem}>
+    <Text style={styles.infoIcon}>▧</Text>
+    <Text style={styles.infoLabel}>사진 수</Text>
+    <Text style={styles.infoValue}>{album?.photoCount || 0}장</Text>
+  </View>
 
-          <View style={styles.infoDivider} />
+  <View style={styles.infoDivider} />
 
-          <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>▣</Text>
-            <Text style={styles.infoLabel}>작성일</Text>
-            <Text style={styles.infoValue}>{formatDate(album?.eventDate)}</Text>
-          </View>
+  <View style={styles.infoItem}>
+    <Text style={styles.infoIcon}>▣</Text>
+    <Text style={styles.infoLabel}>작성일</Text>
+    <Text style={styles.infoValue}>{formatDate(album?.eventDate)}</Text>
+  </View>
 
-          <View style={styles.infoDivider} />
+  <View style={styles.infoDivider} />
 
-          <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>◌</Text>
-            <Text style={styles.infoLabel}>댓글</Text>
-            <Text style={styles.infoValue}>{comments.length}개</Text>
-          </View>
-        </View>
+  <View style={styles.infoItem}>
+    <Text style={styles.infoIcon}>⌖</Text>
+    <Text style={styles.infoLabel}>장소</Text>
+    <Text style={styles.infoValue} numberOfLines={1}>
+      {album?.location || "미입력"}
+    </Text>
+  </View>
+
+  <View style={styles.infoDivider} />
+
+  <View style={styles.infoItem}>
+    <Text style={styles.infoIcon}>◌</Text>
+    <Text style={styles.infoLabel}>댓글</Text>
+    <Text style={styles.infoValue}>{comments.length}개</Text>
+  </View>
+</View>
 
         {album?.description ? (
           <View style={styles.descCard}>
@@ -404,86 +424,119 @@ const styles = StyleSheet.create({
     color: INK,
   },
 
-  hero: {
-    minHeight: 290,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  heroMountain: {
-    position: "absolute",
-    right: -40,
-    bottom: 28,
-    width: 260,
-    height: 160,
-    opacity: 0.18,
-  },
-  emblemWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emblemHanja: {
-    fontFamily: fonts.hanja,
-    fontSize: 68,
-    lineHeight: 78,
-    color: GOLD,
-  },
-  emblemLabel: {
-    marginTop: -6,
-    fontFamily: fonts.hanja,
-    fontSize: 14,
-    color: GOLD,
-    letterSpacing: 1.4,
-  },
-  title: {
-    marginTop: 22,
-    textAlign: "center",
-    fontFamily: fonts.title,
-    fontSize: 30,
-    lineHeight: 40,
-    color: INK,
-  },
-  meta: {
-    marginTop: 10,
-    textAlign: "center",
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: SUB,
-  },
+hero: {
+  minHeight: 240,
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+  paddingHorizontal: 22,
+  paddingTop: 10,
+  paddingBottom: 18,
+},
 
-  infoCard: {
-    minHeight: 104,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: LINE,
-    backgroundColor: CARD,
-    paddingVertical: 18,
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    ...shadow.card,
-  },
+heroMountain: {
+  position: "absolute",
+  right: -40,
+  bottom: 22,
+  width: 250,
+  height: 150,
+  opacity: 0.16,
+},
+heroTextBlock: {
+  alignItems: "center",
+  transform: [{ translateY: -15 }],
+},
+detailBrand: {
+  marginTop: 22,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 9,
+},
+
+detailBrandEmblem: {
+  width: 34,
+  height: 34,
+  opacity: 0.9,
+  marginTop: -7,
+},
+
+detailBrandTitle: {
+  marginTop: -5,
+  fontFamily: fonts.titleSemi,
+  fontSize: 15,
+  color: GOLD,
+  letterSpacing: 0.5,
+},
+
+detailBrandSub: {
+  marginTop: 2,
+  fontFamily: fonts.medium,
+  fontSize: 9,
+  color: "#C3A27A",
+  letterSpacing: 0.8,
+},
+
+heroPhrase: {
+  marginTop: 14,
+  textAlign: "center",
+  fontFamily: fonts.titleSemi,
+  fontSize: 15,
+  lineHeight: 24,
+  color: INK,
+},
+title: {
+  textAlign: "center",
+  fontFamily: fonts.title,
+  fontSize: 30,
+  lineHeight: 40,
+  color: INK,
+},
+
+meta: {
+  marginTop: 10,
+  textAlign: "center",
+  fontFamily: fonts.medium,
+  fontSize: 15,
+  color: SUB,
+},
+infoCard: {
+  marginTop: -45,
+  minHeight: 104,
+  borderRadius: 24,
+  borderWidth: 1,
+  borderColor: LINE,
+  backgroundColor: CARD,
+  paddingVertical: 16,
+  paddingHorizontal: 8,
+  flexDirection: "row",
+  alignItems: "center",
+  ...shadow.card,
+},
   infoItem: {
     flex: 1,
     alignItems: "center",
   },
   infoIcon: {
-    fontFamily: fonts.semiBold,
-    fontSize: 22,
-    color: GOLD,
-  },
-  infoLabel: {
-    marginTop: 6,
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: SUB,
-  },
-  infoValue: {
-    marginTop: 7,
-    fontFamily: fonts.bold,
-    fontSize: 13,
-    color: INK,
-  },
+  fontFamily: fonts.semiBold,
+  fontSize: 19,
+  color: GOLD,
+},
+
+infoLabel: {
+  marginTop: 6,
+  fontFamily: fonts.medium,
+  fontSize: 11,
+  color: SUB,
+},
+
+infoValue: {
+  marginTop: 7,
+  fontFamily: fonts.bold,
+  fontSize: 12,
+  color: INK,
+  textAlign: "center",
+},
   infoDivider: {
     width: 1,
     height: 52,
@@ -491,14 +544,14 @@ const styles = StyleSheet.create({
   },
 
   descCard: {
-    marginTop: 22,
-    borderRadius: 22,
-    backgroundColor: CARD,
-    borderWidth: 1,
-    borderColor: LINE,
-    padding: 18,
-    ...shadow.card,
-  },
+  marginTop: 18,
+  borderRadius: 22,
+  backgroundColor: CARD,
+  borderWidth: 1,
+  borderColor: LINE,
+  padding: 18,
+  ...shadow.card,
+},
   descText: {
     fontFamily: fonts.medium,
     fontSize: 14,

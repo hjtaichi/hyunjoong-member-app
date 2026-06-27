@@ -54,7 +54,7 @@ const MENU = [
   title: "유단자회 앨범",
   desc: "사진 · 기록",
   path: "/yudanja/album",
-  iconImage: require("../../assets/images/yudanja/menu-library.png"),
+  iconImage: require("../../assets/images/yudanja/menu-album.png"),
   bgImage: require("../../assets/images/yudanja/menu-bamboo-bg.png"),
 },
   {

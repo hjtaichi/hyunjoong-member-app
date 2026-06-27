@@ -28,7 +28,15 @@ const fonts = {
   bold: "PretendardBold",
   title: "MaruBuriBold",
   titleSemi: "MaruBuriSemiBold",
+  hanja: "ZhaoKai",
 };
+
+const PAPER = "#FFFCF6";
+const CARD = "#FFFDF8";
+const INK = "#2F241F";
+const SUB = "#7A6C63";
+const GOLD = "#B9894A";
+const LINE = "#EFE3D8";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -36,8 +44,13 @@ function formatDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
 
-  return date.toLocaleDateString("ko-KR");
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+
+  return `${y}. ${m}. ${d}.`;
 }
+
 function formatCommentDateTime(value) {
   if (!value) return "";
 
@@ -52,6 +65,7 @@ function formatCommentDateTime(value) {
 
   return `${y}.${m}.${d} ${h}:${min}`;
 }
+
 export default function DojangAlbumDetailScreen() {
   const { token } = useAuth();
   const { albumId } = useLocalSearchParams();
@@ -91,6 +105,52 @@ export default function DojangAlbumDetailScreen() {
     loadAlbum({ silent: true });
   }, [loadAlbum]);
 
+  async function handleCreateComment() {
+    const content = commentText.trim();
+
+    if (!content) return;
+
+    try {
+      setCommentSaving(true);
+
+      await createDojangAlbumComment(token, String(albumId), content);
+      setCommentText("");
+      await loadAlbum({ silent: true });
+    } catch (error) {
+      Alert.alert("오류", error.message || "댓글을 등록하지 못했습니다.");
+    } finally {
+      setCommentSaving(false);
+    }
+  }
+
+  async function deleteComment(commentId) {
+    try {
+      await deleteDojangAlbumComment(token, String(albumId), commentId);
+      await loadAlbum({ silent: true });
+    } catch (error) {
+      Alert.alert("오류", error.message || "댓글을 삭제하지 못했습니다.");
+    }
+  }
+
+  function handleDeleteComment(commentId) {
+    if (Platform.OS === "web") {
+      const ok = window.confirm("이 댓글을 삭제할까요?");
+      if (!ok) return;
+
+      deleteComment(commentId);
+      return;
+    }
+
+    Alert.alert("댓글 삭제", "이 댓글을 삭제할까요?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: () => deleteComment(commentId),
+      },
+    ]);
+  }
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -99,57 +159,12 @@ export default function DojangAlbumDetailScreen() {
       </View>
     );
   }
-async function handleCreateComment() {
-  const content = commentText.trim();
 
-  if (!content) return;
+  const photos = Array.isArray(album?.photos) ? album.photos : [];
+  const comments = Array.isArray(album?.comments) ? album.comments : [];
 
-  try {
-    setCommentSaving(true);
-
-    await createDojangAlbumComment(token, String(albumId), content);
-    setCommentText("");
-    await loadAlbum({ silent: true });
-  } catch (error) {
-    Alert.alert("오류", error.message || "댓글을 등록하지 못했습니다.");
-  } finally {
-    setCommentSaving(false);
-  }
-}
-
-async function deleteComment(commentId) {
-  try {
-    await deleteDojangAlbumComment(token, String(albumId), commentId);
-    await loadAlbum({ silent: true });
-  } catch (error) {
-    Alert.alert("오류", error.message || "댓글을 삭제하지 못했습니다.");
-  }
-}
-
-function handleDeleteComment(commentId) {
-  if (Platform.OS === "web") {
-    const ok = window.confirm("이 댓글을 삭제할까요?");
-    if (!ok) return;
-
-    deleteComment(commentId);
-    return;
-  }
-
-  Alert.alert("댓글 삭제", "이 댓글을 삭제할까요?", [
-    { text: "취소", style: "cancel" },
-    {
-      text: "삭제",
-      style: "destructive",
-      onPress: () => deleteComment(commentId),
-    },
-  ]);
-}
   return (
     <View style={styles.container}>
-      <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>‹</Text>
-      </Pressable>
-
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
@@ -157,10 +172,80 @@ function handleDeleteComment(commentId) {
         }
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>{album?.title || "도장 앨범"}</Text>
-        <Text style={styles.meta}>
-          {formatDate(album?.eventDate)} · 사진 {album?.photoCount || 0}장
-        </Text>
+        <View style={styles.topBar}>
+          <Pressable style={styles.iconButton} onPress={() => router.back()}>
+            <Text style={styles.topIcon}>‹</Text>
+          </Pressable>
+
+          <Text style={styles.topTitle}>앨범 상세</Text>
+
+          <View style={styles.iconButton}>
+            <Text style={styles.shareIcon}>⇧</Text>
+          </View>
+        </View>
+
+        <View style={styles.hero}>
+          <Image
+            source={require("../../assets/images/yudanja/card-mountain.png")}
+            style={styles.heroMountain}
+            resizeMode="contain"
+          />
+
+          <View style={styles.heroTextBlock}>
+            <Text style={styles.title}>{album?.title || "도장 앨범"}</Text>
+
+            <Text style={styles.meta}>
+              {formatDate(album?.eventDate)} · 사진 {album?.photoCount || 0}장
+            </Text>
+
+            <View style={styles.detailBrand}>
+              <View style={styles.detailBrandMark}>
+                <Text style={styles.detailBrandMarkText}>太</Text>
+              </View>
+
+              <View>
+                <Text style={styles.detailBrandTitle}>현중태극권 도장앨범</Text>
+                <Text style={styles.detailBrandSub}>
+                  HYUNJOONG TAIJI · DOJANG ALBUM
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.infoCard}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoIcon}>▧</Text>
+            <Text style={styles.infoLabel}>사진 수</Text>
+            <Text style={styles.infoValue}>{album?.photoCount || 0}장</Text>
+          </View>
+
+          <View style={styles.infoDivider} />
+
+          <View style={styles.infoItem}>
+            <Text style={styles.infoIcon}>▣</Text>
+            <Text style={styles.infoLabel}>작성일</Text>
+            <Text style={styles.infoValue}>{formatDate(album?.eventDate)}</Text>
+          </View>
+
+          <View style={styles.infoDivider} />
+
+          <View style={styles.infoItem}>
+            <Text style={styles.infoIcon}>⌖</Text>
+            <Text style={styles.infoLabel}>장소</Text>
+            <Text style={styles.infoValue} numberOfLines={1}>
+              {album?.location || "미입력"}
+            </Text>
+          </View>
+
+          <View style={styles.infoDivider} />
+
+          <View style={styles.infoItem}>
+            <Text style={styles.infoIcon}>◌</Text>
+            <Text style={styles.infoLabel}>댓글</Text>
+            <Text style={styles.infoValue}>{comments.length}개</Text>
+          </View>
+        </View>
 
         {album?.description ? (
           <View style={styles.descCard}>
@@ -168,9 +253,9 @@ function handleDeleteComment(commentId) {
           </View>
         ) : null}
 
-        {album?.photos?.length > 0 ? (
+        {photos.length > 0 ? (
           <View style={styles.photoGrid}>
-            {album.photos.map((photo) => (
+            {photos.map((photo) => (
               <Pressable
                 key={photo.id}
                 style={styles.photoItem}
@@ -192,67 +277,69 @@ function handleDeleteComment(commentId) {
             </Text>
           </View>
         )}
-        
-        {album?.comments?.length > 0 ? (
-  <View style={styles.commentSection}>
-    <View style={styles.commentHeader}>
-      <Text style={styles.commentTitle}>댓글</Text>
-      <Text style={styles.commentCount}>
-        {album.comments.length}개
-      </Text>
-    </View>
 
-    <View style={styles.commentList}>
-      {album.comments.map((comment) => (
-        <View key={comment.id} style={styles.commentItem}>
-          <View style={styles.commentItemHeader}>
-            <View style={styles.commentMetaLeft}>
-              <Text style={styles.commentAuthor}>{comment.memberName}</Text>
-              <Text style={styles.commentDate}>
-                {formatCommentDateTime(comment.createdAt)}
-              </Text>
+        {comments.length > 0 ? (
+          <View style={styles.commentSection}>
+            <View style={styles.commentHeader}>
+              <Text style={styles.commentTitle}>댓글</Text>
+              <Text style={styles.commentCount}>{comments.length}개</Text>
             </View>
 
-            {comment.isMine ? (
-              <Pressable onPress={() => handleDeleteComment(comment.id)}>
-                <Text style={styles.commentDelete}>삭제</Text>
-              </Pressable>
-            ) : null}
+            <View style={styles.commentList}>
+              {comments.map((comment) => (
+                <View key={comment.id} style={styles.commentItem}>
+                  <View style={styles.commentItemHeader}>
+                    <View style={styles.commentMetaLeft}>
+                      <Text style={styles.commentAuthor}>
+                        {comment.memberName}
+                      </Text>
+                      <Text style={styles.commentDate}>
+                        {formatCommentDateTime(comment.createdAt)}
+                      </Text>
+                    </View>
+
+                    {comment.isMine ? (
+                      <Pressable onPress={() => handleDeleteComment(comment.id)}>
+                        <Text style={styles.commentDelete}>삭제</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+
+                  <Text style={styles.commentContent}>{comment.content}</Text>
+                </View>
+              ))}
+            </View>
           </View>
+        ) : null}
+      </ScrollView>
 
-          <Text style={styles.commentContent}>{comment.content}</Text>
+      <View style={styles.fixedCommentBar}>
+        <View style={styles.fixedCommentInputBox}>
+          <TextInput
+            value={commentText}
+            onChangeText={setCommentText}
+            placeholder="앨범에 대한 이야기를 남겨보세요."
+            placeholderTextColor="#B5A69A"
+            multiline
+            style={styles.fixedCommentInput}
+          />
+
+          <Pressable
+            style={[
+              styles.fixedCommentSubmitButton,
+              (!commentText.trim() || commentSaving) &&
+                styles.commentSubmitButtonDisabled,
+            ]}
+            onPress={handleCreateComment}
+            disabled={!commentText.trim() || commentSaving}
+          >
+            <Text style={styles.commentSubmitText}>
+              {commentSaving ? "등록 중" : "등록"}
+            </Text>
+          </Pressable>
         </View>
-      ))}
-    </View>
-  </View>
-) : null}
-   </ScrollView>
-<View style={styles.fixedCommentBar}>
-  <View style={styles.fixedCommentInputBox}>
-    <TextInput
-      value={commentText}
-      onChangeText={setCommentText}
-      placeholder="앨범에 대한 이야기를 남겨보세요."
-      placeholderTextColor="#B5A69A"
-      multiline
-      style={styles.fixedCommentInput}
-    />
+      </View>
 
-    <Pressable
-      style={[
-        styles.fixedCommentSubmitButton,
-        (!commentText.trim() || commentSaving) &&
-          styles.commentSubmitButtonDisabled,
-      ]}
-      onPress={handleCreateComment}
-      disabled={!commentText.trim() || commentSaving}
-    >
-      <Text style={styles.commentSubmitText}>
-        {commentSaving ? "등록 중" : "등록"}
-      </Text>
-    </Pressable>
-  </View>
-</View>
       <Modal
         visible={Boolean(selectedPhoto)}
         transparent
@@ -276,70 +363,185 @@ function handleDeleteComment(commentId) {
           ) : null}
         </View>
       </Modal>
-      
     </View>
-    
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background || "#FFFCFA",
+    backgroundColor: colors.background || PAPER,
   },
   center: {
     flex: 1,
-    backgroundColor: colors.background || "#FFFCFA",
+    backgroundColor: colors.background || PAPER,
     alignItems: "center",
     justifyContent: "center",
   },
   loadingText: {
     marginTop: 10,
     fontFamily: fonts.medium,
-    color: "#7A6C63",
+    color: SUB,
   },
-  backButton: {
-    position: "absolute",
-    top: 22,
-    left: 14,
-    zIndex: 10,
-    width: 40,
-    height: 40,
+  content: {
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+    minHeight: "100%",
+    paddingHorizontal: 18,
+    paddingTop: 20,
+    paddingBottom: 190,
+    backgroundColor: PAPER,
+  },
+
+  topBar: {
+    height: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  iconButton: {
+    width: 42,
+    height: 42,
     alignItems: "center",
     justifyContent: "center",
   },
-  backText: {
-    fontSize: 34,
-    color: "#3A2C27",
+  topIcon: {
+    fontSize: 35,
+    color: INK,
+    marginTop: -2,
   },
-content: {
-  paddingHorizontal: 18,
-  paddingTop: 58,
-  paddingBottom: 190,
-  width: "100%",
-  maxWidth: 430,
-  alignSelf: "center",
-},
+  shareIcon: {
+    fontSize: 28,
+    color: INK,
+    marginTop: -4,
+  },
+  topTitle: {
+    fontFamily: fonts.titleSemi,
+    fontSize: 21,
+    color: INK,
+  },
+
+  hero: {
+    minHeight: 240,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    paddingHorizontal: 22,
+    paddingTop: 10,
+    paddingBottom: 18,
+  },
+  heroMountain: {
+    position: "absolute",
+    right: -40,
+    bottom: 22,
+    width: 250,
+    height: 150,
+    opacity: 0.16,
+  },
+  heroTextBlock: {
+    alignItems: "center",
+    transform: [{ translateY: -15 }],
+  },
   title: {
     textAlign: "center",
     fontFamily: fonts.title,
-    fontSize: 28,
-    lineHeight: 38,
-    color: "#3A2C27",
+    fontSize: 30,
+    lineHeight: 40,
+    color: INK,
   },
   meta: {
-    marginTop: 8,
+    marginTop: 10,
     textAlign: "center",
     fontFamily: fonts.medium,
-    fontSize: 14,
-    color: "#7A6C63",
+    fontSize: 15,
+    color: SUB,
   },
-  descCard: {
+  detailBrand: {
     marginTop: 22,
-    borderRadius: 22,
-    backgroundColor: "#FFF9EF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+  },
+  detailBrandMark: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     borderWidth: 1,
-    borderColor: "#EFE3D8",
+    borderColor: "#D8B879",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 250, 240, 0.8)",
+    marginTop: -7,
+  },
+  detailBrandMarkText: {
+    fontFamily: fonts.hanja,
+    fontSize: 19,
+    color: GOLD,
+  },
+  detailBrandTitle: {
+    marginTop: -5,
+    fontFamily: fonts.titleSemi,
+    fontSize: 15,
+    color: GOLD,
+    letterSpacing: 0.5,
+  },
+  detailBrandSub: {
+    marginTop: 2,
+    fontFamily: fonts.medium,
+    fontSize: 9,
+    color: "#C3A27A",
+    letterSpacing: 0.8,
+  },
+
+  infoCard: {
+    marginTop: -45,
+    minHeight: 104,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: LINE,
+    backgroundColor: CARD,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    ...shadow.card,
+  },
+  infoItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  infoIcon: {
+    fontFamily: fonts.semiBold,
+    fontSize: 19,
+    color: GOLD,
+  },
+  infoLabel: {
+    marginTop: 6,
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    color: SUB,
+  },
+  infoValue: {
+    marginTop: 7,
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    color: INK,
+    textAlign: "center",
+  },
+  infoDivider: {
+    width: 1,
+    height: 52,
+    backgroundColor: LINE,
+  },
+
+  descCard: {
+    marginTop: 18,
+    borderRadius: 22,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: LINE,
     padding: 18,
     ...shadow.card,
   },
@@ -349,42 +551,172 @@ content: {
     lineHeight: 22,
     color: "#5E5048",
   },
+
   photoGrid: {
-    marginTop: 22,
+    marginTop: 24,
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },
   photoItem: {
-    width: "31.8%",
+    width: "48.8%",
     aspectRatio: 1,
-    borderRadius: 16,
+    borderRadius: 18,
     overflow: "hidden",
-    backgroundColor: "#F5EEE5",
+    backgroundColor: "#F1E8DC",
   },
   photoImage: {
     width: "100%",
     height: "100%",
   },
+
   emptyCard: {
-    marginTop: 22,
+    marginTop: 24,
     borderRadius: 22,
-    backgroundColor: "#FFFDF8",
+    backgroundColor: CARD,
     borderWidth: 1,
-    borderColor: "#EFE3D8",
+    borderColor: LINE,
     padding: 22,
+    ...shadow.card,
   },
   emptyTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: "#3A2C27",
+    color: INK,
   },
   emptyText: {
     marginTop: 8,
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: "#7A6C63",
+    lineHeight: 20,
+    color: SUB,
   },
+
+  commentSection: {
+    marginTop: 48,
+    borderRadius: 22,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: LINE,
+    padding: 18,
+    ...shadow.card,
+  },
+  commentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  commentTitle: {
+    fontFamily: fonts.titleSemi,
+    fontSize: 21,
+    color: INK,
+  },
+  commentCount: {
+    fontFamily: fonts.semiBold,
+    fontSize: 13,
+    color: GOLD,
+  },
+  commentList: {
+    marginTop: 16,
+    gap: 12,
+  },
+  commentItem: {
+    borderTopWidth: 1,
+    borderTopColor: LINE,
+    paddingTop: 12,
+  },
+  commentItemHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  commentMetaLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingRight: 10,
+  },
+  commentAuthor: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    color: INK,
+  },
+  commentDate: {
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    color: "#9A8A7E",
+  },
+  commentDelete: {
+    fontFamily: fonts.semiBold,
+    fontSize: 12,
+    color: "#B25A4A",
+  },
+  commentContent: {
+    marginTop: 7,
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#5E5048",
+  },
+
+  fixedCommentBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 20,
+    backgroundColor: PAPER,
+    borderTopWidth: 1,
+    borderTopColor: LINE,
+    shadowColor: "#3A2C27",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  fixedCommentInputBox: {
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+    minHeight: 62,
+    borderRadius: 18,
+    backgroundColor: "#F9F2EA",
+    borderWidth: 1,
+    borderColor: LINE,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 10,
+  },
+  fixedCommentInput: {
+    flex: 1,
+    maxHeight: 88,
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    lineHeight: 21,
+    color: INK,
+    padding: 0,
+    textAlignVertical: "top",
+  },
+  fixedCommentSubmitButton: {
+    borderRadius: 999,
+    backgroundColor: INK,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  commentSubmitButtonDisabled: {
+    opacity: 0.45,
+  },
+  commentSubmitText: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: "#F7E5C3",
+  },
+
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.92)",
@@ -405,178 +737,4 @@ content: {
     width: "94%",
     height: "78%",
   },
-  commentSection: {
-  marginTop: 60,
-  marginHorizontal: 18,
-  borderRadius: 22,
-  backgroundColor: "#FFFDF8",
-  padding: 18,
-  ...shadow.card,
-},
-
-commentHeader: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-},
-
-commentTitle: {
-  fontFamily: fonts.titleSemi,
-  fontSize: 21,
-  color: "#3A2C27",
-},
-
-commentCount: {
-  fontFamily: fonts.semiBold,
-  fontSize: 13,
-  color: "#8A6A4D",
-},
-
-commentInputBox: {
-  marginTop: 14,
-  borderRadius: 18,
-  backgroundColor: "#F9F2EA",
-  borderWidth: 1,
-  borderColor: "#EFE3D8",
-  padding: 12,
-},
-
-commentInput: {
-  minHeight: 58,
-  maxHeight: 110,
-  fontFamily: fonts.medium,
-  fontSize: 14,
-  lineHeight: 21,
-  color: "#3A2C27",
-  padding: 0,
-  textAlignVertical: "top",
-},
-
-commentSubmitButton: {
-  marginTop: 10,
-  alignSelf: "flex-end",
-  borderRadius: 999,
-  backgroundColor: "#3A2C27",
-  paddingHorizontal: 16,
-  paddingVertical: 8,
-},
-
-commentSubmitButtonDisabled: {
-  opacity: 0.45,
-},
-
-commentSubmitText: {
-  fontFamily: fonts.bold,
-  fontSize: 13,
-  color: "#F7E5C3",
-},
-
-commentList: {
-  marginTop: 16,
-  gap: 12,
-},
-
-commentItem: {
-  borderTopWidth: 1,
-  borderTopColor: "#EFE3D8",
-  paddingTop: 12,
-},
-
-commentItemHeader: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-},
-
-commentAuthor: {
-  fontFamily: fonts.bold,
-  fontSize: 14,
-  color: "#3A2C27",
-},
-
-commentDelete: {
-  fontFamily: fonts.semiBold,
-  fontSize: 12,
-  color: "#B25A4A",
-},
-
-commentContent: {
-  marginTop: 7,
-  fontFamily: fonts.medium,
-  fontSize: 14,
-  lineHeight: 21,
-  color: "#5E5048",
-},
-
-commentEmpty: {
-  marginTop: 16,
-  fontFamily: fonts.medium,
-  fontSize: 13,
-  lineHeight: 20,
-  color: "#8A7A68",
-},
-commentMetaLeft: {
-  flex: 1,
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 8,
-  paddingRight: 10,
-},
-
-commentDate: {
-  fontFamily: fonts.medium,
-  fontSize: 11,
-  color: "#9A8A7E",
-},
-fixedCommentBar: {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  bottom: 0,
-  paddingHorizontal: 18,
-  paddingTop: 20,
-  paddingBottom: 25,
-  backgroundColor: "#FFFCFA",
-  borderTopWidth: 1,
-  borderTopColor: "#EFE3D8",
-  shadowColor: "#3A2C27",
-  shadowOffset: { width: 0, height: -4 },
-  shadowOpacity: 0.06,
-  shadowRadius: 10,
-  elevation: 8,
-},
-
-fixedCommentInputBox: {
-  width: "100%",
-  maxWidth: 430,
-  alignSelf: "center",
-  minHeight: 62,
-  borderRadius: 18,
-  backgroundColor: "#F9F2EA",
-  borderWidth: 1,
-  borderColor: "#EFE3D8",
-  paddingHorizontal: 14,
-  paddingVertical: 10,
-  flexDirection: "row",
-  alignItems: "flex-end",
-  gap: 10,
-},
-
-fixedCommentInput: {
-  flex: 1,
-  maxHeight: 88,
-  fontFamily: fonts.medium,
-  fontSize: 14,
-  lineHeight: 21,
-  color: "#3A2C27",
-  padding: 0,
-  textAlignVertical: "top",
-},
-
-fixedCommentSubmitButton: {
-  borderRadius: 999,
-  backgroundColor: "#3A2C27",
-  paddingHorizontal: 16,
-  paddingVertical: 9,
-},
 });
