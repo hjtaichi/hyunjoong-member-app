@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { getMemberNoticeDetail } from "../../src/api/memberNotice";
 import { colors, radius, shadow } from "../../src/theme";
@@ -22,15 +22,24 @@ const fonts = {
 
 export default function NoticeDetailScreen() {
   const { noticeId } = useLocalSearchParams();
+  const router = useRouter();
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState(null);
 
   useEffect(() => {
   async function fetchData() {
-    if (!token || !noticeId) return;
+    if (!noticeId) {
+      setLoading(false);
+      return;
+    }
+
+    if (!token) {
+      return;
+    }
 
     try {
+      setLoading(true);
       const result = await getMemberNoticeDetail(token, String(noticeId));
       setNotice(result);
     } catch (error) {
@@ -61,7 +70,16 @@ export default function NoticeDetailScreen() {
 
   return (
   <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-    <ScreenHeader title="공지 상세" />
+<ScreenHeader
+  title="공지 상세"
+  onBack={() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/member-notifications");
+    }
+  }}
+/>
 
     <View style={styles.card}>
       <View style={styles.badge}>

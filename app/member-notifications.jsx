@@ -23,6 +23,7 @@ export default function MemberNotificationsScreen() {
 
     try {
       const data = await getMemberNotifications(token);
+      console.log("🔔 알림 화면 getMemberNotifications data =", data);
       setItems(data);
     } catch (error) {
       console.log("회원 알림 조회 실패:", error);
