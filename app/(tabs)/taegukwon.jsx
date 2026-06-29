@@ -532,10 +532,7 @@ const handleSaveGongbeopGoals = useCallback(async () => {
 }, []);
 
   const member = taegukwonData?.member || null;
-  const isYudanjaMember =
-  !!member?.isYudanja ||
-  !!member?.canAccessYudanjaClass ||
-  Number(member?.rankLevel || 0) > 0;
+  const isYudanjaMember = member?.canAccessYudanjaClass === true;
   
   useEffect(() => {
   if (member?.favoriteFormKey) {

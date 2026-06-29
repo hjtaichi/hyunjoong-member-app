@@ -15,7 +15,27 @@ import { Platform, View, ActivityIndicator } from "react-native";
 
 import { useColorScheme } from "../hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
-import { savePushToken } from "../src/api/push.js";
+import {
+  savePushToken,
+  saveWebPushSubscription,
+} from "../src/api/push.js";
+const WEB_PUSH_PUBLIC_KEY =
+"BJ0WQ4yRiu7k4b17pC7FWYY5iHuuu1O7mYeI-NFnHQsHbD4VAEhGWBEqPmUxMXef6Yxafr5SYfXSFLwhWH-SZiU";
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = `${base64String}${padding}`
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; i += 1) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+
+  return outputArray;
+}
 
 // 🔥 알림 표시 설정
 if (Platform.OS !== "web") {
@@ -91,29 +111,108 @@ async function registerForPushNotificationsAsync() {
 
   return pushToken;
 }
+async function registerForWebPushNotificationsAsync(accessToken) {
+  console.log("🔥 Web Push 등록 시작");
+
+  if (Platform.OS !== "web") return null;
+
+  if (typeof window === "undefined") {
+    console.log("❌ window 없음");
+    return null;
+  }
+
+  if (!("serviceWorker" in navigator)) {
+    console.log("❌ Service Worker 미지원");
+    return null;
+  }
+
+  if (!("PushManager" in window)) {
+    console.log("❌ PushManager 미지원");
+    return null;
+  }
+
+  if (!("Notification" in window)) {
+    console.log("❌ Notification 미지원");
+    return null;
+  }
+
+  console.log("🔥 Notification permission before:", Notification.permission);
+
+  const permission = await Notification.requestPermission();
+
+  console.log("🔥 Notification permission after:", permission);
+
+  if (permission !== "granted") {
+    console.log("❌ 웹 푸시 권한 거부됨:", permission);
+    return null;
+  }
+
+  console.log("🔥 service worker ready 대기");
+
+  const registration = await navigator.serviceWorker.ready;
+
+  console.log("✅ service worker ready 완료");
+
+  let subscription = await registration.pushManager.getSubscription();
+
+  console.log("🔥 기존 subscription:", subscription);
+
+  if (!subscription) {
+    console.log("🔥 새 subscription 생성 시작");
+
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(WEB_PUSH_PUBLIC_KEY),
+    });
+
+    console.log("✅ 새 subscription 생성 완료");
+  }
+
+  const plainSubscription = subscription.toJSON();
+
+  console.log("🔥 저장할 web subscription:", plainSubscription);
+
+  await saveWebPushSubscription(plainSubscription, accessToken);
+
+  console.log("✅ Web Push 구독 서버 저장 완료");
+
+  return plainSubscription;
+}
 
 // 🔥 초기화
 function PushInitializer() {
   const { token: accessToken } = useAuth();
 
   useEffect(() => {
-    async function initPush() {
-      if (!accessToken) return;
+  async function initPush() {
+    console.log("🔥 PushInitializer 실행", {
+      hasAccessToken: !!accessToken,
+      platform: Platform.OS,
+    });
 
-      try {
-        const pushToken = await registerForPushNotificationsAsync();
+    if (!accessToken) return;
 
-        if (pushToken) {
-          await savePushToken(pushToken, accessToken);
-          console.log("✅ 푸시 토큰 서버 저장 완료");
-        }
-      } catch (error) {
-        console.log("❌ 푸시 초기화 실패:", error?.message || error);
+    try {
+      if (Platform.OS === "web") {
+        console.log("🔥 웹 푸시 등록 함수 호출 직전");
+        await registerForWebPushNotificationsAsync(accessToken);
+        console.log("🔥 웹 푸시 등록 함수 호출 완료");
+        return;
       }
-    }
 
-    initPush();
-  }, [accessToken]);
+      const pushToken = await registerForPushNotificationsAsync();
+
+      if (pushToken) {
+        await savePushToken(pushToken, accessToken);
+        console.log("✅ Expo 푸시 토큰 서버 저장 완료");
+      }
+    } catch (error) {
+      console.log("❌ 푸시 초기화 실패:", error?.message || error);
+    }
+  }
+
+  initPush();
+}, [accessToken]);
 
   useEffect(() => {
   if (Platform.OS === "web") {
