@@ -88,7 +88,16 @@ export default function MemberNotificationsScreen() {
   contentContainerStyle={styles.content}
   keyboardShouldPersistTaps="handled"
 >
-      <ScreenHeader title="알림" />
+     <ScreenHeader
+  title="알림"
+  onBack={() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/home");
+    }
+  }}
+/>
 
       {items.length === 0 ? (
         <View style={styles.emptyBox}>

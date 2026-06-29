@@ -179,9 +179,7 @@ export default function DojangAlbumDetailScreen() {
 
           <Text style={styles.topTitle}>앨범 상세</Text>
 
-          <View style={styles.iconButton}>
-            <Text style={styles.shareIcon}>⇧</Text>
-          </View>
+<View style={styles.iconButton} />
         </View>
 
         <View style={styles.hero}>
@@ -199,23 +197,27 @@ export default function DojangAlbumDetailScreen() {
             </Text>
 
             <View style={styles.detailBrand}>
-              <View style={styles.detailBrandMark}>
-                <Text style={styles.detailBrandMarkText}>太</Text>
-              </View>
+  <Image
+    source={require("../../assets/images/dojang-album/brand-logo.png")}
+    style={styles.detailBrandEmblem}
+    resizeMode="contain"
+  />
 
-              <View>
-                <Text style={styles.detailBrandTitle}>현중태극권 도장앨범</Text>
-                <Text style={styles.detailBrandSub}>
-                  HYUNJOONG TAIJI · DOJANG ALBUM
-                </Text>
-              </View>
-            </View>
+  <View>
+    <Text style={styles.detailBrandTitle}>현중태극권</Text>
+    <Text style={styles.detailBrandSub}>HYUNJOONG TAICHI</Text>
+  </View>
+</View>
           </View>
         </View>
 
         <View style={styles.infoCard}>
           <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>▧</Text>
+            <Image
+  source={require("../../assets/images/dojang-album/icon-photo.png")}
+  style={styles.infoImageIcon}
+  resizeMode="contain"
+/>
             <Text style={styles.infoLabel}>사진 수</Text>
             <Text style={styles.infoValue}>{album?.photoCount || 0}장</Text>
           </View>
@@ -223,7 +225,11 @@ export default function DojangAlbumDetailScreen() {
           <View style={styles.infoDivider} />
 
           <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>▣</Text>
+<Image
+  source={require("../../assets/images/dojang-album/icon-date.png")}
+  style={styles.infoImageIcon}
+  resizeMode="contain"
+/>
             <Text style={styles.infoLabel}>작성일</Text>
             <Text style={styles.infoValue}>{formatDate(album?.eventDate)}</Text>
           </View>
@@ -231,7 +237,11 @@ export default function DojangAlbumDetailScreen() {
           <View style={styles.infoDivider} />
 
           <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>⌖</Text>
+<Image
+  source={require("../../assets/images/dojang-album/icon-location.png")}
+  style={styles.infoImageIcon}
+  resizeMode="contain"
+/>
             <Text style={styles.infoLabel}>장소</Text>
             <Text style={styles.infoValue} numberOfLines={1}>
               {album?.location || "미입력"}
@@ -241,7 +251,11 @@ export default function DojangAlbumDetailScreen() {
           <View style={styles.infoDivider} />
 
           <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>◌</Text>
+<Image
+  source={require("../../assets/images/dojang-album/icon-comment.png")}
+  style={styles.infoImageIcon}
+  resizeMode="contain"
+/>
             <Text style={styles.infoLabel}>댓글</Text>
             <Text style={styles.infoValue}>{comments.length}개</Text>
           </View>
@@ -411,11 +425,7 @@ const styles = StyleSheet.create({
     color: INK,
     marginTop: -2,
   },
-  shareIcon: {
-    fontSize: 28,
-    color: INK,
-    marginTop: -4,
-  },
+
   topTitle: {
     fontFamily: fonts.titleSemi,
     fontSize: 21,
@@ -458,44 +468,35 @@ const styles = StyleSheet.create({
     color: SUB,
   },
   detailBrand: {
-    marginTop: 22,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 9,
-  },
-  detailBrandMark: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: "#D8B879",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255, 250, 240, 0.8)",
-    marginTop: -7,
-  },
-  detailBrandMarkText: {
-    fontFamily: fonts.hanja,
-    fontSize: 19,
-    color: GOLD,
-  },
-  detailBrandTitle: {
-    marginTop: -5,
-    fontFamily: fonts.titleSemi,
-    fontSize: 15,
-    color: GOLD,
-    letterSpacing: 0.5,
-  },
-  detailBrandSub: {
-    marginTop: 2,
-    fontFamily: fonts.medium,
-    fontSize: 9,
-    color: "#C3A27A",
-    letterSpacing: 0.8,
-  },
+  marginTop: 22,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 9,
+},
+detailBrandEmblem: {
+  width: 34,
+  height: 34,
+  opacity: 0.9,
+  marginTop: -7,
+},
 
-  infoCard: {
+detailBrandTitle: {
+  marginTop: -5,
+  fontFamily: fonts.titleSemi,
+  fontSize: 17,
+  color: GOLD,
+  letterSpacing: 0.5,
+},
+
+detailBrandSub: {
+  marginTop: 2,
+  fontFamily: fonts.medium,
+  fontSize: 11,
+  color: "#C3A27A",
+  letterSpacing: 0.8,
+},
+    infoCard: {
     marginTop: -45,
     minHeight: 104,
     borderRadius: 24,
@@ -512,11 +513,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
-  infoIcon: {
-    fontFamily: fonts.semiBold,
-    fontSize: 19,
-    color: GOLD,
-  },
+
   infoLabel: {
     marginTop: 6,
     fontFamily: fonts.medium,
@@ -737,4 +734,9 @@ const styles = StyleSheet.create({
     width: "94%",
     height: "78%",
   },
+infoImageIcon: {
+  width: 24,
+  height: 24,
+  tintColor: GOLD,
+},
 });

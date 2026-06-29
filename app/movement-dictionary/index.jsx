@@ -67,6 +67,36 @@ export default function MovementDictionaryHomeScreen() {
     });
   }, [keyword]);
 
+  const searchedMovements = useMemo(() => {
+  const normalize = (value) =>
+    String(value || "")
+      .replace(/\s/g, "")
+      .replace(/[·ㆍ.]/g, "")
+      .trim();
+
+  const q = normalize(keyword);
+  if (!q) return [];
+
+  return movementForms.flatMap((form) =>
+    form.movements
+      .map((movement) => {
+        const number = movement.number || movement.order || movement.step || movement[0];
+        const name = movement.name || movement.title || movement.korean || movement[1];
+        const hanja = movement.hanja || movement[2];
+
+        return {
+          ...movement,
+          number,
+          displayName: name,
+          hanja,
+          formId: form.id,
+          formTitle: form.title,
+          requiredRank: Number(form.requiredRank || 0),
+        };
+      })
+      .filter((movement) => normalize(movement.displayName).includes(q))
+  );
+}, [keyword]);
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <ScreenHeader title="동작명 사전" />
@@ -93,94 +123,143 @@ export default function MovementDictionaryHomeScreen() {
         />
       </View>
 
-      <Text style={styles.sectionTitle}>투로별 보기</Text>
+      <Text style={styles.sectionTitle}>
+  {keyword.trim() ? "검색 결과" : "투로별 보기"}
+</Text>
 
-      {filteredForms.map((form) => {
-        const requiredRank = Number(form.requiredRank || 0);
-        const isLocked = rankLevel < requiredRank;
+{keyword.trim() ? (
+  searchedMovements.length > 0 ? (
+    searchedMovements.map((movement) => {
+      const isLocked = rankLevel < movement.requiredRank;
 
-        const lockedText =
-  requiredRank > 0
-    ? `${requiredRank}단 승단 후 열립니다`
-    : "수련 단계에 따라 열립니다";
+      return (
+        <TouchableOpacity
+          key={`${movement.formId}-${movement.number}`}
+          style={[styles.movementResultCard, isLocked && styles.formCardLocked]}
+          activeOpacity={0.86}
+          onPress={() => {
+            if (isLocked) {
+              Alert.alert("아직 열리지 않았어요", `${movement.requiredRank}단 승단 후 열립니다`);
+              return;
+            }
 
-        return (
-          <TouchableOpacity
-            key={form.id}
-            style={[styles.formCard, isLocked && styles.formCardLocked]}
-            activeOpacity={0.86}
-            onPress={() => {
-              if (isLocked) {
-                Alert.alert("아직 열리지 않았어요", lockedText);
-                return;
-              }
+            router.push({
+              pathname: "/movement-dictionary/[formId]",
+              params: {
+                formId: movement.formId,
+                movementNumber: String(movement.number),
+              },
+            });
+          }}
+        >
+          <View style={styles.movementNumberBadge}>
+            <Text style={styles.movementNumberText}>
+  {movement.number || movement.order || movement.step}
+</Text>
+          </View>
 
-              router.push({
-                pathname: "/movement-dictionary/[formId]",
-                params: { formId: form.id },
-              });
-            }}
-          >
-            <View style={[styles.thumbCircle, isLocked && styles.thumbCircleLocked]}>
-  {!isLocked ? (
-    <Image source={cardBrush} style={styles.thumbBrush} resizeMode="contain" />
-  ) : null}
+          <View style={styles.formTextWrap}>
+            <Text style={styles.movementFormTitle}>{movement.formTitle}</Text>
+<Text style={styles.movementResultName}>
+  {movement.displayName}
+</Text>
 
-{isLocked ? (
-  <Image
-    source={lockIcon}
-    style={styles.thumbLockImage}
-    resizeMode="contain"
-  />
+            {movement.hanja ? (
+              <Text style={styles.movementResultHanja}>{movement.hanja}</Text>
+            ) : null}
+          </View>
+
+          <Text style={styles.arrow}>〉</Text>
+        </TouchableOpacity>
+      );
+    })
+  ) : (
+    <View style={styles.emptySearchCard}>
+      <Text style={styles.emptySearchText}>검색된 동작명이 없습니다.</Text>
+    </View>
+  )
 ) : (
-  <Image
-    source={formIcons[form.id] || formIcons["hyunjung-29"]}
-    style={styles.thumbIconImage}
-    resizeMode="contain"
-  />
-)}
-</View>
+  filteredForms.map((form) => {
+    const requiredRank = Number(form.requiredRank || 0);
+    const isLocked = rankLevel < requiredRank;
 
-            <View style={styles.formTextWrap}>
-              <View style={styles.formTitleRow}>
-                <Text style={[styles.formTitle, isLocked && styles.formTitleLocked]}>
-                  {form.title}
-                </Text>
+    const lockedText =
+      requiredRank > 0
+        ? `${requiredRank}단 승단 후 열립니다`
+        : "수련 단계에 따라 열립니다";
 
-                <View
-  style={[
-    styles.badge,
-    form.badge === "일부 수록" && styles.partialBadge,
-    isLocked && styles.lockBadge,
-  ]}
->
-  <Text
-    style={[
-      styles.badgeText,
-      form.badge === "일부 수록" && styles.partialBadgeText,
-      isLocked && styles.lockBadgeText,
-    ]}
-  >
-    {isLocked ? "잠금" : form.badge}
-  </Text>
-</View>
-              </View>
+    return (
+      <TouchableOpacity
+        key={form.id}
+        style={[styles.formCard, isLocked && styles.formCardLocked]}
+        activeOpacity={0.86}
+        onPress={() => {
+          if (isLocked) {
+            Alert.alert("아직 열리지 않았어요", lockedText);
+            return;
+          }
 
-              <Text style={[styles.formDesc, isLocked && styles.formDescLocked]}>
-                {isLocked ? lockedText : form.subtitle}
+          router.push({
+            pathname: "/movement-dictionary/[formId]",
+            params: { formId: form.id },
+          });
+        }}
+      >
+        <View style={[styles.thumbCircle, isLocked && styles.thumbCircleLocked]}>
+          {!isLocked ? (
+            <Image source={cardBrush} style={styles.thumbBrush} resizeMode="contain" />
+          ) : null}
+
+          {isLocked ? (
+            <Image source={lockIcon} style={styles.thumbLockImage} resizeMode="contain" />
+          ) : (
+            <Image
+              source={formIcons[form.id] || formIcons["hyunjung-29"]}
+              style={styles.thumbIconImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+
+        <View style={styles.formTextWrap}>
+          <View style={styles.formTitleRow}>
+            <Text style={[styles.formTitle, isLocked && styles.formTitleLocked]}>
+              {form.title}
+            </Text>
+
+            <View
+              style={[
+                styles.badge,
+                form.badge === "일부 수록" && styles.partialBadge,
+                isLocked && styles.lockBadge,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.badgeText,
+                  form.badge === "일부 수록" && styles.partialBadgeText,
+                  isLocked && styles.lockBadgeText,
+                ]}
+              >
+                {isLocked ? "잠금" : form.badge}
               </Text>
             </View>
+          </View>
 
-            <Text style={[styles.arrow, isLocked && styles.arrowLocked]}>
-              {isLocked ? (
-  <Image source={lockIcon} style={styles.arrowLockImage} resizeMode="contain" />
-) : (
-  <Text style={styles.arrow}>〉</Text>
+          <Text style={[styles.formDesc, isLocked && styles.formDescLocked]}>
+            {isLocked ? lockedText : form.subtitle}
+          </Text>
+        </View>
+
+        {isLocked ? (
+          <Image source={lockIcon} style={styles.arrowLockImage} resizeMode="contain" />
+        ) : (
+          <Text style={styles.arrow}>〉</Text>
+        )}
+      </TouchableOpacity>
+    );
+  })
 )}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
 
       <Text style={styles.sectionTitle}>기본 용어</Text>
 
@@ -424,5 +503,67 @@ partialBadge: {
 
 partialBadgeText: {
   color: colors.warmBrown,
+},
+movementResultCard: {
+  minHeight: 90,
+  borderRadius: 20,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  flexDirection: "row",
+  alignItems: "center",
+  paddingHorizontal: 14,
+  paddingVertical: 13,
+  marginBottom: 10,
+},
+
+movementNumberBadge: {
+  width: 42,
+  height: 42,
+  borderRadius: 21,
+  backgroundColor: "#F8EFE3",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 13,
+},
+
+movementNumberText: {
+  fontSize: 16,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+},
+
+movementFormTitle: {
+  fontSize: 12,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  marginBottom: 3,
+},
+
+movementResultName: {
+  fontSize: 17,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
+
+movementResultHanja: {
+  marginTop: 3,
+  fontSize: 15,
+  fontFamily: fonts.hanja,
+  color: colors.warmBrown,
+},
+
+emptySearchCard: {
+  borderRadius: 20,
+  backgroundColor: colors.card,
+  borderWidth: 1,
+  borderColor: colors.border,
+  padding: 20,
+},
+
+emptySearchText: {
+  fontSize: 14,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
 },
 });

@@ -17,6 +17,7 @@ import { getYudanjaHome } from "../../src/api/yudanjaContent";
 import { colors } from "../../src/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
+
 const fonts = {
   regular: "PretendardRegular",
   medium: "PretendardMedium",

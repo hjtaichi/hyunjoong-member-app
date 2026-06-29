@@ -14,6 +14,9 @@ import { useAuth } from "../../../src/contexts/AuthContext";
 import { getDojangAlbums } from "../../../src/api/dojangAlbum";
 import { colors, shadow } from "../../../src/theme";
 
+const iconPhoto = require("../../../assets/images/dojang-album/icon-photo.png");
+const iconDate = require("../../../assets/images/dojang-album/icon-date.png");
+
 const fonts = {
   medium: "PretendardMedium",
   semiBold: "PretendardSemiBold",
@@ -101,9 +104,7 @@ export default function YudanjaAlbumScreen() {
 
           <Text style={styles.topTitle}>유단자회 앨범</Text>
 
-          <Pressable style={styles.iconButton}>
-            <Text style={styles.searchIcon}>⌕</Text>
-          </Pressable>
+<View style={styles.iconButton} />
         </View>
 
         <View style={styles.hero}>
@@ -130,9 +131,7 @@ export default function YudanjaAlbumScreen() {
           <>
            <View style={[styles.sectionHeader, styles.recentSectionHeader]}>
   <Text style={styles.sectionTitle}>최근 앨범</Text>
-  <Pressable onPress={() => {}}>
-    <Text style={styles.viewAllText}>전체 보기 ›</Text>
-  </Pressable>
+
 </View>
 
             <Pressable
@@ -170,10 +169,13 @@ export default function YudanjaAlbumScreen() {
                   </View>
                 </View>
 
-                <Text style={styles.featuredMeta}>
-                  {formatDate(featuredAlbum.eventDate)} · 사진{" "}
-                  {featuredAlbum.photoCount || 0}장
-                </Text>
+                <View style={styles.albumMetaRow}>
+  <Image source={iconDate} style={styles.albumMetaIcon} resizeMode="contain" />
+  <Text style={styles.albumMetaText}>{formatDate(featuredAlbum.eventDate)}</Text>
+
+  <Image source={iconPhoto} style={styles.albumMetaIcon} resizeMode="contain" />
+  <Text style={styles.albumMetaText}>사진 {featuredAlbum.photoCount || 0}장</Text>
+</View>
 
                 <View style={styles.albumButton}>
                   <Text style={styles.albumButtonText}>앨범 보기 ›</Text>
@@ -232,9 +234,13 @@ export default function YudanjaAlbumScreen() {
                 <Text style={styles.albumTitle} numberOfLines={1}>
                   {album.title}
                 </Text>
-                <Text style={styles.albumMeta}>
-                  {formatDate(album.eventDate)} · 사진 {album.photoCount || 0}장
-                </Text>
+                <View style={styles.albumMetaRow}>
+  <Image source={iconDate} style={styles.albumMetaIcon} resizeMode="contain" />
+  <Text style={styles.albumMetaText}>{formatDate(album.eventDate)}</Text>
+
+  <Image source={iconPhoto} style={styles.albumMetaIcon} resizeMode="contain" />
+  <Text style={styles.albumMetaText}>사진 {album.photoCount || 0}장</Text>
+</View>
               </View>
 
               <Text style={styles.chevron}>›</Text>
@@ -447,12 +453,25 @@ featuredThumb: {
     fontSize: 12,
     color: GOLD,
   },
-  featuredMeta: {
-    marginTop: 10,
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: SUB,
-  },
+  albumMetaRow: {
+  marginTop: 8,
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 5,
+  flexWrap: "wrap",
+},
+
+albumMetaIcon: {
+  width: 14,
+  height: 14,
+  tintColor: GOLD,
+},
+
+albumMetaText: {
+  fontFamily: fonts.medium,
+  fontSize: 13,
+  color: SUB,
+},
   albumButton: {
     marginTop: 16,
     alignSelf: "flex-start",
@@ -523,13 +542,7 @@ featuredMountain: {
     fontSize: 18,
     color: INK,
   },
-  albumMeta: {
-    marginTop: 8,
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: SUB,
-  },
-  chevron: {
+    chevron: {
     marginLeft: 8,
     fontSize: 30,
     color: GOLD,

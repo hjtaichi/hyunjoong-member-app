@@ -21,6 +21,10 @@ import {
   deleteDojangAlbumComment,
 } from "../../../src/api/dojangAlbum";
 import { colors, shadow } from "../../../src/theme";
+const photoIcon = require("../../../assets/images/dojang-album/icon-photo.png");
+const dateIcon = require("../../../assets/images/dojang-album/icon-date.png");
+const locationIcon = require("../../../assets/images/dojang-album/icon-location.png");
+const commentIcon = require("../../../assets/images/dojang-album/icon-comment.png");
 
 const fonts = {
   medium: "PretendardMedium",
@@ -179,9 +183,7 @@ export default function YudanjaAlbumDetailScreen() {
 
           <Text style={styles.topTitle}>앨범 상세</Text>
 
-          <View style={styles.iconButton}>
-            <Text style={styles.shareIcon}>⇧</Text>
-          </View>
+<View style={styles.iconButton} />
         </View>
 
         <View style={styles.hero}>
@@ -215,7 +217,11 @@ export default function YudanjaAlbumDetailScreen() {
 
         <View style={styles.infoCard}>
   <View style={styles.infoItem}>
-    <Text style={styles.infoIcon}>▧</Text>
+    <Image
+  source={photoIcon}
+  style={styles.infoImageIcon}
+  resizeMode="contain"
+/>
     <Text style={styles.infoLabel}>사진 수</Text>
     <Text style={styles.infoValue}>{album?.photoCount || 0}장</Text>
   </View>
@@ -223,7 +229,11 @@ export default function YudanjaAlbumDetailScreen() {
   <View style={styles.infoDivider} />
 
   <View style={styles.infoItem}>
-    <Text style={styles.infoIcon}>▣</Text>
+    <Image
+  source={dateIcon}
+  style={styles.infoImageIcon}
+  resizeMode="contain"
+/>
     <Text style={styles.infoLabel}>작성일</Text>
     <Text style={styles.infoValue}>{formatDate(album?.eventDate)}</Text>
   </View>
@@ -231,7 +241,11 @@ export default function YudanjaAlbumDetailScreen() {
   <View style={styles.infoDivider} />
 
   <View style={styles.infoItem}>
-    <Text style={styles.infoIcon}>⌖</Text>
+    <Image
+  source={locationIcon}
+  style={styles.infoImageIcon}
+  resizeMode="contain"
+/>
     <Text style={styles.infoLabel}>장소</Text>
     <Text style={styles.infoValue} numberOfLines={1}>
       {album?.location || "미입력"}
@@ -241,7 +255,11 @@ export default function YudanjaAlbumDetailScreen() {
   <View style={styles.infoDivider} />
 
   <View style={styles.infoItem}>
-    <Text style={styles.infoIcon}>◌</Text>
+    <Image
+  source={commentIcon}
+  style={styles.infoImageIcon}
+  resizeMode="contain"
+/>
     <Text style={styles.infoLabel}>댓글</Text>
     <Text style={styles.infoValue}>{comments.length}개</Text>
   </View>
@@ -413,11 +431,7 @@ const styles = StyleSheet.create({
     color: INK,
     marginTop: -2,
   },
-  shareIcon: {
-    fontSize: 28,
-    color: INK,
-    marginTop: -4,
-  },
+
   topTitle: {
     fontFamily: fonts.titleSemi,
     fontSize: 21,
@@ -517,12 +531,7 @@ infoCard: {
     flex: 1,
     alignItems: "center",
   },
-  infoIcon: {
-  fontFamily: fonts.semiBold,
-  fontSize: 19,
-  color: GOLD,
-},
-
+  
 infoLabel: {
   marginTop: 6,
   fontFamily: fonts.medium,
@@ -744,4 +753,9 @@ infoValue: {
     width: "94%",
     height: "78%",
   },
+  infoImageIcon: {
+  width: 24,
+  height: 24,
+  tintColor: GOLD,
+},
 });

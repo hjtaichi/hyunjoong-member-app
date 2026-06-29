@@ -716,7 +716,7 @@ ticketValue: {
   illustrationTitle: {
     fontSize: 16,
     color: "#3A2C27",
-    fontWeight: "900",
+    fontWeight: "700",
   },
   illustrationText: {
     marginTop: 8,
