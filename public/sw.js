@@ -26,10 +26,23 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const targetUrl =
+  const targetPath =
     event.notification.data?.targetUrl ||
     event.notification.data?.url ||
-    "/";
+    "/member-notifications";
 
-  event.waitUntil(clients.openWindow(targetUrl));
+  const targetUrl = new URL(targetPath, self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+
+      return clients.openWindow(targetUrl);
+    })
+  );
 });
