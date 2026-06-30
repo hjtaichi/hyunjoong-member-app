@@ -26,23 +26,7 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const targetPath =
-    event.notification.data?.targetUrl ||
-    event.notification.data?.url ||
-    "/member-notifications";
+  const appUrl = new URL("/", self.location.origin).href;
 
-  const targetUrl = new URL(targetPath, self.location.origin).href;
-
-  event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if ("focus" in client) {
-          client.navigate(targetUrl);
-          return client.focus();
-        }
-      }
-
-      return clients.openWindow(targetUrl);
-    })
-  );
+  event.waitUntil(clients.openWindow(appUrl));
 });
