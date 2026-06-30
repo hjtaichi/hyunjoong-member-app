@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { getDojangAlbums } from "../../../src/api/dojangAlbum";
 import { colors, shadow } from "../../../src/theme";
+import ScreenHeader from "../../../src/components/ScreenHeader";
 
 const iconPhoto = require("../../../assets/images/dojang-album/icon-photo.png");
 const iconDate = require("../../../assets/images/dojang-album/icon-date.png");
@@ -97,15 +98,7 @@ export default function YudanjaAlbumScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.topBar}>
-          <Pressable style={styles.iconButton} onPress={() => router.back()}>
-            <Text style={styles.topIcon}>‹</Text>
-          </Pressable>
-
-          <Text style={styles.topTitle}>유단자회 앨범</Text>
-
-<View style={styles.iconButton} />
-        </View>
+        <ScreenHeader title="유단자회 앨범" />
 
         <View style={styles.hero}>
   <View style={styles.heroBrushWrap} pointerEvents="none">
@@ -297,41 +290,15 @@ content: {
   flexGrow: 1,
   minHeight: "100%",
   paddingHorizontal: 18,
-  paddingTop: 20,
+  paddingTop: 10,
   paddingBottom: 28,
   backgroundColor: PAPER,
 },
 
-  topBar: {
-    height: 42,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  iconButton: {
-    width: 42,
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topIcon: {
-    fontSize: 35,
-    color: INK,
-    marginTop: -2,
-  },
-  searchIcon: {
-    fontSize: 30,
-    color: INK,
-    marginTop: -2,
-  },
-  topTitle: {
-    fontFamily: fonts.titleSemi,
-    fontSize: 21,
-    color: INK,
-  },
 
   hero: {
   minHeight: 245,
+  marginTop: -23,
   marginHorizontal: -18,
   paddingHorizontal: 18,
   alignItems: "center",

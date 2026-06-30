@@ -23,54 +23,42 @@ function AuthProvider({ children }) {
   async function bootstrap() {
   try {
     const savedToken = await getAccessToken();
-    const savedUser = await getUser();
 
-    if (!savedToken || !savedUser) {
-      return;
-    }
-
-    // 저장 토큰 임시 적용
-    setToken(savedToken);
-    setUserState(savedUser);
-
-    // 🔥 현재 회원 상태 다시 조회
-    const meResult = await getMeApi(savedToken);
-
-    const me =
-      meResult?.data ||
-      meResult?.user ||
-      meResult;
-
-    const memberStatus =
-      me?.memberStatus ||
-      me?.status;
-
-    // 🔥 종료회원 → 강제 로그아웃
-    if (memberStatus === "ended") {
-      console.log("⛔ 종료회원 자동 로그아웃");
-
-      await clearAuthStorage();
-
+    if (!savedToken) {
       setToken(null);
       setUserState(null);
-
       return;
     }
 
-    // 🔥 휴식회원 → 상태 갱신
-    const refreshedUser = {
-      ...savedUser,
-      status: memberStatus,
-      memberStatus: memberStatus,
+    const meResult = await getMeApi(savedToken);
+    const me = meResult?.data || meResult?.user || meResult;
+
+    const memberStatus = me?.memberStatus || me?.status;
+
+    if (memberStatus === "ended") {
+      await clearAuthStorage();
+      setToken(null);
+      setUserState(null);
+      return;
+    }
+
+    const nextUser = {
+      id: me?.userId || me?.id,
+      userId: me?.userId || me?.id,
+      email: me?.email,
+      role: me?.role,
+      name: me?.name,
+      status: memberStatus || null,
+      memberStatus: memberStatus || null,
     };
 
-    await setUser(refreshedUser);
+    await setUser(nextUser);
 
-    setUserState(refreshedUser);
+    setToken(savedToken);
+    setUserState(nextUser);
   } catch (e) {
-    console.error("bootstrap auth error:", e);
+    console.error("bootstrap auth error:", e?.response?.data || e.message);
 
-    // 토큰 오류 시 로그아웃
     await clearAuthStorage();
 
     setToken(null);
@@ -197,7 +185,7 @@ setUserState(nextUser);
     () => ({
       token,
       user,
-      isAuthenticated: !!token,
+      isAuthenticated: !isBootLoading && !!token && !!user,
       isBootLoading,
       isLoginLoading,
       login,

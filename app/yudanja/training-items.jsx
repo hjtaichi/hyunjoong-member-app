@@ -341,22 +341,32 @@ setContentData(result || null);
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.heroCard}>
-          <View style={styles.heroTextArea}>
-            <Text style={styles.heroTitle}>유단자회 수련항목</Text>
-            <Text style={styles.heroDesc}>
-              유단자회에서 함께 수련하는 추수, 투로 교정, 발경,
-              용형편간 항목입니다.
-            </Text>
-          </View>
+        <View style={styles.heroWrap}>
+  <View style={styles.heroCardBg}>
+    <Image
+      source={require("../../assets/images/yudanja/card-mountain.png")}
+      style={styles.heroInkMountain}
+      resizeMode="contain"
+    />
 
-          <Image
-            source={require("../../assets/images/yudanja/card-mountain.png")}
-            style={styles.heroMountain}
-            resizeMode="contain"
-          />
-        </View>
+    <View style={styles.heroSpeechBox}>
+      <Text style={styles.heroQuoteMark}>“</Text>
 
+      <Text style={styles.heroSpeechText}>
+        유단자회에서는{"\n"}
+        추수, 투로 교정, 발경,{"\n"}
+        용형편간을 함께 수련해요.
+      </Text>
+    </View>
+  </View>
+
+  <Image
+    source={require("../../assets/images/yudanja/yudanja-guide-karina.png")}
+    style={styles.heroGuideImage}
+    resizeMode="contain"
+    pointerEvents="none"
+  />
+</View>
         {error ? (
   <View style={styles.emptyCard}>
     <Text style={styles.emptyTitle}>불러오기 실패</Text>
@@ -403,19 +413,88 @@ const styles = StyleSheet.create({
     color: "#7A6C63",
   },
 
-  heroCard: {
-    minHeight: 170,
-    borderRadius: 22,
-    padding: 22,
-    backgroundColor: "#FFFDF8",
-    overflow: "hidden",
-    marginBottom: 16,
-    shadowColor: "#7A5B3D",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 3,
-  },
+  heroWrap: {
+  position: "relative",
+  minHeight: 236,
+  marginTop: -15,
+  marginBottom: 18,
+  overflow: "visible",
+},
+
+heroCardBg: {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: 0,
+  height: 198,
+  borderRadius: 22,
+  backgroundColor: "#FFFDF8",
+  borderWidth: 1,
+  borderColor: "rgba(232, 216, 196, 0.85)",
+  overflow: "hidden",
+  shadowColor: "#7A5B3D",
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.1,
+  shadowRadius: 16,
+  elevation: 3,
+},
+
+heroInkMountain: {
+  position: "absolute",
+  left: -22,
+  bottom: -8,
+  width: 245,
+  height: 125,
+  opacity: 0.28,
+  zIndex: 1,
+},
+
+heroSpeechBox: {
+  position: "absolute",
+  left: 14,
+  top: 30,
+  width: "56%",
+  minHeight: 88,
+  borderRadius: 18,
+  borderWidth: 1,
+  borderColor: "rgba(184, 148, 93, 0.45)",
+  backgroundColor: "rgba(255, 253, 248, 0.8)",
+  paddingHorizontal: 13,
+  paddingVertical: 10,
+  justifyContent: "center",
+  zIndex: 3,
+},
+heroQuoteMark: {
+  position: "absolute",
+  left: 4,
+  top: -2,
+  fontFamily: fonts.title,
+  fontSize: 36,
+  lineHeight: 30,
+  color: "#B8945D",
+  opacity: 0.85,
+},
+
+heroSpeechText: {
+  marginTop: 3,
+  marginLeft: 15,
+  fontFamily: fonts.titleSemi,
+  fontSize: 14,
+  lineHeight: 23,
+  color: "#3A2C27",
+  letterSpacing: 0,
+},
+
+heroGuideImage: {
+  position: "absolute",
+  right: -8,
+  bottom: -34,
+  width: 310,
+  height: 250,
+  opacity: 0.98,
+  zIndex: 10,
+  elevation: 10,
+},
   heroTextArea: {
     width: "66%",
     zIndex: 2,
@@ -442,10 +521,10 @@ const styles = StyleSheet.create({
   },
   heroMountain: {
     position: "absolute",
-    right: -12,
+    right: -2,
     bottom: -10,
-    width: 190,
-    height: 135,
+    width: 180,
+    height: 125,
     opacity: 0.42,
   },
 

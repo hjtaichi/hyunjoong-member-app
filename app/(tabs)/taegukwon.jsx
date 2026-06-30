@@ -1635,20 +1635,22 @@ loadData({ silent: true }).catch((error) => {
   
 ) : null}
 
-<TouchableOpacity
-  style={styles.privateGuideBanner}
-  activeOpacity={0.88}
-  onPress={() => router.push("/private-training-guide")}
->
-  <View>
-    <Text style={styles.privateGuideBannerTitle}>개인지도 안내</Text>
-    <Text style={styles.privateGuideBannerDesc}>
-      1:1 자세교정과 심화 수련이 필요하다면 확인해보세요.
-    </Text>
-  </View>
+{activeTab === "training" ? (
+  <TouchableOpacity
+    style={styles.privateGuideBanner}
+    activeOpacity={0.88}
+    onPress={() => router.push("/private-training-guide")}
+  >
+    <View>
+      <Text style={styles.privateGuideBannerTitle}>개인지도 안내</Text>
+      <Text style={styles.privateGuideBannerDesc}>
+        1:1 자세교정과 심화 수련이 필요하다면 확인해보세요.
+      </Text>
+    </View>
 
-  <Text style={styles.privateGuideBannerArrow}>〉</Text>
-</TouchableOpacity>
+    <Text style={styles.privateGuideBannerArrow}>〉</Text>
+  </TouchableOpacity>
+) : null}
 {false && activeTab === "training" ? (
   <TouchableOpacity
     style={styles.awardEntryMiniCard}
@@ -5145,14 +5147,14 @@ privateGuideBanner: {
 },
 
 privateGuideBannerTitle: {
-  fontSize: 14,
+  fontSize: 15,
   fontFamily: "PretendardSemiBold",
   color: "#3A2C27",
 },
 
 privateGuideBannerDesc: {
-  marginTop: 4,
-  fontSize: 12,
+  marginTop: 7,
+  fontSize: 13,
   fontFamily: "PretendardMedium",
   color: "#8A7568",
 },

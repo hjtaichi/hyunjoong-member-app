@@ -942,7 +942,7 @@ allInquiryLink: {
 },
 albumBanner: {
   marginTop: 14,
-  minHeight: 132,
+  minHeight: 95,
   borderRadius: 26,
   padding: 18,
   backgroundColor: "#FFF9EF",
@@ -961,11 +961,11 @@ albumBanner: {
 
 albumBannerImage: {
   position: "absolute",
-  right: -42,
-  bottom: -24,
-  width: 250,
-  height: 140,
-  opacity: 0.55,
+  right: -35,
+  bottom: -20,
+  width: 260,
+  height: 150,
+  opacity: 0.5,
 },
 
 albumBannerText: {
@@ -975,14 +975,15 @@ albumBannerText: {
 },
 
 albumBannerLabel: {
-  fontSize: 12,
+  marginTop: 7,
+  fontSize: 15,
   fontFamily: fonts.semiBold,
   color: colors.warmBrown,
 },
 
 albumBannerTitle: {
   marginTop: 7,
-  fontSize: 22,
+  fontSize: 24,
   fontFamily: fonts.titleSemi,
   color: colors.textMain,
 },
@@ -996,7 +997,7 @@ albumBannerDesc: {
 },
 
 albumBannerCta: {
-  marginTop: 11,
+  marginTop: 9,
   alignSelf: "flex-start",
   borderRadius: 999,
   backgroundColor: "#2B2118",
@@ -1005,7 +1006,7 @@ albumBannerCta: {
 },
 
 albumBannerCtaText: {
-  fontSize: 12,
+  fontSize: 13,
   fontFamily: fonts.bold,
   color: "#F7E5C3",
 },

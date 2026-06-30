@@ -22,8 +22,13 @@ export async function setUser(user) {
 }
 
 export async function getUser() {
-  const raw = await AsyncStorage.getItem(USER_KEY);
-  return raw ? JSON.parse(raw) : null;
+  try {
+    const raw = await AsyncStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    await AsyncStorage.removeItem(USER_KEY);
+    return null;
+  }
 }
 
 export async function removeUser() {
