@@ -56,14 +56,21 @@ function AuthProvider({ children }) {
 
     setToken(savedToken);
     setUserState(nextUser);
-  } catch (e) {
+   } catch (e) {
+    const status = e?.response?.status;
+
     console.error("bootstrap auth error:", e?.response?.data || e.message);
 
-    await clearAuthStorage();
+    if (status === 401 || status === 403) {
+      await clearAuthStorage();
+      setToken(null);
+      setUserState(null);
+    }
 
     setToken(null);
     setUserState(null);
-  } finally {
+  }
+   finally {
     setIsBootLoading(false);
   }
 }
@@ -170,14 +177,19 @@ setUserState(nextUser);
     setUserState(nextUser);
 
     return nextUser;
-  } catch (error) {
+    } catch (error) {
+    const status = error?.response?.status;
+
     console.log("refreshMe error:", error?.response?.data || error.message);
 
-    await clearAuthStorage();
-    setToken(null);
-    setUserState(null);
+    if (status === 401 || status === 403) {
+      await clearAuthStorage();
+      setToken(null);
+      setUserState(null);
+      return null;
+    }
 
-    return null;
+    return user;
   }
 }
 

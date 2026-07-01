@@ -69,30 +69,25 @@ export default function TabLayout() {
   }
 
   useEffect(() => {
-    if (isBootLoading) return;
+  if (isBootLoading) return;
 
-    if (!isAuthenticated) {
-      router.replace("/login");
-      return;
-    }
+  if (!isAuthenticated) {
+    router.replace("/login");
+    return;
+  }
 
-    checkMemberStatus();
+  checkMemberStatus();
 
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") {
-        checkMemberStatus();
-      }
-    });
-
-    const timer = setInterval(() => {
+  const subscription = AppState.addEventListener("change", (state) => {
+    if (state === "active") {
       checkMemberStatus();
-    }, 30000);
+    }
+  });
 
-    return () => {
-      subscription.remove();
-      clearInterval(timer);
-    };
-  }, [pathname, isBootLoading, isAuthenticated]);
+  return () => {
+    subscription.remove();
+  };
+}, [pathname, isBootLoading, isAuthenticated]);
 
   if (isBootLoading) {
     return (

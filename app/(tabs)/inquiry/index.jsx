@@ -942,7 +942,7 @@ allInquiryLink: {
 },
 albumBanner: {
   marginTop: 14,
-  minHeight: 95,
+  minHeight: 85,
   borderRadius: 26,
   padding: 18,
   backgroundColor: "#FFF9EF",
@@ -983,7 +983,7 @@ albumBannerLabel: {
 
 albumBannerTitle: {
   marginTop: 7,
-  fontSize: 24,
+  fontSize: 21,
   fontFamily: fonts.titleSemi,
   color: colors.textMain,
 },
