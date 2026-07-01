@@ -379,20 +379,20 @@ heroTitle: {
 },
 
 heroDesc: {
-  marginTop: 15,
-  fontSize: 17,
-  lineHeight: 24,
+  marginTop: 10,
+  fontSize: 16,
+  lineHeight: 23,
   fontFamily: fonts.medium,
   color: colors.textSub,
-  letterSpacing: -0.4,
+  letterSpacing: -0.5,
 },
 
 heroDecorImage: {
   position: "absolute",
-  right: -30,
+  right: -35,
   top: 34,
-  width: 250,
-  height: 260,
+  width: 220,
+  height: 230,
   opacity: 0.9,
 },
 label: {

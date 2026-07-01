@@ -228,7 +228,7 @@ export default function PrivateTrainingGuideScreen() {
                 • 신청 자격 : 수련기간, 유단자 유무 상관 없이 회원 누구나
               </Text>
               <Text style={styles.infoText}>• 비용</Text>
-              <Text style={styles.infoSubText}>- 현 회원 : 1시간 8만원</Text>
+              <Text style={styles.infoSubText}>- 정 회원 : 1시간 8만원</Text>
               <Text style={styles.infoSubText}>- 비 회원 : 1시간 10만원</Text>
             </View>
           </View>
@@ -414,13 +414,13 @@ heroTitle: {
 kicker: {
   alignSelf: "flex-start",
   paddingHorizontal: 14,
-  paddingVertical: 7,
+  paddingVertical: 5,
   borderRadius: 999,
   borderWidth: 1,
   borderColor: "#C8A977",
   backgroundColor: "rgba(255,253,249,0.78)",
   color: "#8A633A",
-  fontSize: 13,
+  fontSize: 12,
   lineHeight: 18,
   fontFamily: fonts.semiBold,
   marginBottom: 12
@@ -625,7 +625,7 @@ infoText: {
 },
 
   infoSubText: {
-    fontSize: 15,
+    fontSize: 14.5,
     lineHeight: 22,
     color: "#2f2a24",
     fontWeight: "500",

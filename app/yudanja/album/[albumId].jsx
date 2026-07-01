@@ -209,7 +209,7 @@ export default function YudanjaAlbumDetailScreen() {
 
     <View>
       <Text style={styles.detailBrandTitle}>현중태극권 유단자회</Text>
-      <Text style={styles.detailBrandSub}>HYUNJOONG TAIJI · YUDANJAHOE</Text>
+      <Text style={styles.detailBrandSub}>HYUNJOONG TAICHI · YUDANJA GROUP</Text>
     </View>
   </View>
 </View>
