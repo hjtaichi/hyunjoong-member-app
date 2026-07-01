@@ -6,6 +6,8 @@ import {
   getUser,
   setAccessToken,
   setUser,
+  getRefreshToken,
+  setRefreshToken,
 } from "../utils/storage";
 
 const AuthContext = createContext(null);
@@ -86,6 +88,7 @@ function AuthProvider({ children }) {
 
     const payload = authData?.data ?? authData ?? {};
     const nextToken = payload?.accessToken || payload?.token || null;
+    const nextRefreshToken = payload?.refreshToken || null;
     const rawUser = payload?.user || authData?.user || null;
 
     if (!nextToken) {
@@ -105,8 +108,12 @@ function AuthProvider({ children }) {
     }
   : null;
 
-    if (autoLogin) {
+if (autoLogin) {
   await setAccessToken(nextToken);
+
+  if (nextRefreshToken) {
+    await setRefreshToken(nextRefreshToken);
+  }
 
   if (nextUser) {
     await setUser(nextUser);

@@ -37,7 +37,11 @@ export async function removeUser() {
 
 export async function clearAuthStorage() {
   console.log("🧹 clearAuthStorage 실행됨");
-  await Promise.all([removeAccessToken(), removeUser()]);
+  await Promise.all([
+    removeAccessToken(),
+    removeRefreshToken(),
+    removeUser(),
+  ]);
 }
 
 export async function setNoticeHiddenToday(key) {
@@ -60,4 +64,18 @@ export async function getSavedLoginId() {
 
 export async function removeSavedLoginId() {
   await AsyncStorage.removeItem(SAVED_LOGIN_ID_KEY);
+}
+
+const REFRESH_TOKEN_KEY = "member_refresh_token";
+
+export async function setRefreshToken(token) {
+  await AsyncStorage.setItem(REFRESH_TOKEN_KEY, token);
+}
+
+export async function getRefreshToken() {
+  return AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+export async function removeRefreshToken() {
+  await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
 }

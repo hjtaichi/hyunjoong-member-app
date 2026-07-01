@@ -25,3 +25,11 @@ export async function getMeApi(accessToken) {
 
   return res.data;
 }
+
+export async function refreshAccessTokenApi(refreshToken) {
+  const res = await client.post("/api/auth/refresh", {
+    refreshToken,
+  });
+
+  return res.data;
+}
