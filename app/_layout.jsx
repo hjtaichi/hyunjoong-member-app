@@ -181,39 +181,43 @@ async function registerForWebPushNotificationsAsync(accessToken) {
 
 // 🔥 초기화
 function PushInitializer() {
-  const { token: accessToken } = useAuth();
+  const { token: accessToken, isBootLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
-  async function initPush() {
-    console.log("🔥 PushInitializer 실행", {
-      hasAccessToken: !!accessToken,
-      platform: Platform.OS,
-    });
+    async function initPush() {
+      console.log("🔥 PushInitializer 실행", {
+        hasAccessToken: !!accessToken,
+        isBootLoading,
+        isAuthenticated,
+        platform: Platform.OS,
+      });
 
-    if (!accessToken) return;
+      if (isBootLoading) return;
+      if (!isAuthenticated) return;
+      if (!accessToken) return;
 
-    try {
-      if (Platform.OS === "web") {
-        console.log("🔥 웹 푸시 등록 함수 호출 직전");
-        await registerForWebPushNotificationsAsync(accessToken);
-        console.log("🔥 웹 푸시 등록 함수 호출 완료");
-        return;
+      try {
+        if (Platform.OS === "web") {
+          console.log("🔥 웹 푸시 등록 함수 호출 직전");
+          await registerForWebPushNotificationsAsync(accessToken);
+          console.log("🔥 웹 푸시 등록 함수 호출 완료");
+          return;
+        }
+
+        const pushToken = await registerForPushNotificationsAsync();
+
+        if (pushToken) {
+          await savePushToken(pushToken, accessToken);
+          console.log("✅ Expo 푸시 토큰 서버 저장 완료");
+        }
+      } catch (error) {
+        console.log("❌ 푸시 초기화 실패:", error?.message || error);
       }
-
-      const pushToken = await registerForPushNotificationsAsync();
-
-      if (pushToken) {
-        await savePushToken(pushToken, accessToken);
-        console.log("✅ Expo 푸시 토큰 서버 저장 완료");
-      }
-    } catch (error) {
-      console.log("❌ 푸시 초기화 실패:", error?.message || error);
     }
-  }
 
-  initPush();
-}, [accessToken]);
-
+    initPush();
+  }, [accessToken, isBootLoading, isAuthenticated]);
+  
   useEffect(() => {
   if (Platform.OS === "web") {
     console.log("🌐 웹에서는 알림 클릭 리스너를 등록하지 않습니다.");

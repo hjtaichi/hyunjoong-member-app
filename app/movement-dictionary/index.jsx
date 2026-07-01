@@ -107,7 +107,7 @@ export default function MovementDictionaryHomeScreen() {
   <View style={styles.heroTextWrap}>
     <Text style={styles.heroTitle}>투로명이{"\n"}궁금해요?</Text>
     <Text style={styles.heroDesc}>
-      수련 중 들은 동작 이름과 뜻을 그림,{"\n"}설명, 포인트와 함께 확인해보세요.
+      수련 중 들은 동작 이름과 뜻을 {"\n"}그림, 설명, 포인트와 함께 {"\n"}확인해보세요.
     </Text>
   </View>
 </View>

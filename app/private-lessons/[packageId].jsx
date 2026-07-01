@@ -195,7 +195,7 @@ export default function PrivateLessonDetailScreen() {
       )}
 
       <View style={styles.noteCard}>
-        <Text style={styles.noteTitle}>기록 안내</Text>
+        <Text style={styles.noteTitle}>수업 기록 안내</Text>
         <Text style={styles.noteText}>
           완료된 개인지도는 최근 순으로 표시됩니다. 지도 내용은 추후 수련을 되돌아보기 위한 개인 기록으로 남습니다.
         </Text>
@@ -427,8 +427,8 @@ recordFooterText: {
     lineHeight: 21,
   },
   noteCard: {
-    marginTop: 12,
-    padding: 17,
+    marginTop: 10,
+    padding: 15,
     borderRadius: 22,
     backgroundColor: "rgba(247,239,228,0.65)",
     borderWidth: 1,

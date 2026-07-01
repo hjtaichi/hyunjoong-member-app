@@ -706,8 +706,8 @@ ticketValue: {
   },
   illustrationCard: {
     marginTop: 20,
-    minHeight: 118,
-    padding: 18,
+    minHeight: 90,
+    padding: 15,
     borderRadius: 24,
     backgroundColor: "rgba(247,239,228,0.65)",
     borderWidth: 1,
@@ -719,7 +719,7 @@ ticketValue: {
     fontWeight: "700",
   },
   illustrationText: {
-    marginTop: 8,
+    marginTop: 6,
     maxWidth: "82%",
     fontSize: 13,
     lineHeight: 20,
