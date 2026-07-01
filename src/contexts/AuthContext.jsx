@@ -23,6 +23,7 @@ function AuthProvider({ children }) {
   async function bootstrap() {
   try {
     const savedToken = await getAccessToken();
+    console.log("🔥 bootstrap savedToken:", !!savedToken);
 
     if (!savedToken) {
       setToken(null);
@@ -110,8 +111,11 @@ function AuthProvider({ children }) {
   if (nextUser) {
     await setUser(nextUser);
   }
+
+  console.log("✅ 자동로그인 저장 완료");
 } else {
   await clearAuthStorage();
+  console.log("❌ 자동로그인 꺼짐: 저장 안 함");
 }
 
 setToken(nextToken);
