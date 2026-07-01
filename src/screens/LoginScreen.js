@@ -28,7 +28,7 @@ const lockIcon = require("../../assets/images/lock_clean.png");
 const signupIcon = require("../../assets/images/signup_person_plus_clean.png");
 
 export default function LoginScreen() {
-  const { login, isLoginLoading } = useAuth();
+  const { login, isLoginLoading, isAuthenticated, isBootLoading, user } = useAuth();
 
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +50,21 @@ const [loginAlertMessage, setLoginAlertMessage] = useState("");
 
     loadSavedLoginId();
   }, []);
+
+useEffect(() => {
+  if (isBootLoading) return;
+
+  if (isAuthenticated) {
+    const memberStatus = user?.memberStatus || user?.status;
+
+    if (memberStatus === "paused") {
+      router.replace("/(tabs)/inquiry");
+      return;
+    }
+
+    router.replace("/(tabs)/home");
+  }
+}, [isBootLoading, isAuthenticated, user]);
 
   function showLoginAlert(title, message) {
   setLoginAlertTitle(title);
