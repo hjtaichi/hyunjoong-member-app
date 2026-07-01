@@ -36,6 +36,7 @@ export async function removeUser() {
 }
 
 export async function clearAuthStorage() {
+  console.log("🧹 clearAuthStorage 실행됨");
   await Promise.all([removeAccessToken(), removeUser()]);
 }
 

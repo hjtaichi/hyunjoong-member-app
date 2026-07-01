@@ -181,20 +181,24 @@ setUserState(nextUser);
     setUserState(nextUser);
 
     return nextUser;
-    } catch (error) {
-    const status = error?.response?.status;
+} catch (error) {
+  const status = error?.response?.status;
 
-    console.log("refreshMe error:", error?.response?.data || error.message);
+  console.log("🔥 refreshMe 실패 status:", status);
+  console.log("🔥 refreshMe 실패 data:", error?.response?.data);
+  console.log("🔥 refreshMe 실패 message:", error?.message);
 
-    if (status === 401 || status === 403) {
-      await clearAuthStorage();
-      setToken(null);
-      setUserState(null);
-      return null;
-    }
-
-    return user;
+  if (status === 401 || status === 403) {
+    console.log("⛔ 인증 오류라서 로그아웃 처리");
+    await clearAuthStorage();
+    setToken(null);
+    setUserState(null);
+    return null;
   }
+
+  console.log("⚠️ 일시 오류라서 로그인 유지");
+  return user;
+}
 }
 
   const value = useMemo(
