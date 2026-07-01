@@ -110,33 +110,23 @@ export default function PrivateTrainingGuideScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <ScreenHeader title="개별 수련 지도 안내" />
         <View style={styles.heroSection}>
-          <Image
-            source={require("../assets/images/private-guide-mountain-bg.png")}
-            style={styles.mountainBg}
-            resizeMode="cover"
-          />
-          <View style={styles.heroFadeTop} />
-<View style={styles.heroFadeBottom} />
+  <Image
+    source={require("../assets/images/private-training-hero-new.png")}
+    style={styles.heroFullImage}
+    resizeMode="cover"
+  />
 
- 
+  <View style={styles.heroTextLayer}>
+    <Text style={styles.kicker}>정규 수업 외 유료 과정</Text>
 
-<Text style={styles.kicker}>
-  정규 수업 외 유료 과정
-</Text>
-
-          <Text style={styles.heroDesc}>
-            정규 수업에서 {"\n"}
-            더 깊이 배우고 싶은 부분을{"\n"}
-            나에게 맞는 속도로{"\n"}
-            1:1 지도받는 시간입니다.
-          </Text>
-
-          <Image
-            source={require("../assets/images/private-training-hero.png")}
-            style={styles.heroImage}
-            resizeMode="contain"
-          />
-        </View>
+    <Text style={styles.heroDesc}>
+      정규 수업에서{"\n"}
+      더 깊이 배우고 싶은 부분을{"\n"}
+      나에게 맞는 속도로{"\n"}
+      1:1 지도받는 시간입니다.
+    </Text>
+  </View>
+</View>
 
         <View style={styles.mainCard}>
           <Text style={styles.sectionTitle}>이런 방향으로 진행할 수 있어요</Text>
@@ -379,22 +369,28 @@ const styles = StyleSheet.create({
 
 heroSection: {
   position: "relative",
-  minHeight: 190,
+  minHeight: 300,
   marginHorizontal: -16,
-  paddingHorizontal: 34,
-  paddingTop: 16,
+  marginTop: -8,
+  marginBottom: -30,
   overflow: "hidden",
-  marginBottom: 12,
 },
 
-mountainBg: {
+heroFullImage: {
   position: "absolute",
-  left: -90,
-  right: -40,
-  bottom: -100,
-  width: "145%",
-  height: 260,
-  opacity: 0.3,
+  right: 3,
+  top: 25,
+  width: 200,
+  height: 210,
+  zIndex: 2,
+},
+
+heroTextLayer: {
+  position: "absolute",
+  left: 28,
+  top: 30,
+  width: "50%",
+  zIndex: 3,
 },
 
   heroBackButton: {
@@ -411,49 +407,32 @@ mountainBg: {
     fontWeight: "500",
   },
 
-  heroTitle: {
-  fontSize: 26,
-  lineHeight: 36,
-  fontFamily: fonts.title,
-  color: colors.textMain,
-  marginBottom: 8,
-  zIndex: 3,
+heroTitle: {
+  display: "none",
 },
 
 kicker: {
   alignSelf: "flex-start",
-  paddingHorizontal: 13,
-  paddingVertical: 6,
+  paddingHorizontal: 14,
+  paddingVertical: 7,
   borderRadius: 999,
   borderWidth: 1,
-  borderColor: "#c9a978",
-  backgroundColor: "rgba(255,253,249,0.76)",
-  color: "#6f4e2c",
-  fontSize: 14,
+  borderColor: "#C8A977",
+  backgroundColor: "rgba(255,253,249,0.78)",
+  color: "#8A633A",
+  fontSize: 13,
+  lineHeight: 18,
   fontFamily: fonts.semiBold,
-  marginTop: 8,
-  marginBottom: 18,
-  zIndex: 3,
-},
-  heroDesc: {
-  width: "56%",
-  fontSize: 15,
-  lineHeight: 21,
-  marginLeft: 6,
-  fontFamily: fonts.titleSemi,
-  color: colors.textMain,
-  zIndex: 3,
-},
-heroImage: {
-  position: "absolute",
-  right: 30,
-  bottom: 18,
-  width: 135,
-  height: 155,
-  opacity: 0.62,
-  zIndex: 3,
+  marginBottom: 12
 },
 
+heroDesc: {
+  fontSize: 16,
+  lineHeight: 25,
+  fontFamily: fonts.titleSemi,
+  color: "#2B211B",
+  letterSpacing: -0.4,
+},
   mainCard: {
   marginTop: -18,
   borderRadius: radius.lg,
@@ -855,24 +834,6 @@ personIconImage: {
   height: 24,
   opacity: 0.9,
 },
-heroFadeTop: {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 0,
-  height: 20,
-  backgroundColor: "rgba(255,252,250,0.45)",
-  zIndex: 1,
-},
 
 
-heroFadeBottom: {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  bottom: 0,
-  height: 32,
-  backgroundColor: "rgba(255,252,250,0.55)",
-  zIndex: 1,
-},
 });

@@ -496,17 +496,23 @@ const sheetPanResponder = useMemo(
 
   useEffect(() => {
   async function load() {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      const result = await getMemberHome(token);
-      setHomeData(result);
+      const [home, history, common] = await Promise.all([
+        getMemberHome(token),
+        getMyHistoryEvents(token),
+        getCommonHistoryMilestones(token),
+      ]);
 
-      const history = await getMyHistoryEvents(token);
-      setHistoryEvents(history);
-
-      const common = await getCommonHistoryMilestones(token);
-      setCommonMilestones(common);
+      setHomeData(home);
+      setHistoryEvents(Array.isArray(history) ? history : []);
+      setCommonMilestones(Array.isArray(common) ? common : []);
+    } catch (error) {
+      console.log("수련의 길 로딩 실패:", error);
     } finally {
       setLoading(false);
     }

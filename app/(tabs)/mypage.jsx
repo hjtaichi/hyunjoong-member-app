@@ -2168,8 +2168,8 @@ heroCardYudanja: {
   borderColor: "transparent",
 
   // 카드 안쪽 여백 조절
-  paddingHorizontal: 14,
-  paddingVertical: 12,
+  paddingHorizontal: 15,
+  paddingVertical: 15,
 
   shadowColor: "#C9962A",
   shadowOpacity: 0.14,

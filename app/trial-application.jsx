@@ -41,7 +41,7 @@ export default function TrialApplicationScreen() {
   const [shoeSize, setShoeSize] = useState("");
   const [height, setHeight] = useState("");
   const [memo, setMemo] = useState("");
-  const trialTogetherImage = require("../assets/images/trial-together.png");
+  const trialTogetherImage = require("../assets/images/trial-hero-man.png");
   const { isAuthenticated } = useAuth();
 
   function onlyNumbers(value) {
@@ -361,40 +361,39 @@ const styles = StyleSheet.create({
     color: "#241E1A",
   },
   hero: {
-  marginTop: 18,
-  marginBottom: 26,
-  minHeight: 148,
+  marginTop: -42,
+  marginBottom: 14,
+  minHeight: 310,
   paddingLeft: 4,
-  paddingRight: 128,
-  paddingTop: 26,
-  paddingBottom: 16,
-  overflow: "visible",
+  paddingTop: 94,
   position: "relative",
-  backgroundColor: "transparent",
-  borderWidth: 0,
+  overflow: "visible",
 },
 
 heroTitle: {
-  fontSize: 28,
+  fontSize: 34,
+  lineHeight: 44,
   fontFamily: fonts.title,
   color: colors.textMain,
+  letterSpacing: -0.6,
 },
 
 heroDesc: {
-  marginTop: 14,
-  fontSize: 14,
-  lineHeight: 23,
+  marginTop: 15,
+  fontSize: 17,
+  lineHeight: 24,
   fontFamily: fonts.medium,
   color: colors.textSub,
+  letterSpacing: -0.4,
 },
 
 heroDecorImage: {
   position: "absolute",
-  right: -22,
-  top: 8,
-  width: 180,
-  height: 150,
-  opacity: 0.72,
+  right: -30,
+  top: 34,
+  width: 250,
+  height: 260,
+  opacity: 0.9,
 },
 label: {
   marginTop: 14,

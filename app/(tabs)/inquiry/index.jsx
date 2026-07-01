@@ -201,27 +201,27 @@ const previewRooms = activeRooms.slice(0, 1);
       }
     >
       <View style={styles.segment}>
-        {TABS.map((tab) => {
-          const selected = activeTab === tab.key;
+  {TABS.map((tab) => {
+    const selected = activeTab === tab.key;
 
-          return (
-            <Pressable
-              key={tab.key}
-              style={[styles.segmentButton, selected && styles.segmentActive]}
-              onPress={() => setActiveTab(tab.key)}
-            >
-              <Text
-                style={[
-                  styles.segmentText,
-                  selected && styles.segmentTextActive,
-                ]}
-              >
-                {tab.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+    return (
+      <Pressable
+        key={tab.key}
+        style={[styles.segmentButton, selected && styles.segmentActive]}
+        onPress={() => setActiveTab(tab.key)}
+      >
+        <Text
+          style={[
+            styles.segmentText,
+            selected && styles.segmentTextActive,
+          ]}
+        >
+          {tab.label}
+        </Text>
+      </Pressable>
+    );
+  })}
+</View>
 
       {isPausedMember ? (
         <View style={styles.pausedBox}>
@@ -370,19 +370,17 @@ const previewRooms = activeRooms.slice(0, 1);
   <Image
     source={require("../../../assets/images/shop-mini-card.png")}
     style={styles.shopMiniBg}
-    resizeMode="cover"
+    resizeMode="stretch"
   />
 
-  <View style={styles.shopMiniOverlay}>
   <View style={styles.shopMiniTextBox}>
-    <Text style={styles.shopMiniTitle}>현중 Shop</Text>
-    <Text style={styles.shopMiniDesc}>도장 물품과 수련 용품 안내</Text>
+    <Text style={styles.shopMiniTitle}>수련용품 shop</Text>
+    <Text style={styles.shopMiniDesc}>
+      수련에 필요한 도장 물품과{"\n"}현중 굿즈를 안내해드려요.
+    </Text>
   </View>
 
-  <View style={styles.shopMiniTopButton}>
-    <Text style={styles.shopMiniTopButtonText}>바로가기 →</Text>
-  </View>
-</View>
+  <Text style={styles.shopMiniTopLink}>둘러보기 →</Text>
 </Pressable>
   </View>
 ) : null}
@@ -861,20 +859,32 @@ inquiryRightDate: {
   color: colors.textMuted,
 },
 shopMiniCard: {
-  height: 105,
-  borderRadius: 22,
+  position: "relative",
+  height: 88,
+  borderRadius: 21,
   overflow: "hidden",
-  marginTop: 14,
+  marginTop: 6,
   marginBottom: 8,
   borderWidth: 1,
   borderColor: "#E6D7CB",
+  backgroundColor: "#FFF9EF",
 },
 
 shopMiniBg: {
-  position: "absolute",
-  marginTop: 0,
+  ...StyleSheet.absoluteFillObject,
   width: "100%",
   height: "100%",
+},
+
+shopMiniLeft: {
+  flex: 1,
+},
+
+shopMiniTitle: {
+  fontSize: 19,
+  lineHeight: 23,
+  fontFamily: fonts.titleSemi,
+  color: "#3A2A20",
 },
 
 shopMiniOverlay: {
@@ -884,42 +894,31 @@ shopMiniOverlay: {
 },
 
 shopMiniTextBox: {
-  alignItems: "center",
-  marginLeft: 58,
-},
-
-shopMiniTitle: {
-  fontSize: 24,
-  fontWeight: "800",
-  color: "#2F2119",
-  marginTop: 10,
-  marginLeft: -25,
-  letterSpacing: -0.4,
+  position: "absolute",
+  left: 55,
+  top: 19,
+  zIndex: 3,
 },
 
 shopMiniDesc: {
-  marginTop: 1,
-  fontSize: 13,
-  lineHeight: 16,
-  marginLeft: 12,
-  color: "#4F4037",
-  fontWeight: "500",
-},
-shopMiniTopButton: {
-  position: "absolute",
-  right: 14,
-  top: 12,
-  borderRadius: 999,
-  backgroundColor: "rgba(122,47,37,0.9)",
-  paddingHorizontal: 10,
-  paddingVertical: 5,
+  marginTop: 4,
+  fontSize: 10,
+  lineHeight: 14,
+  fontFamily: fonts.medium,
+  color: "#5E4A3C",
 },
 
-shopMiniTopButtonText: {
-  color: "#F7E5C3",
+shopMiniTopLink: {
+  position: "absolute",
+  right: 15,
+  top: 8,
+  zIndex: 4,
   fontSize: 11,
-  fontWeight: "800",
+  lineHeight: 16,
+  fontFamily: fonts.bold,
+  color: "#5A3B29",
 },
+
 inquiryHeaderRow: {
   flexDirection: "row",
   alignItems: "center",
@@ -941,7 +940,7 @@ allInquiryLink: {
   color: colors.warmBrown,
 },
 albumBanner: {
-  marginTop: 14,
+  marginTop: 6,
   minHeight: 85,
   borderRadius: 26,
   padding: 18,

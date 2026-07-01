@@ -62,7 +62,7 @@ const SHOP_CATEGORIES = [
     key: "기타",
     icon: require("../assets/images/shop-category-etc.png"),
     title: "기타",
-    desc: "식품, 교재, 기념품",
+    desc: "식품, 굿즈 ",
     match: ["기타", "식품", "건강식품", "교재", "기념품", "굿즈", "티셔츠", "수건", "텀블러"],
   },
 ];
@@ -585,10 +585,10 @@ sectionDesc: {
 
 categoryCard: {
   width: "48%",
-  minHeight: 82,
+  minHeight: 70,
   borderRadius: radius.lg,
-  paddingHorizontal: 12,
-  paddingVertical: 12,
+  paddingHorizontal: 11,
+  paddingVertical: 11,
   backgroundColor: colors.card,
   borderWidth: 1,
   borderColor: colors.border,
@@ -602,8 +602,8 @@ categoryCardActive: {
 },
 
 categoryImage: {
-  width: 42,
-  height: 42,
+  width: 70,
+  height: 70,
   marginRight: 10,
 },
 
@@ -612,7 +612,7 @@ categoryTextBox: {
 },
 
 categoryTitle: {
-  fontSize: 15,
+  fontSize: 16,
   lineHeight: 21,
   fontFamily: fonts.bold,
   color: colors.textMain,
@@ -623,7 +623,7 @@ categoryTitleActive: {
 
 categoryDesc: {
   marginTop: 3,
-  fontSize: 11,
+  fontSize: 13,
   lineHeight: 16,
   fontFamily: fonts.medium,
   color: colors.textSub,

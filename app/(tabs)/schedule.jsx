@@ -840,7 +840,7 @@ Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>홈 화면을 불러오는 중입니다.</Text>
+        <Text style={styles.loadingText}>일정 화면을 불러오는 중입니다.</Text>
       </View>
     );
   }
