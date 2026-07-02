@@ -300,37 +300,47 @@ const loadFormRecords = useCallback(async () => {
       try {
         if (!silent) setLoading(true);
 
-        const taegukwonResult = await getMemberTaegukwon(token);
-
-try {
-  await loadGongbeopRecord();
-} catch (gongbeopError) {
-  console.log("공법 기록 불러오기 실패:", gongbeopError);
-}
-try {
-  await loadGongbeopGoals();
-} catch (gongbeopGoalError) {
-  console.log("공력 목표 불러오기 실패:", gongbeopGoalError);
-}
-try {
-  await loadFormRecords();
-} catch (formRecordError) {
-  console.log("투로 기록 불러오기 실패:", formRecordError);
-}
-try {
-  const privateLessonResult = await getMyPrivateLessons(token);
-  console.log("개인지도 API", privateLessonResult);
-  setPrivateLessonData(privateLessonResult);
-} catch (privateLessonError) {
-  console.log("개인지도 정보 불러오기 실패:", privateLessonError);
-  setPrivateLessonData(null);
-}
+const taegukwonResult = await getMemberTaegukwon(token);
 
 const payload = taegukwonResult?.data ? taegukwonResult.data : taegukwonResult;
+
+setTaegukwonData(payload);
+
+const record = payload?.gongbeopRecord;
+
+setGongbeopRecord({
+  ilsimyangui: record?.ilsimyangui ? String(record.ilsimyangui) : "",
+  yobujeonsa: record?.yobujeonsa ? String(record.yobujeonsa) : "",
+  duyoMinutes: record?.duyoMinutes ? String(record.duyoMinutes) : "",
+  ohaengjeonsa: record?.ohaengjeonsa ? String(record.ohaengjeonsa) : "",
+});
+
+setGongbeopUpdatedAt(record?.updatedAt || null);
+
+const activeGoals = payload?.gongbeopGoals?.activeGoals || [];
+
+setGongbeopGoalRows(activeGoals);
+
+setGongbeopGoals((prev) => ({
+  ...prev,
+  ilsimyangui:
+    activeGoals.find((item) => item.type === "ilsimyangui")?.target?.toString() ||
+    prev.ilsimyangui,
+  yobujeonsa:
+    activeGoals.find((item) => item.type === "yobujeonsa")?.target?.toString() ||
+    prev.yobujeonsa,
+  duyoMinutes:
+    activeGoals.find((item) => item.type === "duyoMinutes")?.target?.toString() ||
+    prev.duyoMinutes,
+  ohaengjeonsa:
+    activeGoals.find((item) => item.type === "ohaengjeonsa")?.target?.toString() ||
+    prev.ohaengjeonsa,
+}));
+
+setFormRecordData(payload?.formRecords || null);
+setPrivateLessonData(payload?.privateLesson || null);
         console.log("TAEGUKWON payload:", payload);
         console.log("TAEGUKWON member:", payload?.member);
-
-        setTaegukwonData(payload);
 
         if (payload?.personalProgress) {
           setEditCurriculumId(payload.personalProgress.curriculumId || "");

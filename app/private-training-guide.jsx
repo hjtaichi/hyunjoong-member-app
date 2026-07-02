@@ -20,8 +20,7 @@ const fonts = {
   title: "MaruBuriBold",
   titleSemi: "MaruBuriSemiBold",
 };
-import { API_BASE_URL } from "../src/config/env";
-import { useAuth } from "../src/contexts/AuthContext";
+import { submitPrivateTrainingRequest } from "../src/api/privateTraining";
 import { Calendar, LocaleConfig } from "react-native-calendars";
 
 LocaleConfig.locales.ko = {
@@ -41,7 +40,6 @@ LocaleConfig.locales.ko = {
 LocaleConfig.defaultLocale = "ko";
 
 export default function PrivateTrainingGuideScreen() {
-  const { token } = useAuth();
 
   const [consultModalVisible, setConsultModalVisible] = React.useState(false);
   const [calendarVisible, setCalendarVisible] = React.useState(false);
@@ -51,66 +49,55 @@ export default function PrivateTrainingGuideScreen() {
   const [consultDate, setConsultDate] = React.useState("");
   const [consultTime, setConsultTime] = React.useState("");
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
   console.log("🔥 개인지도 상담 신청 버튼 눌림", {
     consultContent,
     consultDateValue,
     consultTime,
-    API_BASE_URL,
   });
 
   if (!consultContent.trim()) {
-      Alert.alert("안내", "필요한 개인지도 내용을 적어주세요.");
-      return;
-    }
+    Alert.alert("안내", "필요한 개인지도 내용을 적어주세요.");
+    return;
+  }
 
-    if (!consultDateValue || !consultTime.trim()) {
-      Alert.alert("안내", "상담 희망 날짜와 시간을 선택해주세요.");
-      return;
-    }
+  if (!consultDateValue || !consultTime.trim()) {
+    Alert.alert("안내", "상담 희망 날짜와 시간을 선택해주세요.");
+    return;
+  }
 
-    Alert.alert("상담 신청", "개인 지도 상담 신청을 보내시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "신청하기",
-        onPress: async () => {
-          try {
-const response = await fetch(
-  `${API_BASE_URL}/member/me/private-training-requests`,
-  {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                  "ngrok-skip-browser-warning": "true",
-                },
-                body: JSON.stringify({
-                  requestContent: consultContent,
-                  preferredDate: consultDateValue,
-                  preferredTime: consultTime,
-                }),
-              }
-            );
+  try {
+    console.log("🔥 개인지도 API 요청 시작");
 
-            const result = await response.json();
+    const result = await submitPrivateTrainingRequest({
+      requestContent: consultContent,
+      preferredDate: consultDateValue,
+      preferredTime: consultTime,
+    });
 
-            if (!response.ok) {
-              throw new Error(result.message || "신청 등록 실패");
-            }
+    console.log("✅ 개인지도 API 요청 성공", result);
 
-            Alert.alert("완료", "상담 신청이 접수되었습니다.");
-            setConsultModalVisible(false);
-            setConsultContent("");
-            setConsultDate("");
-            setConsultDateValue("");
-            setConsultTime("");
-          } catch (error) {
-            Alert.alert("오류", error.message || "상담 신청 중 오류가 발생했습니다.");
-          }
-        },
-      },
-    ]);
-  };
+    setConsultModalVisible(false);
+
+router.push({
+  pathname: "/private-training-request-complete",
+  params: {
+    requestContent: consultContent,
+    preferredDate: consultDateValue,
+    preferredTime: consultTime,
+  },
+});
+  } catch (error) {
+    console.log("❌ 개인지도 상담 신청 에러:", error?.response?.data || error);
+
+    Alert.alert(
+      "오류",
+      error?.response?.data?.message ||
+        error?.message ||
+        "상담 신청 중 오류가 발생했습니다."
+    );
+  }
+};
 
   return (
     <View style={styles.container}>
