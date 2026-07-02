@@ -52,7 +52,14 @@ export default function PrivateTrainingGuideScreen() {
   const [consultTime, setConsultTime] = React.useState("");
 
   const handleSubmit = async () => {
-    if (!consultContent.trim()) {
+  console.log("🔥 개인지도 상담 신청 버튼 눌림", {
+    consultContent,
+    consultDateValue,
+    consultTime,
+    API_BASE_URL,
+  });
+
+  if (!consultContent.trim()) {
       Alert.alert("안내", "필요한 개인지도 내용을 적어주세요.");
       return;
     }
@@ -68,9 +75,9 @@ export default function PrivateTrainingGuideScreen() {
         text: "신청하기",
         onPress: async () => {
           try {
-            const response = await fetch(
-              `${API_BASE_URL}/api/member/me/private-training-requests`,
-              {
+const response = await fetch(
+  `${API_BASE_URL}/member/me/private-training-requests`,
+  {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
