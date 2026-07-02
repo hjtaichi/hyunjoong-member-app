@@ -15,13 +15,14 @@ import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberProducts, createProductOrder } from "../src/api/memberShop";
 import { colors, radius, shadow } from "../src/theme";
 import ScreenHeader from "../src/components/ScreenHeader";
+import { useCart } from "../src/contexts/CartContext";
+
 const fonts = {
   medium: "PretendardMedium",
   semiBold: "PretendardSemiBold",
   bold: "PretendardBold",
   titleSemi: "MaruBuriSemiBold",
 };
-import { useCart } from "../src/contexts/CartContext";
 
 const API_ORIGIN = "http://172.30.1.16:5000";
 
@@ -33,41 +34,45 @@ function getImageUrl(imageUrl) {
 
 function getStockInfo(product) {
   if (product?.stockStatus === "available") {
-    return {
-      label: "재고 있음",
-      desc: "구매는 문의창 혹은 도장에서 관장님께 문의해주세요.",
-      detail: "도장에서 관장님께 문의 후 구매할 수 있어요.",
-      tone: "available",
-    };
+    return { label: "재고 있음", tone: "available" };
   }
 
   if (product?.stockStatus === "unavailable") {
-    return {
-      label: "재고 없음",
-      desc: "입고 여부는 관장님께 문의해주세요.",
-      detail: "현재 바로 구매 가능한 재고가 없습니다.",
-      tone: "order",
-    };
+    return { label: "재고 없음", tone: "order" };
   }
 
-  return {
-    label: "문의 필요",
-    desc: "자세한 상태는 관장님께 문의해주세요.",
-    detail: "도장 상황에 따라 구매 가능 여부를 안내드려요.",
-    tone: "order",
-  };
+  return { label: "문의 필요", tone: "order" };
 }
 
+function DetailImageSection({ title, imageUrl, large = false, cover = false }) {
+  const source = getImageUrl(imageUrl);
+  if (!source) return null;
+
+  return (
+    <View style={styles.detailSection}>
+      {title ? <Text style={styles.detailSectionTitle}>{title}</Text> : null}
+
+      <Image
+        source={{ uri: source }}
+        style={[
+          styles.detailImage,
+          large && styles.detailImageLarge,
+        ]}
+        resizeMode={cover ? "cover" : "contain"}
+      />
+    </View>
+  );
+}
 
 export default function ShopDetailScreen() {
   const { productId } = useLocalSearchParams();
   const { token } = useAuth();
+  const { addToCart } = useCart();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
-  const { addToCart } = useCart();
 
   const loadProduct = useCallback(async () => {
     if (!token) return;
@@ -93,8 +98,47 @@ export default function ShopDetailScreen() {
     [products, productId]
   );
 
-  const imageSource = getImageUrl(product?.imageUrl);
+  const mainImage = getImageUrl(product?.imageUrl);
   const stock = getStockInfo(product);
+
+const usedImages = [
+  product?.imageUrl,
+  product?.bannerImageUrl,
+  product?.lifestyleImageUrl,
+].filter(Boolean);
+
+const detailImages = [
+  product?.detailImage1,
+  product?.detailImage2,
+  product?.detailImage3,
+]
+  .filter(Boolean)
+  .filter((imageUrl) => !usedImages.includes(imageUrl));
+
+  async function handleOrder() {
+    if (ordering) return;
+
+    try {
+      setOrdering(true);
+
+      await createProductOrder(token, {
+        items: [
+          {
+            productId: product.id,
+            quantity: 1,
+            memo: `${product.name} 주문 요청`,
+          },
+        ],
+        memo: `${product.name} 주문 요청`,
+      });
+
+      setSuccessModalVisible(true);
+    } catch (error) {
+      Alert.alert("오류", error.message || "주문 요청에 실패했습니다.");
+    } finally {
+      setOrdering(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -117,252 +161,205 @@ export default function ShopDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.shopHeader}>
-  <ScreenHeader title="상품 상세" />
+    <View style={styles.root}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <View style={styles.shopHeader}>
+          <ScreenHeader title="상품 상세" />
 
-  <Pressable style={styles.cartButton} onPress={() => router.push("/cart")}>
-    <Image
-      source={require("../assets/images/icon-shop-cart.png")}
-      style={styles.cartImage}
-      resizeMode="contain"
-    />
-  </Pressable>
-</View>
-
-      <View style={styles.imageCard}>
-        {imageSource ? (
-          <Image
-            source={{ uri: imageSource }}
-            style={styles.mainImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.noImageBox}>
-            <Text style={styles.noImageText}>玄</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.infoCard}>
-        <View style={styles.titleRow}>
-          <View style={styles.titleBlock}>
-            <Text style={styles.productName}>{product.name}</Text>
-            
-          </View>
-
-          <View
-  style={[
-    styles.stockPill,
-    stock.tone === "available" && styles.stockPillAvailable,
-    stock.tone === "order" && styles.stockPillOrder,
-  ]}
->
-            <Text
-  style={[
-    styles.stockPillText,
-    stock.tone === "available" && styles.stockPillTextAvailable,
-    stock.tone === "order" && styles.stockPillTextOrder,
-  ]}
->
-  {stock.label}
-</Text>
-          </View>
+          <Pressable style={styles.cartButton} onPress={() => router.push("/cart")}>
+            <Image
+              source={require("../assets/images/icon-shop-cart.png")}
+              style={styles.cartImage}
+              resizeMode="contain"
+            />
+          </Pressable>
         </View>
 
-        
+        <View style={styles.heroCard}>
+          {mainImage ? (
+            <Image source={{ uri: mainImage }} style={styles.heroImage} resizeMode="cover" />
+          ) : (
+            <View style={styles.noImageBox}>
+              <Text style={styles.noImageText}>玄</Text>
+            </View>
+          )}
+        </View>
 
-<View style={styles.buttonRow}>
-  <Pressable
-    style={styles.outlineButton}
-    onPress={() => {
-      addToCart(product, 1);
-      router.push("/cart");
-    }}
-  >
-    <Text style={styles.outlineButtonText}>장바구니 담기</Text>
-  </Pressable>
+        <View style={styles.summaryCard}>
+          <View style={styles.categoryRow}>
+            <Text style={styles.categoryText}>{product.category || "현중 Shop"}</Text>
 
-  <Pressable
-    style={[styles.primaryButton, ordering && styles.primaryButtonDisabled]}
-    onPress={async () => {
-      if (ordering) return;
+            <View
+              style={[
+                styles.stockPill,
+                stock.tone === "available" && styles.stockPillAvailable,
+                stock.tone === "order" && styles.stockPillOrder,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.stockPillText,
+                  stock.tone === "available" && styles.stockPillTextAvailable,
+                  stock.tone === "order" && styles.stockPillTextOrder,
+                ]}
+              >
+                {stock.label}
+              </Text>
+            </View>
+          </View>
 
-      try {
-        setOrdering(true);
+          <Text style={styles.productName}>{product.name}</Text>
 
-        await createProductOrder(token, {
-          items: [
-            {
-              productId: product.id,
-              quantity: 1,
-              memo: `${product.name} 주문 요청`,
-            },
-          ],
-          memo: `${product.name} 주문 요청`,
-        });
+          {product.optionName ? (
+            <Text style={styles.optionText}>{product.optionName}</Text>
+          ) : null}
 
-        setSuccessModalVisible(true);
-      } catch (error) {
-        Alert.alert("오류", error.message || "주문 요청에 실패했습니다.");
-      } finally {
-        setOrdering(false);
-      }
-    }}
-  >
-    <Text style={styles.primaryButtonText}>
-      {ordering ? "요청 중..." : "구매 문의하기"}
-    </Text>
-  </Pressable>
-</View>
+          <View style={styles.goldLine} />
 
-        <View style={styles.line} />
+          <Text style={styles.description}>
+            {product.memo ||
+              "도장 수련과 생활에 어울리는 현중태극권 Shop 상품입니다. 자세한 구매 방법은 도장에서 문의해주세요."}
+          </Text>
+        </View>
 
-        <Text style={styles.description}>
-          {product.memo ||
-            product.optionName ||
-            "도장 수련에 필요한 물품입니다. 자세한 사이즈와 수령 방법은 도장에 문의해주세요."}
-        </Text>
+<DetailImageSection
+  title="상품 설명"
+  imageUrl={product.bannerImageUrl}
+  large
+/>
+<DetailImageSection
+  imageUrl={product.lifestyleImageUrl}
+  large
+  cover
+/>
 
-        <View style={styles.specBox}>
+        {detailImages.length > 0 ? (
+          <View style={styles.detailGroup}>
+            <Text style={styles.detailSectionTitle}>상세 안내</Text>
+
+            {detailImages.map((imageUrl, index) => (
+              <View key={`${imageUrl}-${index}`} style={styles.detailImageWrap}>
+                <Image
+                  source={{ uri: getImageUrl(imageUrl) }}
+                  style={styles.detailImage}
+                  resizeMode="cover"
+                />
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        <View style={styles.specCard}>
+          <Text style={styles.specTitle}>상품 정보</Text>
+
           <View style={styles.specRow}>
-            <Text style={styles.specIcon}>▣</Text>
             <Text style={styles.specLabel}>분류</Text>
             <Text style={styles.specValue}>{product.category || "기타"}</Text>
           </View>
 
           <View style={styles.specRow}>
-            <Text style={styles.specIcon}>◈</Text>
             <Text style={styles.specLabel}>옵션</Text>
-            <Text style={styles.specValue}>
-              {product.optionName || "도장 문의"}
-            </Text>
+            <Text style={styles.specValue}>{product.optionName || "도장 문의"}</Text>
           </View>
 
           <View style={styles.specRow}>
-            <Text style={styles.specIcon}>☑</Text>
             <Text style={styles.specLabel}>재고</Text>
             <Text style={styles.specValue}>{stock.label}</Text>
           </View>
         </View>
 
-        <View style={styles.recommendBox}>
-          <Text style={styles.boxTitle}>이런 분께 추천해요</Text>
+        <Text style={styles.footerNotice}>
+          ※ 모든 상품은 도장에 문의 후 구매 또는 주문 가능합니다.
+        </Text>
 
-          <View style={styles.checkRow}>
-            <Text style={styles.checkIcon}>✓</Text>
-            <Text style={styles.checkText}>도장 물품이 필요한 회원</Text>
-          </View>
+        <Modal
+          visible={successModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSuccessModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.successModalCard}>
+              <View style={styles.successIconCircle}>
+                <Text style={styles.successIconText}>✓</Text>
+              </View>
 
-          <View style={styles.checkRow}>
-            <Text style={styles.checkIcon}>✓</Text>
-            <Text style={styles.checkText}>수련 준비물을 갖추려는 회원</Text>
-          </View>
+              <Text style={styles.successTitle}>주문 요청 완료</Text>
 
-          <View style={styles.checkRow}>
-            <Text style={styles.checkIcon}>✓</Text>
-            <Text style={styles.checkText}>관리자 안내 후 구매하고 싶은 회원</Text>
-          </View>
-        </View>
-      </View>
+              <Text style={styles.successMessage}>
+                주문 요청이 접수되었습니다.{"\n"}
+                관리자가 확인 후 안내드릴 예정입니다.
+              </Text>
 
-      <View style={styles.stockGuideCard}>
-        <Text style={styles.stockGuideTitle}>재고 상태 안내</Text>
-
-        <View style={styles.stockGuideItem}>
-          <View style={[styles.statusDot, styles.goldDot]} />
-          <View>
-            <Text style={styles.statusTitle}>재고 있음</Text>
-            <Text style={styles.statusDesc}>도장에서 바로 구매 가능</Text>
-          </View>
-        </View>
-
-        <View style={styles.stockGuideItem}>
-          <View style={[styles.statusDot, styles.darkDot]} />
-          <View>
-            <Text style={styles.statusTitle}>문의 필요</Text>
-<Text style={styles.statusDesc}>관장님 확인 후 구매 가능 여부 안내</Text>
-          </View>
-        </View>
-
-        <View style={styles.stockGuideItem}>
-          <View style={[styles.statusDot, styles.grayDot]} />
-          <View>
-            <Text style={styles.statusTitle}>품절</Text>
-            <Text style={styles.statusDesc}>입고 일정은 추후 안내</Text>
-          </View>
-        </View>
-      </View>
-
-      <Text style={styles.footerNotice}>
-        ※ 모든 상품은 도장에 문의 후 구매 또는 주문 가능합니다.
-      </Text>
-
-      <Modal
-        visible={successModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSuccessModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.successModalCard}>
-            <View style={styles.successIconCircle}>
-              <Text style={styles.successIconText}>✓</Text>
+              <Pressable
+                style={styles.successButton}
+                onPress={() => setSuccessModalVisible(false)}
+              >
+                <Text style={styles.successButtonText}>확인</Text>
+              </Pressable>
             </View>
-
-            <Text style={styles.successTitle}>주문 요청 완료</Text>
-
-            <Text style={styles.successMessage}>
-              주문 요청이 접수되었습니다.{"\n"}
-              관리자가 확인 후 안내드릴 예정입니다.
-            </Text>
-
-            <Pressable
-              style={styles.successButton}
-              onPress={() => setSuccessModalVisible(false)}
-            >
-              <Text style={styles.successButtonText}>확인</Text>
-            </Pressable>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        </Modal>
+      </ScrollView>
+
+      <View style={styles.bottomBar}>
+        <Pressable
+          style={styles.outlineButton}
+          onPress={() => {
+            addToCart(product, 1);
+            router.push("/cart");
+          }}
+        >
+          <Text style={styles.outlineButtonText}>장바구니</Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.primaryButton, ordering && styles.primaryButtonDisabled]}
+          onPress={handleOrder}
+        >
+          <Text style={styles.primaryButtonText}>
+            {ordering ? "요청 중..." : "구매 문의하기"}
+          </Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.background || "#FFFCFA",
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background || "#FFFCFA",
   },
   content: {
-  paddingHorizontal: 16,
-  paddingTop: 24,
-  paddingBottom: 110,
-  width: "100%",
-  maxWidth: 430,
-  alignSelf: "center",
-},
-
-shopHeader: {
-  position: "relative",
-},
-
-cartButton: {
-  position: "absolute",
-  right: 0,
-  top: 0,
-  width: 44,
-  height: 44,
-  alignItems: "center",
-  justifyContent: "center",
-},
-
-cartImage: {
-  width: 24,
-  height: 24,
-  opacity: 0.82,
-},
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 140,
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+  },
+  shopHeader: {
+    position: "relative",
+  },
+  cartButton: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cartImage: {
+    width: 24,
+    height: 24,
+    opacity: 0.82,
+  },
   center: {
     flex: 1,
     backgroundColor: colors.background || "#FFFCFA",
@@ -375,8 +372,8 @@ cartImage: {
   },
   emptyTitle: {
     fontSize: 17,
-    fontWeight: "800",
-    color: "#3A281F",
+    fontFamily: fonts.bold,
+    color: colors.textMain,
   },
   backHomeButton: {
     marginTop: 16,
@@ -387,51 +384,19 @@ cartImage: {
   },
   backHomeText: {
     color: "#fff",
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
-
-  header: {
-    height: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  heroCard: {
+    marginTop: 16,
+    height: 300,
+    borderRadius: 30,
+    overflow: "hidden",
+    backgroundColor: "#F3E8DE",
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.card,
   },
-  backButton: {
-    width: 42,
-    height: 42,
-    alignItems: "flex-start",
-    justifyContent: "center",
-  },
-  backText: {
-    fontSize: 38,
-    color: "#2F2119",
-    marginTop: -5,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#2F2119",
-  },
-  cartIcon: {
-    width: 42,
-    height: 42,
-    alignItems: "flex-end",
-    justifyContent: "center",
-  },
-  cartText: {
-    fontSize: 21,
-  },
-imageCard: {
-  marginTop: 16,
-  height: 250,
-  borderRadius: radius.lg,
-  overflow: "hidden",
-  backgroundColor: "#F3E8DE",
-  borderWidth: 1,
-  borderColor: colors.border,
-  ...shadow.card,
-},
-  mainImage: {
+  heroImage: {
     width: "100%",
     height: "100%",
   },
@@ -442,241 +407,192 @@ imageCard: {
   },
   noImageText: {
     fontSize: 48,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     color: "#B89A7A",
   },
-
-  infoCard: {
-  marginTop: 18,
-  borderRadius: radius.lg,
-  backgroundColor: colors.card,
-  borderWidth: 1,
-  borderColor: colors.border,
-  padding: 18,
-  ...shadow.card,
-},
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 12,
+  summaryCard: {
+    marginTop: 16,
+    borderRadius: 28,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 20,
+    ...shadow.card,
   },
-  titleBlock: {
-    flex: 1,
+  categoryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  categoryText: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontFamily: fonts.semiBold,
+    color: colors.warmBrown || "#9A6A36",
+  },
+  stockPill: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  stockPillAvailable: {
+    backgroundColor: "#EAF4E6",
+  },
+  stockPillOrder: {
+    backgroundColor: "#F3D38C",
+  },
+  stockPillText: {
+    fontSize: 12,
+    fontFamily: fonts.bold,
+  },
+  stockPillTextAvailable: {
+    color: "#3F6B3A",
+  },
+  stockPillTextOrder: {
+    color: "#684013",
   },
   productName: {
-  fontSize: 22,
-  lineHeight: 30,
-  fontFamily: fonts.bold,
-  color: colors.textMain,
-},
-
-productPrice: {
-  marginTop: 4,
-  fontSize: 20,
-  lineHeight: 28,
-  fontFamily: fonts.bold,
-  color: colors.textMain,
-},
-
-  stockPill: {
-  borderRadius: 999,
-  paddingHorizontal: 12,
-  paddingVertical: 7,
-},
-stockPillAvailable: {
-  backgroundColor: "#EAF4E6",
-},
-stockPillOrder: {
-  backgroundColor: "#F3D38C",
-},
-  stockPillText: {
-  fontSize: 12,
-  fontWeight: "800",
-},
-stockPillTextAvailable: {
-  color: "#3F6B3A",
-},
-stockPillTextOrder: {
-  color: "#684013",
-},
-  buyText: {
-  marginTop: 8,
-  fontSize: 13,
-  lineHeight: 20,
-  fontFamily: fonts.medium,
-  color: colors.textSub,
-},
-  line: {
-    height: 1,
-    backgroundColor: "#E8D9CB",
-    marginVertical: 18,
+    marginTop: 12,
+    fontSize: 25,
+    lineHeight: 34,
+    fontFamily: fonts.titleSemi,
+    color: colors.textMain,
+  },
+  optionText: {
+    marginTop: 5,
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
+  goldLine: {
+    width: 42,
+    height: 2,
+    borderRadius: 99,
+    backgroundColor: colors.warmBrown || "#C89E6A",
+    marginTop: 18,
+    marginBottom: 16,
   },
   description: {
-  fontSize: 14,
-  lineHeight: 24,
-  fontFamily: fonts.medium,
-  color: colors.textSub,
+    fontSize: 15,
+    lineHeight: 26,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
+  detailSection: {
+    marginTop: 10,
+  },
+  detailGroup: {
+    marginTop: 22,
+    gap: 12,
+  },
+  detailSectionTitle: {
+    marginBottom: 10,
+    fontSize: 18,
+    lineHeight: 26,
+    fontFamily: fonts.titleSemi,
+    color: colors.textMain,
+  },
+  detailImageWrap: {
+  overflow: "hidden",
+  backgroundColor: "transparent",
+},
+  detailImageLarge: {
+  aspectRatio: 1.05,
+  marginTop: -60,
 },
 
-  specBox: {
-  marginTop: 18,
-  borderRadius: radius.md,
-  borderWidth: 1,
-  borderColor: colors.border,
-  backgroundColor: "#FFF9F0",
-  padding: 15,
-  gap: 13,
+detailImage: {
+  width: "100%",
+  aspectRatio: 1.25,
 },
+  specCard: {
+    marginTop: 24,
+    borderRadius: 26,
+    backgroundColor: "#FFF9F0",
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 18,
+  },
+  specTitle: {
+    marginBottom: 12,
+    fontSize: 17,
+    lineHeight: 24,
+    fontFamily: fonts.titleSemi,
+    color: colors.textMain,
+  },
   specRow: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  specIcon: {
-    width: 30,
-    color: "#8C6B52",
-    fontSize: 13,
+    paddingVertical: 11,
+    borderTopWidth: 1,
+    borderTopColor: "#EADDCF",
   },
   specLabel: {
-    width: 58,
+    width: 72,
     fontSize: 14,
-    color: "#5C4A3F",
-    fontWeight: "700",
+    fontFamily: fonts.semiBold,
+    color: "#7A6254",
   },
   specValue: {
     flex: 1,
     fontSize: 14,
-    color: "#2F2119",
-  },
-
-  recommendBox: {
-  marginTop: 18,
-  borderRadius: radius.md,
-  borderWidth: 1,
-  borderColor: colors.border,
-  backgroundColor: colors.card,
-  padding: 15,
-},
-  boxTitle: {
-  fontSize: 16,
-  lineHeight: 24,
-  fontFamily: fonts.titleSemi,
-  color: colors.textMain,
-  marginBottom: 12,
-},
-  checkRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 7,
-  },
-  checkIcon: {
-    width: 22,
-    color: "#B88737",
-    fontWeight: "900",
-  },
-  checkText: {
-    flex: 1,
-    fontSize: 14,
-    color: "#4F4038",
     lineHeight: 20,
-  },
-
-  buttonRow: {
-  flexDirection: "row",
-  gap: 10,
-  marginTop: 12,
-},
-
-outlineButton: {
-  flex: 1,
-  height: 50,
-  borderRadius: radius.md,
-  borderWidth: 1,
-  borderColor: colors.warmBrown,
-  alignItems: "center",
-  justifyContent: "center",
-  backgroundColor: colors.card,
-},
-
-outlineButtonText: {
-  fontSize: 15,
-  fontFamily: fonts.bold,
-  color: colors.warmBrown,
-},
-
-primaryButton: {
-  flex: 1,
-  height: 50,
-  borderRadius: radius.md,
-  backgroundColor: colors.warmBrown,
-  alignItems: "center",
-  justifyContent: "center",
-},
-
-primaryButtonText: {
-  fontSize: 15,
-  fontFamily: fonts.bold,
-  color: colors.white,
-},
-  
-  primaryButtonDisabled: {
-    opacity: 0.78,
-  },
-
-
-  stockGuideCard: {
-  marginTop: 14,
-  borderRadius: radius.lg,
-  backgroundColor: "#F8F1EA",
-  borderWidth: 1,
-  borderColor: colors.border,
-  padding: 18,
-  ...shadow.card,
-},
-  stockGuideTitle: {
-  fontSize: 16,
-  lineHeight: 24,
-  fontFamily: fonts.titleSemi,
-  color: colors.textMain,
-  marginBottom: 12,
-},
-  stockGuideItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 11,
-    gap: 12,
-  },
-  statusDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-  },
-  goldDot: {
-  backgroundColor: "#8DB77E",
-},
-darkDot: {
-  backgroundColor: "#D8AD45",
-},
-grayDot: {
-  backgroundColor: "#B9B3AE",
-},
-  statusTitle: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#4A3327",
-  },
-  statusDesc: {
-    marginTop: 2,
-    fontSize: 13,
-    color: "#7A6A61",
+    fontFamily: fonts.medium,
+    color: colors.textMain,
   },
   footerNotice: {
     marginTop: 14,
     fontSize: 12,
     lineHeight: 18,
+    fontFamily: fonts.medium,
     color: "#7F6E63",
   },
-
+  bottomBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 24,
+    backgroundColor: "rgba(255, 252, 250, 0.96)",
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    flexDirection: "row",
+    gap: 10,
+  },
+  outlineButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.warmBrown,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.card,
+  },
+  outlineButtonText: {
+    fontSize: 15,
+    fontFamily: fonts.bold,
+    color: colors.warmBrown,
+  },
+  primaryButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: radius.md,
+    backgroundColor: colors.warmBrown,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryButtonText: {
+    fontSize: 15,
+    fontFamily: fonts.bold,
+    color: colors.white,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.78,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(30, 22, 17, 0.38)",
@@ -710,18 +626,19 @@ grayDot: {
   },
   successIconText: {
     fontSize: 30,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     color: "#5A3910",
   },
   successTitle: {
     fontSize: 21,
-    fontWeight: "800",
-    color: "#2F2119",
+    fontFamily: fonts.bold,
+    color: colors.textMain,
   },
   successMessage: {
     marginTop: 10,
     fontSize: 14,
     lineHeight: 22,
+    fontFamily: fonts.medium,
     color: "#6F5C50",
     textAlign: "center",
   },
@@ -737,7 +654,6 @@ grayDot: {
   successButtonText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
-
 });

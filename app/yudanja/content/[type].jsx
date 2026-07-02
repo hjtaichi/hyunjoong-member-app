@@ -465,7 +465,7 @@ introTopImage: {
 rulesTopImage: {
   alignSelf: "center",
   width: "58%",
-  height: 200,
+  height: 190,
   marginTop: 4,
   marginBottom: 28,
 },

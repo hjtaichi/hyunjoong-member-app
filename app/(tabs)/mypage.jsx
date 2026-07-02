@@ -46,6 +46,7 @@ const [phoneModalVisible, setPhoneModalVisible] = useState(false);
 const [paymentModalVisible, setPaymentModalVisible] = useState(false);
 const [avatarModalVisible, setAvatarModalVisible] = useState(false);
 const [defaultAvatarModalVisible, setDefaultAvatarModalVisible] = useState(false);
+const [accountCopied, setAccountCopied] = useState(false);
 
 const [currentPassword, setCurrentPassword] = useState("");
 const [newPassword, setNewPassword] = useState("");
@@ -593,7 +594,12 @@ const PAYMENT_ACCOUNT_COPY_TEXT =
 
 async function handleCopyAccount() {
   await Clipboard.setStringAsync(PAYMENT_ACCOUNT_COPY_TEXT);
-  Alert.alert("복사 완료", "계좌번호가 복사되었습니다.");
+
+  setAccountCopied(true);
+
+  setTimeout(() => {
+    setAccountCopied(false);
+  }, 1800);
 }
 
 async function handleOpenSeoulPay() {
@@ -1047,11 +1053,11 @@ function MenuDivider() {
 
   <MenuDivider />
 
-  <MenuRow
-    title="알림 설정"
-    description="공지와 출석 알림 설정"
-    onPress={() => Alert.alert("안내", "알림 설정은 준비 중입니다.")}
-  />
+<MenuRow
+  title="알림 설정"
+  description="공지와 출석 알림 설정"
+  onPress={() => router.push("/notification-settings")}
+/>
 
 </View>
       <Pressable style={styles.logoutButton} onPress={handleLogout}>
@@ -1399,6 +1405,12 @@ function MenuDivider() {
       계좌 정보 복사
     </Text>
   </Pressable>
+
+  {accountCopied ? (
+  <Text style={styles.copyCompleteText}>
+    계좌 정보가 복사되었습니다.
+  </Text>
+) : null}
 </View>
           </View>
         </View>
@@ -2961,5 +2973,13 @@ avatarTabText: {
 
 avatarTabTextActive: {
   color: "#FFFFFF",
+},
+copyCompleteText: {
+  marginTop: 8,
+  fontSize: 13,
+  lineHeight: 18,
+  fontFamily: fonts.semiBold,
+  color: colors.warmBrown,
+  textAlign: "center",
 },
 });

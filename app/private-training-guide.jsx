@@ -62,7 +62,7 @@ export default function PrivateTrainingGuideScreen() {
       return;
     }
 
-    Alert.alert("상담 신청", "개별 지도 상담 신청을 보내시겠습니까?", [
+    Alert.alert("상담 신청", "개인 지도 상담 신청을 보내시겠습니까?", [
       { text: "취소", style: "cancel" },
       {
         text: "신청하기",
@@ -108,7 +108,7 @@ export default function PrivateTrainingGuideScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <ScreenHeader title="개별 수련 지도 안내" />
+        <ScreenHeader title="개인 수련 지도 안내" />
         <View style={styles.heroSection}>
   <Image
     source={require("../assets/images/private-training-hero-new.png")}
@@ -249,14 +249,14 @@ export default function PrivateTrainingGuideScreen() {
           activeOpacity={0.9}
           onPress={() => setConsultModalVisible(true)}
         >
-          <Text style={styles.ctaText}>개별 지도 상담 신청하기</Text>
+          <Text style={styles.ctaText}>개인 지도 상담 신청하기</Text>
         </TouchableOpacity>
       </ScrollView>
 
       <Modal visible={consultModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.consultModalCard}>
-            <Text style={styles.modalTitle}>개별 지도 상담 신청</Text>
+            <Text style={styles.modalTitle}>개인 지도 상담 신청</Text>
             <Text style={styles.modalDesc}>
               어떤 부분이 궁금한지와 상담 희망 시간을 남겨주세요.
             </Text>
@@ -625,11 +625,12 @@ infoText: {
 },
 
   infoSubText: {
-    fontSize: 14.5,
+    fontSize: 14,
     lineHeight: 22,
     color: "#2f2a24",
     fontWeight: "500",
     marginLeft: 8,
+    letterSpacing:-0.1,
   },
 
   bottomNotice: {

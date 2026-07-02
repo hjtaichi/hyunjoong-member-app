@@ -2431,17 +2431,26 @@ if (result.data?.completedGoal) {
     {currentPeriodLabel} 목표 횟수
   </Text>
 
+  <Text style={styles.goalInputHint}>
+    1회 이상 9,999,999회 이하로 입력 가능
+  </Text>
+
   <View style={styles.goalInputBox}>
-    <TextInput
-      value={formGoalCount}
-      onChangeText={(value) => setFormGoalCount(value.replace(/[^0-9]/g, ""))}
-      keyboardType="numeric"
-      style={styles.goalCountInput}
-      placeholder="100"
-      placeholderTextColor="#B8A99D"
-    />
-    <Text style={styles.goalInputUnit}>회</Text>
-  </View>
+  <TextInput
+    value={formGoalCount}
+    onChangeText={(value) => {
+      const numericOnly = value.replace(/[^0-9]/g, "").slice(0, 7);
+      setFormGoalCount(numericOnly);
+    }}
+    keyboardType="numeric"
+    maxLength={7}
+    style={styles.goalCountInput}
+    placeholder="100"
+    placeholderTextColor="#B8A99D"
+  />
+
+  <Text style={styles.goalInputUnit}>회</Text>
+</View>
 </View>
 
       <View style={styles.formModalButtonRow}>
@@ -2467,8 +2476,12 @@ if (result.data?.completedGoal) {
 
               const targetCountValue = Number(formGoalCount);
 
-if (!formGoalCount || targetCountValue <= 0) {
-  Alert.alert("안내", "목표 횟수를 입력하셔야 합니다.");
+if (
+  !Number.isInteger(targetCountValue) ||
+  targetCountValue < 1 ||
+  targetCountValue > 9999999
+) {
+  Alert.alert("안내", "목표 횟수는 1회 이상 9,999,999회 이하로 입력해주세요.");
   return;
 }
 
@@ -4885,6 +4898,15 @@ goalInputLabel: {
   marginBottom: 8,
 },
 
+goalInputHint: {
+  marginTop: -4,
+  marginBottom: 8,
+  fontSize: 12,
+  color: "#9B8D84",
+  textAlign: "center",
+  fontWeight: "600",
+},
+
 goalInputBox: {
   width: "100%",
   height: 54,
@@ -4892,26 +4914,30 @@ goalInputBox: {
   borderWidth: 1,
   borderColor: "#E2D3C5",
   backgroundColor: "#FFFDF9",
-  flexDirection: "row",
-  alignItems: "center",
-  paddingHorizontal: 16,
+  justifyContent: "center",
+  position: "relative",
 },
 
 goalCountInput: {
-  flex: 1,
+  width: "100%",
   height: "100%",
+  paddingHorizontal: 48,
+  textAlign: "center",
   fontSize: 22,
   fontFamily: fonts.titleSemi,
   color: colors.warmBrown,
-  textAlign: "center",
   outlineStyle: "none",
 },
 
 goalInputUnit: {
-  fontSize: 16,
+  position: "absolute",
+  right: 18,
+  top: 16,
+  fontSize: 15,
   fontFamily: fonts.semiBold,
   color: colors.textSub,
 },
+
 featuredInkCircleImage: {
   position: "absolute",
   right: -10,
@@ -5163,4 +5189,5 @@ privateGuideBannerArrow: {
   fontSize: 22,
   color: "#C89E6A",
 },
+
 });

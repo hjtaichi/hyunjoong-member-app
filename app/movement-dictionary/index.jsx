@@ -137,20 +137,20 @@ export default function MovementDictionaryHomeScreen() {
           key={`${movement.formId}-${movement.number}`}
           style={[styles.movementResultCard, isLocked && styles.formCardLocked]}
           activeOpacity={0.86}
-          onPress={() => {
-            if (isLocked) {
-              Alert.alert("아직 열리지 않았어요", `${movement.requiredRank}단 승단 후 열립니다`);
-              return;
-            }
+onPress={() => {
+  if (isLocked) {
+    Alert.alert("아직 열리지 않았어요", `${movement.requiredRank}단 승단 후 열립니다`);
+    return;
+  }
 
-            router.push({
-              pathname: "/movement-dictionary/[formId]",
-              params: {
-                formId: movement.formId,
-                movementNumber: String(movement.number),
-              },
-            });
-          }}
+router.push({
+  pathname: "/movement-dictionary/[formId]/[stepOrder]",
+  params: {
+    formId: movement.formId,
+    stepOrder: String(movement.number),
+  },
+});
+}}
         >
           <View style={styles.movementNumberBadge}>
             <Text style={styles.movementNumberText}>
@@ -199,10 +199,7 @@ export default function MovementDictionaryHomeScreen() {
             return;
           }
 
-          router.push({
-            pathname: "/movement-dictionary/[formId]",
-            params: { formId: form.id },
-          });
+router.push(`/movement-dictionary/${form.id}`);
         }}
       >
         <View style={[styles.thumbCircle, isLocked && styles.thumbCircleLocked]}>
@@ -230,14 +227,14 @@ export default function MovementDictionaryHomeScreen() {
             <View
               style={[
                 styles.badge,
-                form.badge === "일부 수록" && styles.partialBadge,
+                form.badge === "일러스트 일부 수록" && styles.partialBadge,
                 isLocked && styles.lockBadge,
               ]}
             >
               <Text
                 style={[
                   styles.badgeText,
-                  form.badge === "일부 수록" && styles.partialBadgeText,
+                  form.badge === "일러스트 일부 수록" && styles.partialBadgeText,
                   isLocked && styles.lockBadgeText,
                 ]}
               >

@@ -26,7 +26,9 @@ export default function CoachingUploadScreen() {
   const [selectedFile, setSelectedFile] = useState(null);
   const { token } = useAuth();
   const [videoDuration, setVideoDuration] = useState(null);
-  const TRAINING_OPTIONS = {
+const TRAINING_TYPES = ["공법", "투로", "기타"];
+
+const TRAINING_OPTIONS = {
   공법: [
     "일심양의",
     "요부전사",
@@ -44,6 +46,8 @@ export default function CoachingUploadScreen() {
     "현중용형편간",
     "기타",
   ],
+
+  기타: ["기타"],
 };
 
   function formatDuration(seconds) {
@@ -336,9 +340,9 @@ setTimeout(() => {
       </Text>
 
       {(
-  pickerType === "trainingType"
-    ? ["공법", "투로"]
-    : TRAINING_OPTIONS[trainingType] || []
+pickerType === "trainingType"
+  ? TRAINING_TYPES
+  : TRAINING_OPTIONS[trainingType] || []
 ).map((item) => (
   <Pressable
     key={item}
