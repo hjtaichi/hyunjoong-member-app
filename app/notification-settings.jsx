@@ -136,11 +136,11 @@ const allEnabled = useMemo(() => {
       </Text>
 
       <View style={styles.card}>
-    <SettingRow
+<SettingRow
   title="전체 알림"
   description="모든 알림을 한 번에 켜거나 끕니다."
   value={allEnabled}
-  disabled={false}
+  disabled={savingKey === "all"}
   onValueChange={toggleAll}
   strong
 />
@@ -153,16 +153,6 @@ const allEnabled = useMemo(() => {
           value={settings.noticeAlertEnabled}
           disabled={savingKey === "noticeAlertEnabled"}
           onValueChange={(value) => toggleOne("noticeAlertEnabled", value)}
-        />
-
-        <Divider />
-
-        <SettingRow
-          title="출석 알림"
-          description="출석, 예약, 수업 관련 안내"
-          value={settings.attendanceAlertEnabled}
-          disabled={savingKey === "attendanceAlertEnabled"}
-          onValueChange={(value) => toggleOne("attendanceAlertEnabled", value)}
         />
 
         <Divider />

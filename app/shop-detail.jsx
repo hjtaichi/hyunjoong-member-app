@@ -16,6 +16,7 @@ import { getMemberProducts, createProductOrder } from "../src/api/memberShop";
 import { colors, radius, shadow } from "../src/theme";
 import ScreenHeader from "../src/components/ScreenHeader";
 import { useCart } from "../src/contexts/CartContext";
+import { API_BASE_URL } from "../src/config/env";
 
 const fonts = {
   medium: "PretendardMedium",
@@ -24,7 +25,7 @@ const fonts = {
   titleSemi: "MaruBuriSemiBold",
 };
 
-const API_ORIGIN = "http://172.30.1.16:5000";
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
 
 function getImageUrl(imageUrl) {
   if (!imageUrl) return null;

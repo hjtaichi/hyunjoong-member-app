@@ -13,6 +13,7 @@ import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberProducts } from "../src/api/memberShop";
 import { colors, radius, shadow } from "../src/theme";
 import ScreenHeader from "../src/components/ScreenHeader";
+import { API_BASE_URL } from "../src/config/env";
 const fonts = {
   medium: "PretendardMedium",
   semiBold: "PretendardSemiBold",
@@ -20,7 +21,7 @@ const fonts = {
   titleSemi: "MaruBuriSemiBold",
 };
 
-const API_ORIGIN = "http://172.30.1.16:5000";
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
 
 const SHOP_CATEGORIES = [
   {

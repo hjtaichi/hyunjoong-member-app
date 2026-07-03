@@ -338,7 +338,14 @@ setGongbeopGoals((prev) => ({
 }));
 
 setFormRecordData(payload?.formRecords || null);
-setPrivateLessonData(payload?.privateLesson || null);
+const privateLessonResult = await getMyPrivateLessons(token).catch((error) => {
+  console.log("개인지도 정보 불러오기 실패:", error);
+  return null;
+});
+
+setPrivateLessonData(
+  privateLessonResult?.data ? privateLessonResult.data : privateLessonResult
+);
         console.log("TAEGUKWON payload:", payload);
         console.log("TAEGUKWON member:", payload?.member);
 
