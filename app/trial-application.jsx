@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,6 +7,7 @@ import {
   TextInput,
   View,
   Modal,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { colors, radius, shadow } from "../src/theme";
@@ -30,7 +30,6 @@ const HOPE_TIME_OPTIONS = [
 ];
 
 import { submitTrialApplication } from "../src/api/member";
-import { Image } from "react-native";
 
 export default function TrialApplicationScreen() {
   const [gender, setGender] = useState("남성");
@@ -39,14 +38,36 @@ export default function TrialApplicationScreen() {
   const [dateModalVisible, setDateModalVisible] = useState(false);
   const [calendarBaseDate, setCalendarBaseDate] = useState(new Date());
   const [shoeSize, setShoeSize] = useState("");
-  const [height, setHeight] = useState("");
-  const [memo, setMemo] = useState("");
+const [height, setHeight] = useState("");
+const [memo, setMemo] = useState("");
+
+const [alertModal, setAlertModal] = useState({
+  visible: false,
+  title: "",
+  message: "",
+});
   const trialTogetherImage = require("../assets/images/trial-hero-man.png");
   const { isAuthenticated } = useAuth();
 
   function onlyNumbers(value) {
     return String(value || "").replace(/[^0-9]/g, "");
   }
+
+  function showAppAlert(title, message) {
+  setAlertModal({
+    visible: true,
+    title,
+    message,
+  });
+}
+
+function closeAppAlert() {
+  setAlertModal({
+    visible: false,
+    title: "",
+    message: "",
+  });
+}
 
   function formatDateKey(date) {
   const year = date.getFullYear();
@@ -88,53 +109,87 @@ function handleSelectHopeDate(date) {
 }
 
   async function handleSubmit() {
-    if (!isAuthenticated) {
-  Alert.alert("안내", "로그인 후 이용할 수 있습니다.");
-  router.push("/login");
-  return;
-}
+  if (!isAuthenticated) {
+    showAppAlert("안내", "로그인 후 이용할 수 있습니다.");
+    router.push("/login");
+    return;
+  }
+
+  if (!hopeDate.trim()) {
+    showAppAlert("안내", "희망 날짜를 선택해주세요.");
+    return;
+  }
+
+  if (!hopeTime) {
+    showAppAlert("안내", "희망 시간을 선택해주세요.");
+    return;
+  }
+
+  const shoeSizeNumber =
+    shoeSize === "" || shoeSize == null ? null : Number(shoeSize);
+
+  if (
+    shoeSize !== "" &&
+    shoeSize != null &&
+    (!Number.isInteger(shoeSizeNumber) ||
+      shoeSizeNumber < 150 ||
+      shoeSizeNumber > 350)
+  ) {
+    showAppAlert(
+      "신발 사이즈 확인",
+      "신발 사이즈는 150mm 이상 350mm 이하의 숫자로 입력해주세요."
+    );
+    return;
+  }
+
+  const heightNumber =
+    height === "" || height == null ? null : Number(height);
+
+  if (
+    height !== "" &&
+    height != null &&
+    (!Number.isInteger(heightNumber) ||
+      heightNumber < 80 ||
+      heightNumber > 300)
+  ) {
+    showAppAlert(
+      "키 확인",
+      "키는 80cm 이상 300cm 이하의 숫자로 입력해주세요."
+    );
+    return;
+  }
+
   try {
-    
-    if (!hopeDate.trim()) {
-      Alert.alert("안내", "희망 날짜를 입력해주세요.");
-      return;
-    }
-
-if (!hopeTime) {
-  Alert.alert("안내", "희망 시간을 선택해주세요.");
-  return;
-}
-
     await submitTrialApplication({
-  gender,
-  hopeDate,
-  hopeTime,
-  shoeSize,
-  height,
-  memo,
-});
+      gender,
+      hopeDate,
+      hopeTime,
+      shoeSize: shoeSizeNumber,
+      height: heightNumber,
+      memo,
+    });
 
     router.push({
       pathname: "/trial-application-complete",
       params: {
-  gender,
-  hopeDate,
-  hopeTime,
-  shoeSize,
-  height,
-  memo,
-},
+        gender,
+        hopeDate,
+        hopeTime,
+        shoeSize,
+        height,
+        memo,
+      },
     });
   } catch (error) {
-  console.log("체험 신청 에러:", error?.response?.data || error);
+    console.log("체험 신청 에러:", error?.response?.data || error);
 
-  Alert.alert(
-    "오류",
-    error?.response?.data?.message ||
-      error?.message ||
-      "체험 신청 등록 중 오류가 발생했습니다."
-  );
-}
+    showAppAlert(
+      "오류",
+      error?.response?.data?.message ||
+        error?.message ||
+        "체험 신청 등록 중 오류가 발생했습니다."
+    );
+  }
 }
 
   return (
@@ -223,7 +278,7 @@ if (!hopeTime) {
       <Text style={styles.label}>신발 사이즈 (mm)</Text>
       <TextInput
         style={styles.input}
-        placeholder="예) 265"
+        placeholder=" ~ 350mm 까지"
         placeholderTextColor="#A99F98"
         keyboardType="number-pad"
         value={shoeSize}
@@ -233,7 +288,7 @@ if (!hopeTime) {
       <Text style={styles.label}>키 (cm)</Text>
       <TextInput
         style={styles.input}
-        placeholder="예) 175"
+        placeholder=" ~ 300cm 까지"
         placeholderTextColor="#A99F98"
         keyboardType="number-pad"
         value={height}
@@ -323,6 +378,24 @@ if (!hopeTime) {
         onPress={() => setDateModalVisible(false)}
       >
         <Text style={styles.calendarCloseButtonText}>닫기</Text>
+      </Pressable>
+    </View>
+  </View>
+</Modal>
+<Modal
+  visible={alertModal.visible}
+  transparent
+  animationType="fade"
+  onRequestClose={closeAppAlert}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.alertModalCard}>
+      <Text style={styles.alertModalTitle}>{alertModal.title}</Text>
+
+      <Text style={styles.alertModalMessage}>{alertModal.message}</Text>
+
+      <Pressable style={styles.alertModalButton} onPress={closeAppAlert}>
+        <Text style={styles.alertModalButtonText}>확인</Text>
       </Pressable>
     </View>
   </View>
@@ -516,7 +589,7 @@ calendarHeader: {
 
 calendarTitle: {
   fontSize: 19,
-  fontWeight: "900",
+  fontWeight: "700",
   color: "#241E1A",
 },
 
@@ -559,7 +632,7 @@ dayCellSelected: {
 
 dayText: {
   fontSize: 15,
-  fontWeight: "800",
+  fontWeight: "700",
   color: "#3A312B",
 },
 
@@ -618,5 +691,53 @@ timeText: {
 
 timeTextActive: {
   color: "#E9C98A",
+},
+alertModalCard: {
+  width: "100%",
+  maxWidth: 340,
+  alignSelf: "center",
+  borderRadius: 24,
+  backgroundColor: "#FFFEFC",
+  borderWidth: 1,
+  borderColor: "#E8DED2",
+  paddingHorizontal: 22,
+  paddingTop: 24,
+  paddingBottom: 18,
+  shadowColor: "#000",
+  shadowOpacity: 0.12,
+  shadowRadius: 18,
+  shadowOffset: { width: 0, height: 10 },
+  elevation: 8,
+},
+
+alertModalTitle: {
+  fontSize: 18,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+  textAlign: "center",
+  marginBottom: 12,
+},
+
+alertModalMessage: {
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+  textAlign: "center",
+  marginBottom: 22,
+},
+
+alertModalButton: {
+  minHeight: 48,
+  borderRadius: 15,
+  backgroundColor: colors.warmBrown,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+alertModalButtonText: {
+  fontSize: 15,
+  fontFamily: fonts.bold,
+  color: colors.white,
 },
 });

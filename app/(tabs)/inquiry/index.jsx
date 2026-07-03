@@ -92,18 +92,14 @@ export default function InquiryScreen() {
 const previewRooms = activeRooms.slice(0, 1);
 
   async function handleLogout() {
-    Alert.alert("로그아웃", "로그아웃하시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "로그아웃",
-        style: "destructive",
-        onPress: async () => {
-          await logout();
-          router.replace("/login");
-        },
-      },
-    ]);
+  try {
+    await logout();
+    router.replace("/login");
+  } catch (error) {
+    console.log("로그아웃 실패:", error);
+    router.replace("/login");
   }
+}
 
   const loadInquiries = useCallback(
     async ({ silent = false } = {}) => {

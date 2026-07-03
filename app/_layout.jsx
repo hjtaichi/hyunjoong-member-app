@@ -20,7 +20,7 @@ import {
   saveWebPushSubscription,
 } from "../src/api/push.js";
 const WEB_PUSH_PUBLIC_KEY =
-"BJ0WQ4yRiu7k4b17pC7FWYY5iHuuu1O7mYeI-NFnHQsHbD4VAEhGWBEqPmUxMXef6Yxafr5SYfXSFLwhWH-SZiU";
+"BIDcyRAxTG6Vpf4UbEaAz5Vgxw-sR_fXpys8SrGZJwhdbfv5Zgf3y7C0kQ1zttBgk6qARjOI1B7Ho4NAzW3_baM";
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = `${base64String}${padding}`

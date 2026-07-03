@@ -12,7 +12,7 @@ import { movementForms } from "../../src/data/movementDictionary";
 import ScreenHeader from "../../src/components/ScreenHeader";
 
 export default function MovementFormDetailScreen() {
-  const { formId } = useLocalSearchParams();
+  const { formId, movementNumber } = useLocalSearchParams();
 
   const form = useMemo(() => {
     return movementForms.find((item) => item.id === formId);
@@ -30,6 +30,9 @@ export default function MovementFormDetailScreen() {
   }
 
   const movements = form.movements || [];
+  const targetMovement = movements.find(
+  (movement) => String(movement.order) === String(movementNumber)
+);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -54,49 +57,78 @@ export default function MovementFormDetailScreen() {
         </View>
       </View>
 
-      {movements.length > 0 ? (
-        <View style={styles.listCard}>
-          {movements.map((movement, index) => (
-            <TouchableOpacity
-              key={`${movement.order}-${movement.name}`}
-              style={[
-                styles.movementRow,
-                index === movements.length - 1 && styles.movementRowLast,
-              ]}
-              activeOpacity={0.86}
-              onPress={() =>
-                router.push({
-                  pathname: "/movement-dictionary/[formId]/[stepOrder]",
-                  params: {
-                    formId: form.id,
-                    stepOrder: String(movement.order),
-                  },
-                })
-              }
-            >
-              <View style={styles.numberCircle}>
-                <Text style={styles.numberText}>
-                  {String(movement.order).padStart(2, "0")}
-                </Text>
-              </View>
+      {movementNumber && targetMovement ? (
+  <View style={styles.listCard}>
+    <TouchableOpacity
+      style={[styles.movementRow, styles.movementRowLast]}
+      activeOpacity={0.86}
+      onPress={() =>
+        router.push({
+          pathname: "/movement-dictionary/[formId]/[stepOrder]",
+          params: {
+            formId: form.id,
+            stepOrder: String(targetMovement.order),
+          },
+        })
+      }
+    >
+      <View style={styles.numberCircle}>
+        <Text style={styles.numberText}>
+          {String(targetMovement.order).padStart(2, "0")}
+        </Text>
+      </View>
 
-               <View style={styles.movementTextWrap}>
-                <Text style={styles.movementName}>{movement.name}</Text>
-                <Text style={styles.movementDesc}>{movement.shortDesc}</Text>
-              </View>
+      <View style={styles.movementTextWrap}>
+        <Text style={styles.movementName}>{targetMovement.name}</Text>
+        <Text style={styles.movementDesc}>{targetMovement.shortDesc}</Text>
+      </View>
 
-              <Text style={styles.arrow}>〉</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      ) : (
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>대표 동작 준비 중</Text>
-          <Text style={styles.emptyDesc}>
-            이 투로는 핵심 동작부터 차례대로 추가할 예정이에요.
+      <Text style={styles.arrow}>〉</Text>
+    </TouchableOpacity>
+  </View>
+) : movements.length > 0 ? (
+  <View style={styles.listCard}>
+    {movements.map((movement, index) => (
+      <TouchableOpacity
+        key={`${movement.order}-${movement.name}`}
+        style={[
+          styles.movementRow,
+          index === movements.length - 1 && styles.movementRowLast,
+        ]}
+        activeOpacity={0.86}
+        onPress={() =>
+          router.push({
+            pathname: "/movement-dictionary/[formId]/[stepOrder]",
+            params: {
+              formId: form.id,
+              stepOrder: String(movement.order),
+            },
+          })
+        }
+      >
+        <View style={styles.numberCircle}>
+          <Text style={styles.numberText}>
+            {String(movement.order).padStart(2, "0")}
           </Text>
         </View>
-      )}
+
+        <View style={styles.movementTextWrap}>
+          <Text style={styles.movementName}>{movement.name}</Text>
+          <Text style={styles.movementDesc}>{movement.shortDesc}</Text>
+        </View>
+
+        <Text style={styles.arrow}>〉</Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+) : (
+  <View style={styles.emptyCard}>
+    <Text style={styles.emptyTitle}>대표 동작 준비 중</Text>
+    <Text style={styles.emptyDesc}>
+      이 투로는 핵심 동작부터 차례대로 추가할 예정이에요.
+    </Text>
+  </View>
+)}
 
     </ScrollView>
   );

@@ -24,10 +24,8 @@ const fonts = {
 
 const DEFAULT_SETTINGS = {
   noticeAlertEnabled: true,
-  attendanceAlertEnabled: true,
   paymentAlertEnabled: true,
   inquiryAlertEnabled: true,
-  shopAlertEnabled: true,
 };
 
 export default function NotificationSettingsScreen() {
@@ -38,10 +36,8 @@ export default function NotificationSettingsScreen() {
 const allEnabled = useMemo(() => {
   return (
     settings.noticeAlertEnabled &&
-    settings.attendanceAlertEnabled &&
     settings.paymentAlertEnabled &&
-    settings.inquiryAlertEnabled &&
-    settings.shopAlertEnabled
+    settings.inquiryAlertEnabled
   );
 }, [settings]);
 
@@ -95,10 +91,8 @@ const allEnabled = useMemo(() => {
   const next = {
     ...settings,
     noticeAlertEnabled: value,
-    attendanceAlertEnabled: value,
     paymentAlertEnabled: value,
     inquiryAlertEnabled: value,
-    shopAlertEnabled: value,
   };
 
   try {
@@ -174,18 +168,7 @@ const allEnabled = useMemo(() => {
           disabled={savingKey === "inquiryAlertEnabled"}
           onValueChange={(value) => toggleOne("inquiryAlertEnabled", value)}
         />
-
-        <Divider />
-
-        <SettingRow
-          title="Shop 주문 알림"
-          description="상품 주문 요청과 상태 안내"
-          value={settings.shopAlertEnabled}
-          disabled={savingKey === "shopAlertEnabled"}
-          onValueChange={(value) => toggleOne("shopAlertEnabled", value)}
-        />
-
-      </View>
+     </View>
 
       <Text style={styles.notice}>
         ※ 필수 운영 안내는 알림 설정과 관계없이 앱 내 알림센터에 표시될 수 있습니다.
@@ -214,7 +197,7 @@ function SettingRow({
 <Switch
   value={!!value}
   onValueChange={onValueChange}
-  disabled={false}
+  disabled={disabled}
         trackColor={{
           false: "#DED2C8",
           true: "#D9B67A",
