@@ -603,8 +603,32 @@ const avatarImages = {
   avatar25: require("../../assets/images/avatar25.png"),
 };
 
-const profileAvatarKey = homeData?.member?.profileAvatar || "avatar1";
-const profileImageSource = avatarImages[profileAvatarKey] || avatarImages.avatar1;
+function getProfileImageSource(profileAvatar) {
+  if (!profileAvatar) {
+    return avatarImages.avatar1;
+  }
+
+  if (avatarImages[profileAvatar]) {
+    return avatarImages[profileAvatar];
+  }
+
+  const rawBaseUrl = String(process.env.EXPO_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+  const originBaseUrl = rawBaseUrl.endsWith("/api")
+    ? rawBaseUrl.replace(/\/api$/, "")
+    : rawBaseUrl;
+
+  if (String(profileAvatar).startsWith("/uploads/")) {
+    return { uri: `${originBaseUrl}${profileAvatar}?t=${Date.now()}` };
+  }
+
+  if (String(profileAvatar).startsWith("http")) {
+    return { uri: `${profileAvatar}?t=${Date.now()}` };
+  }
+
+  return avatarImages.avatar1;
+}
+
+const profileImageSource = getProfileImageSource(homeData?.member?.profileAvatar);
   const todaySchedules = useMemo(() => {
     return calendarData?.scheduleByDate?.[todayString] || [];
   }, [calendarData, todayString]);

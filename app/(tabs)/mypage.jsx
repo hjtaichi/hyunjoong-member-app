@@ -122,14 +122,18 @@ function getAvatarSource(profileAvatar) {
     : rawBaseUrl;
 
   if (String(profileAvatar).startsWith("/uploads/")) {
-    return { uri: `${originBaseUrl}${profileAvatar}` };
+    return { uri: `${originBaseUrl}${profileAvatar}?t=${Date.now()}` };
   }
 
   if (
     String(profileAvatar).startsWith("http") ||
     String(profileAvatar).startsWith("file:")
   ) {
-    return { uri: profileAvatar };
+    return {
+  uri: profileAvatar.startsWith("http")
+    ? `${profileAvatar}?t=${Date.now()}`
+    : profileAvatar,
+};
   }
 
   return profilePlaceholder;
@@ -413,15 +417,27 @@ async function uploadProfileImageAsync(imageUri) {
 
   if (Platform.OS === "web") {
     const blob = await fetch(imageUri).then((res) => res.blob());
-    formData.append("image", blob, "profile.jpg");
+
+    const mime = blob.type || "image/jpeg";
+    const ext =
+      mime === "image/png" ? "png" :
+      mime === "image/webp" ? "webp" :
+      "jpg";
+
+    formData.append("image", blob, `profile.${ext}`);
   } else {
     const fileName = imageUri.split("/").pop() || "profile.jpg";
-    const fileType = fileName.split(".").pop() || "jpg";
+    const ext = String(fileName.split(".").pop() || "jpg").toLowerCase();
+
+    const mime =
+      ext === "png" ? "image/png" :
+      ext === "webp" ? "image/webp" :
+      "image/jpeg";
 
     formData.append("image", {
       uri: imageUri,
       name: fileName,
-      type: `image/${fileType === "jpg" ? "jpeg" : fileType}`,
+      type: mime,
     });
   }
 

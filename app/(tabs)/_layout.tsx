@@ -171,7 +171,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="inquiry"
         options={{
-          title: "공지/문의",
+          title: "소식/문의",
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="chatbubble-ellipses-outline"
