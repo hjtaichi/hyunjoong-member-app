@@ -412,8 +412,15 @@ async function handleSaveAvatar() {
     setSubmittingAccount(false);
   }
 }
-async function uploadProfileImageAsync(imageUri) {
+async function uploadProfileImageAsync(assetOrUri) {
   const formData = new FormData();
+
+  const imageUri =
+    typeof assetOrUri === "string" ? assetOrUri : assetOrUri?.uri;
+
+  if (!imageUri) {
+    throw new Error("선택된 이미지가 없습니다.");
+  }
 
   if (Platform.OS === "web") {
     const blob = await fetch(imageUri).then((res) => res.blob());
@@ -426,17 +433,21 @@ async function uploadProfileImageAsync(imageUri) {
 
     formData.append("image", blob, `profile.${ext}`);
   } else {
-    const fileName = imageUri.split("/").pop() || "profile.jpg";
-    const ext = String(fileName.split(".").pop() || "jpg").toLowerCase();
+    const asset = typeof assetOrUri === "object" ? assetOrUri : {};
 
     const mime =
-      ext === "png" ? "image/png" :
-      ext === "webp" ? "image/webp" :
+      asset?.mimeType === "image/png" ? "image/png" :
+      asset?.mimeType === "image/webp" ? "image/webp" :
       "image/jpeg";
+
+    const ext =
+      mime === "image/png" ? "png" :
+      mime === "image/webp" ? "webp" :
+      "jpg";
 
     formData.append("image", {
       uri: imageUri,
-      name: fileName,
+      name: `profile.${ext}`,
       type: mime,
     });
   }
@@ -482,7 +493,7 @@ async function handlePickProfileFromCamera() {
   try {
     setSubmittingAccount(true);
 
-    const uploadedUrl = await uploadProfileImageAsync(result.assets[0].uri);
+   const uploadedUrl = await uploadProfileImageAsync(result.assets[0]);
 
 setSelectedAvatar(uploadedUrl);
 Alert.alert("완료", "프로필 사진이 변경되었습니다.");
@@ -515,7 +526,7 @@ async function handlePickProfileFromAlbum() {
   try {
     setSubmittingAccount(true);
 
-    const uploadedUrl = await uploadProfileImageAsync(result.assets[0].uri);
+    const uploadedUrl = await uploadProfileImageAsync(result.assets[0]);
 
 setSelectedAvatar(uploadedUrl);
 Alert.alert("완료", "프로필 사진이 변경되었습니다.");
