@@ -423,16 +423,28 @@ async function uploadProfileImageAsync(assetOrUri) {
   }
 
   if (Platform.OS === "web") {
-    const blob = await fetch(imageUri).then((res) => res.blob());
+  const blob = await fetch(imageUri).then((res) => res.blob());
 
-    const mime = blob.type || "image/jpeg";
-    const ext =
-      mime === "image/png" ? "png" :
-      mime === "image/webp" ? "webp" :
-      "jpg";
+  const rawMime = blob.type || "image/jpeg";
 
-    formData.append("image", blob, `profile.${ext}`);
-  } else {
+  const mime =
+    rawMime === "image/png"
+      ? "image/png"
+      : rawMime === "image/webp"
+      ? "image/webp"
+      : "image/jpeg";
+
+  const ext =
+    mime === "image/png"
+      ? "png"
+      : mime === "image/webp"
+      ? "webp"
+      : "jpg";
+
+  const file = new File([blob], `profile.${ext}`, { type: mime });
+
+  formData.append("image", file);
+} else {
     const asset = typeof assetOrUri === "object" ? assetOrUri : {};
 
     const mime =
