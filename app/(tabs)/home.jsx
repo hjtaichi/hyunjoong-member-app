@@ -35,7 +35,7 @@ import {
   hideNoticeToday,
   getMemberNoticeList,
 } from "../../src/api/memberNotice";
-
+const DEBUG_HOME = false;
 function pad(n) {
   return String(n).padStart(2, "0");
 }
@@ -379,7 +379,9 @@ const loadMemberNotifications = useCallback(async () => {
 
   const refreshScreenData = useCallback(async () => {
   if (!token) {
-    console.log("⏳ HOME token 아직 없음 - 요청 중단");
+    if (DEBUG_HOME) {
+  console.log("⏳ HOME token 아직 없음 - 요청 중단");
+}
     return;
   }
 
@@ -387,23 +389,29 @@ const loadMemberNotifications = useCallback(async () => {
   const calendarRes = await getMemberCalendar(token, currentYear, currentMonth);
   const noticeRes = await getMemberNoticeList(token);
 
-  console.log("🔥 HOME homeRes =", JSON.stringify(homeRes, null, 2));
-  console.log("🔥 HOME member =", JSON.stringify(homeRes?.member, null, 2));
-  console.log("🔥 HOME groupProgress =", JSON.stringify(homeRes?.groupProgress, null, 2));
-  console.log("🔥 HOME todayClass =", JSON.stringify(homeRes?.todayClass, null, 2));
-  console.log("🔥 HOME calendarRes =", JSON.stringify(calendarRes, null, 2));
+if (DEBUG_HOME) {
+  console.log("🔥 HOME homeRes =", homeRes);
+  console.log("🔥 HOME member =", homeRes?.member);
+  console.log("🔥 HOME groupProgress =", homeRes?.groupProgress);
+  console.log("🔥 HOME todayClass =", homeRes?.todayClass);
+  console.log("🔥 HOME calendarRes =", calendarRes);
+}
 
   setHomeData(homeRes);
   setCalendarData(calendarRes);
   setNoticeList(noticeRes || []);
 
+  if (DEBUG_HOME) {
   console.log("✅ HOME refreshScreenData 완료");
+}
 }, [token, currentYear, currentMonth]);
 
   const loadAll = useCallback(
   async ({ silent = false } = {}) => {
   if (!token) {
-    console.log("⏳ HOME loadAll token 없음 - 대기");
+    if (DEBUG_HOME) {
+  console.log("⏳ HOME loadAll token 없음 - 대기");
+}
     setLoading(false);
     setRefreshing(false);
     return;
@@ -454,19 +462,16 @@ if (
     loadAll();
   }, [loadAll]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadAll({ silent: true });
-      loadMemberNotifications();
-    }, [loadAll])
-  );
-
-  
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
+useFocusEffect(
+  useCallback(() => {
     loadAll({ silent: true });
-    loadMemberNotifications();
-  }, [loadAll]);
+  }, [loadAll])
+);
+
+const onRefresh = useCallback(() => {
+  setRefreshing(true);
+  loadAll({ silent: true });
+}, [loadAll]);
 
   const moveMonth = useCallback(
     (diff) => {
@@ -603,7 +608,7 @@ const avatarImages = {
   avatar25: require("../../assets/images/avatar25.png"),
 };
 
-function getProfileImageSource(profileAvatar) {
+function getProfileImageSource(profileAvatar, version = "") {
   if (!profileAvatar) {
     return avatarImages.avatar1;
   }
@@ -618,17 +623,34 @@ function getProfileImageSource(profileAvatar) {
     : rawBaseUrl;
 
   if (String(profileAvatar).startsWith("/uploads/")) {
-    return { uri: `${originBaseUrl}${profileAvatar}?t=${Date.now()}` };
+    return {
+  uri: version
+    ? `${originBaseUrl}${profileAvatar}?t=${version}`
+    : `${originBaseUrl}${profileAvatar}`,
+};
   }
 
   if (String(profileAvatar).startsWith("http")) {
-    return { uri: `${profileAvatar}?t=${Date.now()}` };
+    return {
+  uri: version ? `${profileAvatar}?t=${version}` : profileAvatar,
+};
   }
 
   return avatarImages.avatar1;
 }
 
-const profileImageSource = getProfileImageSource(homeData?.member?.profileAvatar);
+const profileImageVersion =
+  homeData?.member?.profileImageUpdatedAt ||
+  homeData?.member?.updatedAt ||
+  "";
+
+const profileImageSource = useMemo(() => {
+  return getProfileImageSource(
+    homeData?.member?.profileAvatar,
+    profileImageVersion
+  );
+}, [homeData?.member?.profileAvatar, profileImageVersion]);
+
   const todaySchedules = useMemo(() => {
     return calendarData?.scheduleByDate?.[todayString] || [];
   }, [calendarData, todayString]);
@@ -813,8 +835,11 @@ const homeGroupProgress =
   homeData?.currentGroupProgress ||
   null;
 
-console.log("🔥 [HOME homeData keys]", Object.keys(homeData || {}));
-console.log("🔥 [HOME homeGroupProgress]", homeGroupProgress);
+if (DEBUG_HOME) {
+  console.log("🔥 [HOME homeData keys]", Object.keys(homeData || {}));
+  console.log("🔥 [HOME homeGroupProgress]", homeGroupProgress);
+}
+
 const todayClassTitle = useMemo(() => {
   if (isTodayYudanjaSession) {
     return yudanjaProgress?.title || "유단자회 수련";
