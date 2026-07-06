@@ -32,30 +32,97 @@ function getStatusLabel(status) {
   return "예정";
 }
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const FORM_DEFINITIONS = [
+  {
+    id: "taeguk-29",
+    name: "현중태극권 29식",
+    minRank: 0,
+  },
+  {
+    id: "taeguk-fan-29",
+    name: "현중태극선 29식",
+    minRank: 0,
+  },
+  {
+    id: "taeguk-sword-52",
+    name: "현중태극검 52식",
+    minRank: 1,
+  },
+  {
+    id: "daega-1-79",
+    name: "현중태극권 대가1로 79식",
+    minRank: 2,
+  },
+  {
+    id: "dando-24",
+    name: "현중태극단도 24식",
+    minRank: 2,
+  },
+  {
+    id: "daega-2-62",
+    name: "현중태극권 대가2로 62식",
+    minRank: 3,
+  },
+];
+
+const FORM_IMAGES = {
+  "taeguk-29": require("../../assets/images/form-records/taeguk-29.png"),
+  "taeguk-fan-29": require("../../assets/images/form-records/taeguk-fan-29.png"),
+  "taeguk-sword-52": require("../../assets/images/form-records/taeguk-sword-52.png"),
+  "dando-24": require("../../assets/images/form-records/dando-24.png"),
+  "daega-1-79": require("../../assets/images/form-records/daega-1-79.png"),
+  "daega-2-62": require("../../assets/images/form-records/daega-2-62.png"),
+};
+
+const FORM_IMAGE_STYLES = {
+  "daega-1-79": {
+    featured: {
+      right: -6,
+      bottom: 85,
+      width: 160,
+      height: 175,
+      opacity: 0.85,
+    },
+    small: {
+      right: 1,
+      bottom: -7,
+      width: 85,
+      height: 100,
+    },
+  },
+  "dando-24": {
+    featured: {
+      right: -2,
+      bottom: 100,
+      width: 147,
+      height: 147,
+      opacity: 0.85,
+    },
+    small: {
+      right: -1,
+      bottom: 10,
+      width: 85,
+      height: 85,
+    },
+  },
+};
+
+function getFormCategory(formId) {
+  if (formId?.includes("fan")) return "태극선 · 반복수련";
+  if (formId?.includes("sword")) return "태극검 · 반복수련";
+  if (formId?.includes("dando")) return "단도 · 반복수련";
+  if (formId?.includes("daega")) return "권법 · 반복수련";
+  return "권법 · 반복수련";
+}
 
 function AnimatedPercentCircle({ percent, color = "#9b7650" }) {
-  const animatedValue = useRef(new Animated.Value(0)).current;
-
   const size = 42;
   const strokeWidth = 6;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-
-  useEffect(() => {
-    animatedValue.setValue(0);
-
-    Animated.timing(animatedValue, {
-      toValue: Math.min(percent, 100),
-      duration: 900,
-      useNativeDriver: false,
-    }).start();
-  }, [percent, animatedValue]);
-
-  const strokeDashoffset = animatedValue.interpolate({
-    inputRange: [0, 100],
-    outputRange: [circumference, 0],
-  });
+  const circleRadius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * circleRadius;
+  const safePercent = Math.max(0, Math.min(Number(percent || 0), 100));
+  const strokeDashoffset =
+    circumference - (circumference * safePercent) / 100;
 
   return (
     <View style={styles.animatedCircleWrap}>
@@ -63,29 +130,27 @@ function AnimatedPercentCircle({ percent, color = "#9b7650" }) {
         <Circle
           cx={size / 2}
           cy={size / 2}
-          r={radius}
+          r={circleRadius}
           stroke="rgba(226,216,201,0.8)"
           strokeWidth={strokeWidth}
           fill="rgba(255,253,249,0.55)"
         />
 
-        <AnimatedCircle
+        <Circle
           cx={size / 2}
           cy={size / 2}
-          r={radius}
+          r={circleRadius}
           stroke={color}
           strokeWidth={strokeWidth}
           fill="transparent"
           strokeDasharray={`${circumference} ${circumference}`}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
-          rotation="-90"
-          originX={size / 2}
-          originY={size / 2}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </Svg>
 
-      <Text style={styles.recordPercentText}>{percent}%</Text>
+      <Text style={styles.recordPercentText}>{safePercent}%</Text>
     </View>
   );
 }
@@ -116,7 +181,6 @@ export default function TaegukwonScreen() {
   return new Map(memberTracks.map((track) => [track.curriculumId, track]));
 }, [memberTracks]);
 const [formRecordData, setFormRecordData] = useState(null);
-const [formRecordLoading, setFormRecordLoading] = useState(false);
 const [formGoalCount, setFormGoalCount] = useState("");
 const [recordModalVisible, setRecordModalVisible] = useState(false);
 const [goalModalVisible, setGoalModalVisible] = useState(false);
@@ -128,19 +192,8 @@ const [formRecordModalVisible, setFormRecordModalVisible] = useState(false);
 const [formGoalModalVisible, setFormGoalModalVisible] = useState(false);
 const [selectedFormId, setSelectedFormId] = useState(null);
 const [formRecordCount, setFormRecordCount] = useState("3");
-const [showInactiveForms, setShowInactiveForms] = useState(false);
 const [featuredFormId, setFeaturedFormId] = useState(null);
 
-const [todayRecord, setTodayRecord] = useState({
-  ilsimyangui: "",
-  yobujeonsa: "",
-  duyoMinutes: "",
-  ohaengjeonsa: "",
-});
-
-const [lastRecordDate, setLastRecordDate] = useState(null);
-
-const [showGongbeopInfo, setShowGongbeopInfo] = useState(false);
 const [gongbeopEditMode, setGongbeopEditMode] = useState(false);
 const [gongbeopUpdatedAt, setGongbeopUpdatedAt] = useState(null);
 
@@ -151,15 +204,17 @@ const [gongbeopRecord, setGongbeopRecord] = useState({
   duyoMinutes: "",
   ohaengjeonsa: "",
 });
-
+const [todayGongbeopRecord, setTodayGongbeopRecord] = useState({
+  ilsimyangui: "",
+  yobujeonsa: "",
+  duyoMinutes: "",
+  ohaengjeonsa: "",
+});
 const scrollRef = useRef(null);
 
   const [showRoadmap, setShowRoadmap] = useState(false);
-  const [showRecentAdminMemos, setShowRecentAdminMemos] = useState(false);
   const [showCurriculumOptions, setShowCurriculumOptions] = useState(false);
-  const [showMemoHistory, setShowMemoHistory] = useState(false);
-  // training | gongbeop | formRecord
-const [activeTab, setActiveTab] = useState("training");
+  const [activeTab, setActiveTab] = useState("training");
 useEffect(() => {
   if (tab === "gongbeop") {
     setActiveTab("gongbeop");
@@ -235,12 +290,6 @@ const loadFormRecords = useCallback(async () => {
 
   if (!token) return;
 
-
-
-  setFormRecordLoading(true);
-
-
-
   try {
 
     const response = await fetch(
@@ -283,13 +332,8 @@ const loadFormRecords = useCallback(async () => {
 
   } catch (error) {
 
-    console.log("투로 기록 불러오기 실패:", error);
-
   } finally {
-
-    setFormRecordLoading(false);
-
-  }
+ }
 
 }, [token]);
 
@@ -300,55 +344,24 @@ const loadFormRecords = useCallback(async () => {
       try {
         if (!silent) setLoading(true);
 
-const taegukwonResult = await getMemberTaegukwon(token);
+const [taegukwonResult, privateLessonResult] = await Promise.all([
+  getMemberTaegukwon(token),
+  getMyPrivateLessons(token).catch(() => null),
+]);
 
 const payload = taegukwonResult?.data ? taegukwonResult.data : taegukwonResult;
 
 setTaegukwonData(payload);
 
-const record = payload?.gongbeopRecord;
-
-setGongbeopRecord({
-  ilsimyangui: record?.ilsimyangui ? String(record.ilsimyangui) : "",
-  yobujeonsa: record?.yobujeonsa ? String(record.yobujeonsa) : "",
-  duyoMinutes: record?.duyoMinutes ? String(record.duyoMinutes) : "",
-  ohaengjeonsa: record?.ohaengjeonsa ? String(record.ohaengjeonsa) : "",
-});
-
-setGongbeopUpdatedAt(record?.updatedAt || null);
-
-const activeGoals = payload?.gongbeopGoals?.activeGoals || [];
-
-setGongbeopGoalRows(activeGoals);
-
-setGongbeopGoals((prev) => ({
-  ...prev,
-  ilsimyangui:
-    activeGoals.find((item) => item.type === "ilsimyangui")?.target?.toString() ||
-    prev.ilsimyangui,
-  yobujeonsa:
-    activeGoals.find((item) => item.type === "yobujeonsa")?.target?.toString() ||
-    prev.yobujeonsa,
-  duyoMinutes:
-    activeGoals.find((item) => item.type === "duyoMinutes")?.target?.toString() ||
-    prev.duyoMinutes,
-  ohaengjeonsa:
-    activeGoals.find((item) => item.type === "ohaengjeonsa")?.target?.toString() ||
-    prev.ohaengjeonsa,
-}));
-
-setFormRecordData(payload?.formRecords || null);
-const privateLessonResult = await getMyPrivateLessons(token).catch((error) => {
-  console.log("개인지도 정보 불러오기 실패:", error);
-  return null;
-});
-
 setPrivateLessonData(
   privateLessonResult?.data ? privateLessonResult.data : privateLessonResult
 );
-        console.log("TAEGUKWON payload:", payload);
-        console.log("TAEGUKWON member:", payload?.member);
 
+await Promise.all([
+  loadGongbeopRecord(),
+  loadGongbeopGoals(),
+  loadFormRecords(),
+]);
         if (payload?.personalProgress) {
           setEditCurriculumId(payload.personalProgress.curriculumId || "");
           setEditCurrentStep(String(payload.personalProgress.currentStep ?? ""));
@@ -379,9 +392,6 @@ setPrivateLessonData(
     loadData({ silent: true });
   }, [loadData]);
 
-  const hasAnyGongbeopRecord = useMemo(() => {
-  return Object.values(gongbeopRecord).some((value) => String(value).trim() !== "");
-}, [gongbeopRecord]);
 
 const [gongbeopGoals, setGongbeopGoals] = useState({
   ilsimyangui: "50",
@@ -392,9 +402,14 @@ const [gongbeopGoals, setGongbeopGoals] = useState({
 const [gongbeopGoalRows, setGongbeopGoalRows] = useState([]);
 const handleChangeGongbeopGoal = useCallback((key, value) => {
   const numericOnly = value.replace(/[^0-9]/g, "");
+
+  const limitedValue = numericOnly
+    ? String(Math.min(Number(numericOnly), 9999999))
+    : "";
+
   setGongbeopGoals((prev) => ({
     ...prev,
-    [key]: numericOnly,
+    [key]: limitedValue,
   }));
 }, []);
 
@@ -411,9 +426,37 @@ const handleChangeGongbeop = useCallback((key, value) => {
     [key]: numericOnly,
   }));
 }, []);
+const handleChangeTodayGongbeop = useCallback((key, value) => {
+  const numericOnly = value.replace(/[^0-9]/g, "");
 
+  setTodayGongbeopRecord((prev) => ({
+    ...prev,
+    [key]: numericOnly,
+  }));
+}, []);
 const handleSaveGongbeopRecord = useCallback(async () => {
   try {
+const nextGongbeopRecord = {
+  ilsimyangui:
+    todayGongbeopRecord.ilsimyangui !== ""
+      ? String(Number(todayGongbeopRecord.ilsimyangui || 0))
+      : String(Number(gongbeopRecord.ilsimyangui || 0)),
+
+  yobujeonsa:
+    todayGongbeopRecord.yobujeonsa !== ""
+      ? String(Number(todayGongbeopRecord.yobujeonsa || 0))
+      : String(Number(gongbeopRecord.yobujeonsa || 0)),
+
+  duyoMinutes:
+    todayGongbeopRecord.duyoMinutes !== ""
+      ? String(Number(todayGongbeopRecord.duyoMinutes || 0))
+      : String(Number(gongbeopRecord.duyoMinutes || 0)),
+
+  ohaengjeonsa:
+    todayGongbeopRecord.ohaengjeonsa !== ""
+      ? String(Number(todayGongbeopRecord.ohaengjeonsa || 0))
+      : String(Number(gongbeopRecord.ohaengjeonsa || 0)),
+};
     const response = await fetch(`${API_BASE_URL}/api/member/me/gongbeop`, {
   method: "PATCH",
   headers: {
@@ -423,10 +466,10 @@ const handleSaveGongbeopRecord = useCallback(async () => {
   },
   body: JSON.stringify({
     date: new Date().toISOString().slice(0, 10),
-    ilsimyangui: Number(gongbeopRecord.ilsimyangui || 0),
-    yobujeonsa: Number(gongbeopRecord.yobujeonsa || 0),
-    duyoMinutes: Number(gongbeopRecord.duyoMinutes || 0),
-    ohaengjeonsa: Number(gongbeopRecord.ohaengjeonsa || 0),
+ilsimyangui: Number(nextGongbeopRecord.ilsimyangui || 0),
+yobujeonsa: Number(nextGongbeopRecord.yobujeonsa || 0),
+duyoMinutes: Number(nextGongbeopRecord.duyoMinutes || 0),
+ohaengjeonsa: Number(nextGongbeopRecord.ohaengjeonsa || 0),
     note: "",
   }),
 });
@@ -438,52 +481,80 @@ const handleSaveGongbeopRecord = useCallback(async () => {
 }
 
 const progressEntries = [
-  ["ilsimyangui", Number(gongbeopRecord.ilsimyangui || 0)],
-  ["yobujeonsa", Number(gongbeopRecord.yobujeonsa || 0)],
-  ["duyoMinutes", Number(gongbeopRecord.duyoMinutes || 0)],
-  ["ohaengjeonsa", Number(gongbeopRecord.ohaengjeonsa || 0)],
+  ["ilsimyangui", Number(nextGongbeopRecord.ilsimyangui || 0)],
+  ["yobujeonsa", Number(nextGongbeopRecord.yobujeonsa || 0)],
+  ["duyoMinutes", Number(nextGongbeopRecord.duyoMinutes || 0)],
+  ["ohaengjeonsa", Number(nextGongbeopRecord.ohaengjeonsa || 0)],
 ];
 
-const completedNames = [];
+const goalNameMap = {
+  ilsimyangui: "일심양의",
+  yobujeonsa: "요부전사",
+  duyoMinutes: "두요",
+  ohaengjeonsa: "오행전사",
+};
 
-for (const [type, current] of progressEntries) {
-  const progressResponse = await fetch(
-    `${API_BASE_URL}/api/member/me/gongbeop-goals/${type}/progress`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      body: JSON.stringify({ current }),
+const activeGoalTypes = new Set(
+  gongbeopGoalRows.map((item) => String(item.type))
+);
+
+const progressTargets = progressEntries.filter(([type]) =>
+  activeGoalTypes.has(type)
+);
+
+const progressResults = await Promise.all(
+  progressTargets.map(async ([type, current]) => {
+    const progressResponse = await fetch(
+      `${API_BASE_URL}/api/member/me/gongbeop-goals/${type}/progress`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({ current }),
+      }
+    );
+
+    const progressResult = await progressResponse.json();
+
+    if (!progressResponse.ok) {
+      throw new Error(progressResult.message || "공력 목표 진행률 저장 실패");
     }
-  );
 
-  const progressResult = await progressResponse.json();
-  console.log("공력 목표 진행률 응답:", type, progressResponse.status, progressResult);
+    return {
+      type,
+      result: progressResult,
+    };
+  })
+);
 
-  if (progressResult?.data?.status === "completed") {
-    if (type === "ilsimyangui") completedNames.push("일심양의");
-    if (type === "yobujeonsa") completedNames.push("요부전사");
-    if (type === "duyoMinutes") completedNames.push("두요");
-    if (type === "ohaengjeonsa") completedNames.push("오행전사");
-  }
-}
+const completedNames = progressResults
+  .filter((item) => item.result?.data?.status === "completed")
+  .map((item) => goalNameMap[item.type])
+  .filter(Boolean);
+
+setGongbeopRecord(nextGongbeopRecord);
+
+setTodayGongbeopRecord({
+  ilsimyangui: "",
+  yobujeonsa: "",
+  duyoMinutes: "",
+  ohaengjeonsa: "",
+});
 
 await loadGongbeopGoals();
 
-setTimeout(() => {
-  if (completedNames.length > 0) {
-setCompletedGoalNames(completedNames);
-setCompletionModalType("gongbeop");
-setCompletionModalVisible(true);
-  } else {
-    Alert.alert("완료", "공법 기록이 저장되었습니다.");
-  }
-}, 250);
-
 setGongbeopEditMode(false);
+if (completedNames.length > 0) {
+  setCompletedGoalNames(completedNames);
+  setCompletionModalType("gongbeop");
+
+  setTimeout(() => {
+    setCompletionModalVisible(true);
+  }, 300);
+}
 
   } catch (error) {
     Alert.alert(
@@ -491,7 +562,13 @@ setGongbeopEditMode(false);
       error.message || "공법 기록 저장 중 오류가 발생했습니다."
     );
   }
-}, [token, gongbeopRecord, loadGongbeopGoals]);
+}, [
+  token,
+  gongbeopRecord,
+  todayGongbeopRecord,
+  gongbeopGoalRows,
+  loadGongbeopGoals,
+]);
 
 const handleSaveGongbeopGoals = useCallback(async () => {
   const entries = [
@@ -502,9 +579,7 @@ const handleSaveGongbeopGoals = useCallback(async () => {
   ].filter(([, target]) => target && Number(target) > 0);
 
   try {
-    console.log("공력 목표 저장 버튼 눌림");
-    console.log("저장할 목표:", gongbeopGoals);
-
+    
     // 창은 바로 닫기
     setGoalModalVisible(false);
 
@@ -524,8 +599,7 @@ const handleSaveGongbeopGoals = useCallback(async () => {
       });
 
       const result = await response.json();
-      console.log("공력 목표 저장 응답:", type, response.status, result);
-
+      
       if (!response.ok) {
         throw new Error(result.message || "공력 목표 저장 실패");
       }
@@ -535,8 +609,7 @@ const handleSaveGongbeopGoals = useCallback(async () => {
 
     Alert.alert("완료", "공력 목표가 저장되었습니다.");
   } catch (error) {
-    console.log("공력 목표 저장 오류:", error);
-    Alert.alert("오류", error.message || "공력 목표 저장 중 오류가 발생했습니다.");
+     Alert.alert("오류", error.message || "공력 목표 저장 중 오류가 발생했습니다.");
   }
 }, [gongbeopGoals, token, loadGongbeopGoals]);
   const scrollToEditSection = useCallback(() => {
@@ -573,88 +646,6 @@ const currentPeriodYear = now.getFullYear();
 const currentPeriodHalf = now.getMonth() + 1 <= 6 ? 1 : 2;
 const currentPeriodLabel = currentPeriodHalf === 1 ? "상반기" : "하반기";
 const currentPeriodSub = currentPeriodHalf === 1 ? "1월 ~ 6월" : "7월 ~ 12월";
-
-const FORM_DEFINITIONS = [
-  {
-    id: "taeguk-29",
-    name: "현중태극권 29식",
-    minRank: 0,
-  },
-  {
-    id: "taeguk-fan-29",
-    name: "현중태극선 29식",
-    minRank: 0,
-  },
-  {
-    id: "taeguk-sword-52",
-    name: "현중태극검 52식",
-    minRank: 1,
-  },
-  {
-    id: "daega-1-79",
-    name: "현중태극권 대가1로 79식",
-    minRank: 2,
-  },
-  {
-    id: "dando-24",
-    name: "현중태극단도 24식",
-    minRank: 2,
-  },
-  {
-    id: "daega-2-62",
-    name: "현중태극권 대가2로 62식",
-    minRank: 3,
-  },
-];
-
-const FORM_IMAGES = {
-  "taeguk-29": require("../../assets/images/form-records/taeguk-29.png"),
-  "taeguk-fan-29": require("../../assets/images/form-records/taeguk-fan-29.png"),
-  "taeguk-sword-52": require("../../assets/images/form-records/taeguk-sword-52.png"),
-  "dando-24": require("../../assets/images/form-records/dando-24.png"),
-  "daega-1-79": require("../../assets/images/form-records/daega-1-79.png"),
-  "daega-2-62": require("../../assets/images/form-records/daega-2-62.png"),
-};
-const FORM_IMAGE_STYLES = {
-  "daega-1-79": {
-    featured: {
-      right: -6,
-      bottom: 85,
-      width: 160,
-      height: 175,
-      opacity:0.85,
-    },
-    small: {
-      right: 1,
-      bottom: -7,
-      width: 85,
-      height: 100,
-    },
-  },
-  "dando-24": {
-    featured: {
-      right: -2,
-      bottom: 100,
-      width: 147,
-      height: 147,
-      opacity:0.85,
-    },
-    small: {
-      right: -1,
-      bottom: 10,
-      width: 85,
-      height: 85,
-    },
-  },
-};
-
-function getFormCategory(formId) {
-  if (formId?.includes("fan")) return "태극선 · 반복수련";
-  if (formId?.includes("sword")) return "태극검 · 반복수련";
-  if (formId?.includes("dando")) return "단도 · 반복수련";
-  if (formId?.includes("daega")) return "권법 · 반복수련";
-  return "권법 · 반복수련";
-}
 
 const apiForms = formRecordData?.forms || [];
 
@@ -701,9 +692,7 @@ const selectedForm = mergedForms.find((item) => item.id === selectedFormId);
   const editableCurriculums = taegukwonData?.editableCurriculums || [];
 
   const recentAdminMemos = personalProgress?.recentAdminMemos || [];
-  const featuredAdminMemo = recentAdminMemos[0] || null;
-  const recentListAdminMemos = recentAdminMemos.slice(1, 3);
-
+  
   const selectedCurriculum = useMemo(() => {
     return (
       editableCurriculums.find((item) => item.id === editCurriculumId) || null
@@ -716,11 +705,6 @@ const selectedForm = mergedForms.find((item) => item.id === selectedFormId);
 
   const currentStepNumber = Number(personalProgress?.currentStep || 0);
   const totalStepsNumber = Number(personalProgress?.totalSteps || 0);
-
-  const isPersonalCurriculumCompleted =
-    !!personalProgress &&
-    totalStepsNumber > 0 &&
-    currentStepNumber >= totalStepsNumber;
 
   const handleStartEdit = useCallback(() => {
   const initialCurriculumId = personalProgress?.curriculumId || "";
@@ -865,8 +849,7 @@ setMemoEditModalVisible(false);
 Alert.alert("완료", "수련 메모가 저장되었습니다.");
 
 loadData({ silent: true }).catch((error) => {
-  console.log("메모 저장 후 새로고침 실패:", error);
-});
+  });
     } catch (error) {
       Alert.alert(
         "오류",
@@ -1019,7 +1002,16 @@ loadData({ silent: true }).catch((error) => {
     <TouchableOpacity
   style={styles.flowTodayRecord}
   activeOpacity={0.85}
-  onPress={() => setRecordModalVisible(true)}
+  onPress={() => {
+  setTodayGongbeopRecord({
+    ilsimyangui: "",
+    yobujeonsa: "",
+    duyoMinutes: "",
+    ohaengjeonsa: "",
+  });
+
+  setRecordModalVisible(true);
+}}
 >
   <Text style={styles.flowTodayRecordText}>오늘 기록</Text>
 </TouchableOpacity>
@@ -1105,7 +1097,6 @@ loadData({ silent: true }).catch((error) => {
       style={styles.goalSettingIconButton}
   activeOpacity={0.85}
   onPress={() => {
-    console.log("목표 설정 눌림");
     setGoalModalVisible(true);
   }}
 >
@@ -1997,8 +1988,9 @@ loadData({ silent: true }).catch((error) => {
       </View>
       )}
     </ScrollView>
-    <Modal
-  visible={recordModalVisible}
+{recordModalVisible ? (
+<Modal
+  visible
   transparent
   animationType="fade"
 >
@@ -2016,29 +2008,29 @@ loadData({ silent: true }).catch((error) => {
   />
 
   <TextInput
-    value={gongbeopRecord.ilsimyangui}
-    onChangeText={(value) => handleChangeGongbeop("ilsimyangui", value)}
+value={todayGongbeopRecord.ilsimyangui}
+onChangeText={(value) => handleChangeTodayGongbeop("ilsimyangui", value)}
     keyboardType="numeric"
     style={[styles.imageModalInput, styles.modalInputOne]}
   />
 
   <TextInput
-    value={gongbeopRecord.yobujeonsa}
-    onChangeText={(value) => handleChangeGongbeop("yobujeonsa", value)}
+value={todayGongbeopRecord.yobujeonsa}
+onChangeText={(value) => handleChangeTodayGongbeop("yobujeonsa", value)}
     keyboardType="numeric"
     style={[styles.imageModalInput, styles.modalInputTwo]}
   />
 
   <TextInput
-    value={gongbeopRecord.duyoMinutes}
-    onChangeText={(value) => handleChangeGongbeop("duyoMinutes", value)}
+value={todayGongbeopRecord.duyoMinutes}
+onChangeText={(value) => handleChangeTodayGongbeop("duyoMinutes", value)}
     keyboardType="numeric"
     style={[styles.imageModalInput, styles.modalInputThree]}
   />
 
   <TextInput
-    value={gongbeopRecord.ohaengjeonsa}
-    onChangeText={(value) => handleChangeGongbeop("ohaengjeonsa", value)}
+value={todayGongbeopRecord.ohaengjeonsa}
+onChangeText={(value) => handleChangeTodayGongbeop("ohaengjeonsa", value)}
     keyboardType="numeric"
     style={[styles.imageModalInput, styles.modalInputFour]}
   />
@@ -2050,18 +2042,21 @@ loadData({ silent: true }).catch((error) => {
 
   <TouchableOpacity
     style={styles.modalSaveHotspot}
-    onPress={async () => {
-      setRecordModalVisible(false);
-setTimeout(async () => {
-  await handleSaveGongbeopRecord();
-}, 150);
-    }}
+    onPress={() => {
+  setRecordModalVisible(false);
+
+  setTimeout(() => {
+    handleSaveGongbeopRecord();
+  }, 300);
+}}
   />
 </View>
   </View>
 </Modal>
+) : null}
 
-<Modal visible={completionModalVisible} transparent animationType="fade">
+{completionModalVisible ? (
+<Modal visible transparent animationType="fade">
   <View style={styles.recordModalOverlay}>
     <View style={styles.completionModalCard}>
       <Text style={styles.completionTitle}>축하합니다!</Text>
@@ -2100,8 +2095,11 @@ if (completionModalType === "form") {
     </View>
   </View>
 </Modal>
+) : null}
+
+{goalModalVisible ? (
 <Modal
-  visible={goalModalVisible}
+  visible
   transparent
   animationType="fade"
 >
@@ -2159,7 +2157,10 @@ if (completionModalType === "form") {
     </View>
   </View>
 </Modal>
-<Modal visible={memoHistoryModalVisible} transparent animationType="fade">
+) : null}
+
+{memoHistoryModalVisible ? (
+<Modal visible transparent animationType="fade">
   <View style={styles.recordModalOverlay}>
     <View style={styles.memoHistoryModalCard}>
       <Text style={styles.memoHistoryModalTitle}>지난 수련 메모</Text>
@@ -2197,7 +2198,10 @@ if (completionModalType === "form") {
     </View>
   </View>
 </Modal>
-<Modal visible={memoEditModalVisible} transparent animationType="fade">
+) : null}
+
+{memoEditModalVisible ? (
+<Modal visible transparent animationType="fade">
   <View style={styles.recordModalOverlay}>
     <View style={styles.memoEditModalCard}>
       <Text style={styles.memoHistoryModalTitle}>내 수련 메모</Text>
@@ -2236,7 +2240,6 @@ if (completionModalType === "form") {
   style={styles.memoEditSaveButton}
   disabled={savingMemo}
   onPress={async () => {
-    console.log("내 수련 메모 저장 버튼 눌림");
     await handleSaveMemberMemo();
   }}
 >
@@ -2248,7 +2251,10 @@ if (completionModalType === "form") {
     </View>
   </View>
 </Modal>
-<Modal visible={formRecordModalVisible} transparent animationType="fade">
+) : null}
+
+{formRecordModalVisible ? (
+<Modal visible transparent animationType="fade">
   <View style={styles.recordModalOverlay}>
     <View style={styles.formRecordModalCard}>
       <Text style={styles.formModalTitle}>오늘 투로 기록</Text>
@@ -2364,7 +2370,10 @@ if (result.data?.completedGoal) {
     </View>
   </View>
 </Modal>
-<Modal visible={formGoalModalVisible} transparent animationType="fade">
+) : null}
+
+{formGoalModalVisible ? (
+<Modal visible transparent animationType="fade">
   <View style={styles.recordModalOverlay}>
     <View style={styles.formRecordModalCard}>
       <Text style={styles.formModalTitle}>투로 목표 설정</Text>
@@ -2376,7 +2385,10 @@ if (result.data?.completedGoal) {
         <Text style={styles.formModalCloseText}>×</Text>
       </TouchableOpacity>
 
-      <Text style={styles.formModalDesc}>목표를 설정할 투로를 선택해주세요.</Text>
+      <Text style={styles.formModalDesc}>
+  대표로 보여줄 투로에 별표를 선택해주세요.{"\n"}
+  별표가 없는 투로도 목표 설정과 기록이 가능합니다.
+</Text>
 
       <View style={{ gap: 8, marginBottom: 18 }}>
         {accessibleForms.map((item) => {
@@ -2425,8 +2437,7 @@ if (result.data?.completedGoal) {
       }),
     });
   } catch (error) {
-    console.log("대표 투로 저장 실패:", error);
-  }
+ }
 }}
       >
         <Text
@@ -2481,10 +2492,6 @@ if (result.data?.completedGoal) {
         <TouchableOpacity
           style={styles.formModalSaveButton}
           onPress={async () => {
-            console.log("투로 목표 저장 버튼 눌림");
-             console.log("selectedFormId:", selectedFormId);
-  console.log("formGoalCount:", formGoalCount);
-
             try {
               if (!selectedFormId) {
                 Alert.alert("안내", "투로를 선택해주세요.");
@@ -2501,8 +2508,6 @@ if (
   Alert.alert("안내", "목표 횟수는 1회 이상 9,999,999회 이하로 입력해주세요.");
   return;
 }
-
-              console.log("투로 목표 저장 요청 시작");
               const response = await fetch(`${API_BASE_URL}/api/member/me/form-goals`, {
                 method: "POST",
                 headers: {
@@ -2518,11 +2523,8 @@ if (
                   isActive: true,
                 }),
               });
-              console.log("투로 목표 저장 요청 도착");
-
+              
               const result = await response.json();
-              console.log("투로 목표 저장 응답:", response.status, result);
-
 
               if (!response.ok) {
                 throw new Error(result.message || "투로 목표 저장 실패");
@@ -2542,6 +2544,7 @@ if (
     </View>
   </View>
 </Modal>
+) : null}
     </KeyboardAvoidingView>
   );
 }
@@ -4529,7 +4532,7 @@ formModalTitle: {
   fontSize: 20,
   fontFamily: fonts.title,
   color: colors.textMain,
-  marginBottom: 12,
+  marginBottom: 6,
   textAlign: "center",
 },
 
@@ -4557,7 +4560,7 @@ formModalName: {
 },
 
 formModalDesc: {
-  fontSize: 14,
+  fontSize: 14.5,
   fontFamily: fonts.medium,
   color: colors.textSub,
   textAlign: "center",
