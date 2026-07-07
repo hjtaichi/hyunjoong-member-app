@@ -127,7 +127,7 @@ export async function changeMyPassword(payload: {
   return res.data;
 }
 
-export async function changeMyPhone(phone: string) {
+export async function changeMyPhone(phone: string | null) {
   const res = await client.patch("/api/member/me/phone", { phone });
   return res.data;
 }

@@ -2201,7 +2201,7 @@ featuredFormImage: {
 },
 
 featuredFormTitle: {
-  fontSize: 24,
+  fontSize: 23,
   lineHeight: 34,
   fontFamily: fonts.title,
   color: colors.textMain,
