@@ -47,6 +47,7 @@ const [paymentModalVisible, setPaymentModalVisible] = useState(false);
 const [avatarModalVisible, setAvatarModalVisible] = useState(false);
 const [defaultAvatarModalVisible, setDefaultAvatarModalVisible] = useState(false);
 const [accountCopied, setAccountCopied] = useState(false);
+const [profileImageVersion, setProfileImageVersion] = useState("");
 
 const [currentPassword, setCurrentPassword] = useState("");
 const [newPassword, setNewPassword] = useState("");
@@ -184,7 +185,12 @@ console.log("🔥 mypage homeData:", result);
 setHomeData(result);
         
         setHomeData(result);
-        setSelectedAvatar(result?.member?.profileAvatar || null);
+
+const nextAvatar = result?.member?.profileAvatar || null;
+const nextVersion = result?.member?.updatedAt || "";
+
+setSelectedAvatar(nextAvatar);
+setProfileImageVersion(nextVersion);
 
       } catch (error) {
         Alert.alert("오류", error.message || "내 정보를 불러오지 못했습니다.");
@@ -477,7 +483,10 @@ async function uploadProfileImageAsync(assetOrUri) {
     throw new Error(result?.message || "프로필 이미지 업로드에 실패했습니다.");
   }
 
-  return result?.profileAvatar || result?.data?.profileAvatar;
+  return {
+  profileAvatar: result?.profileAvatar || result?.data?.profileAvatar,
+  updatedAt: result?.updatedAt || result?.data?.updatedAt || String(Date.now()),
+};
 }
 
 async function handlePickProfileFromCamera() {
@@ -500,12 +509,22 @@ async function handlePickProfileFromCamera() {
   try {
     setSubmittingAccount(true);
 
-   const uploadedUrl = await uploadProfileImageAsync(result.assets[0]);
+   const uploaded = await uploadProfileImageAsync(result.assets[0]);
 
-setSelectedAvatar(uploadedUrl);
+setSelectedAvatar(uploaded.profileAvatar);
+setProfileImageVersion(uploaded.updatedAt);
+
+setHomeData((prev) => ({
+  ...prev,
+  member: {
+    ...(prev?.member || {}),
+    profileAvatar: uploaded.profileAvatar,
+    updatedAt: uploaded.updatedAt,
+  },
+}));
+
 Alert.alert("완료", "프로필 사진이 변경되었습니다.");
 setAvatarModalVisible(false);
-await loadProfile({ silent: true });
   } catch (error) {
     Alert.alert("오류", error?.message || "프로필 사진 변경에 실패했습니다.");
   } finally {
@@ -533,12 +552,22 @@ async function handlePickProfileFromAlbum() {
   try {
     setSubmittingAccount(true);
 
-    const uploadedUrl = await uploadProfileImageAsync(result.assets[0]);
+    const uploaded = await uploadProfileImageAsync(result.assets[0]);
 
-setSelectedAvatar(uploadedUrl);
+setSelectedAvatar(uploaded.profileAvatar);
+setProfileImageVersion(uploaded.updatedAt);
+
+setHomeData((prev) => ({
+  ...prev,
+  member: {
+    ...(prev?.member || {}),
+    profileAvatar: uploaded.profileAvatar,
+    updatedAt: uploaded.updatedAt,
+  },
+}));
+
 Alert.alert("완료", "프로필 사진이 변경되었습니다.");
 setAvatarModalVisible(false);
-await loadProfile({ silent: true });
   } catch (error) {
     Alert.alert("오류", error?.message || "프로필 사진 변경에 실패했습니다.");
   } finally {
@@ -960,7 +989,7 @@ function MenuDivider() {
   ) : null}
 
   <Image
-    source={getAvatarSource(selectedAvatar, homeData?.member?.updatedAt)}
+    source={getAvatarSource(selectedAvatar, profileImageVersion)}
     style={[
       styles.heroAvatarImage,
       isYudanja && styles.heroAvatarImageYudanja,
