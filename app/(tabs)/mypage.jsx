@@ -448,21 +448,24 @@ async function uploadProfileImageAsync(assetOrUri) {
 } else {
     const asset = typeof assetOrUri === "object" ? assetOrUri : {};
 
-    const mime =
-      asset?.mimeType === "image/png" ? "image/png" :
-      asset?.mimeType === "image/webp" ? "image/webp" :
-      "image/jpeg";
+let mime = asset?.mimeType || asset?.type || "image/jpeg";
 
-    const ext =
-      mime === "image/png" ? "png" :
-      mime === "image/webp" ? "webp" :
-      "jpg";
+if (!["image/jpeg", "image/png", "image/webp"].includes(mime)) {
+  mime = "image/jpeg";
+}
 
-    formData.append("image", {
-      uri: imageUri,
-      name: `profile.${ext}`,
-      type: mime,
-    });
+const ext =
+  mime === "image/png"
+    ? "png"
+    : mime === "image/webp"
+    ? "webp"
+    : "jpg";
+
+formData.append("image", {
+  uri: imageUri,
+  name: `profile-image-${Date.now()}.${ext}`,
+  type: mime,
+});
   }
 
   const rawApiBase = String(process.env.EXPO_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
