@@ -184,8 +184,6 @@ const [submittingAccount, setSubmittingAccount] = useState(false);
 console.log("🔥 mypage homeData:", result);
 setHomeData(result);
         
-        setHomeData(result);
-
 const nextAvatar = result?.member?.profileAvatar || null;
 const nextVersion = result?.member?.updatedAt || "";
 
@@ -413,6 +411,44 @@ async function handleSaveAvatar() {
     setSubmittingAccount(false);
   }
 }
+
+async function compressImageForWeb(imageUri, maxSize = 1000, quality = 0.68) {
+  const blob = await fetch(imageUri).then((res) => res.blob());
+
+  const image = await new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+const objectUrl = URL.createObjectURL(blob);
+img.onload = () => {
+  URL.revokeObjectURL(objectUrl);
+  resolve(img);
+};
+img.onerror = (error) => {
+  URL.revokeObjectURL(objectUrl);
+  reject(error);
+};
+img.src = objectUrl;
+  });
+
+  const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+  const width = Math.round(image.width * scale);
+  const height = Math.round(image.height * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(image, 0, 0, width, height);
+
+  const compressedBlob = await new Promise((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", quality);
+  });
+
+  return compressedBlob || blob;
+}
+
 async function uploadProfileImageAsync(assetOrUri) {
   const formData = new FormData();
 
@@ -423,26 +459,14 @@ async function uploadProfileImageAsync(assetOrUri) {
     throw new Error("선택된 이미지가 없습니다.");
   }
 
-  if (Platform.OS === "web") {
-  const blob = await fetch(imageUri).then((res) => res.blob());
+if (Platform.OS === "web") {
+  const blob = await compressImageForWeb(imageUri, 1000, 0.68);
 
-  const rawMime = blob.type || "image/jpeg";
-
-  const mime =
-    rawMime === "image/png"
-      ? "image/png"
-      : rawMime === "image/webp"
-      ? "image/webp"
-      : "image/jpeg";
-
-  const ext =
-    mime === "image/png"
-      ? "png"
-      : mime === "image/webp"
-      ? "webp"
-      : "jpg";
-
-  const file = new File([blob], `profile.${ext}`, { type: mime });
+  const file = new File(
+    [blob],
+    `profile-image-${Date.now()}.jpg`,
+    { type: "image/jpeg" }
+  );
 
   formData.append("image", file);
 } else {
