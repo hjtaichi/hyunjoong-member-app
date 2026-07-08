@@ -10,8 +10,11 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../../theme";
 import { getGongbeopPercent } from "./gongbeopMeta";
-
-export default function GongbeopSection({
+const FLOW_IMAGE = require("../../../assets/images/gongbeop-flow-full.png");
+const RIVER_IMAGE = require("../../../assets/images/river-highlight.png");
+const GOAL_ICON = require("../../../assets/images/goal-setting-icon.png");
+const MEMO_BG = require("../../../assets/images/memo-card-bg.png");
+function GongbeopSection({
   styles,
   AnimatedPercentCircle,
   riverGlowAnim,
@@ -48,7 +51,7 @@ export default function GongbeopSection({
         <View style={styles.flowSection}>
          
           <Image
-        source={require("../../../assets/images/gongbeop-flow-full.png")}
+        source={FLOW_IMAGE}
         style={styles.flowBackground}
         resizeMode="stretch"
       />
@@ -60,7 +63,7 @@ export default function GongbeopSection({
       />
       
           <Animated.Image
-        source={require("../../../assets/images/river-highlight.png")}
+        source={RIVER_IMAGE}
         style={[
           styles.riverHighlight,
           { pointerEvents: "none" },
@@ -181,7 +184,7 @@ export default function GongbeopSection({
         }}
       >
         <Image
-          source={require("../../../assets/images/goal-setting-icon.png")}
+          source={GOAL_ICON}
           style={styles.goalSettingIconImage}
           resizeMode="contain"
         />
@@ -238,7 +241,7 @@ export default function GongbeopSection({
       
         <View style={styles.memoImageCard}>
           <Image
-            source={require("../../../assets/images/memo-card-bg.png")}
+            source={MEMO_BG}
             style={styles.memoCardBg}
             resizeMode="stretch"
           />
@@ -270,3 +273,5 @@ export default function GongbeopSection({
     </>
   );
 }
+
+export default React.memo(GongbeopSection);
