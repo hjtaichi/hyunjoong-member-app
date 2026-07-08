@@ -90,7 +90,8 @@ const {
   hasPrivateLessonMenu,
   privateLessonMenuTitle,
   privateLessonMenuDesc,
-  riverGlowAnim,
+riverGlowAnim,
+debugLogs,
 } = screen;
 
   if (loading) {
@@ -224,7 +225,17 @@ const {
     privateLessonMenuDesc={privateLessonMenuDesc}
   />
 ) : null}
+{debugLogs?.length > 0 && (
+  <View style={styles.debugBox}>
+    <Text style={styles.debugTitle}>iPhone Debug Log</Text>
 
+    {debugLogs.map((log, index) => (
+      <Text key={index} style={styles.debugText}>
+        {log}
+      </Text>
+    ))}
+  </View>
+)}
     </ScrollView>
 <GongbeopRecordModal
   visible={recordModalVisible}

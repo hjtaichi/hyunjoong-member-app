@@ -16,6 +16,18 @@ export function useTaegukwonScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+const [debugLogs, setDebugLogs] = useState([]);
+
+const addDebugLog = useCallback((message, data) => {
+  setDebugLogs((prev) => [
+    ...prev.slice(-30),
+    `${new Date().toLocaleTimeString()} | ${message} ${
+      data ? JSON.stringify(data) : ""
+    }`,
+  ]);
+}, []);
+
   const [taegukwonData, setTaegukwonData] = useState(null);
   const [privateLessonData, setPrivateLessonData] = useState(null);
 
@@ -217,23 +229,37 @@ export function useTaegukwonScreen() {
 
       setSavingMemo(true);
 
-      const response = await fetch(`${API_BASE_URL}/api/member/me/personal-memo`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          curriculumId: targetCurriculumId,
-          memberMemo: editMemberMemo,
-        }),
-      });
+const memoUrl = `${API_BASE_URL}/api/member/me/personal-memo`;
 
+addDebugLog("메모 저장 요청 시작", {
+  API_BASE_URL,
+  memoUrl,
+  hasToken: !!token,
+  curriculumId: targetCurriculumId,
+});
+
+const response = await fetch(memoUrl, {
+  method: "PATCH",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+  body: JSON.stringify({
+    curriculumId: targetCurriculumId,
+    memberMemo: editMemberMemo,
+  }),
+});
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message || "내 수련 메모 저장 실패");
-      }
+addDebugLog("메모 저장 응답", {
+  ok: response.ok,
+  status: response.status,
+  result,
+});
+
+if (!response.ok) {
+  throw new Error(result.message || "내 수련 메모 저장 실패");
+}
 
       setTaegukwonData((prev) => ({
         ...prev,
@@ -248,11 +274,15 @@ export function useTaegukwonScreen() {
 
       loadData({ silent: true }).catch(() => {});
     } catch (error) {
-      Alert.alert("오류", error.message || "수련 메모 저장 중 오류가 발생했습니다.");
-    } finally {
+  addDebugLog("메모 저장 실패", {
+    message: error?.message,
+  });
+
+  Alert.alert("오류", error.message || "수련 메모 저장 중 오류가 발생했습니다.");
+} finally {
       setSavingMemo(false);
     }
-  }, [personalProgress, editMemberMemo, token, loadData]);
+  }, [personalProgress, editMemberMemo, token, loadData, addDebugLog]);
 
   return {
     loading,
@@ -326,5 +356,7 @@ export function useTaegukwonScreen() {
     privateLessonMenuDesc,
 
     riverGlowAnim,
+    debugLogs,
+addDebugLog,
   };
 }

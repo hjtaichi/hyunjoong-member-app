@@ -2662,5 +2662,24 @@ privateGuideBannerArrow: {
   fontSize: 22,
   color: "#C89E6A",
 },
+debugBox: {
+  marginTop: 20,
+  marginHorizontal: 16,
+  padding: 12,
+  borderRadius: 12,
+  backgroundColor: "#111",
+},
 
+debugTitle: {
+  color: "#fff",
+  fontSize: 13,
+  fontWeight: "700",
+  marginBottom: 8,
+},
+
+debugText: {
+  color: "#00ff7f",
+  fontSize: 11,
+  lineHeight: 16,
+},
 });
