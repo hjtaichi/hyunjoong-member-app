@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 
 import { getMemberCalendar } from "../../api/memberCalendar";
@@ -122,13 +121,13 @@ useEffect(() => {
   loadAll({ silent: true });
 }, [currentYear, currentMonth, loadAll]);
 
-useFocusEffect(
-  useCallback(() => {
-    if (!hasMountedRef.current) return;
-
-    loadAll({ silent: true });
-  }, [loadAll])
-);
+// useFocusEffect(
+//   useCallback(() => {
+//     if (!hasMountedRef.current) return;
+//
+//     loadAll({ silent: true });
+//   }, [loadAll])
+// );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

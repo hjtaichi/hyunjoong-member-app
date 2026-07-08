@@ -351,10 +351,6 @@ const checkNoticePopup = useCallback(async () => {
   }
 }, [token, homeData, hiddenNoticeIds, closedNoticeIds]);
 
-useEffect(() => {
-  checkNoticePopup();
-}, [checkNoticePopup]);
-
 useFocusEffect(
   useCallback(() => {
     checkNoticePopup();

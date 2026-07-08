@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 
 import { getMemberHome } from "../../api/memberHome";
-import { getMemberCalendar } from "../../api/memberCalendar";
+import { getMemberCalendarSummary } from "../../api/memberCalendar";
 import { getMemberNoticeList } from "../../api/memberNotice";
 
 export const DEBUG_HOME = false;
@@ -23,6 +23,7 @@ export function useHomeScreen({
   const [calendarData, setCalendarData] = useState(null);
   const [noticeList, setNoticeList] = useState([]);
   const [memberNotifications, setMemberNotifications] = useState([]);
+  const didInitialLoadRef = useRef(false);
 
   const loadMemberNotifications = useCallback(async () => {
     if (!token) return;
@@ -58,9 +59,9 @@ export function useHomeScreen({
       return;
     }
 
-    const [homeRes, calendarRes, noticeRes] = await Promise.all([
+const [homeRes, calendarRes, noticeRes] = await Promise.all([
   getMemberHome(token),
-  getMemberCalendar(token, currentYear, currentMonth),
+  getMemberCalendarSummary(token, currentYear, currentMonth),
   getMemberNoticeList(token),
 ]);
 
@@ -103,10 +104,8 @@ export function useHomeScreen({
           setLoading(true);
         }
 
-await Promise.all([
-  refreshScreenData(),
-  loadMemberNotifications(),
-]);
+await refreshScreenData();
+loadMemberNotifications();
       } catch (error) {
         const errorMessage =
           error?.message || error?.response?.data?.message || "";
@@ -131,25 +130,26 @@ await Promise.all([
       }
     },
     [
-      token,
-      logout,
-      refreshScreenData,
-      loadMemberNotifications,
-      isPausedMember,
-      homeData,
-      calendarData,
+  token,
+  logout,
+  refreshScreenData,
+  loadMemberNotifications,
+  isPausedMember,
     ]
   );
 
   useEffect(() => {
-    loadAll();
-  }, [loadAll]);
+  if (didInitialLoadRef.current) return;
 
-  useFocusEffect(
-    useCallback(() => {
-      loadAll({ silent: true });
-    }, [loadAll])
-  );
+  didInitialLoadRef.current = true;
+  loadAll();
+}, [loadAll]);
+
+// useFocusEffect(
+//   useCallback(() => {
+//     loadAll({ silent: true });
+//   }, [loadAll])
+// );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
 import {
   ActivityIndicator,
   Alert,
@@ -128,11 +127,11 @@ const previewRooms = activeRooms.slice(0, 1);
   loadInquiries();
 }, [loadInquiries]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadInquiries({ silent: true });
-    }, [loadInquiries])
-  );
+// useFocusEffect(
+//   useCallback(() => {
+//     loadInquiries({ silent: true });
+//   }, [loadInquiries])
+// );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

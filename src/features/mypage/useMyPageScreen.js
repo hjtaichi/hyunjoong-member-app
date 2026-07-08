@@ -6,12 +6,52 @@ import {
   changeMyPhone,
   verifyMyPassword,
   changeMyLoginId,
+  updateMyProfileAvatar,
 } from "../../api/member";
 
 import { onlyNumbers } from "./mypageUtils";
 import { getMemberHome } from "../../api/memberHome";
+import * as ImagePicker from "expo-image-picker";
 
-export function useMyPageScreen({ token, logout }) {
+async function compressImageForWeb(imageUri, maxSize = 1000, quality = 0.68) {
+  const blob = await fetch(imageUri).then((res) => res.blob());
+
+  const image = await new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const objectUrl = URL.createObjectURL(blob);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(img);
+    };
+
+    img.onerror = (error) => {
+      URL.revokeObjectURL(objectUrl);
+      reject(error);
+    };
+
+    img.src = objectUrl;
+  });
+
+  const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+  const width = Math.round(image.width * scale);
+  const height = Math.round(image.height * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(image, 0, 0, width, height);
+
+  const compressedBlob = await new Promise((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", quality);
+  });
+
+  return compressedBlob || blob;
+}
+
+export function useMyPageScreen({ token, logout, setAvatarModalVisible, setDefaultAvatarModalVisible }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [homeData, setHomeData] = useState(null);
@@ -19,12 +59,12 @@ export function useMyPageScreen({ token, logout }) {
   const [selectedAvatar, setSelectedAvatar] = useState("avatar1");
   const [submittingAccount, setSubmittingAccount] = useState(false);
 
-const [currentPassword, setCurrentPassword] = useState("");
-const [newPassword, setNewPassword] = useState("");
-const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-const [newPhone, setNewPhone] = useState("");
-const [newLoginId, setNewLoginId] = useState("");
-const [verifyPassword, setVerifyPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newLoginId, setNewLoginId] = useState("");
+  const [verifyPassword, setVerifyPassword] = useState("");
   const [profileImageVersion, setProfileImageVersion] = useState("");
 
   const loadProfile = useCallback(
@@ -258,6 +298,204 @@ const handleVerifyPasswordForEdit = useCallback(
   [verifyPassword, homeData]
 );
 
+const uploadProfileImageAsync = useCallback(
+  async (assetOrUri) => {
+    const formData = new FormData();
+
+    const imageUri =
+      typeof assetOrUri === "string" ? assetOrUri : assetOrUri?.uri;
+
+    if (!imageUri) {
+      throw new Error("선택된 이미지가 없습니다.");
+    }
+
+    if (Platform.OS === "web") {
+      const blob = await compressImageForWeb(imageUri, 1000, 0.68);
+
+      const file = new File([blob], `profile-image-${Date.now()}.jpg`, {
+        type: "image/jpeg",
+      });
+
+      formData.append("image", file);
+    } else {
+      const asset = typeof assetOrUri === "object" ? assetOrUri : {};
+
+      let mime = asset?.mimeType || asset?.type || "image/jpeg";
+
+      if (!["image/jpeg", "image/png", "image/webp"].includes(mime)) {
+        mime = "image/jpeg";
+      }
+
+      const ext =
+        mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
+
+      formData.append("image", {
+        uri: imageUri,
+        name: `profile-image-${Date.now()}.${ext}`,
+        type: mime,
+      });
+    }
+
+    const rawApiBase = String(process.env.EXPO_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+    const apiBase = rawApiBase.endsWith("/api")
+      ? rawApiBase
+      : `${rawApiBase}/api`;
+
+    const response = await fetch(`${apiBase}/member/me/profile-image`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result?.message || "프로필 이미지 업로드에 실패했습니다.");
+    }
+
+    return {
+      profileAvatar: result?.profileAvatar || result?.data?.profileAvatar,
+      updatedAt:
+        result?.updatedAt || result?.data?.updatedAt || String(Date.now()),
+    };
+  },
+  [token]
+);
+
+const handlePickProfileFromCamera = useCallback(async () => {
+  const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+  if (!permission.granted) {
+    Alert.alert("안내", "카메라 권한이 필요합니다.");
+    return;
+  }
+
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.75,
+  });
+
+  if (result.canceled) return;
+
+  try {
+    setSubmittingAccount(true);
+
+    const uploaded = await uploadProfileImageAsync(result.assets[0]);
+
+    setSelectedAvatar(uploaded.profileAvatar);
+    setProfileImageVersion(uploaded.updatedAt);
+
+    setHomeData((prev) => ({
+      ...prev,
+      member: {
+        ...(prev?.member || {}),
+        profileAvatar: uploaded.profileAvatar,
+        updatedAt: uploaded.updatedAt,
+      },
+    }));
+
+    Alert.alert("완료", "프로필 사진이 변경되었습니다.");
+    setAvatarModalVisible(false);
+  } catch (error) {
+    Alert.alert("오류", error?.message || "프로필 사진 변경에 실패했습니다.");
+  } finally {
+    setSubmittingAccount(false);
+  }
+}, [uploadProfileImageAsync, setAvatarModalVisible]);
+
+const handlePickProfileFromAlbum = useCallback(async () => {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+  if (!permission.granted) {
+    Alert.alert("안내", "앨범 접근 권한이 필요합니다.");
+    return;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.75,
+  });
+
+  if (result.canceled) return;
+
+  try {
+    setSubmittingAccount(true);
+
+    const uploaded = await uploadProfileImageAsync(result.assets[0]);
+
+    setSelectedAvatar(uploaded.profileAvatar);
+    setProfileImageVersion(uploaded.updatedAt);
+
+    setHomeData((prev) => ({
+      ...prev,
+      member: {
+        ...(prev?.member || {}),
+        profileAvatar: uploaded.profileAvatar,
+        updatedAt: uploaded.updatedAt,
+      },
+    }));
+
+    Alert.alert("완료", "프로필 사진이 변경되었습니다.");
+    setAvatarModalVisible(false);
+  } catch (error) {
+    Alert.alert("오류", error?.message || "프로필 사진 변경에 실패했습니다.");
+  } finally {
+    setSubmittingAccount(false);
+  }
+}, [uploadProfileImageAsync, setAvatarModalVisible]);
+
+const handleUseNoProfileImage = useCallback(async () => {
+  try {
+    setSubmittingAccount(true);
+
+    await updateMyProfileAvatar(null);
+    setSelectedAvatar(null);
+
+    Alert.alert("완료", "기본 프로필 이미지로 적용되었습니다.");
+    setAvatarModalVisible(false);
+    setDefaultAvatarModalVisible(false);
+
+    await loadProfile({ silent: true });
+  } catch (error) {
+    Alert.alert("오류", error?.message || "프로필 이미지 변경에 실패했습니다.");
+  } finally {
+    setSubmittingAccount(false);
+  }
+}, [loadProfile, setAvatarModalVisible, setDefaultAvatarModalVisible]);
+
+const handleUseDefaultAvatar = useCallback(
+  async (avatarKey) => {
+    try {
+      setSubmittingAccount(true);
+
+      await updateMyProfileAvatar(avatarKey);
+
+      setSelectedAvatar(avatarKey);
+      setDefaultAvatarModalVisible(false);
+
+      Alert.alert("완료", "기본 프로필 이미지로 변경했습니다.");
+      await loadProfile({ silent: true });
+    } catch (error) {
+      Alert.alert("오류", error?.message || "프로필 사진 변경에 실패했습니다.");
+    } finally {
+      setSubmittingAccount(false);
+    }
+  },
+  [loadProfile, setDefaultAvatarModalVisible]
+);
+
+const openDefaultAvatarPicker = useCallback(() => {
+  setAvatarModalVisible(false);
+  setDefaultAvatarModalVisible(true);
+}, [setAvatarModalVisible, setDefaultAvatarModalVisible]);
+
   return {
     loading,
     refreshing,
@@ -292,5 +530,10 @@ handleChangePassword,
 handleChangePhone,
 handleChangeLoginId,
 handleVerifyPasswordForEdit,
+handlePickProfileFromCamera,
+handlePickProfileFromAlbum,
+handleUseNoProfileImage,
+handleUseDefaultAvatar,
+openDefaultAvatarPicker,
   };
 }

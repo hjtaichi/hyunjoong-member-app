@@ -13,3 +13,15 @@ export async function getMemberCalendar(token, year, month) {
 
   return result.data;
 }
+
+export async function getMemberCalendarSummary(token, year, month) {
+  const result = await apiFetch(
+    `/member/me/calendar-summary?year=${year}&month=${month}&t=${Date.now()}`,
+    {
+      method: "GET",
+    },
+    token
+  );
+
+  return result.data;
+}

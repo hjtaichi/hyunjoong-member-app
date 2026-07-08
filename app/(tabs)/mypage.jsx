@@ -4,30 +4,22 @@ import {
   Alert,
   Animated,
   Image,
-  ImageBackground,
   LayoutAnimation,
   Linking,
-  Modal,
-  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
 import { router } from "expo-router";
-import {
-  updateMyProfileAvatar,
-} from "../../src/api/member";
 
 import { useAuth } from "../../src/contexts/AuthContext";
 
 import * as Clipboard from "expo-clipboard";
-import * as ImagePicker from "expo-image-picker";
-import { avatarImages, avatarGroups, mypageImages } from "../../src/features/mypage/mypageImages";
-import { getAvatarSource, getJoinedPeriodLabel } from "../../src/features/mypage/mypageUtils";
+import { avatarGroups, mypageImages } from "../../src/features/mypage/mypageImages";
+import { getJoinedPeriodLabel } from "../../src/features/mypage/mypageUtils";
 import { MenuRow, MenuDivider } from "../../src/features/mypage/components/MyPageMenu";
 import { getRankBadgeColors } from "../../src/theme/rankBadge";
 import { styles } from "../../src/features/mypage/mypageStyles";
@@ -38,25 +30,34 @@ import VerifyPasswordModal from "../../src/features/mypage/components/VerifyPass
 import PasswordModal from "../../src/features/mypage/components/PasswordModal";
 import PhoneModal from "../../src/features/mypage/components/PhoneModal";
 import { useMyPageScreen } from "../../src/features/mypage/useMyPageScreen";
+import LoginIdModal from "../../src/features/mypage/components/LoginIdModal";
+import MyPageHeroCard from "../../src/features/mypage/components/MyPageHeroCard";
+import YudanjaCard from "../../src/features/mypage/components/YudanjaCard";
 
 export default function MyPageScreen() {
   
   const { user, token, logout } = useAuth();
+  
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [phoneModalVisible, setPhoneModalVisible] = useState(false);
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [avatarModalVisible, setAvatarModalVisible] = useState(false);
+  const [defaultAvatarModalVisible, setDefaultAvatarModalVisible] = useState(false);
+  const [accountCopied, setAccountCopied] = useState(false);
+
+  const [loginIdModalVisible, setLoginIdModalVisible] = useState(false);
+  const [verifyModalVisible, setVerifyModalVisible] = useState(false);
+  const [avatarTab, setAvatarTab] = useState("animal");
+
   const {
   loading,
   refreshing,
   homeData,
-  setHomeData,
   selectedAvatar,
-  setSelectedAvatar,
   profileImageVersion,
-  setProfileImageVersion,
-  loadProfile,
   onRefresh,
   handleLogout,
-
   submittingAccount,
-  setSubmittingAccount,
 
   currentPassword,
   setCurrentPassword,
@@ -75,30 +76,29 @@ export default function MyPageScreen() {
   handleChangePhone,
   handleChangeLoginId,
   handleVerifyPasswordForEdit,
-} = useMyPageScreen({ token, logout });
-  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
-const [phoneModalVisible, setPhoneModalVisible] = useState(false);
-const [paymentModalVisible, setPaymentModalVisible] = useState(false);
-const [avatarModalVisible, setAvatarModalVisible] = useState(false);
-const [defaultAvatarModalVisible, setDefaultAvatarModalVisible] = useState(false);
-const [accountCopied, setAccountCopied] = useState(false);
-
-const [loginIdModalVisible, setLoginIdModalVisible] = useState(false);
-const [verifyModalVisible, setVerifyModalVisible] = useState(false);
-const [avatarTab, setAvatarTab] = useState("animal");
-
-
-const avatarKeys = avatarGroups[avatarTab] || [];
-
-const [isYudanjaBackVisible, setIsYudanjaBackVisible] = useState(false);
-const yudanjaFlipAnim = useRef(new Animated.Value(0)).current;
-
-const yudanjaFrontRotate = yudanjaFlipAnim.interpolate({
-  inputRange: [0, 180],
-  outputRange: ["0deg", "180deg"],
+  handlePickProfileFromCamera,
+  handlePickProfileFromAlbum,
+  handleUseNoProfileImage,
+  handleUseDefaultAvatar,
+  openDefaultAvatarPicker,
+  } = useMyPageScreen({
+  token,
+  logout,
+  setAvatarModalVisible,
+  setDefaultAvatarModalVisible,
 });
 
-const yudanjaBackRotate = yudanjaFlipAnim.interpolate({
+  const avatarKeys = avatarGroups[avatarTab] || [];
+
+  const [isYudanjaBackVisible, setIsYudanjaBackVisible] = useState(false);
+  const yudanjaFlipAnim = useRef(new Animated.Value(0)).current;
+
+  const yudanjaFrontRotate = yudanjaFlipAnim.interpolate({
+  inputRange: [0, 180],
+  outputRange: ["0deg", "180deg"],
+  });
+
+  const yudanjaBackRotate = yudanjaFlipAnim.interpolate({
   inputRange: [0, 180],
   outputRange: ["180deg", "360deg"],
 });
@@ -122,290 +122,6 @@ function handleFlipYudanjaCard() {
   }).start();
 }
 
-async function handleSaveAvatar() {
-  try {
-    setSubmittingAccount(true);
-
-    await updateMyProfileAvatar(selectedAvatar);
-
-    Alert.alert("완료", "프로필 이미지가 변경되었습니다.");
-    await loadProfile({ silent: true });
-  } catch (error) {
-    Alert.alert(
-      "오류",
-      error?.response?.data?.message ||
-        error?.message ||
-        "프로필 이미지 변경에 실패했습니다."
-    );
-  } finally {
-    setSubmittingAccount(false);
-  }
-}
-
-async function compressImageForWeb(imageUri, maxSize = 1000, quality = 0.68) {
-  const blob = await fetch(imageUri).then((res) => res.blob());
-
-  const image = await new Promise((resolve, reject) => {
-    const img = new window.Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-const objectUrl = URL.createObjectURL(blob);
-img.onload = () => {
-  URL.revokeObjectURL(objectUrl);
-  resolve(img);
-};
-img.onerror = (error) => {
-  URL.revokeObjectURL(objectUrl);
-  reject(error);
-};
-img.src = objectUrl;
-  });
-
-  const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
-  const width = Math.round(image.width * scale);
-  const height = Math.round(image.height * scale);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(image, 0, 0, width, height);
-
-  const compressedBlob = await new Promise((resolve) => {
-    canvas.toBlob(resolve, "image/jpeg", quality);
-  });
-
-  return compressedBlob || blob;
-}
-
-async function uploadProfileImageAsync(assetOrUri) {
-  const formData = new FormData();
-
-  const imageUri =
-    typeof assetOrUri === "string" ? assetOrUri : assetOrUri?.uri;
-
-  if (!imageUri) {
-    throw new Error("선택된 이미지가 없습니다.");
-  }
-
-if (Platform.OS === "web") {
-  const blob = await compressImageForWeb(imageUri, 1000, 0.68);
-
-  const file = new File(
-    [blob],
-    `profile-image-${Date.now()}.jpg`,
-    { type: "image/jpeg" }
-  );
-
-  formData.append("image", file);
-} else {
-    const asset = typeof assetOrUri === "object" ? assetOrUri : {};
-
-let mime = asset?.mimeType || asset?.type || "image/jpeg";
-
-if (!["image/jpeg", "image/png", "image/webp"].includes(mime)) {
-  mime = "image/jpeg";
-}
-
-const ext =
-  mime === "image/png"
-    ? "png"
-    : mime === "image/webp"
-    ? "webp"
-    : "jpg";
-
-formData.append("image", {
-  uri: imageUri,
-  name: `profile-image-${Date.now()}.${ext}`,
-  type: mime,
-});
-  }
-
-  const rawApiBase = String(process.env.EXPO_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
-  const apiBase = rawApiBase.endsWith("/api") ? rawApiBase : `${rawApiBase}/api`;
-
-  const response = await fetch(`${apiBase}/member/me/profile-image`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "ngrok-skip-browser-warning": "true",
-    },
-    body: formData,
-  });
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result?.message || "프로필 이미지 업로드에 실패했습니다.");
-  }
-
-  return {
-  profileAvatar: result?.profileAvatar || result?.data?.profileAvatar,
-  updatedAt: result?.updatedAt || result?.data?.updatedAt || String(Date.now()),
-};
-}
-
-async function handlePickProfileFromCamera() {
-  const permission = await ImagePicker.requestCameraPermissionsAsync();
-
-  if (!permission.granted) {
-    Alert.alert("안내", "카메라 권한이 필요합니다.");
-    return;
-  }
-
-  const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.75,
-  });
-
-  if (result.canceled) return;
-
-  try {
-    setSubmittingAccount(true);
-
-   const uploaded = await uploadProfileImageAsync(result.assets[0]);
-
-setSelectedAvatar(uploaded.profileAvatar);
-setProfileImageVersion(uploaded.updatedAt);
-
-setHomeData((prev) => ({
-  ...prev,
-  member: {
-    ...(prev?.member || {}),
-    profileAvatar: uploaded.profileAvatar,
-    updatedAt: uploaded.updatedAt,
-  },
-}));
-
-Alert.alert("완료", "프로필 사진이 변경되었습니다.");
-setAvatarModalVisible(false);
-  } catch (error) {
-    Alert.alert("오류", error?.message || "프로필 사진 변경에 실패했습니다.");
-  } finally {
-    setSubmittingAccount(false);
-  }
-}
-
-async function handlePickProfileFromAlbum() {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-  if (!permission.granted) {
-    Alert.alert("안내", "앨범 접근 권한이 필요합니다.");
-    return;
-  }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.75,
-  });
-
-  if (result.canceled) return;
-
-  try {
-    setSubmittingAccount(true);
-
-    const uploaded = await uploadProfileImageAsync(result.assets[0]);
-
-setSelectedAvatar(uploaded.profileAvatar);
-setProfileImageVersion(uploaded.updatedAt);
-
-setHomeData((prev) => ({
-  ...prev,
-  member: {
-    ...(prev?.member || {}),
-    profileAvatar: uploaded.profileAvatar,
-    updatedAt: uploaded.updatedAt,
-  },
-}));
-
-Alert.alert("완료", "프로필 사진이 변경되었습니다.");
-setAvatarModalVisible(false);
-  } catch (error) {
-    Alert.alert("오류", error?.message || "프로필 사진 변경에 실패했습니다.");
-  } finally {
-    setSubmittingAccount(false);
-  }
-}
-
-async function handleUseNoProfileImage() {
-  try {
-    setSubmittingAccount(true);
-
-    await updateMyProfileAvatar(null);
-    setSelectedAvatar(null);
-
-    Alert.alert("완료", "기본 프로필 이미지로 적용되었습니다.");
-    setAvatarModalVisible(false);
-    setDefaultAvatarModalVisible(false);
-    await loadProfile({ silent: true });
-  } catch (error) {
-    Alert.alert("오류", error?.message || "프로필 이미지 변경에 실패했습니다.");
-  } finally {
-    setSubmittingAccount(false);
-  }
-}
-
-function openDefaultAvatarPicker() {
-  setAvatarModalVisible(false);
-  setDefaultAvatarModalVisible(true);
-}
-
-async function handleUseDefaultAvatar(avatarKey) {
-  try {
-    console.log("프로필 아바타 선택:", avatarKey);
-    setSubmittingAccount(true);
-
-    const rawApiBase = String(process.env.EXPO_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
-    const apiBase = rawApiBase.endsWith("/api") ? rawApiBase : `${rawApiBase}/api`;
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-    const response = await fetch(`${apiBase}/member/me/profile-avatar`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      body: JSON.stringify({
-        profileAvatar: avatarKey,
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    const result = await response.json();
-    console.log("프로필 아바타 변경 응답:", response.status, result);
-
-    if (!response.ok) {
-      throw new Error(result?.message || "프로필 사진 변경에 실패했습니다.");
-    }
-
-    setSelectedAvatar(avatarKey);
-    setDefaultAvatarModalVisible(false);
-
-    Alert.alert("완료", "기본 프로필 이미지로 변경했습니다.");
-    await loadProfile({ silent: true });
-  } catch (error) {
-    console.log("프로필 아바타 변경 오류:", error);
-
-    Alert.alert(
-      "오류",
-      error?.name === "AbortError"
-        ? "서버 응답이 너무 오래 걸립니다. 백엔드 서버를 재시작해보세요."
-        : error?.message || "프로필 사진 변경에 실패했습니다."
-    );
-  } finally {
-    setSubmittingAccount(false);
-  }
-}
 const PAYMENT_ACCOUNT_DISPLAY_TEXT =
   "신한은행 32304897185 \n예금주: 정원석";
 
@@ -604,176 +320,33 @@ const recurringMenuSummary = hasRecurring
   나의 수련 정보와 계정 설정을 확인할 수 있어요.
 </Text>
 
-<View style={[styles.heroCard, isYudanja && styles.heroCardYudanja]}>
-  {isYudanja ? (
-    <Image
-  source={mypageImages.yudanjaProfileCardBg}
-  style={styles.heroCardBgImage}
-  resizeMode="stretch"
+<MyPageHeroCard
+  styles={styles}
+  isYudanja={isYudanja}
+  memberName={memberName}
+  levelLabel={levelLabel}
+  rankBadgeColors={rankBadgeColors}
+  joinedDateLabel={joinedDateLabel}
+  joinedPeriodLabel={joinedPeriodLabel}
+  attendanceSessionCount={attendanceSessionCount}
+  attendanceDayCount={attendanceDayCount}
+  selectedAvatar={selectedAvatar}
+  profileImageVersion={profileImageVersion}
+  payment={payment}
+  paymentDueText={paymentDueText}
+  paymentDaysLeftText={paymentDaysLeftText}
+  onOpenAvatar={() => setAvatarModalVisible(true)}
+  onOpenPayment={() => setPaymentModalVisible(true)}
 />
-  ) : null}
 
-  {isYudanja ? <View style={styles.heroCardBgSoftOverlay} /> : null}
-  {/* {isYudanja ? <View style={styles.heroGoldGlow} /> : null} */}
-
-  <View style={styles.heroProfileRow}>
-    <View style={styles.heroTextWrap}>
-      <View style={styles.heroNameRow}>
-  <Text style={styles.heroName}>{memberName}</Text>
-
-  <View
-  style={[
-    styles.heroLevelBadge,
-    {
-      backgroundColor: rankBadgeColors.backgroundColor,
-      borderColor: rankBadgeColors.borderColor,
-    },
-  ]}
->
-  <Text
-    style={[
-      styles.heroLevelBadgeText,
-      { color: rankBadgeColors.textColor },
-    ]}
-  >
-    {levelLabel}
-  </Text>
-</View>
-
-  {homeData?.member?.canAccessYudanjaClass ? (
-  <View style={styles.heroYudanjaBadge}>
-    <Text style={styles.heroYudanjaBadgeText}>유단자회</Text>
-  </View>
-) : null}
-</View>
-
-<Text style={styles.heroSubText}>입관 {joinedDateLabel}</Text>
-
-<Text style={styles.heroMetaText}>{joinedPeriodLabel}</Text>
-
-<Text style={styles.heroMetaText}>
-  출석횟수 {attendanceSessionCount}회 ({attendanceDayCount}일)
-</Text>
-    </View>
-
-    <Pressable
-  style={[
-    styles.heroAvatarButton,
-    isYudanja && styles.heroAvatarButtonYudanja,
-  ]}
-  onPress={() => setAvatarModalVisible(true)}
->
-  {isYudanja ? (
-    <Image
-      source={mypageImages.yudanjaEmblemFrame}
-      style={styles.heroYudanjaFrame}
-      resizeMode="contain"
-    />
-  ) : null}
-
-  <Image
-    source={getAvatarSource(selectedAvatar, profileImageVersion)}
-    style={[
-      styles.heroAvatarImage,
-      isYudanja && styles.heroAvatarImageYudanja,
-    ]}
-    resizeMode="cover"
-  />
-
-  <View style={[styles.cameraBadge, isYudanja && styles.cameraBadgeYudanja]}>
-    <Image
-      source={mypageImages.cameraIcon}
-      style={styles.cameraIcon}
-      resizeMode="contain"
-    />
-  </View>
-</Pressable>
-  </View>
-
-  <View style={styles.heroDivider} />
-
-  <View style={styles.heroPaymentRow}>
-  <View style={styles.heroPaymentInfo}>
-    <Text style={styles.heroSmallLabel}>회비 상태</Text>
-
-    <View style={styles.heroPaymentBadge}>
-      <Text style={styles.heroPaymentBadgeText}>
-        {payment?.statusLabel || payment?.status || "확인 필요"}
-      </Text>
-    </View>
-
-    <Text style={styles.heroPaymentDueText}>
-      다음 결제일 {paymentDueText} · {paymentDaysLeftText}
-    </Text>
-  </View>
-
-  <Pressable
-    style={styles.heroPayButton}
-    onPress={() => setPaymentModalVisible(true)}
-  >
-    <Text style={styles.heroPayButtonText}>결제하기</Text>
-  </Pressable>
-</View>
-</View>
-
-{homeData?.member?.canAccessYudanjaClass ? (
-  <Pressable
-    onPress={handleFlipYudanjaCard}
-    style={[
-      styles.yudanjaFlipWrap,
-      isYudanjaBackVisible
-        ? styles.yudanjaFlipWrapBack
-        : styles.yudanjaFlipWrapFront,
-    ]}
-  >
-    <Animated.View
-      style={[
-        styles.yudanjaFlipFace,
-        styles.yudanjaFrontFace,
-        {
-          transform: [{ rotateY: yudanjaFrontRotate }],
-        },
-      ]}
-    >
-      <ImageBackground
-        source={mypageImages.yudanjaCardBg}
-        style={styles.yudanjaCard}
-        imageStyle={styles.yudanjaCardBgImage}
-        resizeMode="cover"
-      >
-        <View style={styles.yudanjaOverlay} />
-
-        <View style={styles.yudanjaTextWrap}>
-          <Text style={styles.yudanjaYear}>2026.01.01 ~ 2026.12.31</Text>
-          <Text style={styles.yudanjaTitle}>2026년 유단자회 회원</Text>
-          <Text style={styles.yudanjaMemberNo}>No. YD-2026-001</Text>
-        </View>
-
-        <Image
-          source={mypageImages.yudanjaIcon}
-          style={styles.yudanjaIconImage}
-          resizeMode="contain"
-        />
-      </ImageBackground>
-    </Animated.View>
-
-    <Animated.View
-      style={[
-        styles.yudanjaFlipFace,
-        styles.yudanjaBackFace,
-        {
-          transform: [{ rotateY: yudanjaBackRotate }],
-        },
-      ]}
-    >
-      <Image
-        source={mypageImages.yudanjaCardBackImage}
-        style={styles.yudanjaBackImage}
-        resizeMode="cover"
-      />
-    </Animated.View>
-  </Pressable>
-) : null}
+<YudanjaCard
+  isYudanja={isYudanja}
+  isYudanjaBackVisible={isYudanjaBackVisible}
+  handleFlipYudanjaCard={handleFlipYudanjaCard}
+  yudanjaFrontRotate={yudanjaFrontRotate}
+  yudanjaBackRotate={yudanjaBackRotate}
+  styles={styles}
+/>
 
 <View style={[styles.menuSection, isYudanja && styles.menuSectionYudanja]}>
 <MenuRow
@@ -893,56 +466,19 @@ const recurringMenuSummary = hasRecurring
   handleOpenSeoulPay={handleOpenSeoulPay}
 />
 
-    <Modal
+<LoginIdModal
   visible={loginIdModalVisible}
-  transparent
-  animationType="fade"
-  onRequestClose={() => setLoginIdModalVisible(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalCard}>
-      <Text style={styles.modalTitle}>최초 아이디 변경</Text>
-
-      <Text style={styles.modalDesc}>
-        정회원 전환 후 1회에 한하여{"\n"}
-        원하는 로그인 아이디로 변경할 수 있습니다.
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="새 로그인 아이디"
-        autoCapitalize="none"
-        autoCorrect={false}
-        value={newLoginId}
-        onChangeText={setNewLoginId}
-      />
-
-      <View style={styles.modalButtonRow}>
-        <Pressable
-          style={[styles.modalButton, styles.modalCancelButton]}
-          onPress={() => setLoginIdModalVisible(false)}
-          disabled={submittingAccount}
-        >
-          <Text style={styles.modalCancelButtonText}>취소</Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.modalButton, styles.modalPrimaryButton]}
-          onPress={() =>
-  handleChangeLoginId({
-    onSuccessClose: () => setLoginIdModalVisible(false),
-  })
-}
-          disabled={submittingAccount}
-        >
-          <Text style={styles.modalPrimaryButtonText}>
-            {submittingAccount ? "변경 중..." : "변경하기"}
-          </Text>
-        </Pressable>
-      </View>
-    </View>
-  </View>
-</Modal>
+  onClose={() => setLoginIdModalVisible(false)}
+  styles={styles}
+  newLoginId={newLoginId}
+  setNewLoginId={setNewLoginId}
+  submittingAccount={submittingAccount}
+  handleChangeLoginId={() =>
+    handleChangeLoginId({
+      onSuccessClose: () => setLoginIdModalVisible(false),
+    })
+  }
+/>
 
 </ScrollView>
   );

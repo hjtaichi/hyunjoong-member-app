@@ -87,7 +87,7 @@ export default function TabLayout() {
   return () => {
     subscription.remove();
   };
-}, [pathname, isBootLoading, isAuthenticated]);
+}, [isBootLoading, isAuthenticated]);
 
   if (isBootLoading) {
     return (
