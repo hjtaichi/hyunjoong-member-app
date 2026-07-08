@@ -24,6 +24,7 @@ export function useHomeScreen({
   const [noticeList, setNoticeList] = useState([]);
   const [memberNotifications, setMemberNotifications] = useState([]);
   const didInitialLoadRef = useRef(false);
+  const lastFocusRefreshRef = useRef(0);
 
   const loadMemberNotifications = useCallback(async () => {
     if (!token) return;
@@ -147,12 +148,27 @@ loadMemberNotifications();
   loadAll();
 }, [loadAll]);
 
-// useFocusEffect(
-//   useCallback(() => {
-//     loadAll({ silent: true });
-//   }, [loadAll])
-// );
+useFocusEffect(
+  useCallback(() => {
+    if (!token || isPausedMember) return;
 
+    const now = Date.now();
+
+    if (now - lastFocusRefreshRef.current < 3000) return;
+
+    lastFocusRefreshRef.current = now;
+
+    getMemberHome(token)
+      .then((homeRes) => {
+        setHomeData(homeRes);
+      })
+      .catch((error) => {
+        if (DEBUG_HOME) {
+          console.log("HOME focus refresh 실패:", error);
+        }
+      });
+  }, [token, isPausedMember])
+);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadAll({ silent: true });
