@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
 content: {
   paddingHorizontal: 16,
   paddingTop: 32,
-  paddingBottom: isWeb ? 90 : 130,
+  paddingBottom: isWeb ? 10 : 130,
   gap: 14,
   width: "100%",
   maxWidth: 430,
@@ -1454,5 +1454,21 @@ copyCompleteText: {
   fontFamily: fonts.semiBold,
   color: colors.warmBrown,
   textAlign: "center",
+},
+appInfoBox: {
+  alignItems: "center",
+  marginTop: 20,
+  marginBottom: 20,
+},
+
+appInfoTitle: {
+  fontSize: 11,
+  color: "#8A7A70",
+},
+
+appInfoVersion: {
+  marginTop: 7,
+  fontSize: 12,
+  color: "#B0A39A",
 },
 });

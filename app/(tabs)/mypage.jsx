@@ -16,6 +16,7 @@ import {
 import { router } from "expo-router";
 
 import { useAuth } from "../../src/contexts/AuthContext";
+import { APP_VERSION } from "../../src/config/appVersion";
 
 import * as Clipboard from "expo-clipboard";
 import { avatarGroups, mypageImages } from "../../src/features/mypage/mypageImages";
@@ -387,7 +388,10 @@ const recurringMenuSummary = hasRecurring
       <Pressable style={styles.logoutButton} onPress={handleLogout}>
   <Text style={styles.logoutButtonText}>로그아웃</Text>
 </Pressable>
-
+<View style={styles.appInfoBox}>
+  <Text style={styles.appInfoTitle}>한국현중태극권총회 with studio 素隱</Text>
+  <Text style={styles.appInfoVersion}>Version {APP_VERSION}</Text>
+</View>
 <PasswordModal
   visible={passwordModalVisible}
   onClose={() => setPasswordModalVisible(false)}
