@@ -96,36 +96,40 @@ export default function RecurringReservationsScreen() {
   const [canUseYudanja, setCanUseYudanja] = useState(false);
   const [activeDay, setActiveDay] = useState(null);
 
-  const loadData = useCallback(async () => {
-    if (!token) return;
+const loadData = useCallback(async () => {
+  if (!token) return;
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const result = await getRecurringReservations(token);
-      const homeResult = await getMemberHome(token);
-       setCanUseYudanja(homeResult?.member?.canAccessYudanjaClass === true);
-      const items = Array.isArray(result?.items) ? result.items : [];
+    const [result, homeResult] = await Promise.all([
+      getRecurringReservations(token),
+      getMemberHome(token),
+    ]);
 
-      const normalItems = items.filter(
-        (item) => item.sessionTimeKey !== "MON_YUDANJA"
-      );
+    setCanUseYudanja(homeResult?.member?.canAccessYudanjaClass === true);
 
-      const yudanjaItem = items.find(
-        (item) => item.sessionTimeKey === "MON_YUDANJA"
-      );
+    const items = Array.isArray(result?.items) ? result.items : [];
 
-      setSelectedRecurringMap(makeInitialRecurringMap(normalItems));
-      setIsYudanjaEnabled(Boolean(yudanjaItem));
-    } catch (error) {
-      Alert.alert(
-        "오류",
-        error.message || "정기출석 설정을 불러오지 못했습니다."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+    const normalItems = items.filter(
+      (item) => item.sessionTimeKey !== "MON_YUDANJA"
+    );
+
+    const yudanjaItem = items.find(
+      (item) => item.sessionTimeKey === "MON_YUDANJA"
+    );
+
+    setSelectedRecurringMap(makeInitialRecurringMap(normalItems));
+    setIsYudanjaEnabled(Boolean(yudanjaItem));
+  } catch (error) {
+    Alert.alert(
+      "오류",
+      error.message || "정기출석 설정을 불러오지 못했습니다."
+    );
+  } finally {
+    setLoading(false);
+  }
+}, [token]);
 
   useEffect(() => {
     loadData();
@@ -221,7 +225,6 @@ export default function RecurringReservationsScreen() {
       });
 
       Alert.alert("완료", "정기출석 설정이 저장되었습니다.");
-      await loadData();
     } catch (error) {
       Alert.alert(
         "오류",
@@ -230,7 +233,7 @@ export default function RecurringReservationsScreen() {
     } finally {
       setSaving(false);
     }
-  }, [selectedRecurringMap, isYudanjaEnabled, canUseYudanja, token, loadData]);
+  }, [selectedRecurringMap, isYudanjaEnabled, canUseYudanja, token]);
 
   if (loading) {
     return (
@@ -267,18 +270,7 @@ export default function RecurringReservationsScreen() {
       ? selectedRecurringMap[day.value]
       : [];
 
-    const selectedText =
-      selectedTimeKeys.length === 0
-        ? "선택 안 함"
-        : selectedTimeKeys
-            .map((key) => {
-              const option = TIME_OPTIONS_BY_WEEKDAY[day.value].find(
-                (item) => item.value === key
-              );
-              return option?.label;
-            })
-            .filter(Boolean)
-            .join(", ");
+    const selectedText = getSelectedLabelsForDay(day.value);
 
     return (
       <Pressable
