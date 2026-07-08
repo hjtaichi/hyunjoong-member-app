@@ -6,7 +6,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 import { CartProvider } from "../src/contexts/CartContext";
-
+import { checkAppVersionAndClearCache } from "../src/utils/appVersionManager";
 
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
@@ -281,7 +281,9 @@ if (Platform.OS !== "web") {
 // 🔥 루트
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-
+  useEffect(() => {
+    checkAppVersionAndClearCache();
+  }, []);
   const [fontsLoaded] = useFonts({
     ChosunCentennial: require("../assets/fonts/ChosunCentennial.ttf"),
 
