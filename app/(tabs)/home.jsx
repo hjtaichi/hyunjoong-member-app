@@ -201,7 +201,7 @@ if (DEBUG_HOME) {
   console.log("🔥 [HOME homeData keys]", Object.keys(homeData || {}));
   console.log("🔥 [HOME homeGroupProgress]", homeGroupProgress);
 }
-
+console.log("🔥 monthlyGoalRate =", homeData?.monthlyGoalRate);
 const todayClassTitle = useMemo(() => {
   if (isTodayYudanjaSession) {
     return yudanjaProgress?.title || "유단자회 수련";
@@ -413,6 +413,7 @@ const handleNoticeDetail = useCallback(() => {
   displayName={displayName}
   joinDays={joinDays}
   attendanceCount={attendanceCount}
+  monthlyGoalRate={homeData?.monthlyGoalRate}
   hasUnreadNotice={hasUnreadNotice}
   hasUnreadMemberNotification={hasUnreadMemberNotification}
   onPressNotification={() => router.push("/member-notifications")}

@@ -60,11 +60,13 @@ export function useHomeScreen({
     }
 
 const [homeRes, calendarRes, noticeRes] = await Promise.all([
+  
   getMemberHome(token),
   getMemberCalendarSummary(token, currentYear, currentMonth),
   getMemberNoticeList(token),
 ]);
-
+console.log("🔥 HOME RESPONSE =", homeRes);
+console.log("🔥 monthlyGoalRate =", homeRes.monthlyGoalRate);
     if (DEBUG_HOME) {
       console.log("🔥 HOME homeRes =", homeRes);
       console.log("🔥 HOME member =", homeRes?.member);

@@ -1196,8 +1196,8 @@ avatarSmallMenu: {
   position: "absolute",
   top: 220,
   right: 38,
-  width: 180,
-  paddingVertical: 7,
+  width: 190,
+  paddingVertical: 14,
   backgroundColor: "#FFFEFC",
   borderRadius: 22,
   borderWidth: 1,
@@ -1211,7 +1211,7 @@ avatarSmallMenu: {
 
 avatarSmallMenuItem: {
   paddingHorizontal: 23,
-  paddingVertical: 7,
+  paddingVertical: 14,
 },
 
 avatarSmallMenuText: {

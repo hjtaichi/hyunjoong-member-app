@@ -16,7 +16,10 @@ export default function HomeHeader({
   profileImageSource,
   yudanjaEmblemFrame,
   promotionBadgeText,
+  monthlyGoalRate,
 }) {
+  const monthlyRate = Number(monthlyGoalRate?.rate || 0);
+  const filledBars = Math.ceil(monthlyRate / 25);
   return (
     <View style={styles.homeHeader}>
       <Image
@@ -92,6 +95,26 @@ export default function HomeHeader({
             입관 {joinDays}일째 · 누적 출석 {attendanceCount}일
           </Text>
         ) : null}
+        {monthlyGoalRate ? (
+  <View style={styles.monthlyGoalMiniRow}>
+    <Text style={styles.monthlyGoalMiniText}>
+      이번 달 목표 달성률 {monthlyRate}%
+    </Text>
+
+    <View style={styles.monthlyGoalSignal}>
+      {[1, 2, 3, 4].map((bar) => (
+        <View
+          key={bar}
+          style={[
+            styles.monthlyGoalSignalBar,
+            styles[`monthlyGoalSignalBar${bar}`],
+            bar <= filledBars && styles.monthlyGoalSignalBarFilled,
+          ]}
+        />
+      ))}
+    </View>
+  </View>
+) : null}
       </View>
 
       <View

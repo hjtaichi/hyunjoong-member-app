@@ -1190,6 +1190,51 @@ todayTrainingButtonDone: {
   backgroundColor: "#9A8A80",
   opacity: 0.85,
 },
+monthlyGoalMiniRow: {
+  marginTop: 6,
+  flexDirection: "row",
+  alignItems: "flex-end",
+  gap: 7,
+},
+
+monthlyGoalMiniText: {
+  fontSize: 12,
+  fontFamily: "PretendardSemiBold",
+  color: "#7B5E3B",
+},
+
+monthlyGoalSignal: {
+  flexDirection: "row",
+  alignItems: "flex-end",
+  gap: 3,
+  paddingBottom: 1,
+},
+
+monthlyGoalSignalBar: {
+  width: 5,
+  borderRadius: 999,
+  backgroundColor: "rgba(120, 92, 55, 0.22)",
+},
+
+monthlyGoalSignalBar1: {
+  height: 5,
+},
+
+monthlyGoalSignalBar2: {
+  height: 8,
+},
+
+monthlyGoalSignalBar3: {
+  height: 11,
+},
+
+monthlyGoalSignalBar4: {
+  height: 14,
+},
+
+monthlyGoalSignalBarFilled: {
+  backgroundColor: "#B87924",
+},
 });
 
 export { styles, fonts, isWeb };
