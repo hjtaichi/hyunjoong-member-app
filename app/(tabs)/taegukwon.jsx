@@ -84,6 +84,7 @@ const {
   handleSaveFormGoal,
   handleSaveFavoriteForm,
   personalProgress,
+  memberMemo,
   personalProgressPercent,
   previousMemoHistory,
   isYudanjaMember,
@@ -190,6 +191,7 @@ debugLogs,
     setRecordModalVisible={setRecordModalVisible}
     setGoalModalVisible={setGoalModalVisible}
     personalProgress={personalProgress}
+    memberMemo={memberMemo}
     setEditMemberMemo={setEditMemberMemo}
     setMemoEditModalVisible={setMemoEditModalVisible}
     setMemoHistoryModalVisible={setMemoHistoryModalVisible}
@@ -218,6 +220,7 @@ debugLogs,
   <TrainingSection
     styles={styles}
     personalProgress={personalProgress}
+    memberMemo={memberMemo}
     personalProgressPercent={personalProgressPercent}
     isYudanjaMember={isYudanjaMember}
     hasPrivateLessonMenu={hasPrivateLessonMenu}
@@ -269,6 +272,7 @@ debugLogs,
   visible={memoHistoryModalVisible}
   styles={styles}
   personalProgress={personalProgress}
+  memberMemo={memberMemo}
   previousMemoHistory={previousMemoHistory}
   setMemoHistoryModalVisible={setMemoHistoryModalVisible}
 />

@@ -1626,9 +1626,10 @@ memoDetailButtonText: {
   fontSize: 11,
   fontWeight: "600",
   color: "#7a6254",
-  top: 5,
+  top: 6,
   fontFamily: "ChosunCentennial",
   opacity:0.7,
+  marginLeft: 7,
 },
 
 memoHistoryModalCard: {

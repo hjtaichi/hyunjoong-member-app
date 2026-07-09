@@ -128,29 +128,43 @@ function handlePickFile() {
     return;
   }
 
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "video/mp4,video/quicktime,video/*";
+const input = document.createElement("input");
+input.type = "file";
+input.accept = ".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm";
 
-  input.onchange = (event) => {
-    const file = event.target.files?.[0];
+  input.onchange = async (event) => {
+  const file = event.target.files?.[0];
 
-    if (!file) return;
+  if (!file) return;
 
-    const maxSize = 300 * 1024 * 1024;
+  const maxSize = 250 * 1024 * 1024;
 
-    if (file.size > maxSize) {
-      Alert.alert("안내", "영상은 300MB 이하만 업로드할 수 있습니다.");
-      return;
-    }
+  if (file.size > maxSize) {
+    Alert.alert("안내", "영상은 250MB 이하만 업로드할 수 있습니다.");
+    return;
+  }
 
-    setSelectedFile(file);
-    readVideoDuration(file).then((duration) => {
+  const duration = await readVideoDuration(file);
+
+  if (!duration) {
+    Alert.alert(
+      "안내",
+      "영상 길이를 확인할 수 없습니다. 다른 영상 파일을 선택해주세요."
+    );
+    return;
+  }
+
+  if (duration > 180) {
+    Alert.alert("안내", "코칭 영상은 3분 이하만 업로드할 수 있습니다.");
+    return;
+  }
+
+  setSelectedFile(file);
   setVideoDuration(duration);
+
+  console.log("선택 파일:", file);
   console.log("영상 길이:", duration);
-});
-    console.log("선택 파일:", file);
-  };
+};
 
   input.click();
 }
@@ -275,8 +289,8 @@ setTimeout(() => {
   <Text style={styles.selectedFileText}>{selectedFile.name}</Text>
 ) : null}
 
-        <Text style={styles.uploadHint}>• 권장 형식 : MP4, MOV</Text>
-        <Text style={styles.uploadHint}>• 최대 300MB 이하, 최대 5분 권장</Text>
+       <Text style={styles.uploadHint}>• 권장 형식 : MP4, MOV, WEBM</Text>
+       <Text style={styles.uploadHint}>• 최대 250MB 이하, 3분 이하</Text>
       </View>
 
       <Text style={styles.stepTitle}>2. 영상 정보 입력</Text>

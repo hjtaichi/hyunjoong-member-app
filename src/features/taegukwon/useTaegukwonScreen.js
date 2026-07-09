@@ -145,11 +145,12 @@ const addDebugLog = useCallback((message, data) => {
           loadFormRecords(),
         ]);
 
-        if (payload?.personalProgress) {
-          setEditMemberMemo(payload.personalProgress.memberMemo || "");
-        } else {
-          setEditMemberMemo("");
-        }
+const loadedMemo =
+  payload?.memberMemo ??
+  payload?.personalProgress?.memberMemo ??
+  "";
+
+setEditMemberMemo(loadedMemo);
       } catch (error) {
         Alert.alert("오류", error.message || "태극권 정보를 불러오지 못했습니다.");
       } finally {
@@ -188,9 +189,18 @@ const addDebugLog = useCallback((message, data) => {
     ? `잔여 ${privateLessonData?.currentPackage?.remainingCount ?? 0}회 · 최근 수업 확인`
     : "지난 개인지도 기록 보기";
 
-  const personalProgress = taegukwonData?.personalProgress || null;
-  const memoHistory = personalProgress?.memoHistory || [];
-  const previousMemoHistory = memoHistory.slice(1);
+const personalProgress = taegukwonData?.personalProgress || null;
+
+const memberMemo =
+  taegukwonData?.memberMemo ??
+  personalProgress?.memberMemo ??
+  "";
+
+const memberMemoHistory = Array.isArray(taegukwonData?.memberMemoHistory)
+  ? taegukwonData.memberMemoHistory
+  : [];
+
+const previousMemoHistory = memberMemoHistory.slice(1);
 
   const personalProgressPercent = useMemo(() => {
     return Number(personalProgress?.progressPercent || 0);
@@ -242,32 +252,9 @@ const addDebugLog = useCallback((message, data) => {
       },
     });
 
-    if (!targetCurriculumId) {
-      sendClientLog({
-        level: "warn",
-        screen: "taegukwon-memo",
-        message: "메모 저장 중단: curriculumId 없음",
-        extra: {
-          hasToken: !!token,
-          hasPersonalProgress: !!personalProgress,
-          memoLength: editMemberMemo?.length || 0,
-        },
-      });
-
-      Alert.alert("안내", "메모를 저장할 투로를 먼저 선택해주세요.");
-      return;
-    }
-
     setSavingMemo(true);
 
     const memoUrl = `${API_BASE_URL}/api/member/me/personal-memo`;
-
-    addDebugLog("메모 저장 요청 시작", {
-      API_BASE_URL,
-      memoUrl,
-      hasToken: !!token,
-      curriculumId: targetCurriculumId,
-    });
 
     sendClientLog({
       level: "info",
@@ -276,7 +263,8 @@ const addDebugLog = useCallback((message, data) => {
       extra: {
         memoUrl,
         hasToken: !!token,
-        curriculumId: targetCurriculumId,
+        hasCurriculumId: !!targetCurriculumId,
+        curriculumId: targetCurriculumId || null,
         memoLength: editMemberMemo?.length || 0,
       },
     });
@@ -288,7 +276,7 @@ const addDebugLog = useCallback((message, data) => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        curriculumId: targetCurriculumId,
+        curriculumId: targetCurriculumId || null,
         memberMemo: editMemberMemo,
       }),
     });
@@ -301,12 +289,6 @@ const addDebugLog = useCallback((message, data) => {
     } catch {
       result = { message: responseText };
     }
-
-    addDebugLog("메모 저장 응답", {
-      ok: response.ok,
-      status: response.status,
-      result,
-    });
 
     sendClientLog({
       level: response.ok ? "info" : "error",
@@ -323,23 +305,26 @@ const addDebugLog = useCallback((message, data) => {
       throw new Error(result.message || "내 수련 메모 저장 실패");
     }
 
-    setTaegukwonData((prev) => ({
-      ...prev,
-      personalProgress: {
-        ...(prev?.personalProgress || {}),
-        memberMemo: editMemberMemo,
-      },
-    }));
+const savedMemo = result?.data?.memberMemo ?? editMemberMemo;
+
+setEditMemberMemo(savedMemo);
+
+setTaegukwonData((prev) => ({
+  ...prev,
+  memberMemo: savedMemo,
+  personalProgress: prev?.personalProgress
+    ? {
+        ...prev.personalProgress,
+        memberMemo: savedMemo,
+      }
+    : prev?.personalProgress,
+}));
 
     setMemoEditModalVisible(false);
     Alert.alert("완료", "수련 메모가 저장되었습니다.");
 
     loadData({ silent: true }).catch(() => {});
   } catch (error) {
-    addDebugLog("메모 저장 실패", {
-      message: error?.message,
-    });
-
     sendClientLog({
       level: "error",
       screen: "taegukwon-memo",
@@ -349,6 +334,7 @@ const addDebugLog = useCallback((message, data) => {
         message: error?.message,
         hasToken: !!token,
         hasPersonalProgress: !!personalProgress,
+        hasCurriculumId: !!targetCurriculumId,
         curriculumId: targetCurriculumId || null,
       },
     });
@@ -357,7 +343,7 @@ const addDebugLog = useCallback((message, data) => {
   } finally {
     setSavingMemo(false);
   }
-}, [personalProgress, editMemberMemo, token, loadData, addDebugLog]);
+}, [personalProgress, editMemberMemo, token, loadData]);
 
   return {
     loading,
@@ -422,9 +408,11 @@ const addDebugLog = useCallback((message, data) => {
     handleSaveFavoriteForm,
 
     personalProgress,
-    personalProgressPercent,
+    memberMemo,
     previousMemoHistory,
-
+    memberMemoHistory,
+    personalProgressPercent,
+   
     isYudanjaMember,
     hasPrivateLessonMenu,
     privateLessonMenuTitle,

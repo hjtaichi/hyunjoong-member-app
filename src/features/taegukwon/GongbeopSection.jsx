@@ -25,6 +25,7 @@ function GongbeopSection({
   setRecordModalVisible,
   setGoalModalVisible,
   personalProgress,
+  memberMemo,
   setEditMemberMemo,
   setMemoEditModalVisible,
   setMemoHistoryModalVisible,
@@ -251,15 +252,15 @@ function GongbeopSection({
         numberOfLines={3}
       
       >
-        {personalProgress?.memberMemo || "아직 작성한 메모가 없습니다."}
+        {memberMemo || "아직 작성한 메모가 없습니다."}
       </Text>
       
           <TouchableOpacity
         style={styles.memoEditHotspot}
         onPress={() => {
-          setEditMemberMemo(personalProgress?.memberMemo || "");
-          setMemoEditModalVisible(true);
-        }}
+  setEditMemberMemo(memberMemo || "");
+  setMemoEditModalVisible(true);
+}}
       />
       
           <TouchableOpacity
