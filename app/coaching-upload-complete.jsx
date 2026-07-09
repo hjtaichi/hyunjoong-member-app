@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
 
   content: {
     paddingHorizontal: 16,
-    paddingTop: 44,
+    paddingTop: 15,
     paddingBottom: 34,
     minHeight: "100%",
   },
@@ -99,13 +99,13 @@ const styles = StyleSheet.create({
 
   hero: {
     alignItems: "center",
-    paddingTop: 56,
+    paddingTop: 36,
     paddingBottom: 40,
   },
 
   checkCircle: {
-    width: 86,
-    height: 86,
+    width: 60,
+    height: 60,
     borderRadius: 43,
     borderWidth: 3,
     borderColor: "#4A2F1E",
@@ -115,20 +115,20 @@ const styles = StyleSheet.create({
   },
 
   checkText: {
-    fontSize: 42,
+    fontSize: 30,
     fontWeight: "900",
     color: "#4A2F1E",
   },
 
   title: {
-    fontSize: 22,
-    fontWeight: "900",
+    fontSize: 23,
+    fontWeight: "800",
     color: "#3A2C27",
-    marginBottom: 12,
+    marginBottom: 8,
   },
 
   desc: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 22,
     fontWeight: "600",
     color: "#8A7A72",
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
 
   infoTitle: {
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
     color: "#3A2C27",
     marginBottom: 14,
   },
@@ -157,14 +157,14 @@ const styles = StyleSheet.create({
   infoLabel: {
     width: 92,
     fontSize: 13,
-    fontWeight: "800",
+    fontWeight: "700",
     color: "#8A7A72",
   },
 
   infoValue: {
     flex: 1,
     fontSize: 13,
-    fontWeight: "800",
+    fontWeight: "700",
     color: "#4A2F1E",
   },
 
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F0E4",
     borderRadius: 14,
     padding: 14,
-    marginBottom: 22,
+    marginBottom: 30,
   },
 
   noticeIcon: {

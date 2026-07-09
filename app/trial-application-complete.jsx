@@ -117,10 +117,10 @@ const styles = StyleSheet.create({
   },
 
   brushCircle: {
-    width: 132,
-    height: 132,
+    width: 90,
+    height: 90,
     borderRadius: 66,
-    borderWidth: 16,
+    borderWidth: 6,
     borderColor: "#2B2522",
     backgroundColor: "#FFFEFC",
     alignItems: "center",
@@ -128,30 +128,30 @@ const styles = StyleSheet.create({
   },
 
   checkText: {
-    fontSize: 56,
+    fontSize: 50,
     fontWeight: "900",
     color: "#B58745",
     marginTop: -4,
   },
 
   title: {
-    marginTop: 34,
+    marginTop: 30,
     textAlign: "center",
-    fontSize: 24,
-    fontWeight: "900",
+    fontSize: 20,
+    fontWeight: "700",
     color: "#241E1A",
   },
 
   desc: {
-    marginTop: 16,
+    marginTop: 10,
     textAlign: "center",
     fontSize: 15,
-    lineHeight: 24,
+    lineHeight: 22,
     color: "#5F554B",
   },
 
   summaryCard: {
-    marginTop: 34,
+    marginTop: 24,
     borderRadius: 22,
     backgroundColor: "#FFFEFC",
     borderWidth: 1,
@@ -162,22 +162,22 @@ const styles = StyleSheet.create({
 
   summaryTitle: {
     marginBottom: 14,
-    fontSize: 16,
-    fontWeight: "900",
+    fontSize: 17,
+    fontWeight: "800",
     color: "#9A6A33",
   },
 
   infoRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    paddingVertical: 7,
+    paddingVertical: 6,
     gap: 14,
   },
 
   infoLabel: {
     width: 82,
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 14,
+    fontWeight: "800",
     color: "#241E1A",
   },
 
@@ -190,24 +190,24 @@ const styles = StyleSheet.create({
   },
 
   thanksBox: {
-    marginTop: 18,
+    marginTop: 16,
     borderRadius: 18,
     backgroundColor: "#F4E6D0",
     borderWidth: 1,
     borderColor: "#E8D6BD",
-    paddingHorizontal: 16,
-    paddingVertical: 15,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
   },
 
   thanksTitle: {
-    fontSize: 15,
-    fontWeight: "900",
+    fontSize: 14,
+    fontWeight: "800",
     color: "#8C6330",
   },
 
   thanksText: {
     marginTop: 5,
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 19,
     color: "#6F5E4D",
   },
@@ -224,6 +224,6 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     fontSize: 17,
     fontWeight: "900",
-    color: "#E9C98A",
+    color: "#f1e9d7",
   },
 });

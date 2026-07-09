@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  Alert,
   Image, 
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { router } from "expo-router";
@@ -18,6 +20,11 @@ export default function CoachingVideosScreen() {
 const [videos, setVideos] = useState([]);
 const [selectedVideo, setSelectedVideo] = useState(null);
 const [menuVisible, setMenuVisible] = useState(false);
+const [editVisible, setEditVisible] = useState(false);
+const [editTrainingType, setEditTrainingType] = useState("");
+const [editCurriculum, setEditCurriculum] = useState("");
+const [editTitle, setEditTitle] = useState("");
+const [editQuestion, setEditQuestion] = useState("");
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 function formatDuration(seconds) {
@@ -59,32 +66,106 @@ const loadVideos = useCallback(async () => {
   }
 }, [token]);
 
-async function handleDeleteVideo() {
+function handleDeleteVideo() {
+  if (!selectedVideo?.id) return;
+
+  Alert.alert(
+    "영상 삭제",
+    "이 영상을 삭제하시겠습니까?",
+    [
+      {
+        text: "취소",
+        style: "cancel",
+      },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const res = await fetch(
+              `${API_BASE_URL}/api/me/coaching-videos/${selectedVideo.id}`,
+              {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "ngrok-skip-browser-warning": "true",
+                },
+              }
+            );
+
+            const result = await res.json();
+
+            if (!res.ok) {
+              throw new Error(result?.message || "삭제 실패");
+            }
+
+            setMenuVisible(false);
+            setSelectedVideo(null);
+            await loadVideos();
+
+            Alert.alert("삭제 완료", "영상이 삭제되었습니다.");
+          } catch (error) {
+            console.log("영상 삭제 실패:", error);
+            Alert.alert(
+              "삭제 실패",
+              error?.message || "영상 삭제 중 오류가 발생했습니다."
+            );
+          }
+        },
+      },
+    ]
+  );
+}
+
+async function handleUpdateVideo() {
   if (!selectedVideo?.id) return;
 
   try {
+    console.log("PATCH 요청 주소 =", `${API_BASE_URL}/api/me/coaching-videos/${selectedVideo.id}`);
+console.log("PATCH 대상 영상 =", selectedVideo);
     const res = await fetch(
       `${API_BASE_URL}/api/me/coaching-videos/${selectedVideo.id}`,
       {
-        method: "DELETE",
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true",
         },
+        body: JSON.stringify({
+          trainingType: editTrainingType,
+          curriculum: editCurriculum,
+          title: editTitle,
+          question: editQuestion,
+        }),
       }
     );
 
     const result = await res.json();
 
     if (!res.ok) {
-      throw new Error(result?.message || "삭제 실패");
+      throw new Error(result?.message || "수정 실패");
     }
 
-    setMenuVisible(false);
-    setSelectedVideo(null);
-    await loadVideos();
+    const updatedVideo = result?.data;
+
+setVideos((prev) =>
+  prev.map((video) =>
+    String(video.id) === String(updatedVideo.id)
+      ? { ...video, ...updatedVideo }
+      : video
+  )
+);
+
+setEditVisible(false);
+setSelectedVideo(null);
+
+Alert.alert("수정 완료", "영상 정보가 수정되었습니다.");
   } catch (error) {
-    console.log("영상 삭제 실패:", error);
+    Alert.alert(
+      "수정 실패",
+      error?.message || "영상 수정 중 오류가 발생했습니다."
+    );
   }
 }
 
@@ -156,9 +237,19 @@ useEffect(() => {
     <View style={styles.menuCard}>
       <Text style={styles.menuModalTitle}>영상 관리</Text>
 
-      <Pressable style={styles.menuOption}>
-        <Text style={styles.menuOptionText}>수정하기</Text>
-      </Pressable>
+<Pressable
+  style={styles.menuOption}
+  onPress={() => {
+    setEditTrainingType(selectedVideo?.trainingType || "투로");
+    setEditCurriculum(selectedVideo?.curriculum || "");
+    setEditTitle(selectedVideo?.title || "");
+    setEditQuestion(selectedVideo?.question || "");
+    setMenuVisible(false);
+    setEditVisible(true);
+  }}
+>
+  <Text style={styles.menuOptionText}>수정하기</Text>
+</Pressable>
 
       <Pressable style={styles.menuOption} onPress={handleDeleteVideo}>
         <Text style={styles.menuDeleteText}>삭제하기</Text>
@@ -167,6 +258,54 @@ useEffect(() => {
       <Pressable
         style={styles.menuCancelButton}
         onPress={() => setMenuVisible(false)}
+      >
+        <Text style={styles.menuCancelText}>취소</Text>
+      </Pressable>
+    </View>
+  </View>
+</Modal>
+<Modal visible={editVisible} transparent animationType="fade">
+  <View style={styles.menuOverlay}>
+    <View style={styles.editCard}>
+      <Text style={styles.menuModalTitle}>영상 정보 수정</Text>
+
+      <Text style={styles.editLabel}>수련 종류</Text>
+      <TextInput
+        value={editTrainingType}
+        onChangeText={setEditTrainingType}
+        style={styles.editInput}
+      />
+
+      <Text style={styles.editLabel}>수련 항목</Text>
+      <TextInput
+        value={editCurriculum}
+        onChangeText={setEditCurriculum}
+        style={styles.editInput}
+      />
+
+      <Text style={styles.editLabel}>제목</Text>
+      <TextInput
+        value={editTitle}
+        onChangeText={setEditTitle}
+        style={styles.editInput}
+      />
+
+      <Text style={styles.editLabel}>질문 내용</Text>
+      <TextInput
+        value={editQuestion}
+        onChangeText={setEditQuestion}
+        style={styles.editTextArea}
+        multiline
+        textAlignVertical="top"
+      />
+
+      <Pressable style={styles.saveButton} onPress={handleUpdateVideo}>
+        <Text style={styles.saveButtonText}>수정 완료</Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.menuCancelButton}
+        onPress={() => setEditVisible(false)}
       >
         <Text style={styles.menuCancelText}>취소</Text>
       </Pressable>
@@ -361,8 +500,8 @@ sectionTitle: {
   },
 
   thumbnail: {
-    width: 112,
-    height: 78,
+    width: 105,
+    height: 75,
     borderRadius: 12,
     backgroundColor: "#E8DDD0",
     alignItems: "center",
@@ -381,10 +520,10 @@ thumbnailFallback: {
 },
   playIcon: {
   position: "absolute",
-  left: "52%",
-  top: "40%",
+  left: "54%",
+  top: "41%",
   transform: [{ translateX: -13 }, { translateY: -13 }],
-  fontSize: 26,
+  fontSize: 22,
   color: "#FFFFFF",
   zIndex: 3,
 },
@@ -412,14 +551,14 @@ thumbnailFallback: {
 
   videoTitle: {
     fontSize: 15,
-    fontWeight: "900",
+    fontWeight: "700",
     color: "#3A2C27",
     marginBottom: 3,
   },
 
   videoMove: {
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "700",
     color: "#3A2C27",
     marginBottom: 6,
   },
@@ -437,7 +576,7 @@ thumbnailFallback: {
   },
 
   arrow: {
-    fontSize: 22,
+    fontSize: 16,
     color: "#A78D83",
   },
   emptyText: {
@@ -464,10 +603,10 @@ cardMenuButton: {
 },
 
 cardMenuText: {
-  fontSize: 22,
+  fontSize: 17,
   fontWeight: "900",
   color: "#9B8D84",
-  marginTop: -8,
+  marginTop: -18,
 },
 
 menuOverlay: {
@@ -489,43 +628,98 @@ menuCard: {
 },
 
 menuModalTitle: {
-  fontSize: 17,
-  fontWeight: "900",
+  fontSize: 16,
+  fontWeight: "700",
   color: "#3A2C27",
-  marginBottom: 12,
+  marginBottom: 6,
 },
 
 menuOption: {
-  height: 52,
+  height: 45,
   justifyContent: "center",
   borderBottomWidth: 1,
   borderBottomColor: "#EFE5DE",
 },
 
 menuOptionText: {
-  fontSize: 16,
-  fontWeight: "800",
+  fontSize: 15,
+  fontWeight: "700",
   color: "#4A2F1E",
 },
 
 menuDeleteText: {
-  fontSize: 16,
-  fontWeight: "900",
+  fontSize: 15,
+  fontWeight: "700",
   color: "#C45A4A",
 },
 
 menuCancelButton: {
-  height: 50,
+  height: 45,
   borderRadius: 14,
   backgroundColor: "#F4EDE6",
+  alignItems: "center",
+  justifyContent: "center",
+  marginTop: 13,
+},
+
+menuCancelText: {
+  fontSize: 15,
+  fontWeight: "800",
+  color: "#6B4F46",
+},
+editCard: {
+  backgroundColor: "#FFFCFA",
+  borderTopLeftRadius: 24,
+  borderTopRightRadius: 24,
+  padding: 18,
+  paddingBottom: 28,
+},
+
+editLabel: {
+  fontSize: 13,
+  fontWeight: "800",
+  color: "#6B4F46",
+  marginTop: 10,
+  marginBottom: 6,
+},
+
+editInput: {
+  height: 46,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: "#EADFD5",
+  backgroundColor: "#FFFFFF",
+  paddingHorizontal: 12,
+  fontSize: 14,
+  fontWeight: "700",
+  color: "#3A2C27",
+},
+
+editTextArea: {
+  minHeight: 96,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: "#EADFD5",
+  backgroundColor: "#FFFFFF",
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+  fontSize: 14,
+  fontWeight: "700",
+  color: "#3A2C27",
+},
+
+saveButton: {
+  height: 48,
+  borderRadius: 14,
+  backgroundColor: colors.warmBrown,
   alignItems: "center",
   justifyContent: "center",
   marginTop: 16,
 },
 
-menuCancelText: {
+saveButtonText: {
   fontSize: 15,
   fontWeight: "900",
-  color: "#6B4F46",
+  color: "#FFFFFF",
 },
 });

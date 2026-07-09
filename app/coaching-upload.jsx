@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Modal,
   Image,
@@ -26,6 +27,7 @@ export default function CoachingUploadScreen() {
   const [selectedFile, setSelectedFile] = useState(null);
   const { token } = useAuth();
   const [videoDuration, setVideoDuration] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 const TRAINING_TYPES = ["공법", "투로", "기타"];
 
 const TRAINING_OPTIONS = {
@@ -188,7 +190,8 @@ if (!curriculum) {
   Alert.alert("안내", "수련 항목을 선택해주세요.");
   return;
 }
-    const formData = new FormData();
+setIsUploading(true);
+const formData = new FormData();
 
     formData.append("video", selectedFile);
     const thumbnailBlob = await captureVideoThumbnail(selectedFile);
@@ -250,19 +253,20 @@ const completeParams = {
 
 console.log("업로드 완료 이동 params:", completeParams);
 
-setTimeout(() => {
-  router.push({
-    pathname: "/coaching-upload-complete",
-    params: completeParams,
-  });
-}, 100);
-  } catch (error) {
+router.replace({
+  pathname: "/coaching-upload-complete",
+  params: completeParams,
+});
+
+   } catch (error) {
     console.error(error);
 
     Alert.alert(
       "업로드 실패",
       error?.message || "영상 업로드 중 오류가 발생했습니다."
     );
+  } finally {
+    setIsUploading(false);
   }
 }
 
@@ -338,11 +342,19 @@ setTimeout(() => {
 
       <Text style={styles.countText}>{question.length}/200</Text>
 
-      <Pressable
-  style={styles.submitButton}
+<Pressable
+  style={[styles.submitButton, isUploading && styles.submitButtonDisabled]}
   onPress={handleUpload}
+  disabled={isUploading}
 >
-  <Text style={styles.submitButtonText}>업로드</Text>
+  {isUploading ? (
+    <View style={styles.uploadingRow}>
+      <ActivityIndicator size="small" color="#FFFFFF" />
+      <Text style={styles.submitButtonText}>업로드 중입니다...</Text>
+    </View>
+  ) : (
+    <Text style={styles.submitButtonText}>업로드</Text>
+  )}
 </Pressable>
       <Modal visible={!!pickerType} transparent animationType="fade">
   <View style={styles.modalOverlay}>
@@ -605,14 +617,14 @@ modalCard: {
 },
 
 modalTitle: {
-  fontSize: 18,
-  fontWeight: "900",
+  fontSize: 17,
+  fontWeight: "700",
   color: "#3A2C27",
-  marginBottom: 12,
+  marginBottom: 6,
 },
 
 optionRow: {
-  minHeight: 48,
+  minHeight: 45,
   justifyContent: "center",
   borderBottomWidth: 1,
   borderBottomColor: "#EFE5DE",
@@ -620,12 +632,12 @@ optionRow: {
 
 optionText: {
   fontSize: 15,
-  fontWeight: "800",
+  fontWeight: "700",
   color: "#4A2F1E",
 },
 
 modalCloseButton: {
-  height: 48,
+  height: 44,
   borderRadius: 12,
   backgroundColor: "#4A2F1E",
   alignItems: "center",
@@ -637,5 +649,15 @@ modalCloseText: {
   fontSize: 15,
   fontWeight: "900",
   color: "#FFFFFF",
+},
+submitButtonDisabled: {
+  opacity: 0.75,
+},
+
+uploadingRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
 },
 });
