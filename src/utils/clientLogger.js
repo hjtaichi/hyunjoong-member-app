@@ -20,14 +20,15 @@ function sanitizeExtra(extra = {}) {
     const lowerKey = String(key).toLowerCase();
 
 if (
-  lowerKey.includes("token") ||
+  lowerKey === "token" ||
+  lowerKey === "accesstoken" ||
+  lowerKey === "refreshtoken" ||
   lowerKey.includes("password") ||
   lowerKey.includes("authorization") ||
   lowerKey === "cookie" ||
   lowerKey === "cookies"
 ) {
-  safeExtra[key] = "[hidden]";
-  return;
+  return "[hidden]";
 }
 
     if (typeof value === "string") {

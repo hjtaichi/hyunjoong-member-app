@@ -315,7 +315,7 @@ const addDebugLog = useCallback((message, data) => {
       extra: {
         ok: response.ok,
         status: response.status,
-        responseText: responseText?.slice(0, 300),
+        responseBodyLength: responseText?.length || 0,
       },
     });
 
