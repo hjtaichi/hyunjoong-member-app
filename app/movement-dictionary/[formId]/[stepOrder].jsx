@@ -311,7 +311,6 @@ backIcon: {
     justifyContent: "center",
   },
   starText: {
-    MarginTop: -30,
     fontSize: 23,
     fontWeight: "1000",
     color: colors.bronzeGold,

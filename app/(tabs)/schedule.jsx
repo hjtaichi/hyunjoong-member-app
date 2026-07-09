@@ -41,6 +41,7 @@ export default function ScheduleScreen() {
 
     loading,
     refreshing,
+    submittingAttendance,
 
     calendarData,
     calendarMap,
@@ -209,6 +210,7 @@ export default function ScheduleScreen() {
   canCancelAttendance={canCancelAttendance}
   canCheckInTodaySession={canCheckInTodaySession}
   handleScheduleAction={handleScheduleAction}
+  submittingAttendance={submittingAttendance}
 />
     </>
   );

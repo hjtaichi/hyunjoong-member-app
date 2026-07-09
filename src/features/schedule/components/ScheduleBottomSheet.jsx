@@ -1,6 +1,5 @@
 import React, { memo } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
-
+import { Modal, Pressable, ScrollView, Text, View, ActivityIndicator } from "react-native";
 function ScheduleBottomSheet({
   visible,
   selectedDate,
@@ -16,6 +15,7 @@ function ScheduleBottomSheet({
   canCancelAttendance,
   canCheckInTodaySession,
   handleScheduleAction,
+  submittingAttendance,
 }) {
   return (
     <Modal
@@ -173,6 +173,7 @@ function ScheduleBottomSheet({
 
                       {finalUiMeta.actionLabel ? (
                         <Pressable
+                          disabled={submittingAttendance}
                           style={[
                             styles.compactActionButton,
                             (finalUiMeta.tone === "reserved" ||
@@ -183,16 +184,20 @@ function ScheduleBottomSheet({
                             handleScheduleAction(item, finalUiMeta.actionType)
                           }
                         >
-                          <Text
-                            style={[
-                              styles.compactActionButtonText,
-                              (finalUiMeta.tone === "reserved" ||
-                                finalUiMeta.tone === "done") &&
-                                styles.compactActionButtonTextSecondary,
-                            ]}
-                          >
-                            {finalUiMeta.actionLabel}
-                          </Text>
+{submittingAttendance ? (
+  <ActivityIndicator size="small" />
+) : (
+  <Text
+    style={[
+      styles.compactActionButtonText,
+      (finalUiMeta.tone === "reserved" ||
+        finalUiMeta.tone === "done") &&
+        styles.compactActionButtonTextSecondary,
+    ]}
+  >
+    {finalUiMeta.actionLabel}
+  </Text>
+)}
                         </Pressable>
                       ) : null}
                     </View>

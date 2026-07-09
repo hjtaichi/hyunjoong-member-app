@@ -25,33 +25,34 @@
       "googleServicesFile": "./google-services.json"
     },
     "web": {
-  "output": "static",
-  "favicon": "./public/icon.png",
-  "name": "현중태극권",
-  "shortName": "현중태극권",
-  "backgroundColor": "#F6F2EC",
-  "themeColor": "#2B221D",
-  "display": "standalone"
-},
+      "output": "static",
+      "favicon": "./public/icon.png",
+      "name": "현중태극권",
+      "shortName": "현중태극권",
+      "backgroundColor": "#F6F2EC",
+      "themeColor": "#2B221D",
+      "display": "standalone"
+    },
     "plugins": [
       "expo-router",
-[
-  "expo-splash-screen",
-  {
-    "image": "./assets/images/loading-screen.png",
-    "resizeMode": "contain",
-    "backgroundColor": "#F6F2EC",
-    "dark": {
-      "image": "./assets/images/loading-screen.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F6F2EC"
-    }
-  }
-],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/loading-screen.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F6F2EC",
+          "dark": {
+            "image": "./assets/images/loading-screen.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#F6F2EC"
+          }
+        }
+      ],
       "expo-secure-store",
       "expo-notifications",
       "expo-font",
-      "expo-video"
+      "expo-video",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

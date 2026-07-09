@@ -48,8 +48,6 @@ export function useScheduleScreen({
 
     const calendarRes = await getMemberCalendar(token, currentYear, currentMonth);
 
-    console.log("🔥 SCHEDULE calendarRes =", JSON.stringify(calendarRes, null, 2));
-
     setCalendarData(calendarRes);
 
     console.log("✅ SCHEDULE refreshScreenData 완료");
@@ -386,17 +384,28 @@ useEffect(() => {
           return;
         }
 
-        await reserveAttendance(token, sessionId);
+await reserveAttendance(token, sessionId);
 
-        Alert.alert("완료", "출석 예정이 등록되었습니다.");
-        await refreshScreenData();
+updateScheduleItemLocally(selectedDate, sessionId, (prev) => ({
+  ...prev,
+  attendanceStatus: "reserved",
+  recurringMeta: {
+    ...(prev.recurringMeta || {}),
+    isRecurring: false,
+    hasRecurringException: false,
+    exceptionType: null,
+  },
+}));
+
+Alert.alert("완료", "출석 예정이 등록되었습니다.");
+refreshScreenData();
       } catch (error) {
         Alert.alert("오류", error.message || "출석 예정 등록에 실패했습니다.");
       } finally {
         setSubmittingAttendance(false);
       }
     },
-    [token, refreshScreenData]
+    [token, selectedDate, updateScheduleItemLocally, refreshScreenData]
   );
 
   const handleSkipOnce = useCallback(
@@ -419,16 +428,26 @@ useEffect(() => {
         reason: "",
       });
 
-      await refreshScreenData();
+updateScheduleItemLocally(selectedDate, item?.sessionId || item?.id, (prev) => ({
+  ...prev,
+  attendanceStatus: null,
+  recurringMeta: {
+    ...(prev.recurringMeta || {}),
+    isRecurring: false,
+    hasRecurringException: true,
+    exceptionType: "skip",
+  },
+}));
 
-      Alert.alert("완료", "이번만 쉬기로 처리되었습니다.");
+Alert.alert("완료", "이번만 쉬기로 처리되었습니다.");
+refreshScreenData();
     } catch (error) {
       Alert.alert("오류", error.message || "이번만 쉬기 처리에 실패했습니다.");
     } finally {
       setSubmittingAttendance(false);
     }
   },
-  [token, selectedDate, refreshScreenData]
+  [token, selectedDate, updateScheduleItemLocally, refreshScreenData]
 );
 
   const handleUndoSkip = useCallback(
@@ -450,16 +469,26 @@ useEffect(() => {
         date: selectedDate,
       });
 
-      await refreshScreenData();
+updateScheduleItemLocally(selectedDate, item?.sessionId || item?.id, (prev) => ({
+  ...prev,
+  attendanceStatus: "reserved",
+  recurringMeta: {
+    ...(prev.recurringMeta || {}),
+    isRecurring: true,
+    hasRecurringException: false,
+    exceptionType: null,
+  },
+}));
 
-      Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
+Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
+refreshScreenData();
     } catch (error) {
       Alert.alert("오류", error.message || "이번 쉬기 취소에 실패했습니다.");
     } finally {
       setSubmittingAttendance(false);
     }
   },
-  [token, selectedDate, refreshScreenData]
+[token, selectedDate, updateScheduleItemLocally, refreshScreenData]
 );
 
   const handleCancelReserve = useCallback(
@@ -473,17 +502,22 @@ useEffect(() => {
           return;
         }
 
-        await cancelReservation(token, sessionId);
+await cancelReservation(token, sessionId);
 
-        Alert.alert("완료", "출석 예정이 취소되었습니다.");
-        await refreshScreenData();
+updateScheduleItemLocally(selectedDate, sessionId, (prev) => ({
+  ...prev,
+  attendanceStatus: null,
+}));
+
+Alert.alert("완료", "출석 예정이 취소되었습니다.");
+refreshScreenData();
       } catch (error) {
         Alert.alert("오류", error.message || "출석 예정 취소에 실패했습니다.");
       } finally {
         setSubmittingAttendance(false);
       }
     },
-    [token, refreshScreenData]
+    [token, selectedDate, updateScheduleItemLocally, refreshScreenData]
   );
 
   const handleCancelAttendance = useCallback(
@@ -497,17 +531,22 @@ useEffect(() => {
           return;
         }
 
-        await cancelAttendance(token, sessionId);
+await cancelAttendance(token, sessionId);
 
-        Alert.alert("완료", "출석이 취소되었습니다.");
-        await refreshScreenData();
+updateScheduleItemLocally(selectedDate, sessionId, (prev) => ({
+  ...prev,
+  attendanceStatus: prev.recurringMeta?.isRecurring ? "reserved" : null,
+}));
+
+Alert.alert("완료", "출석이 취소되었습니다.");
+refreshScreenData();
       } catch (error) {
         Alert.alert("오류", error.message || "출석 취소에 실패했습니다.");
       } finally {
         setSubmittingAttendance(false);
       }
     },
-    [token, refreshScreenData]
+    [token, selectedDate, updateScheduleItemLocally, refreshScreenData]
   );
 
   const handleScheduleAction = useCallback(
