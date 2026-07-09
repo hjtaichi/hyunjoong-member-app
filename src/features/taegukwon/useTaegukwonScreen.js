@@ -9,6 +9,7 @@ import { getMyPrivateLessons } from "../../api/privateLessons";
 import { FORM_DEFINITIONS } from "./taegukwonMeta";
 import { useGongbeopRecords } from "./useGongbeopRecords";
 import { useFormRecords } from "./useFormRecords";
+import { sendClientLog } from "../../utils/clientLogger";
 
 export function useTaegukwonScreen() {
   const { token } = useAuth();
@@ -219,70 +220,144 @@ const addDebugLog = useCallback((message, data) => {
   }, [riverGlowAnim]);
 
   const handleSaveMemberMemo = useCallback(async () => {
-    try {
-      const targetCurriculumId = personalProgress?.curriculumId || "";
+  const targetCurriculumId = personalProgress?.curriculumId || "";
 
-      if (!targetCurriculumId) {
-        Alert.alert("안내", "메모를 저장할 투로를 먼저 선택해주세요.");
-        return;
-      }
+  try {
+    sendClientLog({
+      level: "info",
+      screen: "taegukwon-memo",
+      message: "메모 저장 함수 진입",
+      extra: {
+        hasToken: !!token,
+        hasPersonalProgress: !!personalProgress,
+        hasCurriculumId: !!targetCurriculumId,
+        curriculumId: targetCurriculumId || null,
+        memoLength: editMemberMemo?.length || 0,
+        userAgent:
+          typeof navigator !== "undefined" ? navigator.userAgent : "",
+        online:
+          typeof navigator !== "undefined" ? navigator.onLine : null,
+        cookieEnabled:
+          typeof navigator !== "undefined" ? navigator.cookieEnabled : null,
+      },
+    });
 
-      setSavingMemo(true);
-
-const memoUrl = `${API_BASE_URL}/api/member/me/personal-memo`;
-
-addDebugLog("메모 저장 요청 시작", {
-  API_BASE_URL,
-  memoUrl,
-  hasToken: !!token,
-  curriculumId: targetCurriculumId,
-});
-
-const response = await fetch(memoUrl, {
-  method: "PATCH",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  },
-  body: JSON.stringify({
-    curriculumId: targetCurriculumId,
-    memberMemo: editMemberMemo,
-  }),
-});
-      const result = await response.json();
-
-addDebugLog("메모 저장 응답", {
-  ok: response.ok,
-  status: response.status,
-  result,
-});
-
-if (!response.ok) {
-  throw new Error(result.message || "내 수련 메모 저장 실패");
-}
-
-      setTaegukwonData((prev) => ({
-        ...prev,
-        personalProgress: {
-          ...(prev?.personalProgress || {}),
-          memberMemo: editMemberMemo,
+    if (!targetCurriculumId) {
+      sendClientLog({
+        level: "warn",
+        screen: "taegukwon-memo",
+        message: "메모 저장 중단: curriculumId 없음",
+        extra: {
+          hasToken: !!token,
+          hasPersonalProgress: !!personalProgress,
+          memoLength: editMemberMemo?.length || 0,
         },
-      }));
+      });
 
-      setMemoEditModalVisible(false);
-      Alert.alert("완료", "수련 메모가 저장되었습니다.");
-
-      loadData({ silent: true }).catch(() => {});
-    } catch (error) {
-  addDebugLog("메모 저장 실패", {
-    message: error?.message,
-  });
-
-  Alert.alert("오류", error.message || "수련 메모 저장 중 오류가 발생했습니다.");
-} finally {
-      setSavingMemo(false);
+      Alert.alert("안내", "메모를 저장할 투로를 먼저 선택해주세요.");
+      return;
     }
-  }, [personalProgress, editMemberMemo, token, loadData, addDebugLog]);
+
+    setSavingMemo(true);
+
+    const memoUrl = `${API_BASE_URL}/api/member/me/personal-memo`;
+
+    addDebugLog("메모 저장 요청 시작", {
+      API_BASE_URL,
+      memoUrl,
+      hasToken: !!token,
+      curriculumId: targetCurriculumId,
+    });
+
+    sendClientLog({
+      level: "info",
+      screen: "taegukwon-memo",
+      message: "메모 저장 API 요청 직전",
+      extra: {
+        memoUrl,
+        hasToken: !!token,
+        curriculumId: targetCurriculumId,
+        memoLength: editMemberMemo?.length || 0,
+      },
+    });
+
+    const response = await fetch(memoUrl, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        curriculumId: targetCurriculumId,
+        memberMemo: editMemberMemo,
+      }),
+    });
+
+    const responseText = await response.text();
+
+    let result = {};
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      result = { message: responseText };
+    }
+
+    addDebugLog("메모 저장 응답", {
+      ok: response.ok,
+      status: response.status,
+      result,
+    });
+
+    sendClientLog({
+      level: response.ok ? "info" : "error",
+      screen: "taegukwon-memo",
+      message: "메모 저장 API 응답",
+      extra: {
+        ok: response.ok,
+        status: response.status,
+        responseText: responseText?.slice(0, 300),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(result.message || "내 수련 메모 저장 실패");
+    }
+
+    setTaegukwonData((prev) => ({
+      ...prev,
+      personalProgress: {
+        ...(prev?.personalProgress || {}),
+        memberMemo: editMemberMemo,
+      },
+    }));
+
+    setMemoEditModalVisible(false);
+    Alert.alert("완료", "수련 메모가 저장되었습니다.");
+
+    loadData({ silent: true }).catch(() => {});
+  } catch (error) {
+    addDebugLog("메모 저장 실패", {
+      message: error?.message,
+    });
+
+    sendClientLog({
+      level: "error",
+      screen: "taegukwon-memo",
+      message: "메모 저장 실패 catch",
+      extra: {
+        name: error?.name,
+        message: error?.message,
+        hasToken: !!token,
+        hasPersonalProgress: !!personalProgress,
+        curriculumId: targetCurriculumId || null,
+      },
+    });
+
+    Alert.alert("오류", error.message || "수련 메모 저장 중 오류가 발생했습니다.");
+  } finally {
+    setSavingMemo(false);
+  }
+}, [personalProgress, editMemberMemo, token, loadData, addDebugLog]);
 
   return {
     loading,
