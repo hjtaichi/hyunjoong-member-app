@@ -5,10 +5,9 @@ import { colors } from "../theme";
 
 const fonts = {
   title: "MaruBuriBold",
-  medium: "PretendardMedium",
 };
 
-export default function ScreenHeader({ title, onBack }) {
+export default function ScreenHeader({ title, onBack, light = false }) {
   return (
     <View style={styles.header}>
       <Pressable
@@ -18,12 +17,16 @@ export default function ScreenHeader({ title, onBack }) {
       >
         <Image
           source={require("../../assets/images/back.png")}
-          style={styles.backIcon}
+          style={[styles.backIcon, light && styles.backIconLight]}
           resizeMode="contain"
         />
       </Pressable>
 
-      <Text style={styles.headerTitle}>{title}</Text>
+      {title ? (
+        <Text style={[styles.headerTitle, light && styles.headerTitleLight]}>
+          {title}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -35,6 +38,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 10,
     position: "relative",
+    zIndex: 50,
+    elevation: 50,
   },
 
   backButton: {
@@ -44,6 +49,8 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: "flex-start",
     justifyContent: "center",
+    zIndex: 60,
+    elevation: 60,
   },
 
   backIcon: {
@@ -52,10 +59,19 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
 
+  backIconLight: {
+    tintColor: "#F5E6D0",
+    opacity: 1,
+  },
+
   headerTitle: {
     fontSize: 24,
     fontFamily: fonts.title,
     color: colors.textMain,
     lineHeight: 32,
+  },
+
+  headerTitleLight: {
+    color: "#F5E6D0",
   },
 });

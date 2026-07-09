@@ -145,10 +145,13 @@ export function getScheduleUiMeta(item, { isReservableDate }) {
     !!recurringMeta?.memberRecurringReservationId;
 
   const isRecurringReserved =
-    attendanceStatus === "reserved" && hasMatchedRecurringRule;
+  attendanceStatus === "reserved" &&
+  recurringMeta?.isRecurring === true &&
+  !hasRecurringException;
 
-  const isManualReserved =
-    attendanceStatus === "reserved" && !hasMatchedRecurringRule;
+const isManualReserved =
+  attendanceStatus === "reserved" &&
+  recurringMeta?.isRecurring !== true;
 
   const canUndoSkip =
     isReservableDate &&
@@ -174,16 +177,16 @@ export function getScheduleUiMeta(item, { isReservableDate }) {
 
   const canCancelAttendance = item?.canCancelAttendance === true;
 
-  if (hasRecurringException) {
-    return {
-      tone: "available",
-      label: "예약 가능",
-      helperText: null,
-      actionLabel: canUndoSkip ? "출석 예정" : null,
-      actionType: canUndoSkip ? "undoSkip" : null,
-      isRecurring: false,
-    };
-  }
+if (hasRecurringException) {
+  return {
+    tone: "available",
+    label: "예약 가능",
+    helperText: null,
+    actionLabel: canUndoSkip ? "출석 예정" : null,
+    actionType: canUndoSkip ? "undoSkip" : null,
+    isRecurring: false,
+  };
+}
 
   if (attendanceStatus === "present") {
     return {

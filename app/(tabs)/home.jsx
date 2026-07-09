@@ -75,18 +75,36 @@ const {
   const yudanjaEmblemFrame = require("../../assets/images/yudanja-emblem-frame.png");
   const yudanjaProfileBg = require("../../assets/images/yudanja-profile-card-bg.png");
 
-  const calendarMap = useMemo(() => {
-    const days = calendarData?.days ?? [];
-    const map = {};
+const calendarMap = useMemo(() => {
+  const scheduleByDate = calendarData?.scheduleByDate || {};
+  const map = {};
 
-    for (const item of days) {
-      if (item?.date) {
-        map[item.date] = item;
-      }
-    }
+  Object.entries(scheduleByDate).forEach(([date, schedules]) => {
+    const hasPresent = schedules.some(
+      (item) => item?.attendanceStatus === "present"
+    );
 
-    return map;
-  }, [calendarData]);
+    const hasReserved = schedules.some(
+      (item) => item?.attendanceStatus === "reserved"
+    );
+
+    map[date] = {
+      date,
+      attendanceStatus: hasPresent
+        ? "present"
+        : hasReserved
+        ? "reserved"
+        : null,
+      hasClass: schedules.length > 0,
+      classCount: schedules.length,
+      isHoliday: schedules.some((item) => item?.isHoliday === true),
+      isOpenHoliday: schedules.some((item) => item?.isOpenHoliday === true),
+      holidayName: schedules.find((item) => item?.holidayName)?.holidayName || null,
+    };
+  });
+
+  return map;
+}, [calendarData]);
 
   const miniCalendarWeeks = useMemo(() => {
   const base = new Date(todayString + "T00:00:00");

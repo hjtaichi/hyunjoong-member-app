@@ -4,7 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 
 import { getMemberHome } from "../../api/memberHome";
-import { getMemberCalendarSummary } from "../../api/memberCalendar";
+import { getMemberCalendar } from "../../api/memberCalendar";
 import { getMemberNoticeList } from "../../api/memberNotice";
 
 export const DEBUG_HOME = false;
@@ -63,7 +63,7 @@ export function useHomeScreen({
 const [homeRes, calendarRes, noticeRes] = await Promise.all([
   
   getMemberHome(token),
-  getMemberCalendarSummary(token, currentYear, currentMonth),
+  getMemberCalendar(token, currentYear, currentMonth),
   getMemberNoticeList(token),
 ]);
 console.log("🔥 HOME RESPONSE =", homeRes);

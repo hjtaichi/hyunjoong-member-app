@@ -1315,10 +1315,10 @@ const styles = StyleSheet.create({
   alignItems: "center",
   zIndex: 50,
 },
-  backButton: {
+backButton: {
   width: 44,
   height: 44,
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "center",
   backgroundColor: "transparent",
   borderWidth: 0,
@@ -1327,8 +1327,9 @@ const styles = StyleSheet.create({
 },
 
 backIcon: {
-  width: 28,
-  height: 28,
+  width: 18,
+  height: 18,
+  opacity: 0.75,
 },
   headerTextWrap: {
     flex: 1,

@@ -21,6 +21,8 @@ import {
   deleteDojangAlbumComment,
 } from "../../../src/api/dojangAlbum";
 import { colors, shadow } from "../../../src/theme";
+import ScreenHeader from "../../../src/components/ScreenHeader";
+
 const photoIcon = require("../../../assets/images/dojang-album/icon-photo.png");
 const dateIcon = require("../../../assets/images/dojang-album/icon-date.png");
 const locationIcon = require("../../../assets/images/dojang-album/icon-location.png");
@@ -176,15 +178,7 @@ export default function YudanjaAlbumDetailScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.topBar}>
-          <Pressable style={styles.iconButton} onPress={() => router.back()}>
-            <Text style={styles.topIcon}>‹</Text>
-          </Pressable>
-
-          <Text style={styles.topTitle}>앨범 상세</Text>
-
-<View style={styles.iconButton} />
-        </View>
+<ScreenHeader title="앨범 상세" />
 
         <View style={styles.hero}>
   <Image
@@ -412,30 +406,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 190,
     backgroundColor: PAPER,
-  },
-
-  topBar: {
-    height: 42,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  iconButton: {
-    width: 42,
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topIcon: {
-    fontSize: 35,
-    color: INK,
-    marginTop: -2,
-  },
-
-  topTitle: {
-    fontFamily: fonts.titleSemi,
-    fontSize: 21,
-    color: INK,
   },
 
 hero: {

@@ -420,33 +420,7 @@ content: {
   alignSelf: "center",
 },
 
-  backButton: {
-  position: "absolute",
-  top: 10,
-  left: 16,
-  width: 44,
-  height: 44,
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 20,
-},
-
-backText: {
-  fontSize: 32,
-  lineHeight: 34,
-  color: "#2B221D",
-},
-
-  pageTitle: {
-  textAlign: "center",
-  marginTop: -22,
-  marginBottom: 10,
-  fontSize: 18,
-  fontWeight: "900",
-  color: "#3A2C27",
-},
-
-  stepTitle: {
+stepTitle: {
   fontSize: 16,
   fontFamily: "PretendardBold",
   color: colors.textMain,

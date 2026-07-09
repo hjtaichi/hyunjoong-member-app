@@ -25,6 +25,7 @@ const [editTrainingType, setEditTrainingType] = useState("");
 const [editCurriculum, setEditCurriculum] = useState("");
 const [editTitle, setEditTitle] = useState("");
 const [editQuestion, setEditQuestion] = useState("");
+const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 function formatDuration(seconds) {
@@ -66,57 +67,39 @@ const loadVideos = useCallback(async () => {
   }
 }, [token]);
 
-function handleDeleteVideo() {
+async function handleDeleteVideo() {
   if (!selectedVideo?.id) return;
 
-  Alert.alert(
-    "영상 삭제",
-    "이 영상을 삭제하시겠습니까?",
-    [
+  const deleteTarget = selectedVideo;
+
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/api/me/coaching-videos/${deleteTarget.id}`,
       {
-        text: "취소",
-        style: "cancel",
-      },
-      {
-        text: "삭제",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const res = await fetch(
-              `${API_BASE_URL}/api/me/coaching-videos/${selectedVideo.id}`,
-              {
-                method: "DELETE",
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "ngrok-skip-browser-warning": "true",
-                },
-              }
-            );
-
-            const result = await res.json();
-
-            if (!res.ok) {
-              throw new Error(result?.message || "삭제 실패");
-            }
-
-            setMenuVisible(false);
-            setSelectedVideo(null);
-            await loadVideos();
-
-            Alert.alert("삭제 완료", "영상이 삭제되었습니다.");
-          } catch (error) {
-            console.log("영상 삭제 실패:", error);
-            Alert.alert(
-              "삭제 실패",
-              error?.message || "영상 삭제 중 오류가 발생했습니다."
-            );
-          }
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
         },
-      },
-    ]
-  );
-}
+      }
+    );
 
+    const result = await res.json();
+
+    if (!res.ok) throw new Error(result?.message || "삭제 실패");
+
+    setVideos((prev) =>
+      prev.filter((video) => String(video.id) !== String(deleteTarget.id))
+    );
+
+    setDeleteConfirmVisible(false);
+    setSelectedVideo(null);
+
+    Alert.alert("삭제 완료", "영상이 삭제되었습니다.");
+  } catch (error) {
+    Alert.alert("삭제 실패", error?.message || "영상 삭제 중 오류가 발생했습니다.");
+  }
+}
 async function handleUpdateVideo() {
   if (!selectedVideo?.id) return;
 
@@ -229,35 +212,57 @@ useEffect(() => {
 )}
 <Modal visible={menuVisible} transparent animationType="fade">
   <View style={styles.menuOverlay}>
-    <Pressable
-      style={styles.menuBackdrop}
-      onPress={() => setMenuVisible(false)}
-    />
-
     <View style={styles.menuCard}>
       <Text style={styles.menuModalTitle}>영상 관리</Text>
+
+      <Pressable
+        style={styles.menuOption}
+        onPress={() => {
+          setEditTrainingType(selectedVideo?.trainingType || "투로");
+          setEditCurriculum(selectedVideo?.curriculum || "");
+          setEditTitle(selectedVideo?.title || "");
+          setEditQuestion(selectedVideo?.question || "");
+          setMenuVisible(false);
+          setEditVisible(true);
+        }}
+      >
+        <Text style={styles.menuOptionText}>수정하기</Text>
+      </Pressable>
 
 <Pressable
   style={styles.menuOption}
   onPress={() => {
-    setEditTrainingType(selectedVideo?.trainingType || "투로");
-    setEditCurriculum(selectedVideo?.curriculum || "");
-    setEditTitle(selectedVideo?.title || "");
-    setEditQuestion(selectedVideo?.question || "");
     setMenuVisible(false);
-    setEditVisible(true);
+    setDeleteConfirmVisible(true);
   }}
 >
-  <Text style={styles.menuOptionText}>수정하기</Text>
+  <Text style={styles.menuDeleteText}>삭제하기</Text>
 </Pressable>
-
-      <Pressable style={styles.menuOption} onPress={handleDeleteVideo}>
-        <Text style={styles.menuDeleteText}>삭제하기</Text>
-      </Pressable>
 
       <Pressable
         style={styles.menuCancelButton}
         onPress={() => setMenuVisible(false)}
+      >
+        <Text style={styles.menuCancelText}>취소</Text>
+      </Pressable>
+    </View>
+  </View>
+</Modal>
+<Modal visible={deleteConfirmVisible} transparent animationType="fade">
+  <View style={styles.menuOverlay}>
+    <View style={styles.menuCard}>
+      <Text style={styles.menuModalTitle}>영상 삭제</Text>
+      <Text style={styles.deleteConfirmText}>
+        이 영상을 삭제하시겠습니까?
+      </Text>
+
+      <Pressable style={styles.deleteConfirmButton} onPress={handleDeleteVideo}>
+        <Text style={styles.deleteConfirmButtonText}>삭제하기</Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.menuCancelButton}
+        onPress={() => setDeleteConfirmVisible(false)}
       >
         <Text style={styles.menuCancelText}>취소</Text>
       </Pressable>
@@ -718,6 +723,29 @@ saveButton: {
 },
 
 saveButtonText: {
+  fontSize: 15,
+  fontWeight: "900",
+  color: "#FFFFFF",
+},
+deleteConfirmText: {
+  fontSize: 14,
+  fontWeight: "700",
+  color: "#6B4F46",
+  lineHeight: 21,
+  marginTop: 8,
+  marginBottom: 14,
+},
+
+deleteConfirmButton: {
+  height: 45,
+  borderRadius: 14,
+  backgroundColor: "#C45A4A",
+  alignItems: "center",
+  justifyContent: "center",
+  marginTop: 8,
+},
+
+deleteConfirmButtonText: {
   fontSize: 15,
   fontWeight: "900",
   color: "#FFFFFF",

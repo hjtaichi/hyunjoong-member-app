@@ -135,13 +135,9 @@ export default function YudanjaHomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Pressable
-  style={styles.heroBackButton}
-  onPress={() => router.back()}
-  hitSlop={10}
->
-  <Text style={styles.heroBackText}>‹</Text>
-</Pressable>
+<View style={styles.headerLayer}>
+  <ScreenHeader title="" light />
+</View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -615,22 +611,6 @@ menuMountainImage: {
   height: 65,
   opacity: 0.25,
 },
-  heroBackButton: {
-  position: "absolute",
-  top: 18,
-  left: 10,
-  zIndex: 20,
-  width: 40,
-  height: 40,
-  alignItems: "center",
-  justifyContent: "center",
-},
-
-heroBackText: {
-  fontSize: 34,
-  lineHeight: 36,
-  color: "#F5E6D0",
-},
 heroInfoPill: {
   flexDirection: "row",
   alignItems: "center",
@@ -670,5 +650,13 @@ heroBottomGradient: {
   bottom: 0,
   height: 30,
   zIndex: 1,
+},
+headerLayer: {
+  position: "absolute",
+  top: 18,
+  left: 18,
+  right: 18,
+  zIndex: 50,
+  elevation: 50,
 },
 });

@@ -194,7 +194,9 @@ function handleSelectHopeDate(date) {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <ScreenHeader title="지인 체험 추천" />
+      <View style={styles.headerLayer}>
+  <ScreenHeader title="지인 체험 추천" />
+</View>
 
       <View style={styles.hero}>
   <View style={styles.heroTextArea}>
@@ -433,14 +435,15 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#241E1A",
   },
-  hero: {
+hero: {
   marginTop: -42,
   marginBottom: 14,
-  minHeight: 310,
+  minHeight: 280,
   paddingLeft: 4,
   paddingTop: 94,
   position: "relative",
   overflow: "visible",
+  zIndex: 1,
 },
 
 heroTitle: {
@@ -739,5 +742,10 @@ alertModalButtonText: {
   fontSize: 15,
   fontFamily: fonts.bold,
   color: colors.white,
+},
+headerLayer: {
+  position: "relative",
+  zIndex: 50,
+  elevation: 50,
 },
 });

@@ -14,6 +14,7 @@ import { useAuth } from "../../src/contexts/AuthContext";
 import { getDojangAlbums } from "../../src/api/dojangAlbum";
 import { API_BASE_URL } from "../../src/config/env";
 import { colors, shadow } from "../../src/theme";
+import ScreenHeader from "../../src/components/ScreenHeader";
 
 const fonts = {
   medium: "PretendardMedium",
@@ -115,15 +116,7 @@ export default function DojangAlbumScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.topBar}>
-          <Pressable style={styles.iconButton} onPress={() => router.back()}>
-            <Text style={styles.topIcon}>‹</Text>
-          </Pressable>
-
-          <Text style={styles.topTitle}>앨범</Text>
-
-<View style={styles.iconButton} />
-        </View>
+<ScreenHeader title="앨범" />
 
         <View style={styles.hero}>
   <Image
@@ -292,34 +285,6 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 52,
     backgroundColor: PAPER,
-  },
-
-  topBar: {
-    height: 42,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  iconButton: {
-    width: 42,
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topIcon: {
-    fontSize: 35,
-    color: INK,
-    marginTop: -2,
-  },
-  searchIcon: {
-    fontSize: 30,
-    color: INK,
-    marginTop: -2,
-  },
-  topTitle: {
-    fontFamily: fonts.titleSemi,
-    fontSize: 21,
-    color: INK,
   },
 
 heroWideBg: {

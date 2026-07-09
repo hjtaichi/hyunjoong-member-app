@@ -788,7 +788,7 @@ noticeTitleBlock: {
 },
 
 sectionInlineDesc: {
-  fontSize: 13,
+  fontSize: 14,
   fontFamily: fonts.medium,
   color: colors.textSub,
   marginLeft: 4,
@@ -924,13 +924,13 @@ inquiryHeaderRow: {
 },
 
 countText: {
-  fontSize: 13,
+  fontSize: 14,
   fontFamily: fonts.bold,
   color: colors.warmBrown,
 },
 
 allInquiryLink: {
-  fontSize: 12,
+  fontSize: 13,
   fontFamily: fonts.semiBold,
   color: colors.warmBrown,
 },

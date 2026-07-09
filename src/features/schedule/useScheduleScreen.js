@@ -400,91 +400,67 @@ useEffect(() => {
   );
 
   const handleSkipOnce = useCallback(
-    async (item) => {
-      try {
-        setSubmittingAttendance(true);
+  async (item) => {
+    try {
+      setSubmittingAttendance(true);
 
-        const recurringMeta = item?.recurringMeta || {};
-        const memberRecurringReservationId =
-          recurringMeta?.memberRecurringReservationId;
+      const recurringMeta = item?.recurringMeta || {};
+      const memberRecurringReservationId =
+        recurringMeta?.memberRecurringReservationId;
 
-        if (!memberRecurringReservationId) {
-          Alert.alert("안내", "정기출석 정보가 없어 이번만 쉬기를 처리할 수 없습니다.");
-          return;
-        }
-
-        const sessionId = item?.sessionId || item?.id;
-
-        await skipRecurringReservationOnce(token, {
-          memberRecurringReservationId,
-          date: selectedDate,
-          reason: "",
-        });
-
-        updateScheduleItemLocally(selectedDate, sessionId, (prevItem) => ({
-          ...prevItem,
-          attendanceStatus: null,
-          recurringMeta: {
-            ...(prevItem.recurringMeta || {}),
-            hasRecurringException: true,
-            exceptionType: "skip",
-            matchedRecurringRule: true,
-            memberRecurringReservationId,
-          },
-        }));
-
-        Alert.alert("완료", "이번만 쉬기로 처리되었습니다.");
-      } catch (error) {
-        Alert.alert("오류", error.message || "이번만 쉬기 처리에 실패했습니다.");
-      } finally {
-        setSubmittingAttendance(false);
+      if (!memberRecurringReservationId) {
+        Alert.alert("안내", "정기출석 정보가 없어 이번만 쉬기를 처리할 수 없습니다.");
+        return;
       }
-    },
-    [token, selectedDate, updateScheduleItemLocally]
-  );
+
+      await skipRecurringReservationOnce(token, {
+        memberRecurringReservationId,
+        date: selectedDate,
+        reason: "",
+      });
+
+      await refreshScreenData();
+
+      Alert.alert("완료", "이번만 쉬기로 처리되었습니다.");
+    } catch (error) {
+      Alert.alert("오류", error.message || "이번만 쉬기 처리에 실패했습니다.");
+    } finally {
+      setSubmittingAttendance(false);
+    }
+  },
+  [token, selectedDate, refreshScreenData]
+);
 
   const handleUndoSkip = useCallback(
-    async (item) => {
-      try {
-        setSubmittingAttendance(true);
+  async (item) => {
+    try {
+      setSubmittingAttendance(true);
 
-        const recurringMeta = item?.recurringMeta || {};
-        const memberRecurringReservationId =
-          recurringMeta?.memberRecurringReservationId;
+      const recurringMeta = item?.recurringMeta || {};
+      const memberRecurringReservationId =
+        recurringMeta?.memberRecurringReservationId;
 
-        if (!memberRecurringReservationId) {
-          Alert.alert("안내", "정기출석 정보가 없어 이번 쉬기 취소를 처리할 수 없습니다.");
-          return;
-        }
-
-        const sessionId = item?.sessionId || item?.id;
-
-        await undoSkipRecurringReservationOnce(token, {
-          memberRecurringReservationId,
-          date: selectedDate,
-        });
-
-        updateScheduleItemLocally(selectedDate, sessionId, (prevItem) => ({
-          ...prevItem,
-          attendanceStatus: "reserved",
-          recurringMeta: {
-            ...(prevItem.recurringMeta || {}),
-            hasRecurringException: false,
-            exceptionType: null,
-            matchedRecurringRule: true,
-            memberRecurringReservationId,
-          },
-        }));
-
-        Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
-      } catch (error) {
-        Alert.alert("오류", error.message || "이번 쉬기 취소에 실패했습니다.");
-      } finally {
-        setSubmittingAttendance(false);
+      if (!memberRecurringReservationId) {
+        Alert.alert("안내", "정기출석 정보가 없어 이번 쉬기 취소를 처리할 수 없습니다.");
+        return;
       }
-    },
-    [token, selectedDate, updateScheduleItemLocally]
-  );
+
+      await undoSkipRecurringReservationOnce(token, {
+        memberRecurringReservationId,
+        date: selectedDate,
+      });
+
+      await refreshScreenData();
+
+      Alert.alert("완료", "출석 예정으로 다시 등록되었습니다.");
+    } catch (error) {
+      Alert.alert("오류", error.message || "이번 쉬기 취소에 실패했습니다.");
+    } finally {
+      setSubmittingAttendance(false);
+    }
+  },
+  [token, selectedDate, refreshScreenData]
+);
 
   const handleCancelReserve = useCallback(
     async (item) => {

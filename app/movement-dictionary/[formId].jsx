@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   countText: {
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "700",
     color: colors.warmBrown,
   },
   badge: {

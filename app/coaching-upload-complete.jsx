@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import ScreenHeader from "../src/components/ScreenHeader";
 
 export default function CoachingUploadCompleteScreen() {
   const params = useLocalSearchParams();
@@ -22,9 +23,10 @@ const fileSizeText = params.size
   : "-";
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Pressable style={styles.backButton} onPress={() => router.replace("/coaching-videos")}>
-        <Text style={styles.backText}>‹</Text>
-      </Pressable>
+<ScreenHeader
+  title="업로드 완료"
+  onBack={() => router.replace("/coaching-videos")}
+/>
 
       <View style={styles.hero}>
         <View style={styles.checkCircle}>
@@ -84,17 +86,6 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     paddingBottom: 34,
     minHeight: "100%",
-  },
-
-  backButton: {
-    width: 34,
-    height: 34,
-    justifyContent: "center",
-  },
-
-  backText: {
-    fontSize: 34,
-    color: "#2B221D",
   },
 
   hero: {

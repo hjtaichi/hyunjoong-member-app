@@ -1198,8 +1198,9 @@ monthlyGoalMiniRow: {
 },
 
 monthlyGoalMiniText: {
-  fontSize: 12,
+  fontSize: 13,
   fontFamily: "PretendardSemiBold",
+  marginLeft: 2,
   color: "#7B5E3B",
 },
 
@@ -1207,7 +1208,7 @@ monthlyGoalSignal: {
   flexDirection: "row",
   alignItems: "flex-end",
   gap: 3,
-  paddingBottom: 1,
+  paddingBottom: 2,
 },
 
 monthlyGoalSignalBar: {
@@ -1221,7 +1222,7 @@ monthlyGoalSignalBar1: {
 },
 
 monthlyGoalSignalBar2: {
-  height: 8,
+  height: 7,
 },
 
 monthlyGoalSignalBar3: {

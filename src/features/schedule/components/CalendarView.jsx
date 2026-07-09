@@ -94,15 +94,14 @@ function CalendarView({
                         {dateObj.getDate()}
                       </Text>
                     </View>
-                  ) : dayInfo?.attendanceStatus === "reserved" &&
-                    dayInfo?.isHoliday !== true &&
-                    dayInfo?.hasRecurringException !== true ? (
-                    <View style={styles.dayStampReserved}>
-                      <Text style={styles.dayStampTextReserved}>
-                        {dateObj.getDate()}
-                      </Text>
-                    </View>
-                  ) : (
+) : dayInfo?.attendanceStatus === "reserved" &&
+  dayInfo?.isHoliday !== true ? (
+  <View style={styles.dayStampReserved}>
+    <Text style={styles.dayStampTextReserved}>
+      {dateObj.getDate()}
+    </Text>
+  </View>
+) : (
                     <Text
                       style={[
                         styles.dayNumber,
