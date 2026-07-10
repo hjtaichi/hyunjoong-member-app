@@ -69,8 +69,8 @@ export const FORM_IMAGE_STYLES = {
     small: {
       right: -1,
       bottom: 10,
-      width: 85,
-      height: 85,
+      width: 77,
+      height: 77,
     },
   },
 };

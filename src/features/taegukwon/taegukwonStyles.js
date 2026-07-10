@@ -799,14 +799,14 @@ memoHistoryItemBox: {
 },
 
 memoHistoryDateText: {
-  fontSize: 11,
+  fontSize: 13,
   fontWeight: "700",
   color: "#8a7f72",
   marginBottom: 4,
 },
 
 memoHistoryContentText: {
-  fontSize: 13,
+  fontSize: 15,
   lineHeight: 19,
   color: "#4c4339",
 },
@@ -1487,8 +1487,8 @@ goalItemTitle: {
   marginBottom: 0,
 },
 goalGoalValue: {
-  fontSize: 18,
-  fontWeight: "900",
+  fontSize: 17,
+  fontWeight: "800",
   textAlign: "center",
   includeFontPadding: false,
   maxWidth: "100%",
@@ -1646,7 +1646,8 @@ memoHistoryModalTitle: {
   fontSize: 20,
   fontWeight: "700",
   color: "#5b3f30",
-  marginBottom: 16,
+  marginBottom: 4,
+  arginTop: 16,
   fontFamily: "ChosunCentennial",
 },
 
@@ -2148,8 +2149,8 @@ formTipTitleNew: {
 },
 
 formTipTextNew: {
-  fontSize: 14,
-  lineHeight: 21,
+  fontSize: 15,
+  lineHeight: 19,
   fontFamily: fonts.medium,
   color: colors.textMain,
 },

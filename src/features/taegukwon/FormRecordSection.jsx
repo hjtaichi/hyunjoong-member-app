@@ -64,7 +64,7 @@ export default function FormRecordSection({
           </View>
       
           <View style={styles.formSectionHeaderRowNew}>
-            <Text style={styles.formSectionTitleNew}>내가 연습하는 투로</Text>
+            <Text style={styles.formSectionTitleNew}>현재 연습 중인 투로</Text>
       
             <TouchableOpacity
               onPress={() => {
