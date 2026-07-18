@@ -99,7 +99,7 @@ export default function MovementDictionaryHomeScreen() {
 }, [keyword]);
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <ScreenHeader title="동작명 사전" />
+      <ScreenHeader title="투로명 사전" />
 
       <View style={styles.hero}>
   <Image source={heroFigure} style={styles.heroFigure} resizeMode="contain" />

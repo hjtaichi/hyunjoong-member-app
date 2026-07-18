@@ -98,7 +98,7 @@ export default function HomeHeader({
         {monthlyGoalRate ? (
   <View style={styles.monthlyGoalMiniRow}>
     <Text style={styles.monthlyGoalMiniText}>
-      이번 달 목표 달성률 {monthlyRate}%
+      출석 목표 달성률{monthlyRate}%
     </Text>
 
     <View style={styles.monthlyGoalSignal}>

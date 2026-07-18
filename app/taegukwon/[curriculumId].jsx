@@ -302,7 +302,7 @@ const steps = useMemo(() => {
       </View>
 
       <View style={styles.listCard}>
-        <Text style={styles.sectionTitle}>전체 식 순서</Text>
+        <Text style={styles.sectionTitle}>투로 순서</Text>
 
         {steps.length > 0 ? (
           steps.map((stepItem, index) => {
@@ -371,15 +371,19 @@ const isUpcoming = !isGroupSource && currentStep < stepNo;
   ) : null}
 </Text>
 
-        <Text style={styles.stepStateText}>
-  {isGroupCurrent
-    ? "이번 주 수련"
-    : isCurrent
-    ? "현재 배우는 식"
-    : isDone
-    ? "이미 배운 식"
-    : "앞으로 배울 식"}
-</Text>
+{isGroupSource ? (
+  isGroupCurrent ? (
+    <Text style={styles.stepStateText}>이번 주 수련</Text>
+  ) : null
+) : (
+  <Text style={styles.stepStateText}>
+    {isCurrent
+      ? "현재 배우는 식"
+      : isDone
+      ? "이미 배운 식"
+      : "앞으로 배울 식"}
+  </Text>
+)}
       </View>
     </View>
   );

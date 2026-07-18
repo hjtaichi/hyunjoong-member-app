@@ -267,6 +267,10 @@ const currentJourney = useMemo(() => {
           <Text style={styles.progressDesc}>
             {currentJourney.progressDesc}
           </Text>
+          <Text style={styles.progressBasis}>
+            전체 8단계는 입관 후 4단 승단까지의 수련 여정을 기준으로
+            구성했습니다.
+          </Text>
         </View>
       </View>
 
@@ -672,6 +676,13 @@ heroDesc: {
     lineHeight: 21,
     fontWeight: "700",
     color: COLORS.sub,
+  },
+  progressBasis: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "500",
+    color: "#9A8F82",
   },
 
   sectionTitle: {

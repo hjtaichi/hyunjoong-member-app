@@ -34,7 +34,7 @@ function GongbeopSection({
     <>
         <View style={styles.formPeriodRow}>
           <View>
-            <Text style={styles.formPeriodTitle}>공력 기록</Text>
+            <Text style={styles.formPeriodTitle}>도전! 내 최고 공력</Text>
             <Text style={styles.formPeriodSub}>
               목표는 달성할 때마다 새롭게 시작됩니다.
             </Text>
@@ -99,7 +99,7 @@ function GongbeopSection({
         setRecordModalVisible(true);
       }}
       >
-        <Text style={styles.flowTodayRecordText}>오늘 기록</Text>
+        <Text style={styles.flowTodayRecordText}>기록하기</Text>
       </TouchableOpacity>
       
       {gongbeopUpdatedAt ? (

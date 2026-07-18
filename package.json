@@ -10,7 +10,10 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "compress-images": "node scripts/compress-images.js"
+    "compress-images": "node scripts/compress-images.js",
+    "test": "jest --runInBand",
+    "test:related": "jest --runInBand --runTestsByPath",
+    "test:coverage": "jest --runInBand --coverage"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -19,6 +22,8 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
     "@react-navigation/native-stack": "^7.3.16",
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "29.5.14",
     "@zxing/browser": "^0.2.0",
     "axios": "^1.18.1",
     "expo": "~54.0.35",
@@ -43,6 +48,8 @@
     "expo-video": "~3.0.16",
     "expo-web-browser": "~15.0.11",
     "html5-qrcode": "^2.3.8",
+    "jest": "~29.7.0",
+    "jest-expo": "~54.0.17",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
@@ -63,7 +70,13 @@
     "imagemin-mozjpeg": "^10.0.0",
     "imagemin-pngquant": "^10.0.0",
     "imagemin-webp": "^8.0.0",
+    "test-renderer": "1.1.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "metro": {
+      "ws": "7.5.11"
+    }
+  }
 }

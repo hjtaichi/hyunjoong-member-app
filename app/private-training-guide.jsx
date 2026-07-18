@@ -619,12 +619,12 @@ infoText: {
 },
 
   infoSubText: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 22,
     color: "#2f2a24",
     fontWeight: "500",
     marginLeft: 8,
-    letterSpacing:-0.1,
+    letterSpacing:-0.2,
   },
 
   bottomNotice: {
@@ -672,7 +672,7 @@ infoText: {
 
   ctaText: {
     fontSize: 18,
-    fontWeight: "900",
+    fontWeight: "700",
     color: "#fffdf9",
     letterSpacing: 1,
   },
