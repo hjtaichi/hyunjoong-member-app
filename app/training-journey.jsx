@@ -94,7 +94,7 @@ const steps = [
   icon: "大",
   imageKey: "taiji",
   title: "현중태극권 대가2로 수련",
-  desc: "진가태극권의 전통 투로인 대가2로를\n수련합니다.",
+  desc: "진가태극권의 전통 투로인 대가2로\n를 수련합니다.",
 },
 {
   no: 8,
@@ -754,7 +754,7 @@ heroDesc: {
     marginBottom: 6,
   },
   stepTitle: {
-  fontSize: 17,
+  fontSize: 16,
   lineHeight: 24,
   fontFamily: fonts.bold,
   color: colors.textMain,
@@ -771,7 +771,7 @@ heroDesc: {
     color: COLORS.brownDark,
   },
   stepDesc: {
-  fontSize: 13,
+  fontSize: 14,
   lineHeight: 22,
   fontFamily: fonts.medium,
   color: colors.textSub,
@@ -1067,10 +1067,10 @@ yudanjaNoticeTitle: {
 
 yudanjaNoticeText: {
   marginTop: 7,
-  fontSize: 13.5,
+  fontSize: 13,
   lineHeight: 22,
   fontFamily: fonts.medium,
   color: COLORS.sub,
-  letterSpacing: -0.35,
+  letterSpacing: -0.3,
 },
 });

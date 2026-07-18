@@ -54,9 +54,9 @@ const styles = StyleSheet.create({
   },
 
   backIcon: {
-    width: 18,
-    height: 18,
-    opacity: 0.75,
+    width: 22,
+    height: 22,
+    opacity: 0.8,
   },
 
   backIconLight: {

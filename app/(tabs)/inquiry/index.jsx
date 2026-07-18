@@ -977,7 +977,7 @@ albumBannerLabel: {
 
 albumBannerTitle: {
   marginTop: 7,
-  fontSize: 21,
+  fontSize: 20,
   fontFamily: fonts.titleSemi,
   color: colors.textMain,
 },

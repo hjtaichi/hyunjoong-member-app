@@ -249,7 +249,7 @@ const loadData = useCallback(async () => {
       <ScreenHeader title="정기출석 설정" />
 
       <Text style={styles.subtitle}>
-        요일마다 여러 시간대를 선택할 수 있어요. 자주 가는 시간으로 저장해두면 자동 예약과 연결됩니다.
+        요일마다 여러 시간대를 선택할 수 있어요. {"\n"}자주 가는 시간으로 저장해두면 자동 예약과 연결됩니다.
       </Text>
 
       <View style={styles.summaryCard}>
