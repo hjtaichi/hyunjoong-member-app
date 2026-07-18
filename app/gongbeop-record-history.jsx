@@ -1,4 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -11,6 +16,10 @@ import { router } from "expo-router";
 import { colors } from "../src/theme";
 import { useAuth } from "../src/contexts/AuthContext";
 import { API_BASE_URL } from "../src/config/env";
+import {
+  formatNumber,
+  groupGongbeopGoals,
+} from "../src/features/records/recordHistoryUtils";
 
 const fonts = {
   medium: "PretendardMedium",
@@ -19,16 +28,23 @@ const fonts = {
 };
 
 const GONGBEOP_LABELS = {
-  ilsimyangui: { name: "일심양의", unit: "회" },
-  yobujeonsa: { name: "요부전사", unit: "회" },
-  duyoMinutes: { name: "두요", unit: "분" },
-  ohaengjeonsa: { name: "오행전사", unit: "회" },
+  ilsimyangui: {
+    name: "일심양의",
+    unit: "회",
+  },
+  yobujeonsa: {
+    name: "요부전사",
+    unit: "회",
+  },
+  duyoMinutes: {
+    name: "두요",
+    unit: "분",
+  },
+  ohaengjeonsa: {
+    name: "오행전사",
+    unit: "회",
+  },
 };
-
-function formatDate(value) {
-  if (!value) return "";
-  return new Date(value).toLocaleDateString("ko-KR");
-}
 
 export default function GongbeopRecordHistoryScreen() {
   const { token } = useAuth();
@@ -36,8 +52,15 @@ export default function GongbeopRecordHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [completedGoals, setCompletedGoals] = useState([]);
 
+  const groupedGoals = useMemo(
+    () => groupGongbeopGoals(completedGoals),
+    [completedGoals]
+  );
+
   const loadCompletedGoals = useCallback(async () => {
-    if (!token) return;
+    if (!token) {
+      return;
+    }
 
     try {
       setLoading(true);
@@ -57,12 +80,19 @@ export default function GongbeopRecordHistoryScreen() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || "완료 기록 불러오기 실패");
+        throw new Error(
+          result.message || "완료 기록 불러오기 실패"
+        );
       }
 
-      setCompletedGoals(result.data?.completedGoals || []);
+      setCompletedGoals(
+        result.data?.completedGoals || []
+      );
     } catch (error) {
-      console.log("공력 완료 기록 불러오기 실패:", error);
+      console.log(
+        "공력 완료 기록 불러오기 실패:",
+        error
+      );
     } finally {
       setLoading(false);
     }
@@ -73,15 +103,24 @@ export default function GongbeopRecordHistoryScreen() {
   }, [loadCompletedGoals]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+    >
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.85}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          activeOpacity={0.85}
+          style={styles.backButton}
+        >
           <Text style={styles.backText}>‹</Text>
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>완료 공력 기록</Text>
+        <Text style={styles.headerTitle}>
+          완료 공력 기록
+        </Text>
 
-        <View style={{ width: 24 }} />
+        <View style={styles.headerSpacer} />
       </View>
 
       <Text style={styles.description}>
@@ -91,44 +130,148 @@ export default function GongbeopRecordHistoryScreen() {
       {loading ? (
         <View style={styles.emptyCard}>
           <ActivityIndicator />
+
+          <Text style={styles.emptyText}>
+            기록을 불러오는 중입니다.
+          </Text>
         </View>
-      ) : completedGoals.length === 0 ? (
+      ) : groupedGoals.length === 0 ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyText}>아직 완료 기록이 없습니다.</Text>
+          <Text style={styles.emptyText}>
+            아직 완료 기록이 없습니다.
+          </Text>
         </View>
       ) : (
         <>
-          <View style={styles.recordList}>
-            {completedGoals.map((item) => {
-              const info = GONGBEOP_LABELS[item.type] || {
-                name: item.type,
-                unit: "회",
-              };
+          <View style={styles.monthList}>
+            {groupedGoals.map((monthGroup) => (
+              <View
+                key={monthGroup.key}
+                style={styles.monthCard}
+              >
+                <View style={styles.monthHeader}>
+                  <Text style={styles.monthTitle}>
+                    {monthGroup.monthLabel}
+                  </Text>
 
-              return (
-                <View key={item.id} style={styles.recordCard}>
-                  <View>
-                    <Text style={styles.recordTitle}>{info.name}</Text>
-                    <Text style={styles.recordDate}>
-                      {formatDate(item.completedAt)} 완료
+                  <View style={styles.monthBadge}>
+                    <Text style={styles.monthBadgeText}>
+                      {monthGroup.totalRecords}건 완료
                     </Text>
                   </View>
-
-                  <Text style={styles.recordCount}>
-                    {item.current} / {item.target}
-                    <Text style={styles.recordUnit}>{info.unit}</Text>
-                  </Text>
                 </View>
-              );
-            })}
+
+                <View style={styles.dateList}>
+                  {monthGroup.dateGroups.map(
+                    (dateGroup, dateIndex) => (
+                      <View
+                        key={dateGroup.key}
+                        style={[
+                          styles.dateSection,
+                          dateIndex === 0 &&
+                            styles.firstDateSection,
+                        ]}
+                      >
+                        <Text style={styles.dateLabel}>
+                          {dateGroup.dateLabel}
+                        </Text>
+
+                        <View style={styles.dateRecords}>
+                          {dateGroup.items.map(
+                            (item, itemIndex) => {
+                              const info =
+                                GONGBEOP_LABELS[
+                                  item.type
+                                ] || {
+                                  name: item.type,
+                                  unit: "회",
+                                };
+
+                              const itemKey =
+                                item.id ||
+                                [
+                                  dateGroup.key,
+                                  item.type,
+                                  item.current,
+                                  item.target,
+                                  itemIndex,
+                                ].join("-");
+
+                              return (
+                                <View
+                                  key={itemKey}
+                                  style={[
+                                    styles.recordRow,
+                                    itemIndex === 0 &&
+                                      styles.firstRecordRow,
+                                  ]}
+                                >
+                                  <Text
+                                    style={
+                                      styles.recordTitle
+                                    }
+                                  >
+                                    {info.name}
+                                  </Text>
+
+                                  <View
+                                    style={
+                                      styles.recordValue
+                                    }
+                                  >
+                                    <Text
+                                      style={
+                                        styles.recordCount
+                                      }
+                                    >
+                                      {formatNumber(
+                                        item.current
+                                      )}
+
+                                      <Text
+                                        style={
+                                          styles.recordDivider
+                                        }
+                                      >
+                                        {" / "}
+                                      </Text>
+
+                                      {formatNumber(
+                                        item.target
+                                      )}
+                                    </Text>
+
+                                    <Text
+                                      style={
+                                        styles.recordUnit
+                                      }
+                                    >
+                                      {info.unit}
+                                    </Text>
+                                  </View>
+                                </View>
+                              );
+                            }
+                          )}
+                        </View>
+                      </View>
+                    )
+                  )}
+                </View>
+              </View>
+            ))}
           </View>
 
           <TouchableOpacity
             activeOpacity={0.88}
             style={styles.statsButton}
-            onPress={() => router.push("/gongbeop-stats")}
+            onPress={() =>
+              router.push("/gongbeop-stats")
+            }
           >
-            <Text style={styles.statsButtonText}>내 위치 보기</Text>
+            <Text style={styles.statsButtonText}>
+              내 위치 보기
+            </Text>
           </TouchableOpacity>
         </>
       )}
@@ -158,6 +301,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
+  backButton: {
+    width: 24,
+    height: 44,
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
+
   backText: {
     fontSize: 28,
     color: colors.softBrown,
@@ -169,6 +319,10 @@ const styles = StyleSheet.create({
     color: colors.textMain,
   },
 
+  headerSpacer: {
+    width: 24,
+  },
+
   description: {
     marginTop: 24,
     marginBottom: 14,
@@ -178,59 +332,134 @@ const styles = StyleSheet.create({
   },
 
   emptyCard: {
-    minHeight: 46,
+    minHeight: 84,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#EFE0D4",
     backgroundColor: "#FFFDF9",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
   },
 
   emptyText: {
     fontSize: 13,
     fontFamily: fonts.medium,
     color: colors.textSub,
+    textAlign: "center",
   },
 
-  recordList: {
-    gap: 10,
+  monthList: {
+    gap: 12,
   },
 
-  recordCard: {
-    minHeight: 72,
+  monthCard: {
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#EFE0D4",
     backgroundColor: "#FFFDF9",
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+
+  monthHeader: {
+    paddingBottom: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 12,
   },
 
-  recordTitle: {
-    fontSize: 17,
+  monthTitle: {
+    flex: 1,
+    fontSize: 18,
     fontFamily: fonts.semiBold,
     color: colors.textMain,
   },
 
-  recordDate: {
-    marginTop: 5,
-    fontSize: 12,
-    fontFamily: fonts.medium,
-    color: colors.textSub,
+  monthBadge: {
+    minHeight: 28,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: "#F3E9DF",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  recordCount: {
-    fontSize: 18,
+  monthBadgeText: {
+    fontSize: 12,
     fontFamily: fonts.semiBold,
     color: colors.warmBrown,
   },
 
-  recordUnit: {
+  dateList: {
+    borderTopWidth: 1,
+    borderTopColor: "#EFE0D4",
+  },
+
+  dateSection: {
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#EFE0D4",
+  },
+
+  firstDateSection: {
+    borderTopWidth: 0,
+  },
+
+  dateLabel: {
+    marginBottom: 7,
+    fontSize: 12,
+    fontFamily: fonts.semiBold,
+    color: colors.textSub,
+  },
+
+  dateRecords: {
+    paddingLeft: 2,
+  },
+
+  recordRow: {
+    minHeight: 40,
+    borderTopWidth: 1,
+    borderTopColor: "#F2E8E0",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  firstRecordRow: {
+    borderTopWidth: 0,
+  },
+
+  recordTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: fonts.semiBold,
+    color: colors.textMain,
+  },
+
+  recordValue: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 3,
+  },
+
+  recordCount: {
+    fontSize: 15,
+    fontFamily: fonts.semiBold,
+    color: colors.warmBrown,
+  },
+
+  recordDivider: {
     fontSize: 13,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
+
+  recordUnit: {
+    fontSize: 12,
     fontFamily: fonts.medium,
     color: colors.textSub,
   },
