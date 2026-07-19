@@ -1,7 +1,11 @@
 module.exports = {
   preset: "jest-expo",
   clearMocks: true,
+  modulePathIgnorePatterns: [
+    "<rootDir>/member-app-legacy-backup/",
+  ],
   testPathIgnorePatterns: [
+    "/member-app-legacy-backup/",
     "/node_modules/",
     "/android/",
     "/ios/",
