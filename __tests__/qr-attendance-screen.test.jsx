@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Alert,
+  Linking,
   Platform,
   View,
 } from "react-native";
@@ -20,7 +21,9 @@ import {
 } from "expo-camera";
 import { useAuth } from "../src/contexts/AuthContext";
 import { markAttendance } from "../src/api/memberAttendance";
-import QrAttendanceScreen from "../app/qr-attendance";
+import QrAttendanceScreen, {
+  getWebCameraErrorMessage,
+} from "../app/qr-attendance";
 
 jest.mock("expo-router", () => ({
   router: {
@@ -58,6 +61,7 @@ jest.mock("expo-camera", () => {
 
 describe("실제 QR 출석 화면", () => {
   let alertSpy;
+  let openSettingsSpy;
   let requestPermission;
 
   beforeAll(() => {
@@ -70,10 +74,15 @@ describe("실제 QR 출석 화면", () => {
     alertSpy = jest
       .spyOn(Alert, "alert")
       .mockImplementation(() => {});
+
+    openSettingsSpy = jest
+      .spyOn(Linking, "openSettings")
+      .mockResolvedValue();
   });
 
   afterAll(() => {
     alertSpy.mockRestore();
+    openSettingsSpy.mockRestore();
   });
 
   beforeEach(() => {
@@ -124,7 +133,7 @@ describe("실제 QR 출석 화면", () => {
     expect(markAttendance).not.toHaveBeenCalled();
   });
 
-  test("카메라 권한이 없으면 이전 화면으로 돌아갈 수 있다", async () => {
+  test("권한을 다시 요청할 수 없으면 설정 안내와 설정 열기를 제공한다", async () => {
     const user = userEvent.setup();
 
     useCameraPermissions.mockReturnValue([
@@ -139,15 +148,28 @@ describe("실제 QR 출석 화면", () => {
 
     expect(
       screen.getByText(
-        "카메라 권한이 필요합니다"
+        "카메라 권한이 거부되어 있습니다. 휴대폰 설정에서 현중태극권의 카메라 권한을 허용해주세요."
       )
     ).toBeTruthy();
 
-    await user.press(
-      screen.getByText("돌아가기")
-    );
+    await user.press(screen.getByText("설정 열기"));
+
+    expect(Linking.openSettings).toHaveBeenCalledTimes(1);
+
+    await user.press(screen.getByText("돌아가기"));
 
     expect(router.back).toHaveBeenCalled();
+  });
+
+  test("웹의 영어 권한 거부 오류를 한글 설정 안내로 변환한다", () => {
+    const message = getWebCameraErrorMessage({
+      name: "NotAllowedError",
+      message: "Permission denied",
+    });
+
+    expect(message).toContain("브라우저 주소창의 사이트 설정");
+    expect(message).toContain("카메라 권한");
+    expect(message).not.toContain("Permission denied");
   });
 
   test("memberapp QR에서 세션 ID를 읽어 출석 처리한다", async () => {

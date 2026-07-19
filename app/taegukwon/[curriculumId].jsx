@@ -288,7 +288,7 @@ const steps = useMemo(() => {
   </View>
 ) : currentStep > 0 && steps[currentStep - 1] ? (
   <View style={styles.currentStepBox}>
-    <Text style={styles.currentStepLabel}>현재 배우는 식</Text>
+    <Text style={styles.currentStepLabel}>학습 중인 동작</Text>
     <Text style={styles.currentStepName}>
       {currentStep}식 · {steps[currentStep - 1].ko}
       {!!steps[currentStep - 1].hanja ? (
@@ -375,15 +375,9 @@ const isUpcoming = !isGroupSource && currentStep < stepNo;
   isGroupCurrent ? (
     <Text style={styles.stepStateText}>이번 주 수련</Text>
   ) : null
-) : (
-  <Text style={styles.stepStateText}>
-    {isCurrent
-      ? "현재 배우는 식"
-      : isDone
-      ? "이미 배운 식"
-      : "앞으로 배울 식"}
-  </Text>
-)}
+) : isCurrent ? (
+  <Text style={styles.stepStateText}>학습 중인 동작</Text>
+) : null}
       </View>
     </View>
   );

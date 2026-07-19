@@ -258,15 +258,6 @@ router.push(`/movement-dictionary/${form.id}`);
   })
 )}
 
-      <Text style={styles.sectionTitle}>기본 용어</Text>
-
-      <View style={styles.termRow}>
-        {["공용", "출석", "마보", "전사", "송견"].map((item) => (
-          <View key={item} style={styles.termChip}>
-            <Text style={styles.termText}>{item}</Text>
-          </View>
-        ))}
-      </View>
     </ScrollView>
   );
 }

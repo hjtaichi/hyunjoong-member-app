@@ -218,3 +218,42 @@ export function groupGongbeopGoals(completedGoals = []) {
       };
     });
 }
+export function groupGongbeopGoalsByHalf(completedGoals = []) {
+  const monthGroups = groupGongbeopGoals(completedGoals);
+  const periodMap = new Map();
+
+  monthGroups.forEach((monthGroup) => {
+    const match = /^(\d{4})-(\d{2})$/.exec(monthGroup.key);
+    const year = match ? Number(match[1]) : null;
+    const month = match ? Number(match[2]) : null;
+    const half = month ? (month <= 6 ? 1 : 2) : null;
+    const periodKey = year && half ? `${year}-${half}` : "unknown-period";
+
+    if (!periodMap.has(periodKey)) {
+      periodMap.set(periodKey, {
+        key: periodKey,
+        periodYear: year,
+        periodHalf: half,
+        periodLabel: year && half
+          ? `${year}년 ${half === 1 ? "상반기" : "하반기"}`
+          : "완료일 미상",
+        periodSub: half === 1
+          ? "1월 ~ 6월"
+          : half === 2
+            ? "7월 ~ 12월"
+            : "완료일을 확인할 수 없는 기록",
+        sortValue: year && half ? year * 10 + half : 0,
+        totalRecords: 0,
+        monthGroups: [],
+      });
+    }
+
+    const period = periodMap.get(periodKey);
+    period.totalRecords += monthGroup.totalRecords;
+    period.monthGroups.push(monthGroup);
+  });
+
+  return Array.from(periodMap.values()).sort(
+    (left, right) => right.sortValue - left.sortValue
+  );
+}

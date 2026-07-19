@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -51,6 +52,28 @@ function showAlert(title, message, buttons) {
   Alert.alert(title, message, buttons);
 }
 
+export function getWebCameraErrorMessage(error) {
+  const name = String(error?.name || "");
+
+  if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+    return "카메라 권한이 거부되어 있습니다. 브라우저 주소창의 사이트 설정에서 카메라 권한을 '허용'으로 변경한 뒤 다시 시도해주세요.";
+  }
+
+  if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+    return "사용할 수 있는 카메라를 찾지 못했습니다. 기기에 카메라가 연결되어 있는지 확인해주세요.";
+  }
+
+  if (name === "NotReadableError" || name === "TrackStartError") {
+    return "카메라를 사용할 수 없습니다. 다른 앱에서 카메라를 사용 중인지 확인한 뒤 다시 시도해주세요.";
+  }
+
+  if (name === "SecurityError") {
+    return "보안 연결에서만 카메라를 사용할 수 있습니다. 앱을 정상 주소로 다시 열어주세요.";
+  }
+
+  return "카메라를 시작하지 못했습니다. 브라우저의 사이트 설정에서 카메라 권한을 확인한 뒤 다시 시도해주세요.";
+}
+
 function WebQrScanner({ onScan, disabled }) {
   const videoRef = useRef(null);
   const controlsRef = useRef(null);
@@ -87,10 +110,7 @@ function WebQrScanner({ onScan, disabled }) {
         );
       } catch (error) {
         console.log("❌ zxing qr scanner error:", error);
-        setWebError(
-          error?.message ||
-            "카메라를 시작하지 못했습니다. Safari에서 카메라 권한을 확인해주세요."
-        );
+        setWebError(getWebCameraErrorMessage(error));
       }
     }
 
@@ -210,11 +230,22 @@ export default function QrAttendanceScreen() {
       <View style={styles.center}>
         <Text style={styles.title}>카메라 권한이 필요합니다</Text>
         <Text style={styles.helperText}>
-          QR 출석을 위해 카메라 접근을 허용해주세요.
+          {permission.canAskAgain
+            ? "QR 출석을 위해 카메라 접근을 허용해주세요."
+            : "카메라 권한이 거부되어 있습니다. 휴대폰 설정에서 현중태극권의 카메라 권한을 허용해주세요."}
         </Text>
 
-        <Pressable style={styles.primaryButton} onPress={requestPermission}>
-          <Text style={styles.primaryButtonText}>권한 허용하기</Text>
+        <Pressable
+          style={styles.primaryButton}
+          onPress={
+            permission.canAskAgain
+              ? requestPermission
+              : () => Linking.openSettings()
+          }
+        >
+          <Text style={styles.primaryButtonText}>
+            {permission.canAskAgain ? "권한 허용하기" : "설정 열기"}
+          </Text>
         </Pressable>
 
         <Pressable style={styles.secondaryButton} onPress={() => router.back()}>

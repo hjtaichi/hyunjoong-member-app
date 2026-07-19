@@ -3,6 +3,7 @@ import {
   formatRecordCount,
   groupFormHistory,
   groupGongbeopGoals,
+  groupGongbeopGoalsByHalf,
 } from "../src/features/records/recordHistoryUtils";
 
 describe("recordHistoryUtils", () => {
@@ -90,5 +91,40 @@ describe("recordHistoryUtils", () => {
     expect(result[0].dateGroups).toHaveLength(2);
     expect(result[0].dateGroups[0].dateLabel).toBe("7월 8일");
     expect(result[0].dateGroups[1].items).toHaveLength(2);
+  });
+
+  test("공력 기록을 연도별 상반기와 하반기로 나눈다", () => {
+    const result = groupGongbeopGoalsByHalf([
+      {
+        id: "goal-second-half-july",
+        type: "duyoMinutes",
+        current: 25,
+        target: 15,
+        completedAt: "2026-07-08T10:00:00",
+      },
+      {
+        id: "goal-first-half",
+        type: "yobujeonsa",
+        current: 31,
+        target: 30,
+        completedAt: "2026-06-30T10:00:00",
+      },
+      {
+        id: "goal-second-half-december",
+        type: "ohaengjeonsa",
+        current: 25,
+        target: 20,
+        completedAt: "2026-12-01T10:00:00",
+      },
+    ]);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].periodLabel).toBe("2026년 하반기");
+    expect(result[0].periodSub).toBe("7월 ~ 12월");
+    expect(result[0].totalRecords).toBe(2);
+    expect(result[0].monthGroups).toHaveLength(2);
+    expect(result[1].periodLabel).toBe("2026년 상반기");
+    expect(result[1].periodSub).toBe("1월 ~ 6월");
+    expect(result[1].totalRecords).toBe(1);
   });
 });

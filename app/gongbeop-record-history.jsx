@@ -18,7 +18,7 @@ import { useAuth } from "../src/contexts/AuthContext";
 import { API_BASE_URL } from "../src/config/env";
 import {
   formatNumber,
-  groupGongbeopGoals,
+  groupGongbeopGoalsByHalf,
 } from "../src/features/records/recordHistoryUtils";
 
 const fonts = {
@@ -53,7 +53,7 @@ export default function GongbeopRecordHistoryScreen() {
   const [completedGoals, setCompletedGoals] = useState([]);
 
   const groupedGoals = useMemo(
-    () => groupGongbeopGoals(completedGoals),
+    () => groupGongbeopGoalsByHalf(completedGoals),
     [completedGoals]
   );
 
@@ -124,7 +124,7 @@ export default function GongbeopRecordHistoryScreen() {
       </View>
 
       <Text style={styles.description}>
-        목표를 달성한 공력 수련 기록을 확인합니다.
+        반기별로 목표를 달성한 공력 수련 기록을 확인합니다.
       </Text>
 
       {loading ? (
@@ -143,12 +143,36 @@ export default function GongbeopRecordHistoryScreen() {
         </View>
       ) : (
         <>
-          <View style={styles.monthList}>
-            {groupedGoals.map((monthGroup) => (
-              <View
-                key={monthGroup.key}
-                style={styles.monthCard}
-              >
+          <View style={styles.periodList}>
+            {groupedGoals.map((period) => (
+              <View key={period.key} style={styles.periodCard}>
+                <View style={styles.periodHeader}>
+                  <View style={styles.periodHeading}>
+                    <Text style={styles.periodTitle}>
+                      {period.periodLabel}
+                    </Text>
+
+                    <Text style={styles.periodSub}>
+                      {period.periodSub}
+                    </Text>
+                  </View>
+
+                  <View style={styles.periodBadge}>
+                    <Text style={styles.periodBadgeText}>
+                      {period.totalRecords}건 완료
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.monthList}>
+                  {period.monthGroups.map((monthGroup, monthIndex) => (
+                    <View
+                      key={monthGroup.key}
+                      style={[
+                        styles.monthSection,
+                        monthIndex === 0 && styles.firstMonthSection,
+                      ]}
+                    >
                 <View style={styles.monthHeader}>
                   <Text style={styles.monthTitle}>
                     {monthGroup.monthLabel}
@@ -258,6 +282,9 @@ export default function GongbeopRecordHistoryScreen() {
                     )
                   )}
                 </View>
+                    </View>
+                  ))}
+                </View>
               </View>
             ))}
           </View>
@@ -349,11 +376,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  monthList: {
-    gap: 12,
+  periodList: {
+    gap: 14,
   },
 
-  monthCard: {
+  periodCard: {
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#EFE0D4",
@@ -361,6 +388,61 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 4,
+  },
+
+  periodHeader: {
+    paddingBottom: 14,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  periodHeading: {
+    flex: 1,
+  },
+
+  periodTitle: {
+    fontSize: 18,
+    fontFamily: fonts.semiBold,
+    color: colors.textMain,
+  },
+
+  periodSub: {
+    marginTop: 4,
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
+
+  periodBadge: {
+    minHeight: 28,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: "#F3E9DF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  periodBadgeText: {
+    fontSize: 12,
+    fontFamily: fonts.semiBold,
+    color: colors.warmBrown,
+  },
+
+  monthList: {
+    borderTopWidth: 1,
+    borderTopColor: "#EFE0D4",
+  },
+
+  monthSection: {
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#EFE0D4",
+  },
+
+  firstMonthSection: {
+    borderTopWidth: 0,
   },
 
   monthHeader: {
