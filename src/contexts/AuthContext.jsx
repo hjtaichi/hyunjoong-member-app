@@ -25,7 +25,6 @@ function AuthProvider({ children }) {
   async function bootstrap() {
   try {
     const savedToken = await getAccessToken();
-    console.log("🔥 bootstrap savedToken:", !!savedToken);
 
     if (!savedToken) {
       setToken(null);
@@ -62,7 +61,6 @@ function AuthProvider({ children }) {
    } catch (e) {
     const status = e?.response?.status;
 
-    console.error("bootstrap auth error:", e?.response?.data || e.message);
 
     if (status === 401 || status === 403) {
       await clearAuthStorage();
@@ -84,7 +82,6 @@ function AuthProvider({ children }) {
   try {
     const authData = await loginApi({ email, password });
 
-    console.log("login response:", authData);
 
     const payload = authData?.data ?? authData ?? {};
     const nextToken = payload?.accessToken || payload?.token || null;
@@ -92,7 +89,6 @@ function AuthProvider({ children }) {
     const rawUser = payload?.user || authData?.user || null;
 
     if (!nextToken) {
-      console.log("token parse failed. payload =", payload);
       throw new Error("토큰이 응답에 없습니다.");
     }
 
@@ -119,10 +115,8 @@ if (autoLogin) {
     await setUser(nextUser);
   }
 
-  console.log("✅ 자동로그인 저장 완료");
 } else {
   await clearAuthStorage();
-  console.log("❌ 자동로그인 꺼짐: 저장 안 함");
 }
 
 setToken(nextToken);
@@ -130,7 +124,6 @@ setUserState(nextUser);
 
     return { ok: true };
   } catch (error) {
-    console.log("login failed:", error?.response?.data || error.message);
 
     return {
   ok: false,
@@ -191,19 +184,14 @@ setUserState(nextUser);
 } catch (error) {
   const status = error?.response?.status;
 
-  console.log("🔥 refreshMe 실패 status:", status);
-  console.log("🔥 refreshMe 실패 data:", error?.response?.data);
-  console.log("🔥 refreshMe 실패 message:", error?.message);
 
   if (status === 401 || status === 403) {
-    console.log("⛔ 인증 오류라서 로그아웃 처리");
     await clearAuthStorage();
     setToken(null);
     setUserState(null);
     return null;
   }
 
-  console.log("⚠️ 일시 오류라서 로그인 유지");
   return user;
 }
 }

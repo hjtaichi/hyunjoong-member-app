@@ -19,23 +19,11 @@ import {
   savePushToken,
   saveWebPushSubscription,
 } from "../src/api/push.js";
+import {
+  ensureWebPushSubscription,
+} from "../src/features/push/webPushSubscription";
 const WEB_PUSH_PUBLIC_KEY =
-"BIDcyRAxTG6Vpf4UbEaAz5Vgxw-sR_fXpys8SrGZJwhdbfv5Zgf3y7C0kQ1zttBgk6qARjOI1B7Ho4NAzW3_baM";
-function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = `${base64String}${padding}`
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
-
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; i += 1) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-
-  return outputArray;
-}
+"BA6OM0kZQC_j7BTZzAJi3fO783dpcCgLBThg8mc0pYe11abMEry7fRi1hoH6bMr90agBGTsRZqx2Z6JsMKznzSM";
 
 // 🔥 알림 표시 설정
 if (Platform.OS !== "web") {
@@ -52,12 +40,10 @@ if (Platform.OS !== "web") {
 // 🔥 푸시 토큰 얻기
 async function registerForPushNotificationsAsync() {
   if (Platform.OS === "web") {
-    console.log("🌐 웹에서는 Expo Push 알림을 사용하지 않습니다.");
     return null;
   }
 
   if (!Device.isDevice) {
-    console.log("❌ 실기기에서만 푸시 가능");
     return null;
   }
 
@@ -84,7 +70,6 @@ async function registerForPushNotificationsAsync() {
   }
 
   if (finalStatus !== "granted") {
-    console.log("❌ 푸시 권한 거부됨");
     return null;
   }
 
@@ -93,10 +78,8 @@ async function registerForPushNotificationsAsync() {
     Constants?.expoConfig?.extra?.eas?.projectId ??
     Constants?.easConfig?.projectId;
 
-  console.log("🔥 EAS projectId:", projectId);
 
   if (!projectId) {
-    console.log("❌ projectId 없음");
     return null;
   }
 
@@ -107,74 +90,68 @@ async function registerForPushNotificationsAsync() {
     })
   ).data;
 
-  console.log("🔥 PUSH TOKEN:", pushToken);
 
   return pushToken;
 }
 async function registerForWebPushNotificationsAsync(accessToken) {
-  console.log("🔥 Web Push 등록 시작");
 
   if (Platform.OS !== "web") return null;
 
   if (typeof window === "undefined") {
-    console.log("❌ window 없음");
     return null;
   }
 
   if (!("serviceWorker" in navigator)) {
-    console.log("❌ Service Worker 미지원");
     return null;
   }
 
   if (!("PushManager" in window)) {
-    console.log("❌ PushManager 미지원");
     return null;
   }
 
   if (!("Notification" in window)) {
-    console.log("❌ Notification 미지원");
     return null;
   }
 
-  console.log("🔥 Notification permission before:", Notification.permission);
 
   const permission = await Notification.requestPermission();
 
-  console.log("🔥 Notification permission after:", permission);
 
   if (permission !== "granted") {
-    console.log("❌ 웹 푸시 권한 거부됨:", permission);
     return null;
   }
 
-  console.log("🔥 service worker ready 대기");
 
   const registration = await navigator.serviceWorker.ready;
 
-  console.log("✅ service worker ready 완료");
 
-  let subscription = await registration.pushManager.getSubscription();
+  const storedPublicKey = window.localStorage.getItem(
+    "hjtaichi_web_push_public_key"
+  );
 
-  console.log("🔥 기존 subscription:", subscription);
-
-  if (!subscription) {
-    console.log("🔥 새 subscription 생성 시작");
-
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(WEB_PUSH_PUBLIC_KEY),
-    });
-
-    console.log("✅ 새 subscription 생성 완료");
-  }
+  const subscription = await ensureWebPushSubscription(
+    registration,
+    WEB_PUSH_PUBLIC_KEY,
+    {
+      forceRenew:
+        storedPublicKey !== WEB_PUSH_PUBLIC_KEY,
+    }
+  );
 
   const plainSubscription = subscription.toJSON();
 
-  console.log("🔥 저장할 web subscription:", plainSubscription);
+  await saveWebPushSubscription(
+    plainSubscription,
+    accessToken
+  );
 
-  await saveWebPushSubscription(plainSubscription, accessToken);
-
-  console.log("✅ Web Push 구독 서버 저장 완료");
+  window.localStorage.setItem(
+    "hjtaichi_web_push_public_key",
+    WEB_PUSH_PUBLIC_KEY
+  );
+  window.localStorage.removeItem(
+    "hjtaichi_push_registration_error"
+  );
 
   return plainSubscription;
 }
@@ -185,12 +162,6 @@ function PushInitializer() {
 
   useEffect(() => {
     async function initPush() {
-      console.log("🔥 PushInitializer 실행", {
-        hasAccessToken: !!accessToken,
-        isBootLoading,
-        isAuthenticated,
-        platform: Platform.OS,
-      });
 
       if (isBootLoading) return;
       if (!isAuthenticated) return;
@@ -198,9 +169,7 @@ function PushInitializer() {
 
       try {
         if (Platform.OS === "web") {
-          console.log("🔥 웹 푸시 등록 함수 호출 직전");
           await registerForWebPushNotificationsAsync(accessToken);
-          console.log("🔥 웹 푸시 등록 함수 호출 완료");
           return;
         }
 
@@ -208,10 +177,25 @@ function PushInitializer() {
 
         if (pushToken) {
           await savePushToken(pushToken, accessToken);
-          console.log("✅ Expo 푸시 토큰 서버 저장 완료");
         }
       } catch (error) {
-        console.log("❌ 푸시 초기화 실패:", error?.message || error);
+        if (
+          Platform.OS === "web" &&
+          typeof window !== "undefined"
+        ) {
+          window.localStorage.setItem(
+            "hjtaichi_push_registration_status",
+            "failed"
+          );
+          window.localStorage.setItem(
+            "hjtaichi_push_registration_error_code",
+            String(error?.name || "PushRegistrationError")
+          );
+          window.localStorage.setItem(
+            "hjtaichi_push_registration_failed_at",
+            new Date().toISOString()
+          );
+        }
       }
     }
 
@@ -220,14 +204,12 @@ function PushInitializer() {
   
   useEffect(() => {
   if (Platform.OS === "web") {
-    console.log("🌐 웹에서는 알림 클릭 리스너를 등록하지 않습니다.");
     return;
   }
 
   function handleNotificationResponse(response) {
     const data = response?.notification?.request?.content?.data;
 
-    console.log("🔥 알림 클릭됨:", data);
 
     if (data?.type === "notice" && data?.noticeId) {
       setTimeout(() => {
@@ -316,8 +298,20 @@ export default function RootLayout() {
 
     navigator.serviceWorker
       .register("/sw.js")
-      .then(() => console.log("✅ service worker registered"))
-      .catch((error) => console.log("❌ service worker failed:", error));
+      .catch((error) => {
+        window.localStorage.setItem(
+          "hjtaichi_service_worker_status",
+          "failed"
+        );
+        window.localStorage.setItem(
+          "hjtaichi_service_worker_error_code",
+          String(error?.name || "ServiceWorkerError")
+        );
+        window.localStorage.setItem(
+          "hjtaichi_service_worker_failed_at",
+          new Date().toISOString()
+        );
+      });
   }, []);
 
   if (!fontsLoaded) {

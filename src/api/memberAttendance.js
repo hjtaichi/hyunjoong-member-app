@@ -14,8 +14,6 @@ export async function getMyAttendance(token, date) {
 const separator = query ? "&" : "?";
 const url = `${API_BASE_URL}/api/member/me/attendance${query}${separator}t=${Date.now()}`;
 
-  console.log("[getMyAttendance] url =", url);
-  console.log("[getMyAttendance] token exists =", !!token);
 
   try {
     const res = await fetch(url, {
@@ -26,10 +24,8 @@ const url = `${API_BASE_URL}/api/member/me/attendance${query}${separator}t=${Dat
       },
     });
 
-    console.log("[getMyAttendance] status =", res.status);
 
     const data = await parseJsonSafe(res);
-    console.log("[getMyAttendance] data =", data);
 
     if (!res.ok) {
       throw new Error(data?.message || "출석 정보를 불러오지 못했습니다.");
@@ -37,7 +33,6 @@ const url = `${API_BASE_URL}/api/member/me/attendance${query}${separator}t=${Dat
 
     return data.data || data;
   } catch (error) {
-    console.log("[getMyAttendance] fetch error =", error);
     throw error;
   }
 }
@@ -45,9 +40,6 @@ const url = `${API_BASE_URL}/api/member/me/attendance${query}${separator}t=${Dat
 export async function reserveAttendance(token, sessionId) {
   const url = `${API_BASE_URL}/api/member/me/reservations`;
 
-  console.log("[reserveAttendance] url =", url);
-  console.log("[reserveAttendance] token exists =", !!token);
-  console.log("[reserveAttendance] sessionId =", sessionId);
 
   try {
     const res = await fetch(url, {
@@ -61,10 +53,8 @@ export async function reserveAttendance(token, sessionId) {
       }),
     });
 
-    console.log("[reserveAttendance] status =", res.status);
 
     const data = await parseJsonSafe(res);
-    console.log("[reserveAttendance] data =", data);
 
     if (!res.ok) {
       throw new Error(data?.message || "출석 예정 등록에 실패했습니다.");
@@ -72,7 +62,6 @@ export async function reserveAttendance(token, sessionId) {
 
     return data.data || data;
   } catch (error) {
-    console.log("[reserveAttendance] fetch error =", error);
     throw error;
   }
 }
@@ -80,9 +69,6 @@ export async function reserveAttendance(token, sessionId) {
 export async function markAttendance(token, payload) {
   const url = `${API_BASE_URL}/api/member/me/attendance`;
 
-  console.log("[markAttendance] url =", url);
-  console.log("[markAttendance] token exists =", !!token);
-  console.log("[markAttendance] payload =", payload);
 
   try {
     const res = await fetch(url, {
@@ -94,10 +80,8 @@ export async function markAttendance(token, payload) {
       body: JSON.stringify(payload),
     });
 
-    console.log("[markAttendance] status =", res.status);
 
     const data = await parseJsonSafe(res);
-    console.log("[markAttendance] data =", data);
 
     if (!res.ok) {
       throw new Error(data?.message || "출석 처리에 실패했습니다.");
@@ -105,7 +89,6 @@ export async function markAttendance(token, payload) {
 
     return data.data || data;
   } catch (error) {
-    console.log("[markAttendance] fetch error =", error);
     throw error;
   }
 }
@@ -113,9 +96,6 @@ export async function markAttendance(token, payload) {
 export async function cancelReservation(token, sessionId) {
   const url = `${API_BASE_URL}/api/member/me/reservations/${sessionId}`;
 
-  console.log("[cancelReservation] url =", url);
-  console.log("[cancelReservation] token exists =", !!token);
-  console.log("[cancelReservation] sessionId =", sessionId);
 
   try {
     const res = await fetch(url, {
@@ -126,10 +106,8 @@ export async function cancelReservation(token, sessionId) {
       },
     });
 
-    console.log("[cancelReservation] status =", res.status);
 
     const data = await parseJsonSafe(res);
-    console.log("[cancelReservation] data =", data);
 
     if (!res.ok) {
       throw new Error(data?.message || "출석 예정 취소에 실패했습니다.");
@@ -137,7 +115,6 @@ export async function cancelReservation(token, sessionId) {
 
     return data.data || data;
   } catch (error) {
-    console.log("[cancelReservation] fetch error =", error);
     throw error;
   }
 }
@@ -145,9 +122,6 @@ export async function cancelReservation(token, sessionId) {
 export async function cancelAttendance(token, sessionId) {
   const url = `${API_BASE_URL}/api/member/me/attendance/cancel`;
 
-  console.log("[cancelAttendance] url =", url);
-  console.log("[cancelAttendance] token exists =", !!token);
-  console.log("[cancelAttendance] sessionId =", sessionId);
 
   try {
     const res = await fetch(url, {
@@ -161,10 +135,8 @@ export async function cancelAttendance(token, sessionId) {
       }),
     });
 
-    console.log("[cancelAttendance] status =", res.status);
 
     const data = await parseJsonSafe(res);
-    console.log("[cancelAttendance] data =", data);
 
     if (!res.ok) {
       throw new Error(data?.message || "출석 취소에 실패했습니다.");
@@ -172,7 +144,6 @@ export async function cancelAttendance(token, sessionId) {
 
     return data.data || data;
   } catch (error) {
-    console.log("[cancelAttendance] fetch error =", error);
     throw error;
   }
 }
