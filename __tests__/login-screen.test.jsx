@@ -6,7 +6,7 @@ import {
   waitFor,
 } from "@testing-library/react-native";
 
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import {
   getSavedLoginId,
@@ -19,6 +19,7 @@ jest.mock("expo-router", () => ({
     replace: jest.fn(),
     push: jest.fn(),
   },
+  useLocalSearchParams: jest.fn(),
 }));
 
 jest.mock("../src/contexts/AuthContext", () => ({
@@ -41,6 +42,7 @@ describe("회원 로그인 화면", () => {
 
     getSavedLoginId.mockResolvedValue(null);
     setSavedLoginId.mockResolvedValue(undefined);
+    useLocalSearchParams.mockReturnValue({});
 
     useAuth.mockReturnValue({
       login,
@@ -135,6 +137,27 @@ describe("회원 로그인 화면", () => {
 
     expect(setSavedLoginId).toHaveBeenCalledWith("member01");
     expect(router.replace).toHaveBeenCalledWith("/(tabs)/home");
+  });
+
+  test("returns to signed QR attendance after login", async () => {
+    useLocalSearchParams.mockReturnValue({
+      attendanceToken: "signed.qr_token",
+    });
+    login.mockResolvedValue({ ok: true });
+
+    const user = userEvent.setup();
+    await render(<LoginScreen />);
+
+    await user.type(screen.getByPlaceholderText("아이디"), "member01");
+    await user.type(screen.getByPlaceholderText("비밀번호"), "secret");
+    await user.press(screen.getByText("로그인"));
+
+    await waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith({
+        pathname: "/attendance-check",
+        params: { token: "signed.qr_token" },
+      });
+    });
   });
 
   test("승인 대기 회원은 승인 대기 화면으로 이동한다", async () => {

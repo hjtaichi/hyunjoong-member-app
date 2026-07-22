@@ -15,12 +15,34 @@ import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { markAttendance } from "../src/api/memberAttendance";
 
+function isAllowedMemberAppUrl(url) {
+  if (url.protocol !== "https:") return false;
+  if (url.hostname === "app.hjtaichi.com") return true;
+
+  if (typeof window !== "undefined") {
+    return url.hostname === window.location.hostname;
+  }
+
+  return false;
+}
+
 function parseQrData(data) {
   const raw = String(data || "").trim();
 
   try {
-    if (raw.startsWith("memberapp://")) {
-      const url = new URL(raw);
+    const url = new URL(raw);
+    const normalizedPath = url.pathname.replace(/\/$/, "");
+    const qrToken = url.searchParams.get("token");
+
+    if (
+      isAllowedMemberAppUrl(url) &&
+      normalizedPath === "/attendance-check" &&
+      qrToken
+    ) {
+      return { qrToken: String(qrToken) };
+    }
+
+    if (url.protocol === "memberapp:") {
       const sessionId = url.searchParams.get("sessionId");
       if (url.hostname === "attendance-check" && sessionId) {
         return { sessionId: String(sessionId) };
@@ -178,7 +200,7 @@ export default function QrAttendanceScreen() {
 
     const parsed = parseQrData(data);
 
-    if (!parsed?.sessionId) {
+    if (!parsed?.qrToken && !parsed?.sessionId) {
       showAlert("안내", "현중태극권 출석 QR이 아닙니다.", [
         {
           text: "다시 스캔",
@@ -194,9 +216,12 @@ export default function QrAttendanceScreen() {
     try {
       setSubmitting(true);
 
-      await markAttendance(token, {
-        sessionId: parsed.sessionId,
-      });
+      await markAttendance(
+        token,
+        parsed.qrToken
+          ? { qrToken: parsed.qrToken }
+          : { sessionId: parsed.sessionId }
+      );
 
       showAlert("출석 완료", "출석이 정상 처리되었습니다.", [
         {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+﻿import React, { useCallback, useEffect, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -13,6 +13,9 @@ import {
   markMemberNotificationRead,
 } from "../src/api/memberNotifications";
 import ScreenHeader from "../src/components/ScreenHeader";
+import {
+  formatMemberNotificationDate,
+} from "../src/features/notifications/formatMemberNotificationDate";
 
 export default function MemberNotificationsScreen() {
   const { token } = useAuth();
@@ -137,9 +140,7 @@ item.type === "coaching_member_comment"
             <Text style={styles.cardMessage}>{item.message}</Text>
 
             <Text style={styles.dateText}>
-              {item.createdAt
-                ? new Date(item.createdAt).toLocaleString("ko-KR")
-                : ""}
+              {formatMemberNotificationDate(item.createdAt)}
             </Text>
           </Pressable>
         ))

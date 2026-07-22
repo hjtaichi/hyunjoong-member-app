@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -15,7 +15,7 @@ import {
 } from "../../src/features/home/homeUtils";
 import { styles } from "../../src/features/home/homeStyles";
 import { useFocusEffect } from "@react-navigation/native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { getRankBadgeColors } from "../../src/theme/rankBadge";
 import { getProfileImageSource } from "../../src/features/home/homeImages";
@@ -37,10 +37,19 @@ import { DEBUG_HOME, useHomeScreen } from "../../src/features/home/useHomeScreen
 
 export default function HomeScreen() {
   const { token, user, logout } = useAuth();
+  const { attendanceResult } = useLocalSearchParams();
+  const attendanceResultShownRef = useRef(false);
   const authUser = user || {};
 const memberStatus = authUser?.memberStatus || authUser?.status;
 const isPausedMember = memberStatus === "paused";
 
+useEffect(() => {
+  if (attendanceResult !== "success" || attendanceResultShownRef.current) return;
+
+  attendanceResultShownRef.current = true;
+  Alert.alert("출석 완료", "출석이 정상 처리되었습니다.");
+  router.setParams({ attendanceResult: "" });
+}, [attendanceResult]);
 
   const today = useMemo(() => new Date(), []);
   const todayString = useMemo(() => toDateString(today), [today]);

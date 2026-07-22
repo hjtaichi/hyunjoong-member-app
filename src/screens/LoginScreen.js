@@ -13,7 +13,7 @@ import {
   Image,
   Modal,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import {
   getSavedLoginId,
@@ -27,8 +27,27 @@ const personIcon = require("../../assets/images/person_clean.png");
 const lockIcon = require("../../assets/images/lock_clean.png");
 const signupIcon = require("../../assets/images/signup_person_plus_clean.png");
 
+export function normalizeAttendanceToken(value) {
+  const token = Array.isArray(value) ? value[0] : value;
+  const cleanToken = String(token || "").trim();
+
+  if (!cleanToken || cleanToken.length > 4096) return "";
+  return /^[A-Za-z0-9._-]+$/.test(cleanToken) ? cleanToken : "";
+}
+
+function getPostLoginDestination(attendanceToken) {
+  if (!attendanceToken) return "/(tabs)/home";
+
+  return {
+    pathname: "/attendance-check",
+    params: { token: attendanceToken },
+  };
+}
+
 export default function LoginScreen() {
   const { login, isLoginLoading, isAuthenticated, isBootLoading, user } = useAuth();
+  const { attendanceToken: attendanceTokenParam } = useLocalSearchParams();
+  const attendanceToken = normalizeAttendanceToken(attendanceTokenParam);
 
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
@@ -62,9 +81,9 @@ useEffect(() => {
       return;
     }
 
-    router.replace("/(tabs)/home");
+    router.replace(getPostLoginDestination(attendanceToken));
   }
-}, [isBootLoading, isAuthenticated, user]);
+}, [isBootLoading, isAuthenticated, user, attendanceToken]);
 
   function showLoginAlert(title, message) {
   setLoginAlertTitle(title);
@@ -112,7 +131,7 @@ useEffect(() => {
   await removeSavedLoginId();
 }
 
-    router.replace("/(tabs)/home");
+    router.replace(getPostLoginDestination(attendanceToken));
   } catch (error) {
     console.log("로그인 실패:", error);
 

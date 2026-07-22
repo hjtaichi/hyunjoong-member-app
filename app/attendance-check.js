@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -12,54 +11,83 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { markAttendance } from "../src/api/memberAttendance";
 
+function normalizeQrToken(value) {
+  const token = Array.isArray(value) ? value[0] : value;
+  const cleanToken = String(token || "").trim();
+
+  if (!cleanToken || cleanToken.length > 4096) {
+    return "";
+  }
+
+  return /^[A-Za-z0-9._-]+$/.test(cleanToken) ? cleanToken : "";
+}
+
 export default function AttendanceCheckScreen() {
-  const { sessionId } = useLocalSearchParams();
+  const { token: qrTokenParam } = useLocalSearchParams();
   const { token, isAuthenticated, isBootLoading } = useAuth();
+  const qrToken = normalizeQrToken(qrTokenParam);
 
   const [statusText, setStatusText] = useState("출석 정보를 확인하는 중입니다.");
   const [done, setDone] = useState(false);
+  const submitStartedRef = useRef(false);
+  const redirectTimerRef = useRef(null);
 
   useEffect(() => {
+    if (isBootLoading || submitStartedRef.current) return;
+
+    if (!qrToken) {
+      submitStartedRef.current = true;
+      setStatusText("출석 QR 정보가 올바르지 않습니다.");
+      setDone(true);
+      return;
+    }
+
+    if (!isAuthenticated || !token) {
+      submitStartedRef.current = true;
+      router.replace({
+        pathname: "/login",
+        params: {
+          attendanceToken: qrToken,
+        },
+      });
+      return;
+    }
+
+    submitStartedRef.current = true;
+
     async function submitAttendance() {
-      if (isBootLoading) return;
-
-      if (!isAuthenticated || !token) {
-        Alert.alert("로그인이 필요합니다", "로그인 후 다시 QR을 스캔해주세요.", [
-          {
-            text: "로그인",
-            onPress: () => router.replace("/login"),
-          },
-        ]);
-        return;
-      }
-
-      if (!sessionId) {
-        setStatusText("출석 QR 정보가 올바르지 않습니다.");
-        setDone(true);
-        return;
-      }
-
       try {
         setStatusText("출석 처리 중입니다.");
 
         await markAttendance(token, {
-          sessionId: String(sessionId),
+          qrToken,
         });
 
         setStatusText("출석되었습니다.");
         setDone(true);
 
-        setTimeout(() => {
-          router.replace("/(tabs)/home");
+        redirectTimerRef.current = setTimeout(() => {
+          router.replace({
+            pathname: "/(tabs)/home",
+            params: {
+              attendanceResult: "success",
+            },
+          });
         }, 1200);
       } catch (error) {
-        setStatusText(error.message || "출석 처리에 실패했습니다.");
+        setStatusText(error?.message || "출석 처리에 실패했습니다.");
         setDone(true);
       }
     }
 
     submitAttendance();
-  }, [isBootLoading, isAuthenticated, token, sessionId]);
+
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, [isBootLoading, isAuthenticated, token, qrToken]);
 
   return (
     <View style={styles.screen}>

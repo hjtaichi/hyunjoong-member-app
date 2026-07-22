@@ -172,6 +172,22 @@ describe("실제 QR 출석 화면", () => {
     expect(message).not.toContain("Permission denied");
   });
 
+  test("reads a signed token from the production HTTPS QR", async () => {
+    await render(<QrAttendanceScreen />);
+
+    const handleScan = getScanHandler();
+
+    await act(async () => {
+      await handleScan({
+        data: "https://app.hjtaichi.com/attendance-check?token=signed.qr_token",
+      });
+    });
+
+    expect(markAttendance).toHaveBeenCalledWith("qr-member-token", {
+      qrToken: "signed.qr_token",
+    });
+  });
+
   test("memberapp QR에서 세션 ID를 읽어 출석 처리한다", async () => {
     await render(<QrAttendanceScreen />);
 
