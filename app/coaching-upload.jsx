@@ -16,8 +16,10 @@ import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { colors, radius, shadow } from "../src/theme";
 import ScreenHeader from "../src/components/ScreenHeader";
+import {
+  uploadCoachingVideoToStream,
+} from "../src/features/coaching/streamUploadClient";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 export default function CoachingUploadScreen() {
   const [trainingType, setTrainingType] = useState("투로");
   const [curriculum, setCurriculum] = useState("");
@@ -28,6 +30,8 @@ export default function CoachingUploadScreen() {
   const { token } = useAuth();
   const [videoDuration, setVideoDuration] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState("idle");
 const TRAINING_TYPES = ["공법", "투로", "기타"];
 
 const TRAINING_OPTIONS = {
@@ -72,47 +76,6 @@ function readVideoDuration(file) {
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(url);
       resolve(Math.floor(video.duration || 0));
-    };
-
-    video.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve(null);
-    };
-
-    video.src = url;
-  });
-}
-
-function captureVideoThumbnail(file) {
-  return new Promise((resolve) => {
-    const video = document.createElement("video");
-    const canvas = document.createElement("canvas");
-    const url = URL.createObjectURL(file);
-
-    video.preload = "metadata";
-    video.muted = true;
-    video.playsInline = true;
-
-    video.onloadedmetadata = () => {
-      video.currentTime = Math.min(1, video.duration || 1);
-    };
-
-    video.onseeked = () => {
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 360;
-
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      URL.revokeObjectURL(url);
-
-      canvas.toBlob(
-        (blob) => {
-          resolve(blob);
-        },
-        "image/jpeg",
-        0.82
-      );
     };
 
     video.onerror = () => {
@@ -172,103 +135,95 @@ input.accept = ".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm";
 }
 
   async function handleUpload() {
-  try {
-    console.log("🔥 업로드 버튼 클릭", {
-      selectedFile,
-      trainingType,
-      curriculum,
-      title,
-      question,
-      token: !!token,
-    });
-
-    if (!selectedFile) {
-      Alert.alert("안내", "업로드할 영상을 먼저 선택해주세요.");
-      return;
-    }
-if (!curriculum) {
-  Alert.alert("안내", "수련 항목을 선택해주세요.");
-  return;
-}
-setIsUploading(true);
-const formData = new FormData();
-
-    formData.append("video", selectedFile);
-    const thumbnailBlob = await captureVideoThumbnail(selectedFile);
-
-if (thumbnailBlob) {
-  formData.append(
-    "thumbnail",
-    thumbnailBlob,
-    `thumbnail-${Date.now()}.jpg`
-  );
-}
-
-    formData.append("trainingType", trainingType);
-    formData.append("curriculum", curriculum);
-    formData.append("title", title);
-    formData.append("question", question);
-    const durationForUpload =
-  videoDuration || (await readVideoDuration(selectedFile)) || 0;
-
-formData.append("durationSeconds", String(durationForUpload));
-
-    const response = await fetch(
-      `${API_BASE_URL}/api/me/coaching-videos`,
-      {
-        method: "POST",
-        headers: {
-  Authorization: `Bearer ${token}`,
-  "ngrok-skip-browser-warning": "true",
-},
-        body: formData,
+    try {
+      if (!selectedFile) {
+        Alert.alert(
+          "안내",
+          "업로드할 영상을 먼저 선택해주세요."
+        );
+        return;
       }
-    );
 
-    const result = await response.json();
+      if (!curriculum) {
+        Alert.alert(
+          "안내",
+          "수련 항목을 선택해주세요."
+        );
+        return;
+      }
 
-    if (!response.ok) {
-      throw new Error(result?.message || "업로드 실패");
+      setIsUploading(true);
+      setUploadProgress(0);
+      setUploadStage("requesting");
+
+      const result =
+        await uploadCoachingVideoToStream({
+          token,
+          file: selectedFile,
+          metadata: {
+            trainingType,
+            curriculum,
+            title,
+            question,
+          },
+          onProgress: setUploadProgress,
+          onStageChange: setUploadStage,
+        });
+
+      const uploadedVideo = result?.data || {};
+      const durationForUpload =
+        uploadedVideo.durationSeconds ||
+        videoDuration ||
+        0;
+
+      const completeParams = {
+        curriculum: String(curriculum || ""),
+        movement: String(curriculum || ""),
+        trainingType: String(trainingType || ""),
+        title: String(title || ""),
+        question: String(question || ""),
+        originalName: String(
+          uploadedVideo.originalName ||
+            selectedFile?.name ||
+            ""
+        ),
+        videoUrl: String(
+          uploadedVideo.videoUrl || ""
+        ),
+        size: String(
+          uploadedVideo.size ||
+            selectedFile?.size ||
+            ""
+        ),
+        uploadedAt: String(
+          uploadedVideo.createdAt ||
+            new Date().toISOString()
+        ),
+        durationSeconds: String(
+          durationForUpload
+        ),
+        durationText: String(
+          formatDuration(durationForUpload)
+        ),
+      };
+
+      router.replace({
+        pathname: "/coaching-upload-complete",
+        params: completeParams,
+      });
+    } catch (error) {
+      console.error(error);
+
+      Alert.alert(
+        "업로드 실패",
+        error?.message ||
+          "영상 업로드 중 오류가 발생했습니다."
+      );
+    } finally {
+      setIsUploading(false);
+      setUploadStage("idle");
     }
-
-    console.log("업로드 성공:", result);
-
-const uploadedVideo = result?.data || {};
-
-const completeParams = {
-  curriculum: String(curriculum || ""),
-  movement: String(curriculum || ""),
-  trainingType: String(trainingType || ""),
-  title: String(title || ""),
-  question: String(question || ""),
-  originalName: String(uploadedVideo.originalName || selectedFile?.name || ""),
-  videoUrl: String(uploadedVideo.videoUrl || ""),
-  size: String(uploadedVideo.size || selectedFile?.size || ""),
-  uploadedAt: String(uploadedVideo.createdAt || new Date().toISOString()),
-  durationSeconds: String(uploadedVideo.durationSeconds || durationForUpload || 0),
-  durationText: String(
-    formatDuration(uploadedVideo.durationSeconds || durationForUpload || 0)
-  ),
-};
-
-console.log("업로드 완료 이동 params:", completeParams);
-
-router.replace({
-  pathname: "/coaching-upload-complete",
-  params: completeParams,
-});
-
-   } catch (error) {
-    console.error(error);
-
-    Alert.alert(
-      "업로드 실패",
-      error?.message || "영상 업로드 중 오류가 발생했습니다."
-    );
-  } finally {
-    setIsUploading(false);
   }
-}
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -350,7 +305,11 @@ router.replace({
   {isUploading ? (
     <View style={styles.uploadingRow}>
       <ActivityIndicator size="small" color="#FFFFFF" />
-      <Text style={styles.submitButtonText}>업로드 중입니다...</Text>
+      <Text style={styles.submitButtonText}>
+        {uploadStage === "processing"
+          ? "영상 변환을 확인하는 중..."
+          : `업로드 중입니다... ${uploadProgress}%`}
+      </Text>
     </View>
   ) : (
     <Text style={styles.submitButtonText}>업로드</Text>
