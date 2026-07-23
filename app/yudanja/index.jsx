@@ -200,6 +200,53 @@ export default function YudanjaHomeScreen() {
 
         
 
+        {homeData?.season ? (
+          <View style={styles.seasonStatusCard}>
+            <View style={styles.seasonStatusTopRow}>
+              <View style={styles.seasonStatusTitleWrap}>
+                <Text style={styles.seasonStatusLabel}>
+                  이번 시즌
+                </Text>
+                <Text style={styles.seasonStatusTitle}>
+                  {homeData.season.completedCount ?? 0}회차 진행 중
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.todayStatusBadge,
+                  homeData.season.todaySession?.closure?.isClosed
+                    ? styles.todayStatusBadgeClosed
+                    : styles.todayStatusBadgeOpen,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.todayStatusBadgeText,
+                    homeData.season.todaySession?.closure?.isClosed
+                      ? styles.todayStatusBadgeTextClosed
+                      : styles.todayStatusBadgeTextOpen,
+                  ]}
+                >
+                  {homeData.season.todaySession
+                    ? homeData.season.todaySession.closure?.isClosed
+                      ? "오늘 수련 휴무"
+                      : "오늘 수련 예정"
+                    : "오늘 수련 없음"}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.seasonStatusDesc}>
+              {homeData.season.todaySession?.closure?.isClosed
+                ? "오늘 유단자회 수련은 휴무입니다. 알림센터의 안내도 확인해주세요."
+                : homeData.season.todaySession
+                  ? "오늘 유단자회 수련은 정상 진행 예정입니다."
+                  : "오늘 예정된 유단자회 수련이 없습니다."}
+            </Text>
+          </View>
+        ) : null}
+
         <Pressable
   style={styles.recentCard}
 
@@ -411,6 +458,82 @@ heroSealText: {
     color: "#9A3C3C",
   },
   
+  seasonStatusCard: {
+    marginTop: 18,
+    marginHorizontal: 18,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 17,
+    backgroundColor: "#FFFDF8",
+    borderWidth: 1,
+    borderColor: "#E8D8C4",
+    shadowColor: "#7A5B3D",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+
+  seasonStatusTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  seasonStatusTitleWrap: {
+    flex: 1,
+  },
+
+  seasonStatusLabel: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: "#8A7A68",
+  },
+
+  seasonStatusTitle: {
+    marginTop: 3,
+    fontFamily: fonts.titleSemi,
+    fontSize: 20,
+    lineHeight: 28,
+    color: "#2F241F",
+  },
+
+  todayStatusBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+  },
+
+  todayStatusBadgeOpen: {
+    backgroundColor: "#EAF5EC",
+  },
+
+  todayStatusBadgeClosed: {
+    backgroundColor: "#FCE8E8",
+  },
+
+  todayStatusBadgeText: {
+    fontFamily: fonts.semi,
+    fontSize: 12,
+  },
+
+  todayStatusBadgeTextOpen: {
+    color: "#38704A",
+  },
+
+  todayStatusBadgeTextClosed: {
+    color: "#A13F3F",
+  },
+
+  seasonStatusDesc: {
+    marginTop: 11,
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#6F625A",
+  },
+
   recentCard: {
   marginTop: 23,
   marginHorizontal: 18,
