@@ -245,7 +245,7 @@ export default function InquiryDetailScreen() {
                 >
                   {!mine ? (
                     <Text style={styles.senderText}>
-                      {message.senderName || "상대방"}
+                      관장님
                     </Text>
                   ) : null}
 

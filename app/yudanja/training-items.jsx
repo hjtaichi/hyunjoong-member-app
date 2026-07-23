@@ -231,11 +231,15 @@ function StructuredLine({ line, prevLine }) {
     isLevel1 && styles.trainingLineTextLevel1,
     isLevel2 && styles.trainingLineTextLevel2,
     isLevel3Plus && styles.trainingLineTextLevel3,
+    !textParts.korean && textParts.hanja && styles.hanjaText,
   ]}
 >
-  <Text>{textParts.korean}</Text>
+  {textParts.korean ? <Text>{textParts.korean}</Text> : null}
   {textParts.hanja ? (
-    <Text style={styles.hanjaText}> {textParts.hanja}</Text>
+    <Text style={styles.hanjaText}>
+      {textParts.korean ? " " : ""}
+      {textParts.hanja}
+    </Text>
   ) : null}
 </Text>
     </View>

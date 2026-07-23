@@ -69,42 +69,42 @@ function getErrorMessage(error) {
     const cleanLoginId = loginId.trim().toLowerCase();
 
     if (!name.trim()) {
-      Alert.alert("안내", "성명을 입력해주세요.");
+      showAlert("안내", "성명을 입력해주세요.");
       return;
     }
 
     if (!/^[a-z0-9_]{4,20}$/.test(cleanLoginId)) {
-      Alert.alert("안내", "아이디는 영문 소문자, 숫자, _ 조합 4~20자로 입력해주세요.");
+      showAlert("안내", "아이디는 영문 소문자, 숫자, _ 조합 4~20자로 입력해주세요.");
       return;
     }
 
     if (!birthDate.trim()) {
-      Alert.alert("안내", "생년월일을 입력해주세요.");
+      showAlert("안내", "생년월일을 입력해주세요.");
       return;
     }
 
     if (!gender) {
-      Alert.alert("안내", "성별을 선택해주세요.");
+      showAlert("안내", "성별을 선택해주세요.");
       return;
     }
 
     if (cleanPhone && !/^010\d{8}$/.test(cleanPhone)) {
-      Alert.alert("안내", "휴대폰 번호는 010으로 시작하는 숫자 11자리여야 합니다.");
+      showAlert("안내", "휴대폰 번호는 010으로 시작하는 숫자 11자리여야 합니다.");
       return;
     }
 
     if (password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
-      Alert.alert("안내", "비밀번호는 8자 이상, 영문/숫자 조합이어야 합니다.");
+      showAlert("안내", "비밀번호는 8자 이상, 영문/숫자 조합이어야 합니다.");
       return;
     }
 
     if (password !== passwordConfirm) {
-      Alert.alert("안내", "비밀번호 확인이 일치하지 않습니다.");
+      showAlert("안내", "비밀번호 확인이 일치하지 않습니다.");
       return;
     }
 
     if (!agreeTerms || !agreePrivacy || !confirmStudent) {
-      Alert.alert("안내", "필수 약관에 모두 동의해주세요.");
+      showAlert("안내", "필수 약관에 모두 동의해주세요.");
       return;
     }
 
@@ -315,7 +315,7 @@ function getErrorMessage(error) {
                 (!allChecked || isSubmitting) && styles.buttonDisabled,
               ]}
               onPress={handleRegister}
-              disabled={!allChecked || isSubmitting}
+              disabled={isSubmitting}
             >
               <Text style={styles.buttonText}>
                 {isSubmitting ? "신청 중..." : "가입 신청하기"}
