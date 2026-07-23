@@ -1,15 +1,46 @@
-﻿const INVALID_DATE_LABEL = "날짜 정보 없음";
+const INVALID_DATE_LABEL =
+  "날짜 정보 없음";
 
 function isMissingDateValue(value) {
   return (
     value === null ||
     value === undefined ||
-    (typeof value === "string" &&
-      value.trim() === "")
+    (
+      typeof value === "string" &&
+      value.trim() === ""
+    )
   );
 }
 
-export function formatMemberNotificationDate(value) {
+function getKoreaDateParts(date) {
+  const formatter =
+    new Intl.DateTimeFormat(
+      "ko-KR",
+      {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      }
+    );
+
+  const parts =
+    formatter.formatToParts(date);
+
+  return Object.fromEntries(
+    parts.map((part) => [
+      part.type,
+      part.value,
+    ])
+  );
+}
+
+export function formatMemberNotificationDate(
+  value
+) {
   if (isMissingDateValue(value)) {
     return INVALID_DATE_LABEL;
   }
@@ -20,20 +51,24 @@ export function formatMemberNotificationDate(value) {
     return INVALID_DATE_LABEL;
   }
 
-  const year = String(date.getFullYear())
-    .slice(-2)
-    .padStart(2, "0");
+  const parts =
+    getKoreaDateParts(date);
 
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hour = date.getHours();
-
-  const minute = String(
-    date.getMinutes()
-  ).padStart(2, "0");
+  if (
+    !parts.year ||
+    !parts.month ||
+    !parts.day ||
+    !parts.hour ||
+    !parts.minute
+  ) {
+    return INVALID_DATE_LABEL;
+  }
 
   return (
-    `${year}.${month}.${day} ` +
-    `${hour}:${minute}`
+    `${parts.year}.` +
+    `${parts.month}.` +
+    `${parts.day} ` +
+    `${parts.hour}:` +
+    `${parts.minute}`
   );
 }

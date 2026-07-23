@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -25,8 +25,9 @@ export default function MemberNotificationsScreen() {
     if (!token) return;
 
     try {
-      const data = await getMemberNotifications(token);
-      console.log("🔔 알림 화면 getMemberNotifications data =", data);
+      const data =
+        await getMemberNotifications(token);
+
       setItems(data);
     } catch (error) {
       console.log("회원 알림 조회 실패:", error);
@@ -115,7 +116,6 @@ export default function MemberNotificationsScreen() {
     !item.isRead && styles.unreadCard,
     pressed && styles.cardPressed,
   ]}
-  onPressIn={() => console.log("카드 눌림 시작:", item.id)}
   onPress={() => handleOpen(item)}
 >
             <View style={styles.cardTop}>
