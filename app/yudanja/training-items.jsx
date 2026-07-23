@@ -48,7 +48,9 @@ function parseTrainingLine(text = "") {
 }
 
 function splitHanjaText(text = "") {
-  const match = String(text).match(/^(.*?)(\s*\([^()]+\))$/);
+  const match = String(text).match(
+    /^(.*?)(\s*(?:\([^()]+\)|（[^（）]+）))$/
+  );
 
   if (!match) {
     return {
