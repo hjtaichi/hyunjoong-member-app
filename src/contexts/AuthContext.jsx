@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { loginApi, getMeApi } from "../api/auth";
+import {
+  loginApi,
+  getMeApi,
+  refreshAccessTokenApi,
+} from "../api/auth";
 import {
   clearAuthStorage,
   getAccessToken,
@@ -8,9 +12,34 @@ import {
   setUser,
   getRefreshToken,
   setRefreshToken,
+  subscribeAuthStorage,
 } from "../utils/storage";
 
 const AuthContext = createContext(null);
+
+function normalizeAuthUser(rawUser, fallback = {}) {
+  if (!rawUser && !fallback) return null;
+
+  const source = rawUser || {};
+  const previous = fallback || {};
+  const memberStatus =
+    source.memberStatus ||
+    source.status ||
+    previous.memberStatus ||
+    previous.status ||
+    null;
+
+  return {
+    ...previous,
+    id: source.userId || source.id || previous.id || previous.userId,
+    userId: source.userId || source.id || previous.userId || previous.id,
+    email: source.email || previous.email,
+    role: source.role || previous.role,
+    name: source.name || previous.name,
+    status: memberStatus,
+    memberStatus,
+  };
+}
 
 function AuthProvider({ children }) {
   const [isBootLoading, setIsBootLoading] = useState(true);
@@ -19,62 +48,104 @@ function AuthProvider({ children }) {
   const [user, setUserState] = useState(null);
 
   useEffect(() => {
+    let active = true;
+
+    const unsubscribe = subscribeAuthStorage((event) => {
+      if (!active) return;
+
+      if (event?.type === "access-token") {
+        setToken(event.accessToken || null);
+        return;
+      }
+
+      if (event?.type === "clear") {
+        setToken(null);
+        setUserState(null);
+      }
+    });
+
     bootstrap();
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   async function bootstrap() {
-  try {
-    const savedToken = await getAccessToken();
+    let savedToken = null;
+    let savedRefreshToken = null;
+    let savedUser = null;
 
-    if (!savedToken) {
+    try {
+      [savedToken, savedRefreshToken, savedUser] = await Promise.all([
+        getAccessToken(),
+        getRefreshToken(),
+        getUser(),
+      ]);
+
+      if (!savedToken && savedRefreshToken) {
+        const refreshResult = await refreshAccessTokenApi(savedRefreshToken);
+        const refreshPayload = refreshResult?.data ?? refreshResult ?? {};
+        const refreshedToken =
+          refreshPayload?.accessToken || refreshPayload?.token || null;
+
+        if (!refreshedToken) {
+          throw new Error("갱신 응답에 access token이 없습니다.");
+        }
+
+        savedToken = refreshedToken;
+        savedUser = normalizeAuthUser(refreshPayload?.user, savedUser);
+
+        await setAccessToken(refreshedToken);
+
+        if (savedUser) {
+          await setUser(savedUser);
+        }
+      }
+
+      if (!savedToken) {
+        setToken(null);
+        setUserState(null);
+        return;
+      }
+
+      const meResult = await getMeApi(savedToken);
+      const me = meResult?.data || meResult?.user || meResult;
+      const memberStatus = me?.memberStatus || me?.status;
+
+      if (memberStatus === "ended") {
+        await clearAuthStorage();
+        return;
+      }
+
+      const nextUser = normalizeAuthUser(me, savedUser);
+      const activeToken = (await getAccessToken()) || savedToken;
+
+      await setUser(nextUser);
+
+      setToken(activeToken);
+      setUserState(nextUser);
+    } catch (error) {
+      const status = error?.response?.status;
+
+      if (status === 401 || status === 403) {
+        await clearAuthStorage();
+        return;
+      }
+
+      if (savedToken && savedUser) {
+        setToken(savedToken);
+        setUserState(savedUser);
+        return;
+      }
+
       setToken(null);
       setUserState(null);
-      return;
+    } finally {
+      setIsBootLoading(false);
     }
-
-    const meResult = await getMeApi(savedToken);
-    const me = meResult?.data || meResult?.user || meResult;
-
-    const memberStatus = me?.memberStatus || me?.status;
-
-    if (memberStatus === "ended") {
-      await clearAuthStorage();
-      setToken(null);
-      setUserState(null);
-      return;
-    }
-
-    const nextUser = {
-      id: me?.userId || me?.id,
-      userId: me?.userId || me?.id,
-      email: me?.email,
-      role: me?.role,
-      name: me?.name,
-      status: memberStatus || null,
-      memberStatus: memberStatus || null,
-    };
-
-    await setUser(nextUser);
-
-    setToken(savedToken);
-    setUserState(nextUser);
-   } catch (e) {
-    const status = e?.response?.status;
-
-
-    if (status === 401 || status === 403) {
-      await clearAuthStorage();
-      setToken(null);
-      setUserState(null);
-    }
-
-    setToken(null);
-    setUserState(null);
   }
-   finally {
-    setIsBootLoading(false);
-  }
-}
 
   async function login(email, password, autoLogin = true) {
   setIsLoginLoading(true);
@@ -92,17 +163,7 @@ function AuthProvider({ children }) {
       throw new Error("토큰이 응답에 없습니다.");
     }
 
-    const nextUser = rawUser
-  ? {
-      id: rawUser.userId || rawUser.id,
-      userId: rawUser.userId || rawUser.id,
-      email: rawUser.email,
-      role: rawUser.role,
-      name: rawUser.name,
-      status: rawUser.status || rawUser.memberStatus || null,
-      memberStatus: rawUser.memberStatus || rawUser.status || null,
-    }
-  : null;
+    const nextUser = rawUser ? normalizeAuthUser(rawUser) : null;
 
 if (autoLogin) {
   await setAccessToken(nextToken);
@@ -165,19 +226,11 @@ setUserState(nextUser);
       return { status: "ended" };
     }
 
-    const nextUser = {
-      ...(user || {}),
-      id: me?.id || user?.id,
-      userId: me?.id || user?.userId,
-      email: me?.email || user?.email,
-      role: me?.role || user?.role,
-      name: me?.name || user?.name,
-      status: memberStatus,
-      memberStatus,
-    };
+    const nextUser = normalizeAuthUser(me, user);
+    const activeToken = (await getAccessToken()) || savedToken;
 
     await setUser(nextUser);
-    setToken(savedToken);
+    setToken(activeToken);
     setUserState(nextUser);
 
     return nextUser;

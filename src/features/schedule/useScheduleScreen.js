@@ -400,6 +400,8 @@ export function useScheduleScreen({
       updateScheduleItemLocally(selectedDate, sessionId, (prev) => ({
         ...prev,
         attendanceStatus: "reserved",
+        canCancelReservation: true,
+        cancelReservationReason: null,
         recurringMeta: {
           ...(prev.recurringMeta || {}),
           isRecurring: false,
@@ -435,6 +437,15 @@ export function useScheduleScreen({
 
         if (!memberRecurringReservationId) {
           Alert.alert("안내", "정기출석 정보가 없어 이번만 쉬기를 처리할 수 없습니다.");
+          return;
+        }
+
+        if (item?.canCancelReservation !== true) {
+          Alert.alert(
+            "안내",
+            item?.cancelReservationReason ||
+              "수업이 시작된 후에는 이번만 쉬기로 변경할 수 없습니다."
+          );
           return;
         }
 
@@ -480,6 +491,15 @@ export function useScheduleScreen({
           return;
         }
 
+        if (item?.canReserve === false) {
+          Alert.alert(
+            "안내",
+            item?.reserveBlockedReason ||
+              "이미 시작한 수업은 출석 예정으로 다시 등록할 수 없습니다."
+          );
+          return;
+        }
+
         await undoSkipRecurringReservationOnce(token, {
           memberRecurringReservationId,
           date: selectedDate,
@@ -515,6 +535,15 @@ export function useScheduleScreen({
         const sessionId = item?.sessionId || item?.id;
         if (!sessionId) {
           Alert.alert("안내", "취소할 수업 정보가 없습니다.");
+          return;
+        }
+
+        if (item?.canCancelReservation !== true) {
+          Alert.alert(
+            "안내",
+            item?.cancelReservationReason ||
+              "수업이 시작된 후에는 예약을 취소할 수 없습니다."
+          );
           return;
         }
 

@@ -12,12 +12,18 @@ import {
 import { router } from "expo-router";
 import { getMemberHome } from "../src/api/memberHome";
 import { colors } from "../src/theme/colors";
-import { Image, ImageBackground } from "react-native";
+import { Image } from "react-native";
 import { useAuth } from "../src/contexts/AuthContext";
+import { getMyHistoryEvents } from "../src/api/memberHistoryEvents";
 import {
-  getMyHistoryEvents,
-  getCommonHistoryMilestones,
-} from "../src/api/memberHistoryEvents";
+  getFallbackNextPromotionEvent,
+  getJourneyAttendanceCount,
+  getJourneyRange,
+  getJourneySegment,
+  getSegmentProgress,
+  getWalkerStageIndex,
+} from "../src/features/trainingJourney/trainingJourneyUtils";
+import { getJoinDayCountFromHome } from "../src/utils/joinDay";
 import { LinearGradient } from "expo-linear-gradient";
 const fonts = {
   medium: "PretendardMedium",
@@ -27,9 +33,6 @@ const fonts = {
 };
 const goldenGoalMarker = require("../assets/images/golden-goal-marker.png");
 
-
-const fogLayer = require("../assets/images/fog-layer.png");
-const goldPath = require("../assets/images/gold-path.png");
 const WALKER_IMAGES = [
   require("../assets/images/walker-stage-0.png"),
   require("../assets/images/walker-stage-1.png"),
@@ -70,6 +73,10 @@ const WALKER_IMAGES = [
 ];
 const statsIcon = require("../assets/images/stats-icon.png");
 const backIcon = require("../assets/images/back.png");
+const STATS_SHEET_COLLAPSED_HEIGHT = 82;
+const STATS_SHEET_EXPANDED_HEIGHT = 320;
+const STATS_SHEET_COLLAPSED_OFFSET =
+  STATS_SHEET_EXPANDED_HEIGHT - STATS_SHEET_COLLAPSED_HEIGHT;
 const JOURNEY_IMAGES = {
   spring: {
     start: require("../assets/journey/spring/spring-start.png"),
@@ -244,20 +251,6 @@ const JOURNEY_CARD_POINTS = {
     next: { top: 190, left: 28 },
   },
 };
-const STAGES = [
-  { days: 0, title: "입관", desc: "현중태극권의 길에 들어서다" },
-
-  ...Array.from({ length: 12 }, (_, index) => {
-    const days = (index + 1) * 100;
-
-    return {
-      days,
-      title: `수련 ${days}일째`,
-      desc: "꾸준함이 길을 만든다",
-    };
-  }),
-];
-
 const JOURNEY_QUOTES = {
   50: "좋아, 첫걸음을 내디뎠어.",
   100: "잘하고 있어. 계속 가보자.",
@@ -278,7 +271,7 @@ const JOURNEY_QUOTES = {
   850: "조금씩 깊이가 생기고 있어.",
   900: "지금까지의 노력이 쌓이고 있다.",
   950: "꾸준함은 재능을 이긴다.",
-  1000: "천 일을 걸어온 사람은 다르다.",
+  1000: "천 번의 수련을 이어온 사람은 다르다.",
   1050: "높은 산도 한 걸음부터였다.",
   1100: "익숙함 속에서도 기본을 잊지 마.",
   1150: "정체된 것 같아도 앞으로 가고 있어.",
@@ -298,26 +291,29 @@ const JOURNEY_QUOTES = {
   1850: "강함은 부드러움 속에 숨어있다.",
   1900: "중심을 잃지 않는 사람이 멀리 간다.",
   1950: "조용히 쌓인 시간이 힘이 된다.",
-  2000: "이천 일을 걸어온 발걸음은 결코 가볍지 않다.",
+  2000: "이천 회의 수련을 쌓아온 발걸음은 결코 가볍지 않다.",
   2050: "이제 길을 걷는 사람이 아니라 길이 되어간다.",
   2100: "몸과 마음이 하나로 이어지고 있다.",
   2150: "수련은 끝이 아니라 평생의 여정이다.",
   2200: "고수를 향한 길은 오늘도 계속된다.",
 };
 
-function getJourneyQuote(days) {
-  const quoteDay = Math.max(50, Math.min(2200, Math.floor(days / 50) * 50));
-  return JOURNEY_QUOTES[quoteDay] || "오늘도 한 걸음이면 충분해.";
+function getJourneyQuote(attendanceCount) {
+  const quoteCount = Math.max(
+    50,
+    Math.min(2200, Math.floor(attendanceCount / 50) * 50)
+  );
+  return JOURNEY_QUOTES[quoteCount] || "오늘도 한 걸음이면 충분해.";
 }
 
-function shouldShowJourneyQuote(days) {
-  const nearestQuoteDay = Math.round(days / 50) * 50;
+function shouldShowJourneyQuote(attendanceCount) {
+  const nearestQuoteCount = Math.round(attendanceCount / 50) * 50;
 
-  if (nearestQuoteDay < 50 || nearestQuoteDay > 2200) {
+  if (nearestQuoteCount < 50 || nearestQuoteCount > 2200) {
     return false;
   }
 
-  return Math.abs(days - nearestQuoteDay) <= 3;
+  return Math.abs(attendanceCount - nearestQuoteCount) <= 3;
 }
 
 function getCurrentSeason(date = new Date()) {
@@ -331,54 +327,6 @@ function getCurrentSeason(date = new Date()) {
   return "winter";
 }
 
-function getJourneyRange(days) {
-  if (days < 50) return { start: 0, end: 50 };
-  if (days < 300) return { start: 50, end: 300 };
-  if (days < 550) return { start: 300, end: 550 };
-  if (days < 800) return { start: 550, end: 800 };
-  if (days < 1050) return { start: 800, end: 1050 };
-  if (days < 1300) return { start: 1050, end: 1300 };
-  if (days < 1550) return { start: 1300, end: 1550 };
-  if (days < 1800) return { start: 1550, end: 1800 };
-  if (days < 2050) return { start: 1800, end: 2050 };
-  return { start: 2050, end: 2200 };
-}
-
-function getJourneySegment(days) {
-  if (days < 50) return "start";
-  if (days < 300) return "1";
-  if (days < 550) return "2";
-  if (days < 800) return "3";
-  if (days < 1050) return "4";
-  if (days < 1300) return "5";
-  if (days < 1550) return "6";
-  if (days < 1800) return "7";
-  if (days < 2050) return "8";
-  return "end";
-}
-
-function getWalkerStageIndex(attendanceCount) {
-  return Math.min(
-    35,
-    Math.max(0, Math.floor(attendanceCount / 100))
-  );
-}
-
-function getJoinedPeriodLabel(joinedAt) {
-  if (!joinedAt) return "입관일 확인 필요";
-
-  const start = new Date(joinedAt);
-  const today = new Date();
-
-  if (Number.isNaN(start.getTime())) return "입관일 확인 필요";
-
-  const diffMs =
-    new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime() -
-    new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
-
-  const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-  return `입관 ${days}일째`;
-}
 function formatShortDate(dateValue) {
   if (!dateValue) return "";
 
@@ -392,95 +340,166 @@ function formatShortDate(dateValue) {
 
   return `${year}.${month}.${day}`;
 }
-function getSegmentProgress(days) {
-  const range = getJourneyRange(days);
 
-  return Math.min(
-    1,
-    Math.max(0, (days - range.start) / (range.end - range.start))
+function TrainingStatsBottomSheet({
+  attendanceCount,
+  expectedTrainingHours,
+  statsNextGoal,
+  statsProgressPercent,
+  latestPromotionRank,
+  afterPromotionCount,
+  requiredAfterPromotionCount,
+  remainingAfterPromotionCount,
+  hasLatestPromotion,
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const translateY = React.useRef(
+    new Animated.Value(STATS_SHEET_COLLAPSED_OFFSET)
+  ).current;
+
+  const openSheet = React.useCallback(() => {
+    setExpanded(true);
+    translateY.stopAnimation();
+    Animated.spring(translateY, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 68,
+      friction: 11,
+    }).start();
+  }, [translateY]);
+
+  const closeSheet = React.useCallback(() => {
+    translateY.stopAnimation();
+    Animated.spring(translateY, {
+      toValue: STATS_SHEET_COLLAPSED_OFFSET,
+      useNativeDriver: true,
+      tension: 68,
+      friction: 11,
+    }).start(({ finished }) => {
+      if (finished) setExpanded(false);
+    });
+  }, [translateY]);
+
+  const sheetPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dy) > 8,
+        onPanResponderRelease: (_, gesture) => {
+          if (gesture.dy < -20) openSheet();
+          if (gesture.dy > 20) closeSheet();
+        },
+      }),
+    [closeSheet, openSheet]
+  );
+
+  return (
+    <>
+      {expanded ? (
+        <Pressable style={styles.statsSheetBackdrop} onPress={closeSheet} />
+      ) : null}
+
+      <Animated.View
+        style={[
+          styles.statsBottomSheet,
+          { transform: [{ translateY }] },
+        ]}
+      >
+        <Pressable
+          style={styles.bottomSheetHandleArea}
+          onPress={expanded ? closeSheet : openSheet}
+          {...sheetPanResponder.panHandlers}
+        >
+          <View style={styles.bottomSheetHandle} />
+        </Pressable>
+
+        <View style={styles.trainingStatsMiniContent}>
+          <Image
+            source={statsIcon}
+            style={styles.trainingStatsIconImage}
+            resizeMode="contain"
+          />
+
+          <View style={styles.trainingStatsMiniTextRow}>
+            <Text style={styles.trainingStatsMiniTitle}>내 수련 통계</Text>
+            <Text style={styles.trainingStatsMiniSub}>
+              {attendanceCount}회 · {expectedTrainingHours}시간
+            </Text>
+          </View>
+        </View>
+
+        {expanded ? (
+          <View style={styles.bottomSheetFullContent}>
+            <View style={styles.trainingStatsFullHeader}>
+              <Pressable onPress={() => router.push("/training-stats")}>
+                <Text style={styles.trainingStatsInlineLink}>자세히 보기</Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.trainingStatsMainRow}>
+              <View style={styles.trainingStatsMainItem}>
+                <Text style={styles.trainingStatsMainValue}>
+                  {attendanceCount}회
+                </Text>
+                <Text style={styles.trainingStatsMainLabel}>총 출석횟수</Text>
+              </View>
+
+              <View style={styles.trainingStatsCenterDot} />
+
+              <View style={styles.trainingStatsMainItem}>
+                <Text style={styles.trainingStatsMainValue}>
+                  {expectedTrainingHours}시간
+                </Text>
+                <Text style={styles.trainingStatsMainLabel}>
+                  예상 수련 시간
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.trainingStatsGoalPanel}>
+              <Text style={styles.trainingStatsGoalSmallLabel}>다음 목표</Text>
+
+              <View style={styles.trainingStatsGoalTitleRow}>
+                <Text style={styles.trainingStatsGoalBigTitle}>
+                  {statsNextGoal?.title || "수련의 길은 계속 이어집니다"}
+                </Text>
+
+                {statsNextGoal ? (
+                  <View style={styles.trainingStatsProgressTrackInline}>
+                    <View
+                      style={[
+                        styles.trainingStatsProgressFill,
+                        { width: `${statsProgressPercent}%` },
+                      ]}
+                    />
+                  </View>
+                ) : null}
+              </View>
+
+              <Text style={styles.trainingStatsGoalDesc}>
+                {statsNextGoal
+                  ? hasLatestPromotion
+                    ? `${latestPromotionRank}단 승단 후 ${afterPromotionCount}회째 · 목표 ${requiredAfterPromotionCount}회 · 앞으로 ${remainingAfterPromotionCount}회`
+                    : `현재 ${attendanceCount}회 · 목표 ${statsNextGoal.attendanceCount}회 · 앞으로 ${Math.max(
+                        0,
+                        statsNextGoal.attendanceCount - attendanceCount
+                      )}회`
+                  : "꾸준히 한 걸음씩 나아가고 있어요"}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+      </Animated.View>
+    </>
   );
 }
-function getNextDanEvent(member) {
-  const danPromotions = Array.isArray(member?.danPromotions)
-    ? member.danPromotions
-    : [];
 
-  const currentRankLevel = Number(
-    member?.rankLevel ?? String(member?.level || "").replace("단", "") ?? 0
-  );
-
-  if (currentRankLevel <= 0) {
-    return {
-      days: 150,
-      title: "1단 승단 가능",
-      desc: "관리자 확인 후 승단을 진행할 수 있습니다.",
-      kind: "promotion",
-    };
-  }
-
-  const latestPromotion = [...danPromotions]
-    .sort((a, b) => Number(b.danRank) - Number(a.danRank))[0];
-
-  if (!latestPromotion) return null;
-
-  const nextRank = currentRankLevel + 1;
-  const requiredDays = nextRank * 150;
-
-  return {
-    days: Number(latestPromotion.attendanceDay || 0) + requiredDays,
-    title: `${nextRank}단 승단 가능`,
-    desc: `${currentRankLevel}단 승단 후 다음 단계에 도전할 수 있습니다.`,
-    kind: "promotion",
-  };
-}
+const MemoizedTrainingStatsBottomSheet = React.memo(TrainingStatsBottomSheet);
 
 export default function TrainingHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [homeData, setHomeData] = useState(null);
   const [historyEvents, setHistoryEvents] = useState([]);
-  const [commonMilestones, setCommonMilestones] = useState([]);
   const { token } = useAuth();
-
-const COLLAPSED_HEIGHT = 82;
-const EXPANDED_HEIGHT = 320;
-
-const [statsExpanded, setStatsExpanded] = useState(false);
-
-const sheetHeight = useMemo(
-  () => new Animated.Value(COLLAPSED_HEIGHT),
-  []
-);
-
-const openSheet = () => {
-  setStatsExpanded(true);
-  Animated.spring(sheetHeight, {
-    toValue: EXPANDED_HEIGHT,
-    useNativeDriver: false,
-    tension: 60,
-    friction: 10,
-  }).start();
-};
-
-const closeSheet = () => {
-  Animated.spring(sheetHeight, {
-    toValue: COLLAPSED_HEIGHT,
-    useNativeDriver: false,
-    tension: 60,
-    friction: 10,
-  }).start(() => setStatsExpanded(false));
-};
-
-const sheetPanResponder = useMemo(
-  () =>
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dy) > 8,
-      onPanResponderRelease: (_, gesture) => {
-        if (gesture.dy < -20) openSheet();
-        if (gesture.dy > 20) closeSheet();
-      },
-    }),
-  [sheetHeight]
-);
 
   const handleBack = () => {
     if (router.canGoBack?.()) {
@@ -502,15 +521,13 @@ const sheetPanResponder = useMemo(
     }
 
     try {
-      const [home, history, common] = await Promise.all([
+      const [home, history] = await Promise.all([
         getMemberHome(token),
         getMyHistoryEvents(token),
-        getCommonHistoryMilestones(token),
       ]);
 
       setHomeData(home);
       setHistoryEvents(Array.isArray(history) ? history : []);
-      setCommonMilestones(Array.isArray(common) ? common : []);
     } catch (error) {
       console.log("수련의 길 로딩 실패:", error);
     } finally {
@@ -522,45 +539,14 @@ const sheetPanResponder = useMemo(
 }, [token]);
 
   const member = homeData?.member || {};
-  const trainingStats = homeData?.trainingStats || {};
-  const realAttendanceCount =
-  member?.totalAttendanceCount ??
-  homeData?.trainingStats?.totalAttendanceCount ??
-  homeData?.totalAttendanceCount ??
-  0;
-
-const attendanceCount = Number(realAttendanceCount || 0);
+  const attendanceCount = getJourneyAttendanceCount(homeData);
+  const joinDayCount = getJoinDayCountFromHome(homeData);
 
 
   const joinedAt = member?.joinDate || member?.joinedAt || null;
 
-  const nextStage = useMemo(() => {
-    return STAGES.find((stage) => stage.days > attendanceCount) || null;
-  }, [attendanceCount]);
-
-  const previousStage = useMemo(() => {
-    return [...STAGES]
-      .reverse()
-      .find((stage) => stage.days <= attendanceCount);
-  }, [attendanceCount]);
 const walkerStageIndex = getWalkerStageIndex(attendanceCount);
 const currentWalkerImage = WALKER_IMAGES[walkerStageIndex];
-
-const currentStageIndex = Math.max(
-  0,
-  STAGES.findIndex((stage) => stage.days === previousStage?.days)
-);
-
-const nextStageIndex = Math.min(currentStageIndex + 1, STAGES.length - 1);
-
-
-const STAGE_GAP = 120;
-const START_BOTTOM_OFFSET = 120;
-const DAY_HEIGHT = 2.15;
-const MAX_JOURNEY_DAYS = 1200;
-const SCENE_TOP_PADDING = 210;
-const SCENE_BOTTOM_PADDING = 120;
-
 const season = getCurrentSeason();
 const segment = getJourneySegment(attendanceCount);
 const currentJourneyImage = JOURNEY_IMAGES[season][segment];
@@ -568,31 +554,13 @@ const range = getJourneyRange(attendanceCount);
 
 const sceneHeight = 930;
 
-function getStageTop(index) {
-  return sceneHeight - START_BOTTOM_OFFSET - index * STAGE_GAP;
-}
-
-function getDayTop(day) {
-  const range = getJourneyRange(attendanceCount);
-
-  const clampedDay = Math.min(
-    Math.max(day, range.start),
-    range.end
-  );
-
-  const segmentProgress =
-    (clampedDay - range.start) / (range.end - range.start);
-
-  const usableHeight = sceneHeight - SCENE_TOP_PADDING - SCENE_BOTTOM_PADDING;
-
-  return sceneHeight - SCENE_BOTTOM_PADDING - usableHeight * segmentProgress;
-}
-
 function getStageLayout(stage) {
-  const isFuture = stage.days > attendanceCount;
+  const isFuture = stage.attendanceCount > attendanceCount;
 
   if (isFuture) {
-  const endPoint = getWalkerLikePositionByDay(stage.days);
+  const endPoint = getWalkerLikePositionByAttendanceCount(
+    stage.attendanceCount
+  );
 
   const markerWidth = 70;
 const markerHeight = 220;
@@ -611,9 +579,10 @@ return {
 };
 }
 
-  const position = getPositionByDay(stage.days);
+  const position = getPositionByAttendanceCount(stage.attendanceCount);
 
-const BOTTOM_SHEET_SAFE_TOP = sceneHeight - COLLAPSED_HEIGHT - 150;
+const BOTTOM_SHEET_SAFE_TOP =
+  sceneHeight - STATS_SHEET_COLLAPSED_HEIGHT - 150;
 
 return {
   top: Math.min(
@@ -667,12 +636,15 @@ return {
   transform: [{ scale }],
 };
 }
-function getWalkerLikePositionByDay(day) {
+function getWalkerLikePositionByAttendanceCount(targetAttendanceCount) {
   const points = JOURNEY_PATH_POINTS[segment] || JOURNEY_PATH_POINTS.start;
 
   const targetProgress = Math.min(
     1,
-    Math.max(0, (day - range.start) / (range.end - range.start))
+    Math.max(
+      0,
+      (targetAttendanceCount - range.start) / (range.end - range.start)
+    )
   );
 
   let previous = points[0];
@@ -705,14 +677,18 @@ function getWalkerLikePositionByDay(day) {
     scale,
   };
 }
-function getPositionByDay(day) {
-  const targetSegment = getJourneySegment(day);
+function getPositionByAttendanceCount(targetAttendanceCount) {
+  const targetSegment = getJourneySegment(targetAttendanceCount);
   const points = JOURNEY_PATH_POINTS[targetSegment] || JOURNEY_PATH_POINTS.start;
-  const targetRange = getJourneyRange(day);
+  const targetRange = getJourneyRange(targetAttendanceCount);
 
   const progress = Math.min(
     1,
-    Math.max(0, (day - targetRange.start) / (targetRange.end - targetRange.start))
+    Math.max(
+      0,
+      (targetAttendanceCount - targetRange.start) /
+        (targetRange.end - targetRange.start)
+    )
   );
 
   let previous = points[0];
@@ -739,9 +715,6 @@ function getPositionByDay(day) {
 };
 }
 
-  const progressText = nextStage
-    ? `${Math.max(0, nextStage.days - attendanceCount)}일 더 수련하면 ${nextStage.title}`
-    : "수련의 길은 계속 이어집니다";
 const promotionGoal = homeData?.trainingGoals?.promotion;
 
 const danPromotions = Array.isArray(member?.danPromotions)
@@ -752,12 +725,12 @@ const latestPromotion = [...danPromotions]
   .sort((a, b) => Number(b.danRank || 0) - Number(a.danRank || 0))[0];
 
 const latestPromotionRank = Number(latestPromotion?.danRank || 0);
-const latestPromotionAttendanceDay = Number(
+const latestPromotionAttendanceCount = Number(
   latestPromotion?.attendanceDay || 0
 );
 
 const afterPromotionCount = latestPromotion
-  ? Math.max(0, attendanceCount - latestPromotionAttendanceDay)
+  ? Math.max(0, attendanceCount - latestPromotionAttendanceCount)
   : attendanceCount;
 
 const requiredAfterPromotionCount =
@@ -766,44 +739,37 @@ const requiredAfterPromotionCount =
 const remainingAfterPromotionCount =
   Math.max(0, requiredAfterPromotionCount - afterPromotionCount);
 
-const promotionRequiredDays = Number(
-  promotionGoal?.requiredAttendanceCount || 0
-);
-
-const promotionTargetDays =
+const promotionTargetCount =
   Number(promotionGoal?.targetAttendanceCount) ||
   Number(promotionGoal?.requiredAttendanceCount) ||
   attendanceCount + Number(promotionGoal?.remainingCount || 0);
-const promotionRemainDays = Math.max(
+const promotionRemainCount = Math.max(
   0,
-  promotionTargetDays - attendanceCount
+  promotionTargetCount - attendanceCount
 );
 
 const shouldShowPromotionScroll =
-  promotionRemainDays <= 0 &&
-  attendanceCount >= promotionTargetDays &&
-  attendanceCount <= promotionTargetDays + 10;
-
-const shouldHidePromotionStage =
-  promotionRemainDays <= 0 &&
-  attendanceCount >= promotionTargetDays;
+  Boolean(promotionGoal) &&
+  promotionRemainCount <= 0 &&
+  attendanceCount >= promotionTargetCount &&
+  attendanceCount <= promotionTargetCount + 10;
 
 const nextDanEvent = promotionGoal
   ? {
-      days: promotionTargetDays,
+      attendanceCount: promotionTargetCount,
       title: promotionGoal.label || `${promotionGoal.nextRankLevel}단 승단심사`,
       desc:
-        promotionRemainDays <= 0
+        promotionRemainCount <= 0
           ? `${promotionGoal.nextRankLevel}단 승단심사 자격이 되었습니다.`
-          : `${promotionGoal.nextRankLevel}단까지 앞으로 ${promotionRemainDays}일 남았습니다.`,
+          : `${promotionGoal.nextRankLevel}단까지 앞으로 ${promotionRemainCount}회 남았습니다.`,
       kind: "promotion",
     }
-  : getNextDanEvent(member);
+  : getFallbackNextPromotionEvent(member);
   
 
 const mergedStages = [
   {
-    days: 0,
+    attendanceCount: 0,
     title: "입관",
     desc: "현중태극권의 길에 들어서다",
     kind: "start",
@@ -812,39 +778,26 @@ const mergedStages = [
   ...(nextDanEvent ? [nextDanEvent] : []),
 
   ...historyEvents.map((event) => ({
-    days: event.attendanceDay,
+    attendanceCount: Number(event.attendanceDay || 0),
     title: event.title,
     desc: event.description || "",
     eventDate: event.eventDate,
     kind: "custom",
   })),
-].sort((a, b) => a.days - b.days);
-
-const completedStages = [...mergedStages]
-  .reverse()
-  .filter((stage) => stage.days <= attendanceCount);
-
-const displayPreviousStage =
-  completedStages.find((stage) => {
-    if (stage.kind === "start" && attendanceCount >= 50) return false;
-    return true;
-  }) || null;
+].sort((a, b) => a.attendanceCount - b.attendanceCount);
 
 const displayNextStage =
-  mergedStages.find((stage) => stage.days > attendanceCount) || null;
+  mergedStages.find((stage) => stage.attendanceCount > attendanceCount) || null;
 
-const statsNextGoal = nextDanEvent || displayNextStage; 
+const activeNextDanEvent =
+  nextDanEvent?.attendanceCount > attendanceCount ? nextDanEvent : null;
+const statsNextGoal = activeNextDanEvent || displayNextStage;
 
- const statsTargetDays = displayNextStage?.days ?? null;
-
-const statsRemainDays =
-  statsTargetDays != null
-    ? Math.max(0, statsTargetDays - attendanceCount)
-    : 0;
+const statsTargetCount = statsNextGoal?.attendanceCount ?? null;
 
 const statsProgressPercent =
-  statsTargetDays != null && statsTargetDays > 0
-    ? Math.min(100, Math.max(0, (attendanceCount / statsTargetDays) * 100))
+  statsTargetCount != null && statsTargetCount > 0
+    ? Math.min(100, Math.max(0, (attendanceCount / statsTargetCount) * 100))
     : 100;
 
 const expectedTrainingHours = Math.floor(attendanceCount * 1.5);
@@ -869,17 +822,30 @@ const speechBubblePosition = {
   ),
 };
 
-  const visibleStages = mergedStages.filter((stage) => {
-  return stage.days >= range.start && stage.days < range.end;
+const visibleStages = mergedStages.filter((stage) => {
+  return (
+    stage.attendanceCount >= range.start &&
+    stage.attendanceCount < range.end
+  );
 });
 const roadmapItems = useMemo(() => {
   const items = [];
 
   if (joinedAt) {
+    const joinedDayLabel =
+      joinDayCount != null
+        ? `${joinDayCount}일째`
+        : null;
+
     items.push({
       key: "join",
       title: "입관",
-      desc: formatShortDate(joinedAt),
+      desc: [
+        formatShortDate(joinedAt),
+        joinedDayLabel,
+      ]
+        .filter(Boolean)
+        .join(" · "),
       completed: true,
       current: false,
     });
@@ -891,7 +857,7 @@ const roadmapItems = useMemo(() => {
       title: `${promotion.danRank}단 승단`,
       desc: promotion.promotedAt
         ? formatShortDate(promotion.promotedAt)
-        : `${promotion.attendanceDay || ""}일`,
+        : `${promotion.attendanceDay || ""}회`,
       completed: true,
       current: false,
     });
@@ -901,8 +867,8 @@ const roadmapItems = useMemo(() => {
 
   if (achievedHundred >= 100) {
     items.push({
-      key: `day-${achievedHundred}`,
-      title: `${achievedHundred}일 달성`,
+      key: `count-${achievedHundred}`,
+      title: `${achievedHundred}회 달성`,
       desc: "꾸준한 수련 기록",
       completed: true,
       current: false,
@@ -912,16 +878,19 @@ const roadmapItems = useMemo(() => {
   items.push({
   key: "current",
   title: "현재",
-  desc: `${attendanceCount}일째`,
+  desc: `${attendanceCount}회째`,
   completed: true,
   current: true,
 });
 
-if (statsNextGoal && statsNextGoal.days > attendanceCount) {
+if (
+  statsNextGoal &&
+  statsNextGoal.attendanceCount > attendanceCount
+) {
   items.push({
     key: "next-goal",
     title: statsNextGoal.title,
-    desc: `${statsNextGoal.days - attendanceCount}일 남음`,
+    desc: `${statsNextGoal.attendanceCount - attendanceCount}회 남음`,
     completed: false,
     current: false,
     future: true,
@@ -930,17 +899,14 @@ if (statsNextGoal && statsNextGoal.days > attendanceCount) {
 
 return items.slice(-6);
 
-}, [joinedAt, member?.danPromotions, attendanceCount]);
-const displayCurrentStageIndex = Math.max(
-  0,
-  mergedStages.findIndex((stage) => stage.days === displayPreviousStage?.days)
-);
-
-const displayNextStageIndex = Math.min(
-  displayCurrentStageIndex + 1,
-  mergedStages.length - 1
-);
-  
+}, [
+  joinedAt,
+  joinDayCount,
+  member?.danPromotions,
+  attendanceCount,
+  statsNextGoal?.attendanceCount,
+  statsNextGoal?.title,
+]);
     if (loading) {
     return (
       <View style={styles.center}>
@@ -1084,11 +1050,12 @@ locations={[0, 0.28, 0.66, 1]}
     )}
 
     {mergedStages.map((stage, index) => {
-      const completed = attendanceCount > stage.days;
-      const current = attendanceCount === stage.days;
-      const future = attendanceCount < stage.days;
+      const current = attendanceCount === stage.attendanceCount;
+      const future = attendanceCount < stage.attendanceCount;
 
-      const visible = visibleStages.some((item) => item.days === stage.days);
+      const visible = visibleStages.some(
+        (item) => item.attendanceCount === stage.attendanceCount
+      );
       if (!visible) return null;
 
       const layout = getStageLayout(stage);
@@ -1100,7 +1067,7 @@ locations={[0, 0.28, 0.66, 1]}
       if (future) {
         return (
           <View
-            key={`${stage.kind}-${stage.days}-${index}`}
+            key={`${stage.kind}-${stage.attendanceCount}-${index}`}
             style={[
               styles.sceneFutureGoalWrap,
               {
@@ -1125,7 +1092,7 @@ locations={[0, 0.28, 0.66, 1]}
 
       return (
         <View
-          key={`${stage.kind}-${stage.days}-${index}`}
+          key={`${stage.kind}-${stage.attendanceCount}-${index}`}
           style={[
             styles.sceneMilestone,
             future && styles.sceneMilestoneFuture,
@@ -1183,100 +1150,17 @@ locations={[0, 0.28, 0.66, 1]}
   locations={[0, 0.38, 0.72, 1]}
   style={styles.journeyBottomFade}
 />
-{statsExpanded ? (
-  <Pressable
-    style={styles.statsSheetBackdrop}
-    onPress={closeSheet}
-  />
-) : null}
-<Animated.View
-  style={[
-    styles.statsBottomSheet,
-    { height: sheetHeight },
-  ]}
->
-  <Pressable
-  style={styles.bottomSheetHandleArea}
-  onPress={statsExpanded ? closeSheet : openSheet}
-  {...sheetPanResponder.panHandlers}
->
-    <View style={styles.bottomSheetHandle} />
-  </Pressable>
-
-  <View style={styles.trainingStatsMiniContent}>
-    <Image
-      source={statsIcon}
-      style={styles.trainingStatsIconImage}
-      resizeMode="contain"
-    />
-
-    <View style={styles.trainingStatsMiniTextRow}>
-  <Text style={styles.trainingStatsMiniTitle}>내 수련 통계</Text>
-
-  <Text style={styles.trainingStatsMiniSub}>
-    {attendanceCount}회 · {expectedTrainingHours}시간
-  </Text>
-</View>
-  </View>
-
-  {statsExpanded ? (
-    <View style={styles.bottomSheetFullContent}>
-      <View style={styles.trainingStatsFullHeader}>
-
-  <Pressable onPress={() => router.push("/training-stats")}>
-    <Text style={styles.trainingStatsInlineLink}>자세히 보기</Text>
-  </Pressable>
-</View>
-      <View style={styles.trainingStatsMainRow}>
-        <View style={styles.trainingStatsMainItem}>
-          <Text style={styles.trainingStatsMainValue}>{attendanceCount}회</Text>
-          <Text style={styles.trainingStatsMainLabel}>총 출석횟수</Text>
-        </View>
-
-        <View style={styles.trainingStatsCenterDot} />
-
-        <View style={styles.trainingStatsMainItem}>
-          <Text style={styles.trainingStatsMainValue}>
-            {expectedTrainingHours}시간
-          </Text>
-          <Text style={styles.trainingStatsMainLabel}>예상 수련 시간</Text>
-        </View>
-      </View>
-
-      <View style={styles.trainingStatsGoalPanel}>
-        <Text style={styles.trainingStatsGoalSmallLabel}>다음 목표</Text>
-
-        <View style={styles.trainingStatsGoalTitleRow}>
-          <Text style={styles.trainingStatsGoalBigTitle}>
-            {statsNextGoal?.title || "수련의 길은 계속 이어집니다"}
-          </Text>
-
-          {statsNextGoal ? (
-            <View style={styles.trainingStatsProgressTrackInline}>
-              <View
-                style={[
-                  styles.trainingStatsProgressFill,
-                  { width: `${statsProgressPercent}%` },
-                ]}
-              />
-            </View>
-          ) : null}
-        </View>
-
-        <Text style={styles.trainingStatsGoalDesc}>
-          {statsNextGoal
-  ? latestPromotion
-    ? `${latestPromotionRank}단 승단 후 ${afterPromotionCount}회째 · 목표 ${requiredAfterPromotionCount}회 · 앞으로 ${remainingAfterPromotionCount}회`
-    : `현재 ${attendanceCount}회 · 목표 ${statsNextGoal.days}회 · 앞으로 ${Math.max(
-        0,
-        statsNextGoal.days - attendanceCount
-      )}회`
-  : "꾸준히 한 걸음씩 나아가고 있어요"}
-        </Text>
-      </View>
-    </View>
-  ) : null}
-</Animated.View>
+<MemoizedTrainingStatsBottomSheet
+  attendanceCount={attendanceCount}
+  expectedTrainingHours={expectedTrainingHours}
+  statsNextGoal={statsNextGoal}
+  statsProgressPercent={statsProgressPercent}
+  latestPromotionRank={latestPromotionRank}
+  afterPromotionCount={afterPromotionCount}
+  requiredAfterPromotionCount={requiredAfterPromotionCount}
+  remainingAfterPromotionCount={remainingAfterPromotionCount}
+  hasLatestPromotion={Boolean(latestPromotion && activeNextDanEvent)}
+/>
       </View>
     </View>
   </ScrollView>
@@ -1383,12 +1267,6 @@ backIcon: {
     fontSize: 16,
     fontWeight: "900",
     color: "#F1D39A",
-  },
-  progressText: {
-    marginTop: 12,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.textSub,
   },
   timelineCard: {
   borderRadius: 30,
@@ -2064,6 +1942,7 @@ statsBottomSheet: {
   left: 0,
   right: 0,
   bottom: 0,
+  height: STATS_SHEET_EXPANDED_HEIGHT,
   backgroundColor: "rgba(255,253,249,0.98)",
   borderTopLeftRadius: 32,
   borderTopRightRadius: 32,
@@ -2078,14 +1957,6 @@ statsBottomSheet: {
   shadowRadius: 16,
   shadowOffset: { width: 0, height: -4 },
   overflow: "hidden",
-},
-
-statsBottomSheetCollapsed: {
-  height: 96,
-},
-
-statsBottomSheetExpanded: {
-  height: 320,
 },
 bottomSheetHandleArea: {
   alignItems: "center",

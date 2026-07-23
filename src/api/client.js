@@ -25,8 +25,23 @@ let isRefreshing = false;
 let refreshQueue = [];
 
 function resolveRefreshQueue(newToken) {
-  refreshQueue.forEach((callback) => callback(newToken));
+  refreshQueue.forEach(({ resolve }) => resolve(newToken));
   refreshQueue = [];
+}
+
+function rejectRefreshQueue(error) {
+  refreshQueue.forEach(({ reject }) => reject(error));
+  refreshQueue = [];
+}
+
+function isPublicAuthRequest(url) {
+  const value = String(url || "");
+
+  return [
+    "/api/auth/login",
+    "/api/auth/register",
+    "/api/auth/refresh",
+  ].some((path) => value.includes(path));
 }
 
 client.interceptors.request.use(
@@ -55,22 +70,26 @@ client.interceptors.response.use(
     const originalRequest = error?.config;
     const status = error?.response?.status;
 
-    if (!originalRequest || status !== 401 || originalRequest._retry) {
-      return Promise.reject(error);
-    }
-
-    if (String(originalRequest.url || "").includes("/api/auth/refresh")) {
-      await clearAuthStorage();
+    if (
+      !originalRequest ||
+      status !== 401 ||
+      originalRequest._retry ||
+      isPublicAuthRequest(originalRequest.url)
+    ) {
       return Promise.reject(error);
     }
 
     originalRequest._retry = true;
 
     if (isRefreshing) {
-      return new Promise((resolve) => {
-        refreshQueue.push((newToken) => {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          resolve(client(originalRequest));
+      return new Promise((resolve, reject) => {
+        refreshQueue.push({
+          resolve: (newToken) => {
+            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            resolve(client(originalRequest));
+          },
+          reject,
         });
       });
     }
@@ -82,6 +101,7 @@ client.interceptors.response.use(
 
       if (!refreshToken) {
         await clearAuthStorage();
+        rejectRefreshQueue(error);
         return Promise.reject(error);
       }
 
@@ -100,6 +120,7 @@ client.interceptors.response.use(
 
       if (!newAccessToken) {
         await clearAuthStorage();
+        rejectRefreshQueue(error);
         return Promise.reject(error);
       }
 
@@ -107,11 +128,13 @@ client.interceptors.response.use(
 
       resolveRefreshQueue(newAccessToken);
 
+      originalRequest.headers = originalRequest.headers || {};
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
       return client(originalRequest);
     } catch (refreshError) {
       await clearAuthStorage();
+      rejectRefreshQueue(refreshError);
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

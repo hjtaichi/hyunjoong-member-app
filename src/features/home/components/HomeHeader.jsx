@@ -5,7 +5,7 @@ import { styles } from "../homeStyles";
 
 export default function HomeHeader({
   displayName,
-  joinDays,
+  joinDayCount,
   attendanceCount,
   hasUnreadNotice,
   hasUnreadMemberNotification,
@@ -18,7 +18,10 @@ export default function HomeHeader({
   promotionBadgeText,
   monthlyGoalRate,
 }) {
-  const monthlyRate = Number(monthlyGoalRate?.rate || 0);
+  const monthlyRate = Math.min(
+    100,
+    Math.max(0, Number(monthlyGoalRate?.rate || 0))
+  );
   const filledBars = Math.ceil(monthlyRate / 25);
   return (
     <View style={styles.homeHeader}>
@@ -90,15 +93,15 @@ export default function HomeHeader({
           )}
         </View>
 
-        {joinDays ? (
+        {joinDayCount != null ? (
           <Text style={styles.homeAttendanceSummary}>
-            입관 {joinDays}일째 · 누적 출석 {attendanceCount}일
+            입관 {joinDayCount}일째 · 누적 출석 {attendanceCount}회
           </Text>
         ) : null}
         {monthlyGoalRate ? (
   <View style={styles.monthlyGoalMiniRow}>
     <Text style={styles.monthlyGoalMiniText}>
-      출석 목표 달성률{monthlyRate}%
+      출석 목표 달성률 {monthlyRate}%
     </Text>
 
     <View style={styles.monthlyGoalSignal}>

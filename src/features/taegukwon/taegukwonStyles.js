@@ -115,7 +115,9 @@ levelTextBadgeText: {
   fontSize: isWeb ? 24 : 28,
   fontFamily: fonts.title,
   color: colors.textMain,
-  lineHeight: isWeb ? 31 : 35,
+  lineHeight: isWeb ? 33 : 35,
+  marginBottom: 3,
+  marginTop: -13,
 },
   completedBadgeInline: {
     backgroundColor: "#dfead9",
@@ -972,7 +974,7 @@ detailTextButton: {
   fontSize: 12,
   fontWeight: "700",
   color: "#8a7f72",
-  marginTop: -2,
+  marginTop: 2,
 },
 
 sectionLabel: {
@@ -1030,7 +1032,7 @@ menuCard: {
 },
 
 menuRow: {
-  minHeight: 67,
+  minHeight: 70,
   paddingVertical: 12,
   borderBottomWidth: 1,
   borderBottomColor: "#f0e8dc",
@@ -1054,14 +1056,14 @@ menuTextWrap: {
 },
 
 menuTitle: {
-  fontSize: 15,
+  fontSize: 17,
   fontFamily: fonts.bold,
   color: colors.textMain,
 },
 
 menuDesc: {
   marginTop: 4,
-  fontSize: 12,
+  fontSize: 14,
   fontFamily: fonts.medium,
   color: colors.textSub,
 },

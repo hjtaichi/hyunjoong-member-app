@@ -43,9 +43,9 @@ export default function TrainingStatsScreen() {
   const trainingStats = homeData?.trainingStats || {};
 
   const attendanceCount =
-    member?.totalAttendanceCount ??
-    member?.attendanceCount ??
-    homeData?.totalAttendanceCount ??
+    member?.totalAttendanceSessionCount ??
+    trainingStats?.totalAttendanceSessionCount ??
+    homeData?.totalAttendanceSessionCount ??
     0;
 
   const monthlyData = useMemo(() => {
@@ -75,8 +75,8 @@ export default function TrainingStatsScreen() {
 
         <View style={styles.summaryCard}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>총 출석일</Text>
-            <Text style={styles.summaryValue}>{attendanceCount}일</Text>
+            <Text style={styles.summaryLabel}>총 출석횟수</Text>
+            <Text style={styles.summaryValue}>{attendanceCount}회</Text>
           </View>
 
           <View style={styles.summaryDivider} />
@@ -93,7 +93,7 @@ export default function TrainingStatsScreen() {
           <View style={styles.infoBox}>
             <Text style={styles.infoLabel}>이번 달 출석</Text>
             <Text style={styles.infoValue}>
-              {trainingStats.monthlyAttendanceCount ?? "-"}일
+              {trainingStats.monthlyAttendanceCount ?? "-"}회
             </Text>
           </View>
 
@@ -115,7 +115,7 @@ export default function TrainingStatsScreen() {
         <View style={styles.chartCard}>
           <Text style={styles.sectionTitle}>최근 12개월 출석</Text>
           <Text style={styles.sectionDesc}>
-            월별 출석일을 한눈에 확인할 수 있어요.
+            월별 출석횟수를 한눈에 확인할 수 있어요.
           </Text>
 
           {monthlyData.length === 0 ? (

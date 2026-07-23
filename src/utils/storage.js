@@ -4,9 +4,36 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ACCESS_TOKEN_KEY = "member_access_token";
 const USER_KEY = "member_user";
+const authStorageListeners = new Set();
+
+function emitAuthStorageChange(event) {
+  authStorageListeners.forEach((listener) => {
+    try {
+      listener(event);
+    } catch {
+      // A consumer failure must not break token persistence.
+    }
+  });
+}
+
+export function subscribeAuthStorage(listener) {
+  if (typeof listener !== "function") {
+    return () => {};
+  }
+
+  authStorageListeners.add(listener);
+
+  return () => {
+    authStorageListeners.delete(listener);
+  };
+}
 
 export async function setAccessToken(token) {
   await AsyncStorage.setItem(ACCESS_TOKEN_KEY, token);
+  emitAuthStorageChange({
+    type: "access-token",
+    accessToken: token,
+  });
 }
 
 export async function getAccessToken() {
@@ -15,6 +42,10 @@ export async function getAccessToken() {
 
 export async function removeAccessToken() {
   await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+  emitAuthStorageChange({
+    type: "access-token",
+    accessToken: null,
+  });
 }
 
 export async function setUser(user) {
@@ -36,12 +67,16 @@ export async function removeUser() {
 }
 
 export async function clearAuthStorage() {
-  console.log("🧹 clearAuthStorage 실행됨");
   await Promise.all([
     removeAccessToken(),
     removeRefreshToken(),
     removeUser(),
   ]);
+
+  emitAuthStorageChange({
+    type: "clear",
+    accessToken: null,
+  });
 }
 
 export async function setNoticeHiddenToday(key) {

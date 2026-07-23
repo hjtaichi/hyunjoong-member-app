@@ -47,7 +47,7 @@ const steps = [
     icon: "一",
     imageKey: "rankExam",
     title: "1단 심사 안내",
-    desc: "입관 후 1년, 최소 출석 147일을 충족하면 심사에 응시할 수 있습니다.",
+    desc: "입관 후 1년, 최소 출석 147회를 충족하면 심사에 응시할 수 있습니다.",
     bullets: [
       "현중태극권 역사와 원리 구술",
       "현중태극권 29식 투로",
@@ -68,7 +68,7 @@ const steps = [
     icon: "二",
     imageKey: "rankExam2",
     title: "2단 심사 안내",
-    desc: "1단 승단일 기준 2년, 추가 출석 300일을 충족하면 심사에 응시할 수 있습니다.",
+    desc: "1단 승단일 기준 2년, 추가 출석 300회를 충족하면 심사에 응시할 수 있습니다.",
     bullets: ["현중태극검 52식", "공력심사"],
   },
   {
@@ -85,7 +85,7 @@ const steps = [
     icon: "三",
     imageKey: "rankExam3",
     title: "3단 심사 안내",
-    desc: "2단 승단일 기준 3년, 추가 출석 450일을 충족하면 심사에 응시할 수 있습니다.",
+    desc: "2단 승단일 기준 3년, 추가 출석 450회를 충족하면 심사에 응시할 수 있습니다.",
     bullets: ["현중태극권 대가1로 79식", "공력심사"],
   },
   {
@@ -102,7 +102,7 @@ const steps = [
   icon: "四",
   imageKey: "rankExam3",
   title: "4단 심사 안내",
-  desc: "3단 승단일 기준 3년, 추가 출석 600일을 충족하면 심사에 응시할 수 있습니다.",
+  desc: "3단 승단일 기준 3년, 추가 출석 600회를 충족하면 심사에 응시할 수 있습니다.",
   bullets: ["현중태극권 대가2로", "공력심사"],
 },
 
@@ -157,8 +157,6 @@ useEffect(() => {
 
 const member = data?.member || {};
 const rankLevel = Number(member.rankLevel || 0);
-const personalProgress = data?.personalProgress || null;
-
 const currentJourney = useMemo(() => {
   const totalSteps = steps.length;
 

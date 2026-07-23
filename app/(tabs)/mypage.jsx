@@ -20,7 +20,10 @@ import { APP_VERSION } from "../../src/config/appVersion";
 
 import * as Clipboard from "expo-clipboard";
 import { avatarGroups, mypageImages } from "../../src/features/mypage/mypageImages";
-import { getJoinedPeriodLabel } from "../../src/features/mypage/mypageUtils";
+import {
+  formatJoinDayCountLabel,
+  getJoinDayCountFromHome,
+} from "../../src/utils/joinDay";
 import { MenuRow, MenuDivider } from "../../src/features/mypage/components/MyPageMenu";
 import { getRankBadgeColors } from "../../src/theme/rankBadge";
 import { styles } from "../../src/features/mypage/mypageStyles";
@@ -229,7 +232,8 @@ const joinedDateLabel = joinedAtText
   ? String(joinedAtText).slice(0, 10)
   : "입관일 확인 필요";
 
-const joinedPeriodLabel = getJoinedPeriodLabel(joinedAtText);
+const joinDayCount = getJoinDayCountFromHome(homeData);
+const joinedPeriodLabel = formatJoinDayCountLabel(joinDayCount);
 
   /*{const recurringSummary =
     homeData?.recurringReservationSummary ||

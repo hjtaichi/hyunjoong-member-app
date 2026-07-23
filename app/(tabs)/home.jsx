@@ -9,10 +9,10 @@ import {
 } from "react-native";
 import {
   toDateString,
-  getDateDiffInDays,
   getSessionDisplayLabel,
   isWithinTodayAttendanceLockWindow,
 } from "../../src/features/home/homeUtils";
+import { getJoinDayCountFromHome } from "../../src/utils/joinDay";
 import { styles } from "../../src/features/home/homeStyles";
 import { useFocusEffect } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -137,13 +137,7 @@ const calendarMap = useMemo(() => {
   homeData?.user?.name ||
   "회원님";
 
-  const joinDate = homeData?.member?.joinDate;
-
-const joinDateString = joinDate ? String(joinDate).slice(0, 10) : null;
-
-const joinDays = joinDateString
-  ? getDateDiffInDays(joinDateString, todayString) + 1
-  : null;
+const joinDayCount = getJoinDayCountFromHome(homeData);
 
 const attendanceCount =
   homeData?.member?.totalAttendanceSessionCount ??
@@ -228,7 +222,6 @@ if (DEBUG_HOME) {
   console.log("🔥 [HOME homeData keys]", Object.keys(homeData || {}));
   console.log("🔥 [HOME homeGroupProgress]", homeGroupProgress);
 }
-console.log("🔥 monthlyGoalRate =", homeData?.monthlyGoalRate);
 const todayClassTitle = useMemo(() => {
   if (isTodayYudanjaSession) {
     return yudanjaProgress?.title || "유단자회 수련";
@@ -438,7 +431,7 @@ const handleNoticeDetail = useCallback(() => {
       >
 <HomeHeader
   displayName={displayName}
-  joinDays={joinDays}
+  joinDayCount={joinDayCount}
   attendanceCount={attendanceCount}
   monthlyGoalRate={homeData?.monthlyGoalRate}
   hasUnreadNotice={hasUnreadNotice}

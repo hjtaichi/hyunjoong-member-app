@@ -104,10 +104,38 @@ describe("예약·출석 화면 상태 판독", () => {
     });
   });
 
+  test("시작한 수업의 이번만 쉬기 상태는 유지하고 복구 동작을 숨긴다", () => {
+    const meta = getScheduleUiMeta(
+      {
+        canReserve: false,
+        reserveBlockedReason:
+          "이미 시작한 수업은 출석 예정으로 등록할 수 없습니다.",
+        recurringMeta: {
+          hasRecurringException: true,
+          memberRecurringReservationId: 104,
+        },
+      },
+      {
+        isReservableDate: true,
+      }
+    );
+
+    expect(meta).toMatchObject({
+      tone: "disabled",
+      label: "이번만 쉬기",
+      helperText:
+        "이미 시작한 수업은 출석 예정으로 등록할 수 없습니다.",
+      actionLabel: null,
+      actionType: null,
+      isRecurring: false,
+    });
+  });
+
   test("정기예약 수업은 이번만 쉬기 동작을 표시한다", () => {
     const meta = getScheduleUiMeta(
       {
         attendanceStatus: "reserved",
+        canCancelReservation: true,
         recurringMeta: {
           isRecurring: true,
           matchedRecurringRule: true,
@@ -132,6 +160,7 @@ describe("예약·출석 화면 상태 판독", () => {
     const meta = getScheduleUiMeta(
       {
         attendanceStatus: "reserved",
+        canCancelReservation: true,
         recurringMeta: {
           isRecurring: false,
         },
@@ -147,6 +176,64 @@ describe("예약·출석 화면 상태 판독", () => {
       actionLabel: "예약 취소",
       actionType: "cancelReserve",
       isRecurring: false,
+    });
+  });
+
+  test("시작한 일반예약은 출석 예정 상태를 유지하고 취소 동작을 숨긴다", () => {
+    const meta = getScheduleUiMeta(
+      {
+        attendanceStatus: "reserved",
+        canReserve: false,
+        canCancelReservation: false,
+        cancelReservationReason:
+          "수업이 시작된 후에는 예약을 취소할 수 없습니다.",
+        recurringMeta: {
+          isRecurring: false,
+        },
+      },
+      {
+        isReservableDate: true,
+      }
+    );
+
+    expect(meta).toMatchObject({
+      tone: "reserved",
+      label: "출석 예정",
+      helperText:
+        "수업이 시작된 후에는 예약을 취소할 수 없습니다.",
+      actionLabel: null,
+      actionType: null,
+      isRecurring: false,
+    });
+  });
+
+  test("시작한 정기예약은 정기출석 예정 상태를 유지하고 이번만 쉬기를 숨긴다", () => {
+    const meta = getScheduleUiMeta(
+      {
+        attendanceStatus: "reserved",
+        canReserve: false,
+        canCancelReservation: false,
+        cancelReservationReason:
+          "수업이 시작된 후에는 예약을 취소할 수 없습니다.",
+        recurringMeta: {
+          isRecurring: true,
+          matchedRecurringRule: true,
+          memberRecurringReservationId: 103,
+        },
+      },
+      {
+        isReservableDate: true,
+      }
+    );
+
+    expect(meta).toMatchObject({
+      tone: "reserved",
+      label: "정기출석 예정",
+      helperText:
+        "수업이 시작된 후에는 예약을 취소할 수 없습니다.",
+      actionLabel: null,
+      actionType: null,
+      isRecurring: true,
     });
   });
 
@@ -256,5 +343,35 @@ describe("예약·출석 화면 상태 판독", () => {
       chip: "disabled-chip",
       chipText: "disabled-text",
     });
+  });
+});
+
+
+const { readFileSync: readAttendanceConsistencySource } = require("node:fs");
+const { join: joinAttendanceConsistencyPath } = require("node:path");
+
+function readAttendanceConsistencyFile(relativePath) {
+  return readAttendanceConsistencySource(joinAttendanceConsistencyPath(process.cwd(), relativePath), "utf8");
+}
+
+describe("회원 홈 출석 표시 일관성", () => {
+  test("누적 출석은 수업 횟수 단위로 표시한다", () => {
+    const source = readAttendanceConsistencyFile("src/features/home/components/HomeHeader.jsx");
+    expect(source).toContain("누적 출석 {attendanceCount}회");
+    expect(source).not.toContain("누적 출석 {attendanceCount}일");
+  });
+
+  test("출석 목표 달성률은 백엔드 계산값을 표시한다", () => {
+    const source = readAttendanceConsistencyFile("src/features/home/components/HomeHeader.jsx");
+    expect(source).toContain("Number(monthlyGoalRate?.rate || 0)");
+    expect(source).toContain("출석 목표 달성률 {monthlyRate}%");
+  });
+
+  test("홈 응답과 출석 목표를 무조건 console에 출력하지 않는다", () => {
+    const hookSource = readAttendanceConsistencyFile("src/features/home/useHomeScreen.js");
+    const screenSource = readAttendanceConsistencyFile("app/(tabs)/home.jsx");
+    expect(hookSource).not.toContain(`console.log("🔥 HOME RESPONSE ="`);
+    expect(hookSource).not.toContain(`console.log("🔥 monthlyGoalRate ="`);
+    expect(screenSource).not.toContain(`console.log("🔥 monthlyGoalRate ="`);
   });
 });

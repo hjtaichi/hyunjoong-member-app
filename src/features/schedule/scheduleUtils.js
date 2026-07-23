@@ -158,16 +158,20 @@ const isManualReserved =
     hasRecurringException &&
     item?.canReserve !== false;
 
+  const canCancelReservation =
+    item?.canCancelReservation === true;
+
   const canSkipOnce =
     isReservableDate &&
     isRecurringReserved &&
     !hasRecurringException &&
-    item?.canReserve !== false;
+    canCancelReservation;
 
   const canCancelReserve =
     isReservableDate &&
     isManualReserved &&
-    !hasRecurringException;
+    !hasRecurringException &&
+    canCancelReservation;
 
   const canReserve =
     isReservableDate &&
@@ -179,9 +183,11 @@ const isManualReserved =
 
 if (hasRecurringException) {
   return {
-    tone: "available",
-    label: "예약 가능",
-    helperText: null,
+    tone: canUndoSkip ? "available" : "disabled",
+    label: canUndoSkip ? "예약 가능" : "이번만 쉬기",
+    helperText: canUndoSkip
+      ? null
+      : item?.reserveBlockedReason || null,
     actionLabel: canUndoSkip ? "출석 예정" : null,
     actionType: canUndoSkip ? "undoSkip" : null,
     isRecurring: false,
@@ -201,24 +207,28 @@ if (hasRecurringException) {
     };
   }
 
-  if (canSkipOnce) {
+  if (isRecurringReserved) {
     return {
       tone: "reserved",
       label: "정기출석 예정",
-      helperText: "정기출석으로 자동 예약된 수업입니다.",
-      actionLabel: "이번만 쉬기",
-      actionType: "skipOnce",
+      helperText: canSkipOnce
+        ? "정기출석으로 자동 예약된 수업입니다."
+        : item?.cancelReservationReason || null,
+      actionLabel: canSkipOnce ? "이번만 쉬기" : null,
+      actionType: canSkipOnce ? "skipOnce" : null,
       isRecurring: true,
     };
   }
 
-  if (canCancelReserve) {
+  if (isManualReserved) {
     return {
       tone: "reserved",
       label: "출석 예정",
-      helperText: null,
-      actionLabel: "예약 취소",
-      actionType: "cancelReserve",
+      helperText: canCancelReserve
+        ? null
+        : item?.cancelReservationReason || null,
+      actionLabel: canCancelReserve ? "예약 취소" : null,
+      actionType: canCancelReserve ? "cancelReserve" : null,
       isRecurring: false,
     };
   }
