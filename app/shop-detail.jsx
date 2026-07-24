@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { Link, router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberProducts, createProductOrder } from "../src/api/memberShop";
 import { normalizeShopCategory } from "../src/features/shop/shopCategory";
@@ -185,6 +185,17 @@ const detailImages = [
   .filter(Boolean)
   .filter((imageUrl) => !usedImages.includes(imageUrl));
 
+  function handleAddToCartAndOpenCart() {
+    if (!product) return;
+
+    addToCart(product, 1);
+
+    // Let CartContext commit the item before changing the route.
+    setTimeout(() => {
+      router.push("/cart");
+    }, 0);
+  }
+
   async function handleOrder() {
     if (ordering) return;
 
@@ -236,13 +247,20 @@ const detailImages = [
         <View style={styles.shopHeader}>
           <ScreenHeader title="상품 상세" />
 
-          <Pressable style={styles.cartButton} onPress={() => router.push("/cart")}>
+          <Link href="/cart" asChild>
+            <Pressable
+              style={styles.cartButton}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="장바구니로 이동"
+            >
             <Image
               source={require("../assets/images/icon-shop-cart.png")}
               style={styles.cartImage}
               resizeMode="contain"
             />
           </Pressable>
+          </Link>
         </View>
 
         <View style={styles.heroCard}>
@@ -384,10 +402,7 @@ const detailImages = [
       <View style={styles.bottomBar}>
         <Pressable
           style={styles.outlineButton}
-          onPress={() => {
-            addToCart(product, 1);
-            router.push("/cart");
-          }}
+          onPress={handleAddToCartAndOpenCart}
         >
           <Text style={styles.outlineButtonText}>장바구니</Text>
         </Pressable>
@@ -433,6 +448,8 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 30,
+    elevation: 30,
   },
   cartImage: {
     width: 24,

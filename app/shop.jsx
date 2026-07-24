@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberProducts } from "../src/api/memberShop";
 import { normalizeShopCategory } from "../src/features/shop/shopCategory";
@@ -294,13 +294,20 @@ const bestProducts = useMemo(() => {
       <View style={styles.topContent}>
   <View style={styles.shopHeader}>
   <ScreenHeader title="현중 Shop" />
- <Pressable style={styles.cartButton} onPress={() => router.push("/cart")}>
+ <Link href="/cart" asChild>
+            <Pressable
+              style={styles.cartButton}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="장바구니로 이동"
+            >
     <Image
       source={require("../assets/images/icon-shop-cart.png")}
       style={styles.cartImage}
       resizeMode="contain"
     />
   </Pressable>
+          </Link>
 </View>
 
   <View style={styles.heroArea}>
@@ -804,6 +811,8 @@ cartButton: {
   height: 44,
   alignItems: "center",
   justifyContent: "center",
+    zIndex: 30,
+    elevation: 30,
 },
 
 cartImage: {
