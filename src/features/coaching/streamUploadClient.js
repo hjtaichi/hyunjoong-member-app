@@ -159,7 +159,7 @@ export async function finalizeCoachingStreamUpload({
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      return await authenticatedJsonRequest(
+      const result = await authenticatedJsonRequest(
         "/api/me/coaching-videos/stream-finalize",
         token,
         {
@@ -168,10 +168,24 @@ export async function finalizeCoachingStreamUpload({
           fetchImpl,
         }
       );
+
+      if (result?.data?.state === "processing") {
+        const processingError = new Error(
+          result?.message ||
+            "영상 변환이 아직 완료되지 않았습니다."
+        );
+        processingError.status = 202;
+        throw processingError;
+      }
+
+      return result;
     } catch (error) {
       lastError = error;
 
-      if (error?.status !== 409 || attempt === attempts) {
+      if (
+        ![202, 409].includes(error?.status) ||
+        attempt === attempts
+      ) {
         throw error;
       }
 
