@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#050505",
+        "backgroundColor": "#071A39",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png"
       },
@@ -29,23 +29,30 @@
       "favicon": "./public/icon.png",
       "name": "현중태극권",
       "shortName": "현중태극권",
-      "backgroundColor": "#F6F2EC",
-      "themeColor": "#2B221D",
-      "display": "standalone"
+      "backgroundColor": "#071A39",
+      "themeColor": "#071A39",
+      "display": "standalone",
+      "splash": {
+        "image": "./assets/images/android-icon-foreground.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#071A39"
+      }
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/loading-screen.png",
+          "image": "./assets/images/android-icon-foreground.png",
           "resizeMode": "contain",
-          "backgroundColor": "#F6F2EC",
+          "backgroundColor": "#071A39",
           "dark": {
-            "image": "./assets/images/loading-screen.png",
+            "image": "./assets/images/android-icon-foreground.png",
             "resizeMode": "contain",
-            "backgroundColor": "#F6F2EC"
-          }
+            "imageWidth": 150,
+            "backgroundColor": "#071A39"
+          },
+          "imageWidth": 150
         }
       ],
       "expo-secure-store",

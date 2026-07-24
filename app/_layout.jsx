@@ -93,6 +93,65 @@ async function registerForPushNotificationsAsync() {
 
   return pushToken;
 }
+function isAdminManagedBrowser() {
+  if (
+    Platform.OS !== "web" ||
+    typeof document === "undefined"
+  ) {
+    return false;
+  }
+
+  return document.cookie
+    .split(";")
+    .map((item) => item.trim())
+    .includes("hjtaichi_admin_device=1");
+}
+
+async function removeMemberWebPushFromAdminBrowser() {
+  if (
+    typeof navigator === "undefined" ||
+    !("serviceWorker" in navigator)
+  ) {
+    return;
+  }
+
+  try {
+    const registration =
+      await navigator.serviceWorker.ready;
+
+    const subscription =
+      await registration.pushManager
+        ?.getSubscription();
+
+    if (subscription) {
+      await subscription.unsubscribe();
+    }
+
+    window.localStorage.setItem(
+      "hjtaichi_member_web_push_suppressed",
+      "admin_device"
+    );
+  } catch (error) {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        "hjtaichi_member_web_push_cleanup_status",
+        "failed"
+      );
+      window.localStorage.setItem(
+        "hjtaichi_member_web_push_cleanup_error_code",
+        String(
+          error?.name ||
+            "MemberWebPushCleanupError"
+        )
+      );
+      window.localStorage.setItem(
+        "hjtaichi_member_web_push_cleanup_failed_at",
+        new Date().toISOString()
+      );
+    }
+  }
+}
+
 async function registerForWebPushNotificationsAsync(accessToken) {
 
   if (Platform.OS !== "web") return null;
@@ -113,6 +172,10 @@ async function registerForWebPushNotificationsAsync(accessToken) {
     return null;
   }
 
+  if (isAdminManagedBrowser()) {
+    await removeMemberWebPushFromAdminBrowser();
+    return null;
+  }
 
   const permission = await Notification.requestPermission();
 
