@@ -32,7 +32,7 @@ export default function CoachingDetailScreen() {
     ""
   );
 
-  const videoId = String(videoId || "").trim();
+  const videoId = String(params.id || "").trim();
 
   function buildApiUrl(pathname) {
     const path = String(pathname || "");

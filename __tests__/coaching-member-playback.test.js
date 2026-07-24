@@ -9,6 +9,17 @@ function read(relativePath) {
 }
 
 describe("member coaching playback screen", () => {
+  test("does not reference videoId before initialization", () => {
+    const source = read("app/coaching-detail.jsx");
+
+    expect(source).toContain(
+      'const videoId = String(params.id || "").trim();'
+    );
+    expect(source).not.toContain(
+      'const videoId = String(videoId || "").trim();'
+    );
+  });
+
   test("loads an owned playback response instead of concatenating stored Stream URLs", () => {
     const source = read("app/coaching-detail.jsx");
 
