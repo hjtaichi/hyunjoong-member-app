@@ -12,7 +12,7 @@ export default function TrainingSection({
   privateLessonMenuDesc,
 }) {
   return (
-    <>
+    <View style={styles.trainingSection}>
       <Text style={styles.sectionLabel}>현재 수련</Text>
 
       <View style={styles.coachingInlineBox}>
@@ -252,6 +252,6 @@ export default function TrainingSection({
 
         <Text style={styles.privateGuideBannerArrow}>〉</Text>
       </TouchableOpacity>
-    </>
+    </View>
   );
 }

@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../../src/contexts/AuthContext";
-import { colors } from "../../src/theme/colors";
+import { colors, readability } from "../../src/theme";
 
 export default function TabLayout() {
   const auth = useAuth();
@@ -107,12 +107,13 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.warmBrown,
-        tabBarInactiveTintColor: colors.softBrown,
+        tabBarInactiveTintColor: colors.navInactive,
         tabBarHideOnKeyboard: true,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: readability.tabLabel.fontSize,
+          lineHeight: readability.tabLabel.lineHeight,
           fontWeight: "700",
-          marginTop: 0,
+          marginTop: 1,
         },
         tabBarIconStyle: {
           marginTop: 3,

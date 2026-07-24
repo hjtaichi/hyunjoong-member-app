@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
-import { colors, radius, shadow } from "../theme";
+import { colors, radius, shadow, readability } from "../theme";
 import { useAuth } from "../contexts/AuthContext";
 import { getMemberNoticeList } from "../api/memberNotice";
 
@@ -262,17 +262,18 @@ popupBadgeText: {
 },
 
 mainContent: {
-  fontSize: 14,
+  fontSize: readability.body.fontSize,
   fontFamily: fonts.medium,
-  lineHeight: 21,
-  color: colors.textSub,
+  lineHeight: readability.body.lineHeight,
+  color: colors.textSubStrong,
   marginBottom: 8,
 },
 
 mainDate: {
-  fontSize: 13,
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
   fontFamily: fonts.medium,
-  color: colors.textMuted,
+  color: colors.textMeta,
   letterSpacing: 0.3,
 },
 
@@ -313,7 +314,7 @@ mainDate: {
   },
 
   noticeRow: {
-  minHeight: 50,
+  minHeight: 56,
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
@@ -326,7 +327,8 @@ mainDate: {
 
   noticeTitle: {
   flex: 1,
-  fontSize: 15,
+  fontSize: 16,
+  lineHeight: 22,
   fontFamily: fonts.semiBold,
   color: colors.textMain,
 },
@@ -338,14 +340,16 @@ mainDate: {
   },
 
 noticeDate: {
-  fontSize: 11,
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
   fontFamily: fonts.medium,
-  color: colors.textMuted,
+  color: colors.textMeta,
 },
 
   arrow: {
-    fontSize: 10,
-    color: colors.softBrown,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.navInactive,
     marginTop: -2,
   },
 
@@ -403,9 +407,10 @@ noticeDate: {
   },
 
   loadingText: {
-  fontSize: 13,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontFamily: fonts.medium,
-  color: colors.textSub,
+  color: colors.textSubStrong,
 },
 
 emptyText: {

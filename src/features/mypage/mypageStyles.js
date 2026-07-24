@@ -1,5 +1,5 @@
 import { Platform, StyleSheet } from "react-native";
-import { colors, radius, shadow } from "../../theme";
+import { colors, radius, shadow, readability } from "../../theme";
 
 const fonts = {
   regular: "PretendardRegular",
@@ -46,13 +46,13 @@ center: {
   color: colors.textMain,
 },
   subtitle: {
-  fontSize: 15,
+  fontSize: readability.body.fontSize,
   fontFamily: fonts.medium,
-  color: colors.textSub,
+  color: colors.textSubStrong,
   marginTop: -8,
   marginBottom: 10,
   marginLeft: 4,
-  lineHeight: 20,
+  lineHeight: readability.body.lineHeight,
 },
   profileCard: {
     backgroundColor: "#F8F5EF",
@@ -708,16 +708,17 @@ heroLevelBadge: {
 },
 
 heroLevelBadgeText: {
-  fontSize: 11,
+  fontSize: readability.statusLabel.fontSize,
+  lineHeight: readability.statusLabel.lineHeight,
   fontWeight: "900",
   color: colors.warmBrown,
 },
 
 heroSubText: {
   marginTop: 8,
-  fontSize: 14,
-  lineHeight: 19,
-  color: "#7D746D",
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
+  color: colors.textSubStrong,
 },
 
 heroAvatarButton: {
@@ -814,9 +815,10 @@ heroPaymentRow: {
 },
 
 heroSmallLabel: {
-  fontSize: 12,
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
   fontWeight: "800",
-  color: "#A78D83",
+  color: colors.textMeta,
   marginBottom: 6,
 },
 
@@ -829,20 +831,23 @@ heroPaymentBadge: {
 },
 
 heroPaymentBadgeText: {
-  fontSize: 12,
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
   fontWeight: "900",
   color: "#6B4F46",
 },
 
 heroPayButton: {
-  paddingHorizontal: 14,
+  minHeight: 44,
+  paddingHorizontal: 16,
   paddingVertical: 9,
   borderRadius: 999,
   backgroundColor: "#2B2522",
 },
 
 heroPayButtonText: {
-  fontSize: 12,
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
   fontWeight: "900",
   color: "#FFFFFF",
 },
@@ -929,9 +934,9 @@ menuSection: {
 },
 
 menuRow: {
-  minHeight: 68,
+  minHeight: readability.comfortableRow.minHeight,
   paddingHorizontal: 18,
-  paddingVertical: 13,
+  paddingVertical: readability.comfortableRow.paddingVertical,
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
@@ -951,23 +956,25 @@ menuTextWrap: {
 },
 
 menuTitle: {
-  fontSize: 15,
-  fontFamily: fonts.bold,
+  fontSize: readability.listTitle.fontSize,
+  lineHeight: readability.listTitle.lineHeight,
+  fontFamily: fonts.semiBold,
   color: colors.textMain,
 },
 
 menuDescription: {
-  marginTop: 4,
-  fontSize: 12,
-  color: "#7D746D",
+  marginTop: 3,
+  fontSize: readability.listDescription.fontSize,
+  lineHeight: readability.listDescription.lineHeight,
+  color: colors.textSubStrong,
 },
 
 menuArrow: {
-  width: 18,
+  width: 20,
   textAlign: "center",
-  fontSize: 13,
-  lineHeight: 18,
-  color: "#a08f7a",
+  fontSize: 16,
+  lineHeight: 22,
+  color: colors.navInactive,
   fontWeight: "300",
   marginRight: 2,
 },
@@ -1003,9 +1010,9 @@ heroYudanjaBadgeText: {
 
 heroMetaText: {
   marginTop: 4,
-  fontSize: 12,
-  lineHeight: 13,
-  color: "#A78D83",
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
+  color: colors.textSubStrong,
 },
 
 heroPaymentInfo: {
@@ -1014,9 +1021,9 @@ heroPaymentInfo: {
 
 heroPaymentDueText: {
   marginTop: 8,
-  fontSize: 12,
-  lineHeight: 18,
-  color: "#7D746D",
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
+  color: colors.textSubStrong,
 },
 noAvatarCircle: {
   width: 66,

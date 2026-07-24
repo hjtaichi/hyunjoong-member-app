@@ -11,6 +11,7 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberProducts } from "../src/api/memberShop";
+import { normalizeShopCategory } from "../src/features/shop/shopCategory";
 import { colors, radius, shadow } from "../src/theme";
 import ScreenHeader from "../src/components/ScreenHeader";
 import { API_BASE_URL } from "../src/config/env";
@@ -68,6 +69,28 @@ const SHOP_CATEGORIES = [
   },
 ];
 
+function formatProductPrice(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const normalized = String(value)
+    .trim()
+    .replace(/,/g, "");
+
+  if (!normalized) {
+    return null;
+  }
+
+  const amount = Number(normalized);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+
+  return `${amount.toLocaleString("ko-KR")}원`;
+}
+
 function getImageUrl(imageUrl) {
   if (!imageUrl) return null;
   if (imageUrl.startsWith("http")) return imageUrl;
@@ -99,19 +122,15 @@ function getStockLabel(product) {
 }
 
 function getMainCategory(product) {
-  const category = product?.category || "";
-
-  const found = SHOP_CATEGORIES.find((item) =>
-    item.match.some((word) => category.includes(word) || word.includes(category))
-  );
-
-  return found?.key || "기타";
+  return normalizeShopCategory(product?.category);
 }
 
 function ProductCard({ product }) {
   const stock = getStockLabel(product);
   const imageSource = getImageUrl(product.imageUrl);
   const category = getMainCategory(product);
+  const priceLabel =
+    formatProductPrice(product.price);
 
   return (
     <Pressable
@@ -164,6 +183,12 @@ function ProductCard({ product }) {
           </View>
         </View>
 
+        {priceLabel ? (
+          <Text style={styles.productPrice}>
+            {priceLabel}
+          </Text>
+        ) : null}
+
         <Text style={styles.stockDesc}>{stock.desc}</Text>
       </View>
     </Pressable>
@@ -172,6 +197,8 @@ function ProductCard({ product }) {
 
 function SmallProductCard({ product, badge }) {
   const imageSource = getImageUrl(product.imageUrl);
+  const priceLabel =
+    formatProductPrice(product.price);
 
   return (
     <Pressable
@@ -204,6 +231,12 @@ function SmallProductCard({ product, badge }) {
       <Text style={styles.smallName} numberOfLines={1}>
         {product.name}
       </Text>
+
+      {priceLabel ? (
+        <Text style={styles.smallPrice}>
+          {priceLabel}
+        </Text>
+      ) : null}
       
     </Pressable>
   );

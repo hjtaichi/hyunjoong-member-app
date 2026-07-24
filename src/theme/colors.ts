@@ -13,6 +13,9 @@ export const colors = {
   textMain: "#3A2C27",
   textSub: "#8A7A72",
   textMuted: "#A99F98",
+  textSubStrong: "#6F625B",
+  textMeta: "#7D7068",
+  navInactive: "#8B756C",
 
   border: "#EFE5DE",
   divider: "#F3EAE4",

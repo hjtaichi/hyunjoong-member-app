@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { colors, spacing, radius, shadow } from "../../../src/theme";
+import { colors, spacing, radius, shadow, readability } from "../../../src/theme";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { getMemberInquiries } from "../../../src/api/memberInquiry";
 import { createMemberInquiry } from "../../../src/api/memberInquiryCreate";
@@ -545,7 +545,8 @@ segmentActive: {
 },
 
 segmentText: {
-  fontSize: 14,
+  fontSize: 15,
+  lineHeight: 21,
   fontFamily: fonts.semiBold,
   color: colors.softBrown,
 },
@@ -587,7 +588,7 @@ segmentTextActive: {
 },
 
 guideItem: {
-  minHeight: 74,
+  minHeight: 80,
   flexDirection: "row",
   alignItems: "center",
 },
@@ -610,22 +611,24 @@ guideTextBlock: {
   flex: 1,
 },
 guideTitle: {
-  fontSize: 18,
-  fontFamily: fonts.bold,
+  fontSize: readability.listTitle.fontSize,
+  lineHeight: readability.listTitle.lineHeight,
+  fontFamily: fonts.semiBold,
   color: colors.textMain,
 },
 
 guideText: {
-  marginTop: 5,
-  fontSize: 13,
+  marginTop: 4,
+  fontSize: readability.listDescription.fontSize,
   fontWeight: "500",
-  lineHeight: 18,
-  color: colors.textSub,
+  lineHeight: readability.listDescription.lineHeight,
+  color: colors.textSubStrong,
 },
 
 chevron: {
-  fontSize: 13,
-  color: colors.softBrown,
+  fontSize: 16,
+  lineHeight: 22,
+  color: colors.navInactive,
   marginLeft: 12,
   marginTop: -2,
 },
@@ -665,9 +668,9 @@ divider: {
   },
   emptyText: {
     paddingVertical: 24,
-    fontSize: 14,
-    lineHeight: 22,
-    color: "#7a6f66",
+    fontSize: readability.body.fontSize,
+    lineHeight: readability.body.lineHeight,
+    color: colors.textSubStrong,
   },
 
   badgeRow: {
@@ -696,7 +699,8 @@ divider: {
     backgroundColor: "#f1dcd3",
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: readability.statusLabel.fontSize,
+    lineHeight: readability.statusLabel.lineHeight,
     fontWeight: "800",
   },
   badgeTextDefault: {
@@ -761,8 +765,8 @@ divider: {
   },
   pausedText: {
     marginTop: 6,
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: readability.metadataStrong.fontSize,
+    lineHeight: readability.metadataStrong.lineHeight,
     color: "#7c4d30",
   },
   logoutButton: {
@@ -788,9 +792,10 @@ noticeTitleBlock: {
 },
 
 sectionInlineDesc: {
-  fontSize: 14,
+  fontSize: readability.body.fontSize,
+  lineHeight: readability.body.lineHeight,
   fontFamily: fonts.medium,
-  color: colors.textSub,
+  color: colors.textSubStrong,
   marginLeft: 4,
 },
 noticeHero: {
@@ -836,26 +841,28 @@ inquiryRightMeta: {
 },
 
 inquiryTitle: {
-  fontSize: 18,
-  fontFamily: fonts.bold,
+  fontSize: readability.listTitle.fontSize,
+  lineHeight: readability.listTitle.lineHeight,
+  fontFamily: fonts.semiBold,
   color: colors.textMain,
 },
 
 inquiryMessage: {
-  marginTop: 18,
-  fontSize: 14,
-  lineHeight: 21,
-  color: colors.textSub,
+  marginTop: 8,
+  fontSize: readability.listDescription.fontSize,
+  lineHeight: readability.listDescription.lineHeight,
+  color: colors.textSubStrong,
 },
 
 inquiryRightDate: {
-  fontSize: 12,
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
   fontWeight: "600",
-  color: colors.textMuted,
+  color: colors.textMeta,
 },
 shopMiniCard: {
   position: "relative",
-  height: 88,
+  height: 96,
   borderRadius: 21,
   overflow: "hidden",
   marginTop: 6,
@@ -897,8 +904,8 @@ shopMiniTextBox: {
 
 shopMiniDesc: {
   marginTop: 4,
-  fontSize: 10,
-  lineHeight: 14,
+  fontSize: 12,
+  lineHeight: 17,
   fontFamily: fonts.medium,
   color: "#5E4A3C",
 },
@@ -908,8 +915,8 @@ shopMiniTopLink: {
   right: 15,
   top: 8,
   zIndex: 4,
-  fontSize: 11,
-  lineHeight: 16,
+  fontSize: readability.statusLabel.fontSize,
+  lineHeight: readability.statusLabel.lineHeight,
   fontFamily: fonts.bold,
   color: "#5A3B29",
 },
@@ -930,7 +937,8 @@ countText: {
 },
 
 allInquiryLink: {
-  fontSize: 13,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontFamily: fonts.semiBold,
   color: colors.warmBrown,
 },

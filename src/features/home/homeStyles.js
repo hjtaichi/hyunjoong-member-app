@@ -1,5 +1,5 @@
 import { Platform, StyleSheet } from "react-native";
-import { colors, spacing, radius, shadow } from "../../theme";
+import { colors, spacing, radius, shadow, readability } from "../../theme";
 
 const isWeb = Platform.OS === "web";
 const fonts = {
@@ -71,7 +71,7 @@ homeHeaderTextBlock: {
 },
 
   homeGreeting: {
-  fontSize: isWeb ? 16 : 15,
+  fontSize: 16,
   fontFamily: fonts.semiBold,
   lineHeight: isWeb ? 20 : 20,
   color: colors.textSub,
@@ -106,7 +106,8 @@ homeName: {
 
 
   homeBadgeText: {
-  fontSize: 12,
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
   fontFamily: fonts.bold,
   color: colors.warmBrown,
 },
@@ -152,10 +153,11 @@ todayTrainingLabel: {
 },
 
 todayTrainingMore: {
-  fontSize: 11,
-  fontFamily: fonts.Medium,
-  marginTop: isWeb ? -10 : -10,
-  color: colors.textSub,
+  fontSize: readability.actionText.fontSize,
+  lineHeight: readability.actionText.lineHeight,
+  fontFamily: fonts.semiBold,
+  marginTop: -8,
+  color: colors.textSubStrong,
 },
 
 todayTrainingTitle: {
@@ -225,9 +227,10 @@ card: {
 },
 
 miniCalendarMore: {
-  fontSize: 11,
+  fontSize: readability.actionText.fontSize,
+  lineHeight: readability.actionText.lineHeight,
   fontFamily: fonts.semiBold,
-  color: colors.textSub,
+  color: colors.textSubStrong,
 },
 
   weekHeader: {
@@ -239,9 +242,10 @@ miniCalendarMore: {
   weekHeaderText: {
   flex: 1,
   textAlign: "center",
-  fontSize: 13,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontFamily: fonts.bold,
-  color: "#B7AAA2",
+  color: colors.textMeta,
 },
 
   weekHeaderTextSunday: {
@@ -278,7 +282,8 @@ miniCalendarMore: {
   },
 
   dayNumber: {
-  fontSize: 14,
+  fontSize: readability.body.fontSize,
+  lineHeight: readability.body.lineHeight,
   fontFamily: fonts.bold,
   color: colors.textMain,
   zIndex: 5,
@@ -355,9 +360,10 @@ miniCalendarMore: {
 },
 
 noticeSummaryMore: {
-  fontSize: 12,
+  fontSize: readability.actionText.fontSize,
+  lineHeight: readability.actionText.lineHeight,
   fontFamily: fonts.bold,
-  color: colors.textSub,
+  color: colors.textSubStrong,
 },
 
   noticeSummaryItem: {
@@ -375,22 +381,25 @@ noticeSummaryMore: {
 
   noticeSummaryText: {
   flex: 1,
-  fontSize: 14,
+  fontSize: readability.body.fontSize,
+  lineHeight: readability.body.lineHeight,
   fontFamily: fonts.semiBold,
   color: colors.textMain,
 },
 
 noticeSummaryDate: {
   marginLeft: 10,
-  fontSize: 12,
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
   fontFamily: fonts.semiBold,
-  color: colors.textSub,
+  color: colors.textMeta,
 },
 
   noticeSummaryEmpty: {
-    fontSize: 13,
+    fontSize: readability.metadataStrong.fontSize,
+    lineHeight: readability.metadataStrong.lineHeight,
     fontWeight: "600",
-    color: colors.textSub,
+    color: colors.textSubStrong,
     paddingVertical: 6,
   },
 
@@ -791,9 +800,10 @@ legendDotReserved: {
 },
 
 legendText: {
-  fontSize: 11,
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
   fontFamily: fonts.medium,
-  color: colors.textSub,
+  color: colors.textSubStrong,
 },
 todaySilhouette: {
   position: "absolute",
@@ -1007,11 +1017,11 @@ homeAttendanceSummary: {
   marginTop: 12,
   marginLeft: 2,
 
-  fontSize: isWeb ? 13 : 14,
-  lineHeight: isWeb ? 18 : 20,
+  fontSize: readability.body.fontSize,
+  lineHeight: readability.body.lineHeight,
 
   fontFamily: fonts.medium,
-  color: "#8E8178",
+  color: colors.textSubStrong,
 
   letterSpacing: -0.3,
 },
@@ -1058,9 +1068,10 @@ trainingRecordBannerTitle: {
 
 trainingRecordBannerSub: {
   marginTop: 3,
-  fontSize: 14,
+  fontSize: readability.body.fontSize,
+  lineHeight: readability.body.lineHeight,
   fontFamily: fonts.medium,
-  color: colors.textSub,
+  color: colors.textSubStrong,
 },
 
 trainingRecordBannerArrow: {
@@ -1098,9 +1109,10 @@ recordSelectItemTitle: {
 
 recordSelectItemSub: {
   marginTop: 4,
-  fontSize: 12,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontFamily: fonts.medium,
-  color: colors.textSub,
+  color: colors.textSubStrong,
 },
 
 recordSelectCancel: {
@@ -1198,10 +1210,11 @@ monthlyGoalMiniRow: {
 },
 
 monthlyGoalMiniText: {
-  fontSize: 13,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontFamily: "PretendardSemiBold",
   marginLeft: 2,
-  color: "#7B5E3B",
+  color: "#6F5132",
 },
 
 monthlyGoalSignal: {

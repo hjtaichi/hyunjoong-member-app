@@ -22,6 +22,15 @@ function MyPageHeroCard({
   onOpenAvatar,
   onOpenPayment,
 }) {
+  const joinedDateDisplay =
+    joinedDateLabel === "입관일 확인 필요"
+      ? "확인 필요"
+      : String(joinedDateLabel || "확인 필요").replace(/-/g, ".");
+
+  const joinedPeriodDisplay =
+    joinedPeriodLabel === "입관일 확인 필요"
+      ? "확인 필요"
+      : String(joinedPeriodLabel || "확인 필요").replace(/^입관\s+/, "");
   return (
     <View style={[styles.heroCard, isYudanja && styles.heroCardYudanja]}>
         {isYudanja ? (
@@ -66,12 +75,12 @@ function MyPageHeroCard({
       ) : null}
       </View>
       
-      <Text style={styles.heroSubText}>입관 {joinedDateLabel}</Text>
-      
-      <Text style={styles.heroMetaText}>{joinedPeriodLabel}</Text>
-      
+      <Text style={styles.heroSubText}>
+        입관일 {joinedDateDisplay} · {joinedPeriodDisplay}
+      </Text>
+
       <Text style={styles.heroMetaText}>
-        출석횟수 {attendanceSessionCount}회 ({attendanceDayCount}일)
+        누적 출석 {attendanceSessionCount}회 · 출석일 {attendanceDayCount}일
       </Text>
           </View>
       

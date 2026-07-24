@@ -13,6 +13,7 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberProducts, createProductOrder } from "../src/api/memberShop";
+import { normalizeShopCategory } from "../src/features/shop/shopCategory";
 import { colors, radius, shadow } from "../src/theme";
 import ScreenHeader from "../src/components/ScreenHeader";
 import { useCart } from "../src/contexts/CartContext";
@@ -26,6 +27,28 @@ const fonts = {
 };
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
+
+function formatProductPrice(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const normalized = String(value)
+    .trim()
+    .replace(/,/g, "");
+
+  if (!normalized) {
+    return null;
+  }
+
+  const amount = Number(normalized);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+
+  return `${amount.toLocaleString("ko-KR")}원`;
+}
 
 function getImageUrl(imageUrl) {
   if (!imageUrl) return null;
@@ -45,7 +68,50 @@ function getStockInfo(product) {
   return { label: "문의 필요", tone: "order" };
 }
 
-function DetailImageSection({ title, imageUrl, large = false, cover = false }) {
+function AutoRatioImage({ imageUrl, style }) {
+  const source = getImageUrl(imageUrl);
+  const [aspectRatio, setAspectRatio] = useState(1.25);
+
+  useEffect(() => {
+    if (!source) return undefined;
+
+    let active = true;
+
+    Image.getSize(
+      source,
+      (width, height) => {
+        if (active && width > 0 && height > 0) {
+          setAspectRatio(width / height);
+        }
+      },
+      () => {}
+    );
+
+    return () => {
+      active = false;
+    };
+  }, [source]);
+
+  if (!source) return null;
+
+  return (
+    <Image
+      source={{ uri: source }}
+      style={[style, { aspectRatio }]}
+      resizeMode="contain"
+      onLoad={(event) => {
+        const width = Number(event?.nativeEvent?.source?.width || 0);
+        const height = Number(event?.nativeEvent?.source?.height || 0);
+
+        if (width > 0 && height > 0) {
+          setAspectRatio(width / height);
+        }
+      }}
+    />
+  );
+}
+
+function DetailImageSection({ title, imageUrl, large = false }) {
   const source = getImageUrl(imageUrl);
   if (!source) return null;
 
@@ -53,13 +119,12 @@ function DetailImageSection({ title, imageUrl, large = false, cover = false }) {
     <View style={styles.detailSection}>
       {title ? <Text style={styles.detailSectionTitle}>{title}</Text> : null}
 
-      <Image
-        source={{ uri: source }}
+      <AutoRatioImage
+        imageUrl={source}
         style={[
           styles.detailImage,
           large && styles.detailImageLarge,
         ]}
-        resizeMode={cover ? "cover" : "contain"}
       />
     </View>
   );
@@ -101,6 +166,10 @@ export default function ShopDetailScreen() {
 
   const mainImage = getImageUrl(product?.imageUrl);
   const stock = getStockInfo(product);
+  const priceLabel =
+    formatProductPrice(product?.price);
+  const displayCategory =
+    normalizeShopCategory(product?.category);
 
 const usedImages = [
   product?.imageUrl,
@@ -188,7 +257,7 @@ const detailImages = [
 
         <View style={styles.summaryCard}>
           <View style={styles.categoryRow}>
-            <Text style={styles.categoryText}>{product.category || "현중 Shop"}</Text>
+            <Text style={styles.categoryText}>{displayCategory}</Text>
 
             <View
               style={[
@@ -215,6 +284,10 @@ const detailImages = [
             <Text style={styles.optionText}>{product.optionName}</Text>
           ) : null}
 
+          {priceLabel ? (
+            <Text style={styles.productPrice}>{priceLabel}</Text>
+          ) : null}
+
           <View style={styles.goldLine} />
 
           <Text style={styles.description}>
@@ -231,7 +304,6 @@ const detailImages = [
 <DetailImageSection
   imageUrl={product.lifestyleImageUrl}
   large
-  cover
 />
 
         {detailImages.length > 0 ? (
@@ -240,10 +312,9 @@ const detailImages = [
 
             {detailImages.map((imageUrl, index) => (
               <View key={`${imageUrl}-${index}`} style={styles.detailImageWrap}>
-                <Image
-                  source={{ uri: getImageUrl(imageUrl) }}
+                <AutoRatioImage
+                  imageUrl={imageUrl}
                   style={styles.detailImage}
-                  resizeMode="cover"
                 />
               </View>
             ))}
@@ -255,13 +326,20 @@ const detailImages = [
 
           <View style={styles.specRow}>
             <Text style={styles.specLabel}>분류</Text>
-            <Text style={styles.specValue}>{product.category || "기타"}</Text>
+            <Text style={styles.specValue}>{displayCategory}</Text>
           </View>
 
           <View style={styles.specRow}>
             <Text style={styles.specLabel}>옵션</Text>
             <Text style={styles.specValue}>{product.optionName || "도장 문의"}</Text>
           </View>
+
+          {priceLabel ? (
+            <View style={styles.specRow}>
+              <Text style={styles.specLabel}>가격</Text>
+              <Text style={styles.specValue}>{priceLabel}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.specRow}>
             <Text style={styles.specLabel}>재고</Text>
@@ -466,6 +544,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     color: colors.textSub,
   },
+  productPrice: {
+    marginTop: 8,
+    fontSize: 20,
+    lineHeight: 28,
+    fontFamily: fonts.bold,
+    color: colors.warmBrown || "#8A5E49",
+  },
   goldLine: {
     width: 42,
     height: 2,
@@ -481,14 +566,14 @@ const styles = StyleSheet.create({
     color: colors.textSub,
   },
   detailSection: {
-    marginTop: 10,
+    marginTop: 20,
   },
   detailGroup: {
-    marginTop: 22,
+    marginTop: 20,
     gap: 12,
   },
   detailSectionTitle: {
-    marginBottom: 10,
+    marginBottom: 12,
     fontSize: 18,
     lineHeight: 26,
     fontFamily: fonts.titleSemi,
@@ -499,14 +584,12 @@ const styles = StyleSheet.create({
   backgroundColor: "transparent",
 },
   detailImageLarge: {
-  aspectRatio: 1.05,
-  marginTop: -60,
-},
+    marginTop: 0,
+  },
 
-detailImage: {
-  width: "100%",
-  aspectRatio: 1.25,
-},
+  detailImage: {
+    width: "100%",
+  },
   specCard: {
     marginTop: 24,
     borderRadius: 26,

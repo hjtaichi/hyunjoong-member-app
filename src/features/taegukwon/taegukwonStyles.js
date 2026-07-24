@@ -1,5 +1,5 @@
 import { Platform, StyleSheet } from "react-native";
-import { colors, spacing, radius, shadow } from "../../theme";
+import { colors, spacing, radius, shadow, readability } from "../../theme";
 
 const isWeb = Platform.OS === "web";
 
@@ -836,7 +836,8 @@ topTabButtonActive: {
 },
 
 topTabText: {
-  fontSize: 14,
+  fontSize: 15,
+  lineHeight: 21,
   fontFamily: fonts.semiBold,
   color: colors.softBrown,
 },
@@ -845,33 +846,6 @@ topTabTextActive: {
   color: colors.white,
 },
 
-menuRow: {
-  minHeight: 68,
-  paddingHorizontal: 18,
-  paddingVertical: 13,
-  flexDirection: "row",
-  alignItems: "center",
-},
-
-menuRowLocked: {
-  opacity: 0.7,
-},
-
-menuTitle: {
-  fontSize: 17,
-  fontFamily: fonts.title,
-  color: colors.textMain,
-  marginBottom: 3,
-},
-menuDesc: {
-  fontSize: 12,
-  fontFamily: fonts.medium,
-  color: colors.textSub,
-},
-
-menuLock: {
-  fontSize: 18,
-},
 currentTrainingLabel: {
   fontSize: 11,
   fontWeight: "800",
@@ -883,8 +857,9 @@ currentTrainingLabel: {
 currentStepDescription: {
   marginTop: -2,
   marginBottom: 12,
-  fontSize: 13,
-  color: "#7b7064",
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
+  color: colors.textSubStrong,
   fontWeight: "600",
 },
 trainingHeroRow: {
@@ -920,7 +895,8 @@ progressSection: {
 },
 
 progressLabel: {
-  fontSize: 13,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontFamily: fonts.bold,
   color: colors.textMain,
   marginBottom: 4,
@@ -941,8 +917,9 @@ progressTrackInline: {
 },
 
 progressPercentInline: {
-  width: 42,
-  fontSize: 13,
+  width: 44,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontFamily: fonts.bold,
   color: colors.textMain,
 },
@@ -971,18 +948,24 @@ detailButton: {
   paddingVertical: 8,
 },
 detailTextButton: {
-  fontSize: 12,
+  fontSize: readability.actionText.fontSize,
+  lineHeight: readability.actionText.lineHeight,
   fontWeight: "700",
-  color: "#8a7f72",
+  color: colors.textSubStrong,
   marginTop: 2,
 },
 
+trainingSection: {
+  width: "100%",
+  gap: 12,
+},
 sectionLabel: {
-  fontSize: 18,
+  fontSize: 20,
+  lineHeight: 28,
   fontFamily: fonts.title,
   color: colors.textMain,
-  marginTop: 2,
-  marginBottom: 6,
+  marginTop: 0,
+  marginBottom: 0,
   marginLeft: 4,
 },
 
@@ -992,8 +975,8 @@ cardTopActionRow: {
   marginBottom: 2,
 },
 coachingInlineBox: {
-  marginTop: -6,
-  marginBottom: 10,
+  marginTop: 0,
+  marginBottom: 0,
   paddingHorizontal: 16,
   paddingVertical: 13,
   borderRadius: 18,
@@ -1032,8 +1015,8 @@ menuCard: {
 },
 
 menuRow: {
-  minHeight: 70,
-  paddingVertical: 12,
+  minHeight: readability.comfortableRow.minHeight,
+  paddingVertical: readability.comfortableRow.paddingVertical,
   borderBottomWidth: 1,
   borderBottomColor: "#f0e8dc",
   flexDirection: "row",
@@ -1046,8 +1029,8 @@ menuRowLast: {
 },
 
 menuIcon: {
-  width: 28,
-  height: 28,
+  width: 30,
+  height: 30,
   opacity: 0.82,
 },
 
@@ -1056,24 +1039,26 @@ menuTextWrap: {
 },
 
 menuTitle: {
-  fontSize: 17,
-  fontFamily: fonts.bold,
+  fontSize: readability.listTitle.fontSize,
+  lineHeight: readability.listTitle.lineHeight,
+  fontFamily: fonts.semiBold,
   color: colors.textMain,
 },
 
 menuDesc: {
-  marginTop: 4,
-  fontSize: 14,
+  marginTop: 3,
+  fontSize: readability.listDescription.fontSize,
+  lineHeight: readability.listDescription.lineHeight,
   fontFamily: fonts.medium,
-  color: colors.textSub,
+  color: colors.textSubStrong,
 },
 
 menuArrow: {
-  width: 18,
+  width: 20,
   textAlign: "center",
-  fontSize: 13,
-  lineHeight: 18,
-  color: "#a08f7a",
+  fontSize: 16,
+  lineHeight: 22,
+  color: colors.navInactive,
   fontWeight: "300",
   marginRight: 2,
 },
@@ -2637,7 +2622,7 @@ memoLimitText: {
   textAlign: "right",
 },
 privateGuideBanner: {
-  marginTop: 12,
+  marginTop: 0,
   paddingVertical: 14,
   paddingHorizontal: 16,
   borderRadius: 18,

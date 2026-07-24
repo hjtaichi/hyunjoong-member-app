@@ -1,5 +1,5 @@
 import { Platform, StyleSheet } from "react-native";
-import { colors, spacing, radius, shadow } from "../../theme";
+import { colors, spacing, radius, shadow, readability } from "../../theme";
 
 const isWeb = Platform.OS === "web";
 
@@ -69,35 +69,38 @@ selectedScheduleSummaryItem: {
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
-  paddingTop: 10,
-  paddingBottom: 8,
+  paddingTop: 12,
+  paddingBottom: 10,
   borderTopWidth: 1,
   borderTopColor: colors.border,
 },
 
 selectedScheduleTime: {
-  fontSize: 13,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontFamily: fonts.medium,
-  color: colors.textSub,
+  color: colors.textSubStrong,
   marginBottom: 6,
   marginTop: 6,
 },
 
 selectedScheduleName: {
-  fontSize: 16,
+  fontSize: readability.listTitle.fontSize,
+  lineHeight: readability.listTitle.lineHeight,
   fontFamily: fonts.bold,
   color: colors.textMain,
 },
 
 selectedScheduleStatusChip: {
-  paddingHorizontal: 8,
-  paddingVertical: 4,
+  paddingHorizontal: 10,
+  paddingVertical: 5,
   borderRadius: 8,
   backgroundColor: "#F7EEDC",
 },
 
 selectedScheduleStatusText: {
-  fontSize: 10,
+  fontSize: readability.statusLabel.fontSize,
+  lineHeight: readability.statusLabel.lineHeight,
   fontWeight: "700",
   color: "#9A7448",
 },
@@ -143,7 +146,8 @@ scheduleToggleActive: {
 },
 
 scheduleToggleText: {
-  fontSize: 14,
+  fontSize: 15,
+  lineHeight: 21,
   fontFamily: fonts.semiBold,
   color: colors.softBrown,
 },
@@ -153,9 +157,9 @@ scheduleToggleTextActive: {
 },
 
 monthButton: {
-  width: 20,
-  height: 20,
-  borderRadius: 8,
+  width: 36,
+  height: 36,
+  borderRadius: 18,
   backgroundColor: "transparent",
   alignItems: "center",
   justifyContent: "center",
@@ -169,7 +173,8 @@ monthButtonText: {
 },
 
 monthTitle: {
-  fontSize: 16,
+  fontSize: 18,
+  lineHeight: 25,
   fontFamily: fonts.title,
   color: colors.textMain,
 },
@@ -222,17 +227,19 @@ center: {
   },
   
 selectedScheduleSummaryMore: {
-  fontSize: 12,
+  fontSize: readability.actionText.fontSize,
+  lineHeight: readability.actionText.lineHeight,
   fontWeight: "600",
-  color: "#8A8176",
+  color: colors.textSubStrong,
 },
 
 weekHeaderText: {
     flex: 1,
     textAlign: "center",
-    fontSize: 14,
+    fontSize: readability.metadataStrong.fontSize,
+    lineHeight: readability.metadataStrong.lineHeight,
     fontWeight: "600",
-    color: "#9A8F81",
+    color: colors.textMeta,
   },
 
   weekHeaderTextSunday: {
@@ -240,7 +247,8 @@ weekHeaderText: {
   },
 
 dayNumber: {
-  fontSize: 15,
+  fontSize: readability.body.fontSize,
+  lineHeight: readability.body.lineHeight,
   fontWeight: "600",
   color: "#2B2522",
 },
@@ -426,14 +434,9 @@ compactStatusChip: {
   marginTop: 2,
 },
 
-compactRecurringBadge: {
-  backgroundColor: "#F7EEDC",
-  paddingHorizontal: 8,
-  paddingVertical: 3,
-  borderRadius: 999,
-},
 compactScheduleTitle: {
-  fontSize: 17,
+  fontSize: readability.listTitle.fontSize,
+  lineHeight: readability.listTitle.lineHeight,
   fontWeight: "700",
   color: "#2B2522",
   marginBottom: 4,
@@ -447,27 +450,29 @@ compactScheduleTitle: {
   },
 
   compactRecurringBadgeText: {
-    fontSize: 11,
+    fontSize: readability.statusLabel.fontSize,
+    lineHeight: readability.statusLabel.lineHeight,
     fontWeight: "700",
     color: "#8A684A",
   },
 
 
 compactStatusChipText: {
-  fontSize: 10,
+  fontSize: readability.statusLabel.fontSize,
+  lineHeight: readability.statusLabel.lineHeight,
   fontWeight: "700",
 },
 
 compactHelperText: {
-  marginTop: 2,
-  fontSize: 12,
-  lineHeight: 17,
-  color: "#8A8176",
+  marginTop: 3,
+  fontSize: readability.listDescription.fontSize,
+  lineHeight: readability.listDescription.lineHeight,
+  color: colors.textSubStrong,
 },
 
 compactActionButton: {
-  minWidth: 72,
-  height: 36,
+  minWidth: 84,
+  height: 40,
   paddingHorizontal: 10,
   borderRadius: 12,
   alignItems: "center",
@@ -476,7 +481,8 @@ compactActionButton: {
 },
 
 compactActionButtonText: {
-  fontSize: 12,
+  fontSize: readability.actionText.fontSize,
+  lineHeight: readability.actionText.lineHeight,
   fontWeight: "700",
   color: "#FFFFFF",
 },
@@ -602,15 +608,17 @@ weekDaySection: {
 },
 
 weekDayTitle: {
-  fontSize: 13,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontWeight: "700",
   color: "#6B4F46",
   marginBottom: 8,
 },
 
 weekEmptyText: {
-  fontSize: 12,
-  color: "#A78D83",
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
+  color: colors.textMeta,
 },
 
 weekScheduleRow: {
@@ -621,15 +629,17 @@ weekScheduleRow: {
 },
 
 weekScheduleTime: {
-  width: 70,
-  fontSize: 12,
+  width: 76,
+  fontSize: readability.metadata.fontSize,
+  lineHeight: readability.metadata.lineHeight,
   fontWeight: "500",
-  color: "#8A8176",
+  color: colors.textSubStrong,
 },
 
 weekScheduleName: {
   flex: 1,
-  fontSize: 13,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontWeight: "600",
   color: "#2B2522",
 },
@@ -642,7 +652,8 @@ weekScheduleStatusChip: {
 },
 
 weekScheduleStatusText: {
-  fontSize: 10,
+  fontSize: readability.statusLabel.fontSize,
+  lineHeight: readability.statusLabel.lineHeight,
   fontWeight: "700",
   color: "#9A7448",
 },
@@ -676,16 +687,18 @@ recurringInfoBox: {
 },
 
 recurringInfoLabel: {
-  fontSize: 14,
+  fontSize: 15,
+  lineHeight: 21,
   fontFamily: fonts.bold,
   color: colors.warmBrown,
 },
 
 recurringInfoText: {
   flex: 1,
-  fontSize: 13,
+  fontSize: readability.metadataStrong.fontSize,
+  lineHeight: readability.metadataStrong.lineHeight,
   fontFamily: fonts.semiBold,
-  color: colors.textSub,
+  color: colors.textSubStrong,
 },
 
 recurringSettingButton: {
