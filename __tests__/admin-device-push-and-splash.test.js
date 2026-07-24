@@ -124,11 +124,11 @@ describe("admin-device push isolation and separated launcher/splash icons", () =
           purpose: "any",
         }),
         expect.objectContaining({
-          src: "/icon-maskable-192-v104.png",
+          src: "/icon-maskable-192-v105.png",
           purpose: "maskable",
         }),
         expect.objectContaining({
-          src: "/icon-maskable-512-v104.png",
+          src: "/icon-maskable-512-v105.png",
           purpose: "maskable",
         }),
       ])
@@ -139,7 +139,7 @@ describe("admin-device push isolation and separated launcher/splash icons", () =
     const source = read("app/+html.jsx");
 
     expect(source).toContain(
-      '<link rel="manifest" href="/manifest.json?v=104" />'
+      '<link rel="manifest" href="/manifest.json?v=105" />'
     );
     expect(source).toContain(
       '<meta name="theme-color" content="#071A39" />'
