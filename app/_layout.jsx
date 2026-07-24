@@ -381,7 +381,7 @@ export default function RootLayout() {
     if (!("serviceWorker" in navigator)) return;
 
     navigator.serviceWorker
-      .register("/sw.js?v=20260724-v3", {
+      .register("/sw.js?v=20260724-v4", {
         updateViaCache: "none",
       })
       .catch((error) => {

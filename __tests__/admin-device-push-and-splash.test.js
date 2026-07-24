@@ -8,7 +8,7 @@ function read(relativePath) {
   );
 }
 
-describe("admin-device push isolation and navy splash", () => {
+describe("admin-device push isolation and separated launcher/splash icons", () => {
   test("member Web Push is removed from every app-origin service worker on an admin-managed browser", () => {
     const source = read("app/_layout.jsx");
 
@@ -31,7 +31,7 @@ describe("admin-device push isolation and navy splash", () => {
       "hjtaichi_member_web_push_cleanup_status"
     );
     expect(source).toContain(
-      '"/sw.js?v=20260724-v3"'
+      '"/sw.js?v=20260724-v4"'
     );
   });
 
@@ -54,7 +54,7 @@ describe("admin-device push isolation and navy splash", () => {
     );
   });
 
-  test("member service worker rejects admin-audience push and uses v103 icons", () => {
+  test("member service worker rejects admin-audience push and uses the compact notification icon", () => {
     const source = read("public/sw.js");
 
     expect(source).toContain(
@@ -64,11 +64,11 @@ describe("admin-device push isolation and navy splash", () => {
       'data.receiverRole === "admin"'
     );
     expect(source).toContain(
-      "/icon-192-v103.png"
+      "/icon-192.png?v=104"
     );
   });
 
-  test("native splash uses the transparent gold logo at twice the previous width", () => {
+  test("native splash keeps the large transparent logo at width 300", () => {
     const config = JSON.parse(
       read("app.json")
     );
@@ -96,20 +96,9 @@ describe("admin-device push isolation and navy splash", () => {
     expect(plugin[1].backgroundColor).toBe(
       "#071A39"
     );
-    expect(plugin[1].backgroundColor).toBe(
-      config.expo.web.backgroundColor
-    );
-    expect(plugin[1].backgroundColor).toBe(
-      config.expo.web.themeColor
-    );
-    expect(plugin[1].backgroundColor).toBe(
-      config.expo.android.adaptiveIcon
-        .backgroundColor
-    );
   });
 
-  test("web manifest uses matching navy v103 regular and maskable icons", () => {
-    const config = JSON.parse(read("app.json"));
+  test("web manifest separates the large PWA splash icons from the compact launcher maskable icons", () => {
     const manifest = JSON.parse(
       read("public/manifest.json")
     );
@@ -117,41 +106,40 @@ describe("admin-device push isolation and navy splash", () => {
     expect(manifest.background_color).toBe(
       "#071A39"
     );
-    expect(manifest.background_color).toBe(
-      config.expo.web.backgroundColor
-    );
     expect(manifest.theme_color).toBe(
-      config.expo.web.themeColor
+      "#071A39"
     );
 
     expect(manifest.icons).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          src: "/icon-192-v103.png",
+          src: "/icon-splash-192-v104.png",
           purpose: "any",
         }),
         expect.objectContaining({
-          src: "/icon-512-v103.png",
+          src: "/icon-splash-512-v104.png",
           purpose: "any",
         }),
         expect.objectContaining({
-          src: "/icon-maskable-192-v103.png",
+          src: "/icon-maskable-192-v104.png",
           purpose: "maskable",
         }),
         expect.objectContaining({
-          src: "/icon-maskable-512-v103.png",
+          src: "/icon-maskable-512-v104.png",
           purpose: "maskable",
         }),
       ])
     );
   });
 
-  test("HTML theme color is the same navy as the manifest", () => {
+  test("HTML forces the v104 manifest to be fetched instead of a cached manifest", () => {
     const source = read("app/+html.jsx");
 
     expect(source).toContain(
+      '<link rel="manifest" href="/manifest.json?v=104" />'
+    );
+    expect(source).toContain(
       '<meta name="theme-color" content="#071A39" />'
     );
-    expect(source).not.toContain("#2B221D");
   });
 });

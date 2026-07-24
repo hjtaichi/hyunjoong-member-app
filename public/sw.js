@@ -39,8 +39,8 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: payload.body || "",
-    icon: "/icon-192-v103.png",
-    badge: "/icon-192-v103.png",
+    icon: "/icon-192.png?v=104",
+    badge: "/icon-192.png?v=104",
     tag:
       data.notificationId ||
       `${data.type || "member"}-${Date.now()}`,
