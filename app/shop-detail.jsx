@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { Link, router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberProducts, createProductOrder } from "../src/api/memberShop";
 import { normalizeShopCategory } from "../src/features/shop/shopCategory";
@@ -247,20 +247,21 @@ const detailImages = [
         <View style={styles.shopHeader}>
           <ScreenHeader title="상품 상세" />
 
-          <Link href="/cart" asChild>
-            <Pressable
-              style={styles.cartButton}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="장바구니로 이동"
-            >
+          <Pressable
+            style={styles.cartButton}
+            onPress={() => router.push("/cart")}
+            hitSlop={14}
+            pointerEvents="auto"
+            accessibilityRole="button"
+            accessibilityLabel="장바구니로 이동"
+            testID="shop-detail-header-cart-button"
+          >
             <Image
               source={require("../assets/images/icon-shop-cart.png")}
               style={styles.cartImage}
               resizeMode="contain"
             />
           </Pressable>
-          </Link>
         </View>
 
         <View style={styles.heroCard}>
@@ -448,8 +449,8 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 30,
-    elevation: 30,
+    zIndex: 100,
+    elevation: 100,
   },
   cartImage: {
     width: 24,

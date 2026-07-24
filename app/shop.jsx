@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { getMemberProducts } from "../src/api/memberShop";
 import { normalizeShopCategory } from "../src/features/shop/shopCategory";
@@ -23,6 +23,8 @@ const fonts = {
 };
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
+const PRODUCTS_PER_PAGE = 5;
+const PAGE_BUTTON_WINDOW = 5;
 
 const SHOP_CATEGORIES = [
   {
@@ -246,6 +248,7 @@ export default function ShopScreen() {
   const { token } = useAuth();
   const [products, setProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   const loadProducts = useCallback(async () => {
@@ -280,6 +283,43 @@ const bestProducts = useMemo(() => {
     return products.filter((item) => getMainCategory(item) === selectedCategory);
   }, [products, selectedCategory]);
 
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE)
+  );
+
+  const currentPageProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+
+    return filteredProducts.slice(
+      startIndex,
+      startIndex + PRODUCTS_PER_PAGE
+    );
+  }, [filteredProducts, currentPage]);
+
+  const visiblePageNumbers = useMemo(() => {
+    const windowSize = Math.min(PAGE_BUTTON_WINDOW, totalPages);
+    const maxStart = Math.max(1, totalPages - windowSize + 1);
+    const centeredStart = currentPage - Math.floor(windowSize / 2);
+    const startPage = Math.min(
+      maxStart,
+      Math.max(1, centeredStart)
+    );
+
+    return Array.from(
+      { length: windowSize },
+      (_, index) => startPage + index
+    );
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -294,20 +334,21 @@ const bestProducts = useMemo(() => {
       <View style={styles.topContent}>
   <View style={styles.shopHeader}>
   <ScreenHeader title="현중 Shop" />
- <Link href="/cart" asChild>
-            <Pressable
-              style={styles.cartButton}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="장바구니로 이동"
-            >
+ <Pressable
+    style={styles.cartButton}
+    onPress={() => router.push("/cart")}
+    hitSlop={14}
+    pointerEvents="auto"
+    accessibilityRole="button"
+    accessibilityLabel="장바구니로 이동"
+    testID="shop-header-cart-button"
+  >
     <Image
       source={require("../assets/images/icon-shop-cart.png")}
       style={styles.cartImage}
       resizeMode="contain"
     />
   </Pressable>
-          </Link>
 </View>
 
   <View style={styles.heroArea}>
@@ -459,11 +500,81 @@ const bestProducts = useMemo(() => {
               </Text>
             </View>
           ) : (
-            filteredProducts.map((product) => (
+            currentPageProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))
           )}
         </View>
+
+        {filteredProducts.length > PRODUCTS_PER_PAGE ? (
+          <View style={styles.paginationWrap}>
+            <Pressable
+              style={[
+                styles.paginationArrow,
+                currentPage === 1 && styles.paginationButtonDisabled,
+              ]}
+              onPress={() =>
+                setCurrentPage((page) => Math.max(1, page - 1))
+              }
+              disabled={currentPage === 1}
+              accessibilityRole="button"
+              accessibilityLabel="이전 상품 페이지"
+            >
+              <Text style={styles.paginationArrowText}>‹</Text>
+            </Pressable>
+
+            {visiblePageNumbers.map((pageNumber) => {
+              const active = pageNumber === currentPage;
+
+              return (
+                <Pressable
+                  key={pageNumber}
+                  style={[
+                    styles.paginationButton,
+                    active && styles.paginationButtonActive,
+                  ]}
+                  onPress={() => setCurrentPage(pageNumber)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`상품 ${pageNumber}페이지`}
+                >
+                  <Text
+                    style={[
+                      styles.paginationButtonText,
+                      active && styles.paginationButtonTextActive,
+                    ]}
+                  >
+                    {pageNumber}
+                  </Text>
+                </Pressable>
+              );
+            })}
+
+            <Pressable
+              style={[
+                styles.paginationArrow,
+                currentPage === totalPages &&
+                  styles.paginationButtonDisabled,
+              ]}
+              onPress={() =>
+                setCurrentPage((page) =>
+                  Math.min(totalPages, page + 1)
+                )
+              }
+              disabled={currentPage === totalPages}
+              accessibilityRole="button"
+              accessibilityLabel="다음 상품 페이지"
+            >
+              <Text style={styles.paginationArrowText}>›</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {filteredProducts.length > PRODUCTS_PER_PAGE ? (
+          <Text style={styles.paginationSummary}>
+            {currentPage} / {totalPages} 페이지
+          </Text>
+        ) : null}
       </View>
     </ScrollView>
   );
@@ -678,6 +789,65 @@ categoryDescActive: {
     gap: 12,
     paddingHorizontal: 18,
   },
+  paginationWrap: {
+    marginTop: 20,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  paginationButton: {
+    minWidth: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paginationButtonActive: {
+    backgroundColor: colors.warmBrown,
+    borderColor: colors.warmBrown,
+  },
+  paginationButtonText: {
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    color: colors.textMain,
+  },
+  paginationButtonTextActive: {
+    color: colors.white,
+  },
+  paginationArrow: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: "#F8F1EB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paginationArrowText: {
+    marginTop: -2,
+    fontSize: 25,
+    lineHeight: 28,
+    fontFamily: fonts.medium,
+    color: colors.warmBrown,
+  },
+  paginationButtonDisabled: {
+    opacity: 0.35,
+  },
+  paginationSummary: {
+    marginTop: 10,
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
   productCard: {
   minHeight: 132,
   flexDirection: "row",
@@ -811,8 +981,8 @@ cartButton: {
   height: 44,
   alignItems: "center",
   justifyContent: "center",
-    zIndex: 30,
-    elevation: 30,
+    zIndex: 100,
+    elevation: 100,
 },
 
 cartImage: {
