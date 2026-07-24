@@ -5,18 +5,33 @@
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#071A39",
   "theme_color": "#071A39",
   "icons": [
     {
-      "src": "/icon-192-v102.png",
+      "src": "/icon-192-v103.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/icon-512-v102.png",
+      "src": "/icon-512-v103.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192-v103.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512-v103.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

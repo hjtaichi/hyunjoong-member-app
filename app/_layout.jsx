@@ -116,21 +116,42 @@ async function removeMemberWebPushFromAdminBrowser() {
   }
 
   try {
-    const registration =
-      await navigator.serviceWorker.ready;
+    const registrations =
+      await navigator.serviceWorker.getRegistrations();
 
-    const subscription =
-      await registration.pushManager
-        ?.getSubscription();
+    let unsubscribedCount = 0;
 
-    if (subscription) {
-      await subscription.unsubscribe();
+    for (const registration of registrations) {
+      const subscription =
+        await registration.pushManager
+          ?.getSubscription();
+
+      if (
+        subscription &&
+        (await subscription.unsubscribe())
+      ) {
+        unsubscribedCount += 1;
+      }
     }
 
-    window.localStorage.setItem(
-      "hjtaichi_member_web_push_suppressed",
-      "admin_device"
-    );
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        "hjtaichi_member_web_push_suppressed",
+        "admin_device"
+      );
+      window.localStorage.setItem(
+        "hjtaichi_member_web_push_cleanup_status",
+        "complete"
+      );
+      window.localStorage.setItem(
+        "hjtaichi_member_web_push_cleanup_count",
+        String(unsubscribedCount)
+      );
+      window.localStorage.setItem(
+        "hjtaichi_member_web_push_cleanup_completed_at",
+        new Date().toISOString()
+      );
+    }
   } catch (error) {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(
@@ -360,7 +381,9 @@ export default function RootLayout() {
     if (!("serviceWorker" in navigator)) return;
 
     navigator.serviceWorker
-      .register("/sw.js")
+      .register("/sw.js?v=20260724-v3", {
+        updateViaCache: "none",
+      })
       .catch((error) => {
         window.localStorage.setItem(
           "hjtaichi_service_worker_status",

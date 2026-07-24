@@ -6,27 +6,93 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
+function parsePushPayload(event) {
+  if (!event.data) {
+    return {};
+  }
+
+  try {
+    return event.data.json();
+  } catch {
+    return {
+      title: "현중태극권",
+      body: event.data.text(),
+      data: {},
+    };
+  }
+}
+
 self.addEventListener("push", (event) => {
-  if (!event.data) return;
+  const payload = parsePushPayload(event);
+  const data = payload.data || {};
 
-  const data = event.data.json();
+  if (
+    data.audience === "admin" ||
+    data.receiverRole === "admin"
+  ) {
+    event.waitUntil(Promise.resolve());
+    return;
+  }
 
-  const title = data.title || "현중태극권";
+  const title =
+    payload.title || "현중태극권";
 
   const options = {
-    body: data.body || "",
-    icon: "/icon-192-v102.png",
-    badge: "/icon-192-v102.png",
-    data: data.data || {},
+    body: payload.body || "",
+    icon: "/icon-192-v103.png",
+    badge: "/icon-192-v103.png",
+    tag:
+      data.notificationId ||
+      `${data.type || "member"}-${Date.now()}`,
+    data,
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration.showNotification(
+      title,
+      options
+    )
+  );
 });
 
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
+self.addEventListener(
+  "notificationclick",
+  (event) => {
+    event.notification.close();
 
-  const appUrl = new URL("/", self.location.origin).href;
+    const targetUrl =
+      event.notification?.data?.targetUrl ||
+      "/";
 
-  event.waitUntil(clients.openWindow(appUrl));
-});
+    const absoluteUrl = new URL(
+      targetUrl,
+      self.location.origin
+    ).href;
+
+    event.waitUntil(
+      self.clients
+        .matchAll({
+          type: "window",
+          includeUncontrolled: true,
+        })
+        .then((clientList) => {
+          const existingClient =
+            clientList.find(
+              (client) =>
+                client.url.startsWith(
+                  self.location.origin
+                )
+            );
+
+          if (existingClient) {
+            existingClient.navigate(absoluteUrl);
+            return existingClient.focus();
+          }
+
+          return self.clients.openWindow(
+            absoluteUrl
+          );
+        })
+    );
+  }
+);

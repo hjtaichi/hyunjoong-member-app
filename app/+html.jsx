@@ -10,7 +10,7 @@ export default function Root({ children }) {
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
         />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#2B221D" />
+        <meta name="theme-color" content="#071A39" />
       </head>
       <body>{children}</body>
     </html>
