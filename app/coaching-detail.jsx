@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,26 +17,132 @@ import { VideoView, useVideoPlayer } from "expo-video";
 export default function CoachingDetailScreen() {
   const params = useLocalSearchParams();
   const { token } = useAuth();
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
-const videoUrl = params.videoUrl
-  ? `${API_BASE_URL}${params.videoUrl}`
-  : "";
-
-const player = useVideoPlayer(videoUrl, (player) => {
-  player.loop = false;
-});
-
-const uploadedDate = params.createdAt
-  ? new Date(String(params.createdAt)).toLocaleDateString("ko-KR")
-  : "-";
   const [message, setMessage] = useState("");
   const [comments, setComments] = useState([]);
+  const [playback, setPlayback] = useState(null);
+  const [playbackLoading, setPlaybackLoading] = useState(true);
+  const [playbackError, setPlaybackError] = useState("");
+
+  const API_BASE_URL = String(
+    process.env.EXPO_PUBLIC_API_BASE_URL || ""
+  ).replace(/\/+$/, "");
+
+  const API_ORIGIN = API_BASE_URL.replace(
+    /\/api\/?$/,
+    ""
+  );
+
+  const videoId = String(videoId || "").trim();
+
+  function buildApiUrl(pathname) {
+    const path = String(pathname || "");
+    return `${API_ORIGIN}${
+      path.startsWith("/") ? path : `/${path}`
+    }`;
+  }
+
+  function getMediaUrl(url) {
+    const value = String(url || "").trim();
+
+    if (!value || value.startsWith("cloudflare-stream://")) {
+      return "";
+    }
+
+    if (
+      value.startsWith("http://") ||
+      value.startsWith("https://")
+    ) {
+      return value;
+    }
+
+    return `${API_ORIGIN}${
+      value.startsWith("/") ? value : `/${value}`
+    }`;
+  }
+
+  const player = useVideoPlayer(null, (videoPlayer) => {
+    videoPlayer.loop = false;
+  });
+
+  const uploadedDate = params.createdAt
+    ? new Date(
+        String(params.createdAt)
+      ).toLocaleDateString("ko-KR")
+    : "-";
+
+  const loadPlayback = useCallback(async () => {
+    if (!token || !videoId) {
+      setPlayback(null);
+      setPlaybackLoading(false);
+      setPlaybackError("영상 정보를 확인할 수 없습니다.");
+      return;
+    }
+
+    try {
+      setPlaybackLoading(true);
+      setPlaybackError("");
+
+      const res = await fetch(
+        buildApiUrl(
+          `/api/me/coaching-videos/${videoId}/playback?t=${Date.now()}`
+        ),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          result?.message ||
+            "영상 재생 주소를 불러오지 못했습니다."
+        );
+      }
+
+      setPlayback(result?.data || null);
+    } catch (error) {
+      setPlayback(null);
+      setPlaybackError(
+        error?.message ||
+          "영상 재생 준비 중 오류가 발생했습니다."
+      );
+    } finally {
+      setPlaybackLoading(false);
+    }
+  }, [token, videoId]);
+
+  const legacyVideoUrl =
+    playback?.type === "legacy"
+      ? getMediaUrl(
+          playback?.videoUrl || params.videoUrl
+        )
+      : "";
+
+  const nativeStreamUrl =
+    playback?.type === "cloudflare_stream"
+      ? String(
+          playback?.hlsUrl ||
+            playback?.dashUrl ||
+            ""
+        )
+      : "";
+
+  const playerSource =
+    playback?.type === "cloudflare_stream" &&
+    Platform.OS === "web"
+      ? ""
+      : nativeStreamUrl || legacyVideoUrl;
+
   const loadComments = useCallback(async () => {
-  if (!token || !params.id) return;
+  if (!token || !videoId) return;
 
   try {
     const res = await fetch(
-      `${API_BASE_URL}/api/me/coaching-videos/${params.id}/comments?t=${Date.now()}`,
+      buildApiUrl(`/api/me/coaching-videos/${videoId}/comments?t=${Date.now()}`),
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -51,27 +159,27 @@ const uploadedDate = params.createdAt
   } catch (error) {
     console.log("댓글 불러오기 실패:", error);
   }
-}, [token, params.id]);
+}, [token, videoId]);
 async function handleSendComment() {
   const text = message.trim();
 
   console.log("댓글 전송 시도:", {
     text,
-    videoId: params.id,
+    videoId: videoId,
     tokenExists: !!token,
-    url: `${API_BASE_URL}/api/me/coaching-videos/${params.id}/comments`,
+    url: buildApiUrl(`/api/me/coaching-videos/${videoId}/comments`),
   });
 
   if (!text) return;
 
-  if (!params.id) {
+  if (!videoId) {
     alert("영상 ID가 없습니다.");
     return;
   }
 
   try {
     const res = await fetch(
-      `${API_BASE_URL}/api/me/coaching-videos/${params.id}/comments`,
+      buildApiUrl(`/api/me/coaching-videos/${videoId}/comments`),
       {
         method: "POST",
         headers: {
@@ -101,8 +209,18 @@ async function handleSendComment() {
 }
 
 useEffect(() => {
-loadComments();
+  loadComments();
 }, [loadComments]);
+
+useEffect(() => {
+  loadPlayback();
+}, [loadPlayback]);
+
+useEffect(() => {
+  if (!playerSource) return;
+
+  player.replace(playerSource);
+}, [player, playerSource]);
 
   return (
     <View style={styles.screen}>
@@ -112,28 +230,65 @@ loadComments();
         </Pressable>
 
         <View style={styles.videoBox}>
-  {videoUrl ? (
-    <VideoView
-      style={styles.video}
-      player={player}
-      nativeControls
-      allowsFullscreen
-      allowsPictureInPicture
-    />
-  ) : (
-    <>
-      <Text style={styles.videoFileName}>
-        {params.originalName || "training-video.mp4"}
-      </Text>
-      <Image
-        source={require("../assets/images/taichi-silhouette.png")}
-        style={styles.videoImage}
-        resizeMode="contain"
-      />
-      <Text style={styles.playIcon}>▶</Text>
-    </>
-  )}
-</View>
+          {playbackLoading ? (
+            <View style={styles.videoStateBox}>
+              <ActivityIndicator
+                size="large"
+                color="#8A5A21"
+              />
+              <Text style={styles.videoStateText}>
+                영상 재생을 준비하고 있습니다.
+              </Text>
+            </View>
+          ) : playback?.type ===
+              "cloudflare_stream" &&
+            Platform.OS === "web" &&
+            playback?.iframeUrl ? (
+            <iframe
+              key={String(playback.iframeUrl)}
+              src={String(playback.iframeUrl)}
+              title="내 수련 영상"
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+              style={{
+                width: "100%",
+                height: "100%",
+                border: 0,
+                backgroundColor: "#000000",
+              }}
+            />
+          ) : playerSource ? (
+            <VideoView
+              style={styles.video}
+              player={player}
+              nativeControls
+              allowsFullscreen
+              allowsPictureInPicture
+            />
+          ) : (
+            <View style={styles.videoStateBox}>
+              <Image
+                source={require("../assets/images/taichi-silhouette.png")}
+                style={styles.videoImage}
+                resizeMode="contain"
+              />
+
+              <Text style={styles.videoErrorText}>
+                {playbackError ||
+                  "재생 가능한 영상 주소가 없습니다."}
+              </Text>
+
+              <Pressable
+                style={styles.retryButton}
+                onPress={loadPlayback}
+              >
+                <Text style={styles.retryButtonText}>
+                  다시 시도
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
 
         <Text style={styles.title}>
   {(params.curriculum || "수련")}{" "}
@@ -461,6 +616,48 @@ emptyCommentText: {
   color: "#9B8D84",
   textAlign: "center",
 },
+videoStateBox: {
+  width: "100%",
+  height: "100%",
+  alignItems: "center",
+  justifyContent: "center",
+  paddingHorizontal: 24,
+},
+
+videoStateText: {
+  marginTop: 12,
+  fontSize: 13,
+  fontWeight: "700",
+  color: "#6B4F46",
+  textAlign: "center",
+},
+
+videoErrorText: {
+  marginTop: 12,
+  fontSize: 13,
+  lineHeight: 20,
+  fontWeight: "700",
+  color: "#8A7A72",
+  textAlign: "center",
+},
+
+retryButton: {
+  marginTop: 14,
+  minWidth: 104,
+  height: 38,
+  paddingHorizontal: 16,
+  borderRadius: 19,
+  backgroundColor: "#F4E4C8",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+retryButtonText: {
+  fontSize: 13,
+  fontWeight: "900",
+  color: "#8A5A21",
+},
+
 video: {
   width: "100%",
   height: "100%",
