@@ -35,13 +35,13 @@ describe("admin-device push isolation and separated launcher/splash icons", () =
     );
   });
 
-  test("admin web can immediately clean the member-app subscription through the app-origin cleanup route", () => {
+  test("admin web can clean the member-app subscription through the app-origin cleanup route", () => {
     const source = read(
       "app/admin-device-cleanup.jsx"
     );
 
     expect(source).toContain(
-      "https://admin.hjtaichi.com/"
+      '"https://admin.hjtaichi.com"'
     );
     expect(source).toContain(
       "navigator.serviceWorker.getRegistrations()"
@@ -50,7 +50,10 @@ describe("admin-device push isolation and separated launcher/splash icons", () =
       "await subscription.unsubscribe()"
     );
     expect(source).toContain(
-      "HJTAICHI_MEMBER_PUSH_CLEANUP_COMPLETE"
+      "memberPushCleanup"
+    );
+    expect(source).toContain(
+      "window.location.replace("
     );
   });
 
