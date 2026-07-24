@@ -4,112 +4,133 @@ import {
   uploadFileToCloudflareStream,
 } from "../src/features/coaching/streamUploadClient";
 
-describe("Stream coaching upload client", () => {
-  test("requests a direct upload URL", async () => {
-    const fetchImpl = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 201,
-      text: async () =>
-        JSON.stringify({
-          data: {
-            uploadURL:
-              "https://upload.videodelivery.net/direct",
-            uid: "stream-1",
-          },
-        }),
-    });
+describe("Stream coaching TUS upload client", () => {
+  test(
+    "sends file metadata to the backend",
+    async () => {
+      const fetchImpl = jest
+        .fn()
+        .mockResolvedValue({
+          ok: true,
+          status: 201,
+          text: async () =>
+            JSON.stringify({
+              data: {
+                uploadURL:
+                  "https://upload.videodelivery.net/tus/abc",
+                uid: "stream-1",
+              },
+            }),
+        });
 
-    const result =
       await requestCoachingStreamUploadUrl({
         token: "member-token",
         title: "연습",
-        fetchImpl,
-      });
-
-    expect(result.uid).toBe("stream-1");
-
-    const [url, options] = fetchImpl.mock.calls[0];
-
-    expect(url).toContain(
-      "/api/me/coaching-videos/direct-upload-url"
-    );
-    expect(options.headers.Authorization).toBe(
-      "Bearer member-token"
-    );
-  });
-
-  test("uploads through tus and reports progress", async () => {
-    const progress = [];
-
-    class MockUpload {
-      constructor(file, options) {
-        this.options = options;
-        this.url = "https://upload.example/resume";
-      }
-
-      findPreviousUploads() {
-        return Promise.resolve([]);
-      }
-
-      start() {
-        this.options.onProgress(50, 100);
-        this.options.onSuccess();
-      }
-    }
-
-    await uploadFileToCloudflareStream({
-      file: {
-        name: "practice.mp4",
-        type: "video/mp4",
-        size: 100,
-      },
-      uploadURL: "https://upload.example",
-      onProgress: (value) => progress.push(value),
-      tusImpl: {
-        Upload: MockUpload,
-      },
-    });
-
-    expect(progress).toEqual([50]);
-  });
-
-  test("retries finalize while Stream is processing", async () => {
-    const fetchImpl = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 409,
-        text: async () =>
-          JSON.stringify({
-            message:
-              "영상 변환이 아직 완료되지 않았습니다.",
-          }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 201,
-        text: async () =>
-          JSON.stringify({
-            data: {
-              id: "video-1",
-              streamUid: "stream-1",
-            },
-          }),
-      });
-
-    const result =
-      await finalizeCoachingStreamUpload({
-        token: "token",
-        payload: {
-          streamUid: "stream-1",
+        file: {
+          size: 123,
+          name: "practice.mp4",
+          type: "video/mp4",
         },
-        attempts: 2,
-        delayMs: 0,
         fetchImpl,
-        sleepImpl: () => Promise.resolve(),
       });
 
-    expect(result.data.id).toBe("video-1");
-    expect(fetchImpl).toHaveBeenCalledTimes(2);
-  });
+      const [, options] =
+        fetchImpl.mock.calls[0];
+
+      expect(
+        JSON.parse(options.body)
+      ).toMatchObject({
+        fileSize: 123,
+        fileName: "practice.mp4",
+        fileType: "video/mp4",
+      });
+    }
+  );
+
+  test(
+    "uses the already-created TUS upload URL",
+    async () => {
+      let receivedOptions;
+
+      class MockUpload {
+        constructor(file, options) {
+          receivedOptions = options;
+          this.options = options;
+          this.url = options.uploadUrl;
+        }
+
+        findPreviousUploads() {
+          return Promise.resolve([]);
+        }
+
+        start() {
+          this.options.onProgress(50, 100);
+          this.options.onSuccess();
+        }
+      }
+
+      await uploadFileToCloudflareStream({
+        file: {
+          name: "practice.mp4",
+          type: "video/mp4",
+          size: 100,
+        },
+        uploadURL:
+          "https://upload.example/tus/resource",
+        tusImpl: {
+          Upload: MockUpload,
+        },
+      });
+
+      expect(receivedOptions.uploadUrl).toBe(
+        "https://upload.example/tus/resource"
+      );
+      expect(
+        receivedOptions.endpoint
+      ).toBeUndefined();
+    }
+  );
+
+  test(
+    "retries finalize while processing",
+    async () => {
+      const fetchImpl = jest
+        .fn()
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 409,
+          text: async () =>
+            JSON.stringify({
+              message: "processing",
+            }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 201,
+          text: async () =>
+            JSON.stringify({
+              data: {
+                id: "video-1",
+              },
+            }),
+        });
+
+      const result =
+        await finalizeCoachingStreamUpload({
+          token: "token",
+          payload: {
+            streamUid: "stream-1",
+          },
+          attempts: 2,
+          delayMs: 0,
+          fetchImpl,
+          sleepImpl: () =>
+            Promise.resolve(),
+        });
+
+      expect(result.data.id).toBe(
+        "video-1"
+      );
+    }
+  );
 });

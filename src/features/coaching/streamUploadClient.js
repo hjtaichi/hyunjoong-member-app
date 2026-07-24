@@ -61,6 +61,7 @@ async function authenticatedJsonRequest(
 export async function requestCoachingStreamUploadUrl({
   token,
   title,
+  file,
   fetchImpl,
 }) {
   const result = await authenticatedJsonRequest(
@@ -70,6 +71,9 @@ export async function requestCoachingStreamUploadUrl({
       method: "POST",
       body: {
         title: String(title || ""),
+        fileSize: Number(file?.size || 0),
+        fileName: String(file?.name || ""),
+        fileType: String(file?.type || ""),
       },
       fetchImpl,
     }
@@ -94,7 +98,7 @@ export function uploadFileToCloudflareStream({
 }) {
   return new Promise((resolve, reject) => {
     const upload = new tusImpl.Upload(file, {
-      endpoint: uploadURL,
+      uploadUrl: uploadURL,
       uploadSize: file.size,
       retryDelays: [0, 1000, 3000, 5000, 10000],
       removeFingerprintOnSuccess: true,
@@ -202,6 +206,7 @@ export async function uploadCoachingVideoToStream({
     await requestCoachingStreamUploadUrl({
       token,
       title: metadata?.title,
+      file,
       fetchImpl,
     });
 
