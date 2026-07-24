@@ -6,8 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
-  Animated,
-  PanResponder,
+  Modal,
 } from "react-native";
 import { router } from "expo-router";
 import { getMemberHome } from "../src/api/memberHome";
@@ -75,8 +74,6 @@ const statsIcon = require("../assets/images/stats-icon.png");
 const backIcon = require("../assets/images/back.png");
 const STATS_SHEET_COLLAPSED_HEIGHT = 82;
 const STATS_SHEET_EXPANDED_HEIGHT = 320;
-const STATS_SHEET_COLLAPSED_OFFSET =
-  STATS_SHEET_EXPANDED_HEIGHT - STATS_SHEET_COLLAPSED_HEIGHT;
 const JOURNEY_IMAGES = {
   spring: {
     start: require("../assets/journey/spring/spring-start.png"),
@@ -341,6 +338,32 @@ function formatShortDate(dateValue) {
   return `${year}.${month}.${day}`;
 }
 
+function TrainingStatsMiniSummary({
+  attendanceCount,
+  expectedTrainingHours,
+}) {
+  return (
+    <View style={styles.trainingStatsMiniContent}>
+      <Image
+        source={statsIcon}
+        style={styles.trainingStatsIconImage}
+        resizeMode="contain"
+      />
+
+      <View style={styles.trainingStatsMiniTextRow}>
+        <Text style={styles.trainingStatsMiniTitle}>내 수련 통계</Text>
+        <Text style={styles.trainingStatsMiniSub}>
+          {attendanceCount}회 · {expectedTrainingHours}시간
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+const MemoizedTrainingStatsMiniSummary = React.memo(
+  TrainingStatsMiniSummary
+);
+
 function TrainingStatsBottomSheet({
   attendanceCount,
   expectedTrainingHours,
@@ -352,143 +375,123 @@ function TrainingStatsBottomSheet({
   remainingAfterPromotionCount,
   hasLatestPromotion,
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const translateY = React.useRef(
-    new Animated.Value(STATS_SHEET_COLLAPSED_OFFSET)
-  ).current;
+  const [visible, setVisible] = useState(false);
 
   const openSheet = React.useCallback(() => {
-    setExpanded(true);
-    translateY.stopAnimation();
-    Animated.spring(translateY, {
-      toValue: 0,
-      useNativeDriver: true,
-      tension: 68,
-      friction: 11,
-    }).start();
-  }, [translateY]);
+    setVisible(true);
+  }, []);
 
   const closeSheet = React.useCallback(() => {
-    translateY.stopAnimation();
-    Animated.spring(translateY, {
-      toValue: STATS_SHEET_COLLAPSED_OFFSET,
-      useNativeDriver: true,
-      tension: 68,
-      friction: 11,
-    }).start(({ finished }) => {
-      if (finished) setExpanded(false);
-    });
-  }, [translateY]);
-
-  const sheetPanResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dy) > 8,
-        onPanResponderRelease: (_, gesture) => {
-          if (gesture.dy < -20) openSheet();
-          if (gesture.dy > 20) closeSheet();
-        },
-      }),
-    [closeSheet, openSheet]
-  );
+    setVisible(false);
+  }, []);
 
   return (
     <>
-      {expanded ? (
-        <Pressable style={styles.statsSheetBackdrop} onPress={closeSheet} />
-      ) : null}
-
-      <Animated.View
-        style={[
-          styles.statsBottomSheet,
-          { transform: [{ translateY }] },
-        ]}
+      <Pressable
+        style={styles.statsCollapsedSheet}
+        onPress={openSheet}
+        accessibilityRole="button"
+        accessibilityLabel="내 수련 통계 펼치기"
       >
-        <Pressable
-          style={styles.bottomSheetHandleArea}
-          onPress={expanded ? closeSheet : openSheet}
-          {...sheetPanResponder.panHandlers}
-        >
-          <View style={styles.bottomSheetHandle} />
-        </Pressable>
+        <View style={styles.bottomSheetHandle} />
 
-        <View style={styles.trainingStatsMiniContent}>
-          <Image
-            source={statsIcon}
-            style={styles.trainingStatsIconImage}
-            resizeMode="contain"
+        <MemoizedTrainingStatsMiniSummary
+          attendanceCount={attendanceCount}
+          expectedTrainingHours={expectedTrainingHours}
+        />
+      </Pressable>
+
+      <Modal
+        visible={visible}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        hardwareAccelerated
+        onRequestClose={closeSheet}
+      >
+        <View style={styles.statsModalOverlay}>
+          <Pressable
+            style={styles.statsModalBackdrop}
+            onPress={closeSheet}
           />
 
-          <View style={styles.trainingStatsMiniTextRow}>
-            <Text style={styles.trainingStatsMiniTitle}>내 수련 통계</Text>
-            <Text style={styles.trainingStatsMiniSub}>
-              {attendanceCount}회 · {expectedTrainingHours}시간
-            </Text>
+          <View style={styles.statsModalSheet}>
+            <Pressable
+              style={styles.bottomSheetHandleArea}
+              onPress={closeSheet}
+              accessibilityRole="button"
+              accessibilityLabel="내 수련 통계 닫기"
+            >
+              <View style={styles.bottomSheetHandle} />
+            </Pressable>
+
+            <MemoizedTrainingStatsMiniSummary
+              attendanceCount={attendanceCount}
+              expectedTrainingHours={expectedTrainingHours}
+            />
+
+            <View style={styles.bottomSheetFullContent}>
+              <View style={styles.trainingStatsFullHeader}>
+                <Pressable onPress={() => router.push("/training-stats")}>
+                  <Text style={styles.trainingStatsInlineLink}>자세히 보기</Text>
+                </Pressable>
+              </View>
+
+              <View style={styles.trainingStatsMainRow}>
+                <View style={styles.trainingStatsMainItem}>
+                  <Text style={styles.trainingStatsMainValue}>
+                    {attendanceCount}회
+                  </Text>
+                  <Text style={styles.trainingStatsMainLabel}>총 출석횟수</Text>
+                </View>
+
+                <View style={styles.trainingStatsCenterDot} />
+
+                <View style={styles.trainingStatsMainItem}>
+                  <Text style={styles.trainingStatsMainValue}>
+                    {expectedTrainingHours}시간
+                  </Text>
+                  <Text style={styles.trainingStatsMainLabel}>
+                    예상 수련 시간
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.trainingStatsGoalPanel}>
+                <Text style={styles.trainingStatsGoalSmallLabel}>다음 목표</Text>
+
+                <View style={styles.trainingStatsGoalTitleRow}>
+                  <Text style={styles.trainingStatsGoalBigTitle}>
+                    {statsNextGoal?.title || "수련의 길은 계속 이어집니다"}
+                  </Text>
+
+                  {statsNextGoal ? (
+                    <View style={styles.trainingStatsProgressTrackInline}>
+                      <View
+                        style={[
+                          styles.trainingStatsProgressFill,
+                          { width: `${statsProgressPercent}%` },
+                        ]}
+                      />
+                    </View>
+                  ) : null}
+                </View>
+
+                <Text style={styles.trainingStatsGoalDesc}>
+                  {statsNextGoal
+                    ? hasLatestPromotion
+                      ? `${latestPromotionRank}단 승단 후 ${afterPromotionCount}회째 · 목표 ${requiredAfterPromotionCount}회 · 앞으로 ${remainingAfterPromotionCount}회`
+                      : `현재 ${attendanceCount}회 · 목표 ${statsNextGoal.attendanceCount}회 · 앞으로 ${Math.max(
+                          0,
+                          statsNextGoal.attendanceCount - attendanceCount
+                        )}회`
+                    : "꾸준히 한 걸음씩 나아가고 있어요"}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
-
-        {expanded ? (
-          <View style={styles.bottomSheetFullContent}>
-            <View style={styles.trainingStatsFullHeader}>
-              <Pressable onPress={() => router.push("/training-stats")}>
-                <Text style={styles.trainingStatsInlineLink}>자세히 보기</Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.trainingStatsMainRow}>
-              <View style={styles.trainingStatsMainItem}>
-                <Text style={styles.trainingStatsMainValue}>
-                  {attendanceCount}회
-                </Text>
-                <Text style={styles.trainingStatsMainLabel}>총 출석횟수</Text>
-              </View>
-
-              <View style={styles.trainingStatsCenterDot} />
-
-              <View style={styles.trainingStatsMainItem}>
-                <Text style={styles.trainingStatsMainValue}>
-                  {expectedTrainingHours}시간
-                </Text>
-                <Text style={styles.trainingStatsMainLabel}>
-                  예상 수련 시간
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.trainingStatsGoalPanel}>
-              <Text style={styles.trainingStatsGoalSmallLabel}>다음 목표</Text>
-
-              <View style={styles.trainingStatsGoalTitleRow}>
-                <Text style={styles.trainingStatsGoalBigTitle}>
-                  {statsNextGoal?.title || "수련의 길은 계속 이어집니다"}
-                </Text>
-
-                {statsNextGoal ? (
-                  <View style={styles.trainingStatsProgressTrackInline}>
-                    <View
-                      style={[
-                        styles.trainingStatsProgressFill,
-                        { width: `${statsProgressPercent}%` },
-                      ]}
-                    />
-                  </View>
-                ) : null}
-              </View>
-
-              <Text style={styles.trainingStatsGoalDesc}>
-                {statsNextGoal
-                  ? hasLatestPromotion
-                    ? `${latestPromotionRank}단 승단 후 ${afterPromotionCount}회째 · 목표 ${requiredAfterPromotionCount}회 · 앞으로 ${remainingAfterPromotionCount}회`
-                    : `현재 ${attendanceCount}회 · 목표 ${statsNextGoal.attendanceCount}회 · 앞으로 ${Math.max(
-                        0,
-                        statsNextGoal.attendanceCount - attendanceCount
-                      )}회`
-                  : "꾸준히 한 걸음씩 나아가고 있어요"}
-              </Text>
-            </View>
-          </View>
-        ) : null}
-      </Animated.View>
+      </Modal>
     </>
   );
 }
@@ -1937,21 +1940,33 @@ trainingStatsMiniContent: {
   gap: 10,
 },
 
-statsBottomSheet: {
+statsCollapsedSheet: {
   position: "absolute",
   left: 0,
   right: 0,
   bottom: 0,
-  height: STATS_SHEET_EXPANDED_HEIGHT,
+  height: STATS_SHEET_COLLAPSED_HEIGHT,
   backgroundColor: "rgba(255,253,249,0.98)",
   borderTopLeftRadius: 32,
   borderTopRightRadius: 32,
   paddingHorizontal: 20,
   paddingTop: 8,
-
   zIndex: 999,
-  elevation: 999,
+  elevation: 24,
+  shadowColor: "#000",
+  shadowOpacity: 0.12,
+  shadowRadius: 16,
+  shadowOffset: { width: 0, height: -4 },
+  overflow: "hidden",
+},
 
+statsModalSheet: {
+  height: STATS_SHEET_EXPANDED_HEIGHT,
+  backgroundColor: "rgba(255,253,249,0.99)",
+  borderTopLeftRadius: 32,
+  borderTopRightRadius: 32,
+  paddingHorizontal: 20,
+  paddingTop: 8,
   shadowColor: "#000",
   shadowOpacity: 0.12,
   shadowRadius: 16,
@@ -2165,13 +2180,13 @@ sceneGoalMarkerIcon: {
   height: 220,
   zIndex: 8,
 },
-statsSheetBackdrop: {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 0,
-  bottom: 0,
-  zIndex: 998,
+statsModalOverlay: {
+  flex: 1,
+  justifyContent: "flex-end",
+},
+
+statsModalBackdrop: {
+  ...StyleSheet.absoluteFillObject,
   backgroundColor: "rgba(0,0,0,0.08)",
 },
 trainingStatsFullHeader: {

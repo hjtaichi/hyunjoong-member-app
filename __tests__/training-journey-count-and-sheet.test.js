@@ -76,13 +76,20 @@ describe("수련의 길 출석 횟수 기준과 바텀시트 보호", () => {
     expect(statsSource).not.toContain("총 출석일");
   });
 
-  test("바텀시트는 고정 높이와 네이티브 translateY 애니메이션을 사용한다", () => {
+  test("바텀시트는 일정 화면과 같은 Modal slide 구조로 분리한다", () => {
     const source = readSource("app", "training-history.jsx");
 
     expect(source).toContain("function TrainingStatsBottomSheet(");
     expect(source).toContain("React.memo(TrainingStatsBottomSheet)");
-    expect(source).toContain("useNativeDriver: true");
-    expect(source).toContain("transform: [{ translateY }]");
+    expect(source).toContain("<Modal");
+    expect(source).toContain('animationType="slide"');
+    expect(source).toContain("hardwareAccelerated");
+    expect(source).toContain("styles.statsCollapsedSheet");
+    expect(source).toContain("styles.statsModalOverlay");
+    expect(source).toContain("styles.statsModalSheet");
+    expect(source).not.toContain("Animated.spring");
+    expect(source).not.toContain("PanResponder.create");
+    expect(source).not.toContain("transform: [{ translateY }]");
     expect(source).not.toContain("{ height: sheetHeight }");
     expect(source).not.toContain("getCommonHistoryMilestones(token)");
   });
