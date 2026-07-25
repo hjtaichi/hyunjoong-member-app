@@ -10,13 +10,13 @@
   "theme_color": "#071A39",
   "icons": [
     {
-      "src": "/icon-splash-192-v109.png",
+      "src": "/icon-splash-192-v104.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-splash-512-v109.png",
+      "src": "/icon-splash-512-v104.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
