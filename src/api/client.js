@@ -14,7 +14,6 @@ const client = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
-    "ngrok-skip-browser-warning": "true",
     "Cache-Control": "no-cache",
     Pragma: "no-cache",
     Expires: "0",
@@ -110,7 +109,6 @@ client.interceptors.response.use(
         { refreshToken },
         {
           headers: {
-            "ngrok-skip-browser-warning": "true",
           },
         }
       );

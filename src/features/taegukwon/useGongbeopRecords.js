@@ -38,7 +38,6 @@ export function useGongbeopRecords({
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
       },
     });
 
@@ -64,7 +63,6 @@ export function useGongbeopRecords({
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
       },
     });
 
@@ -144,7 +142,6 @@ export function useGongbeopRecords({
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify({
           date: new Date().toISOString().slice(0, 10),
@@ -186,7 +183,6 @@ export function useGongbeopRecords({
               headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
-                "ngrok-skip-browser-warning": "true",
               },
               body: JSON.stringify({ current }),
             }
@@ -263,7 +259,6 @@ export function useGongbeopRecords({
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
           },
           body: JSON.stringify({
             type,

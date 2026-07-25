@@ -18,7 +18,6 @@ export async function getMemberInquiryDetail(token, roomId) {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
         "Cache-Control": "no-cache",
         Pragma: "no-cache",
       },
@@ -43,7 +42,6 @@ export async function sendMemberInquiryMessage(token, roomId, message) {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
       },
       body: JSON.stringify({ message }),
     }

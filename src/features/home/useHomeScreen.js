@@ -35,7 +35,6 @@ export function useHomeScreen({
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
           },
         }
       );

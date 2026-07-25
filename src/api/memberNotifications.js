@@ -30,7 +30,6 @@ export async function getMemberNotifications(token) {
   const res = await fetch(`${API_BASE_URL}/api/me/notifications?t=${Date.now()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
-      "ngrok-skip-browser-warning": "true",
     },
   });
 
@@ -58,7 +57,6 @@ export async function markMemberNotificationRead(token, notificationId) {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
       },
     }
   );

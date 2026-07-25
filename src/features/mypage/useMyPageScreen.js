@@ -345,7 +345,6 @@ const uploadProfileImageAsync = useCallback(
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
       },
       body: formData,
     });

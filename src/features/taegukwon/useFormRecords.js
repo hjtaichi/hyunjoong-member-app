@@ -32,7 +32,6 @@ export function useFormRecords({
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
           },
         }
       );
@@ -93,7 +92,6 @@ export function useFormRecords({
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify({
           formKey: selectedForm?.id,
@@ -155,7 +153,6 @@ const handleSaveFormGoal = useCallback(async () => {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
       },
       body: JSON.stringify({
         formKey: selectedFormId,
@@ -198,7 +195,6 @@ const handleSaveFavoriteForm = useCallback(
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify({
           formKey,

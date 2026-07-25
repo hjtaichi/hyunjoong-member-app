@@ -47,7 +47,6 @@ const loadVideos = useCallback(async () => {
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
         },
       }
     );
@@ -79,7 +78,6 @@ async function handleDeleteVideo() {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
         },
       }
     );
@@ -113,7 +111,6 @@ console.log("PATCH 대상 영상 =", selectedVideo);
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify({
           trainingType: editTrainingType,
