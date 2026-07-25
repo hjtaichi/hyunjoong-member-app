@@ -186,7 +186,7 @@ export default function DojangAlbumDetailScreen() {
             <Text style={styles.title}>{album?.title || "도장 앨범"}</Text>
 
             <Text style={styles.meta}>
-              {formatDate(album?.eventDate)} · 사진 {album?.photoCount || 0}장
+              행사일 {formatDate(album?.eventDate)} · 사진 {album?.photoCount || 0}장
             </Text>
 
             <View style={styles.detailBrand}>

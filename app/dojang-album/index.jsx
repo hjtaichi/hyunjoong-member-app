@@ -182,7 +182,7 @@ export default function DojangAlbumScreen() {
 
                 <View style={styles.albumMetaRow}>
   <Image source={iconDate} style={styles.albumMetaIcon} resizeMode="contain" />
-  <Text style={styles.albumMetaText}>{formatDate(featuredAlbum.eventDate)}</Text>
+  <Text style={styles.albumMetaText}>행사일 {formatDate(featuredAlbum.eventDate)}</Text>
 
   <Image source={iconPhoto} style={styles.albumMetaIcon} resizeMode="contain" />
   <Text style={styles.albumMetaText}>사진 {featuredAlbum.photoCount || 0}장</Text>
@@ -244,7 +244,7 @@ export default function DojangAlbumScreen() {
                 </Text>
                 <View style={styles.albumMetaRow}>
   <Image source={iconDate} style={styles.albumMetaIcon} resizeMode="contain" />
-  <Text style={styles.albumMetaText}>{formatDate(album.eventDate)}</Text>
+  <Text style={styles.albumMetaText}>행사일 {formatDate(album.eventDate)}</Text>
 
   <Image source={iconPhoto} style={styles.albumMetaIcon} resizeMode="contain" />
   <Text style={styles.albumMetaText}>사진 {album.photoCount || 0}장</Text>
