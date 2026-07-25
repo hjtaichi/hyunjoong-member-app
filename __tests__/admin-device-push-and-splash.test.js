@@ -141,3 +141,24 @@ test("HTML forces the v112 manifest to be fetched instead of a cached manifest",
     );
   });
 });
+
+
+test("HTML declares dedicated Apple touch icons for iPad and iPhone home screen", () => {
+  const html = read("app/+html.jsx");
+
+  expect(html).toContain(
+    '<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=113" />'
+  );
+  expect(html).toContain(
+    '<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180-v113.png" />'
+  );
+  expect(html).toContain(
+    '<link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167-v113.png" />'
+  );
+  expect(html).toContain(
+    '<link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152-v113.png" />'
+  );
+  expect(html).toContain(
+    '<link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120-v113.png" />'
+  );
+});
