@@ -22,14 +22,18 @@ const fonts = {
   titleSemi: "MaruBuriSemiBold",
 };
 
-const HOPE_TIME_OPTIONS = [
-  { label: "오전 10시", value: "10:00" },
-  { label: "13시 30분(토)", value: "13:30" },
-  { label: "오후 4시", value: "16:00" },
-  { label: "오후 7시", value: "19:00" },
-];
+const HOPE_TIME_OPTIONS = ALL_TRIAL_TIME_OPTIONS;
 
 import { submitTrialApplication } from "../src/api/member";
+
+import {
+  ALL_TRIAL_TIME_OPTIONS,
+  getTrialTimeOptionsForDate,
+  isTrialDateSelectable,
+  validateTrialScheduleSelection,
+} from "../src/features/trial/trialSchedule";
+
+// TRIAL_APPLICATION_DATE_TIME_POLICY_V1
 
 export default function TrialApplicationScreen() {
   const [gender, setGender] = useState("남성");
@@ -48,6 +52,16 @@ const [alertModal, setAlertModal] = useState({
 });
   const trialTogetherImage = require("../assets/images/trial-hero-man.png");
   const { isAuthenticated } = useAuth();
+
+  const availableHopeTimeOptions =
+    getTrialTimeOptionsForDate(
+      hopeDate
+    );
+
+  const displayedHopeTimeOptions =
+    hopeDate
+      ? availableHopeTimeOptions
+      : HOPE_TIME_OPTIONS;
 
   function onlyNumbers(value) {
     return String(value || "").replace(/[^0-9]/g, "");
@@ -104,7 +118,36 @@ function moveCalendarMonth(diff) {
 }
 
 function handleSelectHopeDate(date) {
-  setHopeDate(formatDateKey(date));
+  const nextDate =
+    formatDateKey(date);
+
+  if (
+    !isTrialDateSelectable(
+      nextDate
+    )
+  ) {
+    return;
+  }
+
+  const nextOptions =
+    getTrialTimeOptionsForDate(
+      nextDate
+    );
+
+  setHopeDate(nextDate);
+
+  setHopeTime((current) => {
+    const stillAllowed =
+      nextOptions.some(
+        (option) =>
+          option.value === current
+      );
+
+    return stillAllowed
+      ? current
+      : "";
+  });
+
   setDateModalVisible(false);
 }
 
@@ -160,6 +203,21 @@ function handleSelectHopeDate(date) {
   }
 
   try {
+
+  const scheduleValidation =
+    validateTrialScheduleSelection({
+      hopeDate,
+      hopeTime,
+    });
+
+  if (!scheduleValidation.ok) {
+    showAppAlert(
+      "안내",
+      scheduleValidation.message
+    );
+    return;
+  }
+
     await submitTrialApplication({
       gender,
       hopeDate,
@@ -257,11 +315,13 @@ function handleSelectHopeDate(date) {
 <Text style={styles.label}>희망 시간 *</Text>
 
 <View style={styles.timeRow}>
-  {HOPE_TIME_OPTIONS.map((option) => (
+  {displayedHopeTimeOptions.map((option) => (
     <Pressable
       key={option.value}
+      disabled={!hopeDate}
       style={[
         styles.timeButton,
+        !hopeDate && styles.timeButtonDisabled,
         hopeTime === option.value && styles.timeButtonActive,
       ]}
       onPress={() => setHopeTime(option.value)}
@@ -351,20 +411,27 @@ function handleSelectHopeDate(date) {
         {getMonthDays(calendarBaseDate).map((date, index) => {
           const dateKey = date ? formatDateKey(date) : "";
           const selected = dateKey && hopeDate === dateKey;
+          const unavailable =
+            Boolean(dateKey) &&
+            !isTrialDateSelectable(
+              dateKey
+            );
 
           return (
             <Pressable
               key={`${dateKey}-${index}`}
               style={[
                 styles.dayCell,
+                unavailable && styles.dayCellDisabled,
                 selected && styles.dayCellSelected,
               ]}
-              disabled={!date}
+              disabled={!date || unavailable}
               onPress={() => date && handleSelectHopeDate(date)}
             >
               <Text
                 style={[
                   styles.dayText,
+                  unavailable && styles.dayTextDisabled,
                   selected && styles.dayTextSelected,
                 ]}
               >
@@ -629,6 +696,10 @@ dayCell: {
   borderRadius: 999,
 },
 
+dayCellDisabled: {
+  opacity: 0.28,
+},
+
 dayCellSelected: {
   backgroundColor: "#241E1A",
 },
@@ -637,6 +708,10 @@ dayText: {
   fontSize: 15,
   fontWeight: "700",
   color: "#3A312B",
+},
+
+dayTextDisabled: {
+  color: "#C8BFB6",
 },
 
 dayTextSelected: {
@@ -679,6 +754,10 @@ timeButton: {
   alignItems: "center",
   justifyContent: "center",
   paddingHorizontal: 8,
+},
+
+timeButtonDisabled: {
+  opacity: 0.42,
 },
 
 timeButtonActive: {
