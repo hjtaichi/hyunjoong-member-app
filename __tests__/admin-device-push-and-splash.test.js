@@ -101,7 +101,7 @@ describe("admin-device push isolation and separated launcher/splash icons", () =
     );
   });
 
-  test("web manifest uses the unchanged maskable launcher icons for Android PWA launch and home screen", () => {
+  test("web manifest uses color-matched maskable icons for Android PWA launch and home screen", () => {
   const manifest = JSON.parse(
     read("public/manifest.json")
   );
@@ -115,13 +115,13 @@ describe("admin-device push isolation and separated launcher/splash icons", () =
   expect(manifest.icons).toEqual(
     [
       {
-        src: "/icon-maskable-192-v107.png",
+        src: "/icon-maskable-192-v112.png",
         sizes: "192x192",
         type: "image/png",
         purpose: "maskable",
       },
       {
-        src: "/icon-maskable-512-v107.png",
+        src: "/icon-maskable-512-v112.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
@@ -130,11 +130,11 @@ describe("admin-device push isolation and separated launcher/splash icons", () =
   );
 });
 
-test("HTML forces the v111 manifest to be fetched instead of a cached manifest", () => {
+test("HTML forces the v112 manifest to be fetched instead of a cached manifest", () => {
     const source = read("app/+html.jsx");
 
     expect(source).toContain(
-      '<link rel="manifest" href="/manifest.json?v=111" />'
+      '<link rel="manifest" href="/manifest.json?v=112" />'
     );
     expect(source).toContain(
       '<meta name="theme-color" content="#071A39" />'
