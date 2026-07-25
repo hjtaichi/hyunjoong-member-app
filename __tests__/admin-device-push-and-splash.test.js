@@ -101,45 +101,40 @@ describe("admin-device push isolation and separated launcher/splash icons", () =
     );
   });
 
-  test("web manifest separates the large PWA splash icons from the compact launcher maskable icons", () => {
-    const manifest = JSON.parse(
-      read("public/manifest.json")
-    );
+  test("web manifest uses the unchanged maskable launcher icons for Android PWA launch and home screen", () => {
+  const manifest = JSON.parse(
+    read("public/manifest.json")
+  );
 
-    expect(manifest.background_color).toBe(
-      "#071A39"
-    );
-    expect(manifest.theme_color).toBe(
-      "#071A39"
-    );
+  expect(manifest.background_color).toBe(
+    "#071A39"
+  );
+  expect(manifest.theme_color).toBe(
+    "#071A39"
+  );
+  expect(manifest.icons).toEqual(
+    [
+      {
+        src: "/icon-maskable-192-v107.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/icon-maskable-512-v107.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
+    ]
+  );
+});
 
-    expect(manifest.icons).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          src: "/icon-splash-192-v104.png",
-          purpose: "any",
-        }),
-        expect.objectContaining({
-          src: "/icon-splash-512-v104.png",
-          purpose: "any",
-        }),
-        expect.objectContaining({
-          src: "/icon-maskable-192-v107.png",
-          purpose: "maskable",
-        }),
-        expect.objectContaining({
-          src: "/icon-maskable-512-v107.png",
-          purpose: "maskable",
-        }),
-      ])
-    );
-  });
-
-  test("HTML forces the v104 manifest to be fetched instead of a cached manifest", () => {
+test("HTML forces the v111 manifest to be fetched instead of a cached manifest", () => {
     const source = read("app/+html.jsx");
 
     expect(source).toContain(
-      '<link rel="manifest" href="/manifest.json?v=110" />'
+      '<link rel="manifest" href="/manifest.json?v=111" />'
     );
     expect(source).toContain(
       '<meta name="theme-color" content="#071A39" />'
