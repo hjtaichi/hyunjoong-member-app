@@ -25,6 +25,10 @@ const TIME_VALUES_BY_WEEKDAY = Object.freeze({
   6: Object.freeze(["10:00", "13:30"]),
 });
 
+// TRIAL_APPLICATION_PAST_DATE_POLICY_V2
+const KOREA_UTC_OFFSET_MS =
+  9 * 60 * 60 * 1000;
+
 function parseDateKey(value) {
   const match =
     /^(\d{4})-(\d{2})-(\d{2})$/.exec(
@@ -52,17 +56,65 @@ function parseDateKey(value) {
   }
 
   return {
+    value:
+      `${match[1]}-${match[2]}-${match[3]}`,
     weekday: date.getUTCDay(),
   };
 }
 
+export function getKoreaTodayDateKey(
+  now = new Date()
+) {
+  const source =
+    now instanceof Date
+      ? now
+      : new Date(now);
+
+  const shifted = new Date(
+    source.getTime() +
+      KOREA_UTC_OFFSET_MS
+  );
+
+  const year =
+    shifted.getUTCFullYear();
+  const month = String(
+    shifted.getUTCMonth() + 1
+  ).padStart(2, "0");
+  const day = String(
+    shifted.getUTCDate()
+  ).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+export function isPastTrialDate(
+  dateKey,
+  now = new Date()
+) {
+  const parsed = parseDateKey(dateKey);
+
+  if (!parsed) {
+    return false;
+  }
+
+  return (
+    parsed.value <
+    getKoreaTodayDateKey(now)
+  );
+}
+
 export function isTrialDateSelectable(
-  dateKey
+  dateKey,
+  now = new Date()
 ) {
   const parsed = parseDateKey(dateKey);
 
   return Boolean(
     parsed &&
+    !isPastTrialDate(
+      parsed.value,
+      now
+    ) &&
     TIME_VALUES_BY_WEEKDAY[
       parsed.weekday
     ]
@@ -70,11 +122,18 @@ export function isTrialDateSelectable(
 }
 
 export function getTrialTimeOptionsForDate(
-  dateKey
+  dateKey,
+  now = new Date()
 ) {
   const parsed = parseDateKey(dateKey);
 
-  if (!parsed) {
+  if (
+    !parsed ||
+    !isTrialDateSelectable(
+      parsed.value,
+      now
+    )
+  ) {
     return [];
   }
 
@@ -89,10 +148,13 @@ export function getTrialTimeOptionsForDate(
   );
 }
 
-export function validateTrialScheduleSelection({
-  hopeDate,
-  hopeTime,
-}) {
+export function validateTrialScheduleSelection(
+  {
+    hopeDate,
+    hopeTime,
+  },
+  now = new Date()
+) {
   if (!hopeDate) {
     return {
       ok: false,
@@ -102,7 +164,23 @@ export function validateTrialScheduleSelection({
   }
 
   if (
-    !isTrialDateSelectable(hopeDate)
+    isPastTrialDate(
+      hopeDate,
+      now
+    )
+  ) {
+    return {
+      ok: false,
+      message:
+        "지난 날짜에는 체험을 신청할 수 없습니다.",
+    };
+  }
+
+  if (
+    !isTrialDateSelectable(
+      hopeDate,
+      now
+    )
   ) {
     return {
       ok: false,
@@ -121,7 +199,8 @@ export function validateTrialScheduleSelection({
 
   const available =
     getTrialTimeOptionsForDate(
-      hopeDate
+      hopeDate,
+      now
     );
 
   if (
