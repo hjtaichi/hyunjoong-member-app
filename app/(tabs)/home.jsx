@@ -152,15 +152,29 @@ const trainingGoals = homeData?.trainingGoals || null;
 const promotionGoal = trainingGoals?.promotion || null;
 
 const promotionRemainingText =
-  promotionGoal && !promotionGoal.isEligible
-    ? String(promotionGoal.remainingCount).padStart(3, "0")
+  promotionGoal &&
+  promotionGoal.isHighestRank !== true &&
+  promotionGoal.isConfigured !== false &&
+  promotionGoal.remainingCount != null &&
+  promotionGoal.isEligible !== true
+    ? String(
+        promotionGoal.remainingCount
+      )
     : null;
 
-const promotionBadgeText = promotionGoal
-  ? promotionGoal.isEligible
-    ? "승단심사 가능"
-    : `승단 D-${promotionRemainingText}일`
-  : null;
+const promotionBadgeText =
+  !promotionGoal
+    ? null
+    : promotionGoal.isHighestRank === true
+      ? "9단 최고단"
+      : promotionGoal.isConfigured === false
+        ? null
+        : promotionGoal.isEligible === true
+          ? "승단심사 가능"
+          : promotionRemainingText != null
+            ? `승단까지 ${promotionRemainingText}회`
+            : null;
+
 const profileImageVersion =
   homeData?.member?.profileImageUpdatedAt ||
   homeData?.member?.updatedAt ||

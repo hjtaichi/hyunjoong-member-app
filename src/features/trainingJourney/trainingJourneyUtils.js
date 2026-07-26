@@ -7,6 +7,15 @@ export const PROMOTION_ATTENDANCE_REQUIREMENTS = Object.freeze({
   4: 600,
 });
 
+export const DEFAULT_PROMOTION_BASE_ATTENDANCE = Object.freeze({
+  1: 147,
+  2: 447,
+  3: 897,
+  4: 1497,
+});
+
+export const HIGHEST_RANK_LEVEL = 9;
+
 function toSafeAttendanceCount(value) {
   const count = Number(value);
 
@@ -74,40 +83,101 @@ export function getWalkerStageIndex(attendanceCount) {
 
 export function getFallbackNextPromotionEvent(member) {
   const currentRankLevel = Number(
-    member?.rankLevel ?? String(member?.level || "").replace("단", "") ?? 0
+    member?.rankLevel ??
+      String(
+        member?.level || ""
+      ).replace("단", "") ??
+      0
   );
 
-  if (currentRankLevel >= 4) return null;
-
-  const nextRankLevel = Math.max(1, currentRankLevel + 1);
-  const requiredAttendanceCount =
-    PROMOTION_ATTENDANCE_REQUIREMENTS[nextRankLevel];
-
-  if (!requiredAttendanceCount) return null;
-
-  if (currentRankLevel <= 0) {
-    return {
-      attendanceCount: requiredAttendanceCount,
-      title: "1단 승단 가능",
-      desc: "관리자 확인 후 승단을 진행할 수 있습니다.",
-      kind: "promotion",
-    };
+  if (
+    currentRankLevel >=
+    HIGHEST_RANK_LEVEL
+  ) {
+    return null;
   }
 
-  const danPromotions = Array.isArray(member?.danPromotions)
-    ? member.danPromotions
-    : [];
-  const latestPromotion = [...danPromotions].sort(
-    (a, b) => Number(b.danRank) - Number(a.danRank)
-  )[0];
+  const nextRankLevel =
+    Math.max(
+      1,
+      currentRankLevel + 1
+    );
 
-  if (!latestPromotion) return null;
+  const requiredAttendanceCount =
+    PROMOTION_ATTENDANCE_REQUIREMENTS[
+      nextRankLevel
+    ];
+
+  if (!requiredAttendanceCount) {
+    return null;
+  }
+
+  const danPromotions =
+    Array.isArray(
+      member?.danPromotions
+    )
+      ? member.danPromotions
+      : [];
+
+  const currentPromotion =
+    [...danPromotions]
+      .filter(
+        (promotion) =>
+          Number(
+            promotion?.danRank
+          ) === currentRankLevel
+      )
+      .sort(
+        (a, b) =>
+          new Date(
+            b?.promotedAt || 0
+          ).getTime() -
+          new Date(
+            a?.promotedAt || 0
+          ).getTime()
+      )[0] || null;
+
+  const recordedBase =
+    currentPromotion
+      ?.attendanceDay;
+
+  const hasRecordedBase =
+    recordedBase !== null &&
+    recordedBase !== undefined &&
+    recordedBase !== "" &&
+    Number.isFinite(
+      Number(recordedBase)
+    );
+
+  const baseAttendanceCount =
+    currentRankLevel <= 0
+      ? 0
+      : hasRecordedBase
+        ? Number(recordedBase)
+        : Number(
+            DEFAULT_PROMOTION_BASE_ATTENDANCE[
+              currentRankLevel
+            ] || 0
+          );
 
   return {
     attendanceCount:
-      Number(latestPromotion.attendanceDay || 0) + requiredAttendanceCount,
-    title: `${nextRankLevel}단 승단 가능`,
-    desc: `${currentRankLevel}단 승단 후 다음 단계에 도전할 수 있습니다.`,
+      baseAttendanceCount +
+      requiredAttendanceCount,
+    title:
+      `${nextRankLevel}단 승단 가능`,
+    desc:
+      currentRankLevel <= 0
+        ? "관리자 확인 후 승단을 진행할 수 있습니다."
+        : `${currentRankLevel}단 기준 이후 다음 단계에 도전할 수 있습니다.`,
     kind: "promotion",
+    baseAttendanceCount,
+    baseAttendanceSource:
+      currentRankLevel <= 0
+        ? "join"
+        : hasRecordedBase
+          ? "recorded"
+          : "estimated",
+    requiredAttendanceCount,
   };
 }

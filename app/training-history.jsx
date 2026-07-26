@@ -371,6 +371,7 @@ function TrainingStatsBottomSheet({
   statsProgressPercent,
   latestPromotionRank,
   afterPromotionCount,
+  promotionBaseSource,
   requiredAfterPromotionCount,
   remainingAfterPromotionCount,
   hasLatestPromotion,
@@ -480,7 +481,11 @@ function TrainingStatsBottomSheet({
                 <Text style={styles.trainingStatsGoalDesc}>
                   {statsNextGoal
                     ? hasLatestPromotion
-                      ? `${latestPromotionRank}단 승단 후 ${afterPromotionCount}회째 · 목표 ${requiredAfterPromotionCount}회 · 앞으로 ${remainingAfterPromotionCount}회`
+                      ? `${
+        promotionBaseSource === "estimated"
+          ? `${latestPromotionRank}단 기준 추정 후`
+          : `${latestPromotionRank}단 승단 후`
+      } ${afterPromotionCount}회째 · 목표 ${requiredAfterPromotionCount}회 · 앞으로 ${remainingAfterPromotionCount}회`
                       : `현재 ${attendanceCount}회 · 목표 ${statsNextGoal.attendanceCount}회 · 앞으로 ${Math.max(
                           0,
                           statsNextGoal.attendanceCount - attendanceCount
@@ -727,48 +732,204 @@ const danPromotions = Array.isArray(member?.danPromotions)
 const latestPromotion = [...danPromotions]
   .sort((a, b) => Number(b.danRank || 0) - Number(a.danRank || 0))[0];
 
-const latestPromotionRank = Number(latestPromotion?.danRank || 0);
-const latestPromotionAttendanceCount = Number(
-  latestPromotion?.attendanceDay || 0
-);
+const currentRankLevel =
+  Number(
+    promotionGoal
+      ?.currentRankLevel ??
+      member?.rankLevel ??
+      0
+  );
 
-const afterPromotionCount = latestPromotion
-  ? Math.max(0, attendanceCount - latestPromotionAttendanceCount)
-  : attendanceCount;
+const isHighestRank =
+  promotionGoal
+    ?.isHighestRank === true ||
+  currentRankLevel >= 9;
+
+const requiredAttendanceValue =
+  promotionGoal
+    ?.requiredAttendanceCount;
+
+const targetAttendanceValue =
+  promotionGoal
+    ?.targetAttendanceCount;
+
+const isPromotionConfigured =
+  promotionGoal
+    ?.isConfigured !== false &&
+  requiredAttendanceValue !== null &&
+  requiredAttendanceValue !== undefined &&
+  Number.isFinite(
+    Number(
+      requiredAttendanceValue
+    )
+  ) &&
+  Number(
+    requiredAttendanceValue
+  ) > 0 &&
+  targetAttendanceValue !== null &&
+  targetAttendanceValue !== undefined &&
+  Number.isFinite(
+    Number(
+      targetAttendanceValue
+    )
+  ) &&
+  Number(
+    targetAttendanceValue
+  ) > 0;
+
+const latestPromotionRank =
+  Number(
+    latestPromotion
+      ?.danRank ||
+      currentRankLevel ||
+      0
+  );
+
+const recordedPromotionAttendanceCount =
+  latestPromotion
+    ?.attendanceDay;
+
+const promotionBaseAttendanceCount =
+  promotionGoal
+    ?.baseAttendanceCount !== null &&
+  promotionGoal
+    ?.baseAttendanceCount !== undefined &&
+  Number.isFinite(
+    Number(
+      promotionGoal
+        ?.baseAttendanceCount
+    )
+  )
+    ? Number(
+        promotionGoal
+          ?.baseAttendanceCount
+      )
+    : recordedPromotionAttendanceCount !== null &&
+        recordedPromotionAttendanceCount !== undefined &&
+        recordedPromotionAttendanceCount !== "" &&
+        Number.isFinite(
+          Number(
+            recordedPromotionAttendanceCount
+          )
+        )
+      ? Number(
+          recordedPromotionAttendanceCount
+        )
+      : 0;
+
+const promotionBaseSource =
+  promotionGoal
+    ?.baseAttendanceSource ||
+  (
+    recordedPromotionAttendanceCount !== null &&
+    recordedPromotionAttendanceCount !== undefined &&
+    recordedPromotionAttendanceCount !== ""
+      ? "recorded"
+      : currentRankLevel > 0
+        ? "estimated"
+        : "join"
+  );
+
+const afterPromotionCount =
+  promotionGoal
+    ?.attendanceAfterBase !== null &&
+  promotionGoal
+    ?.attendanceAfterBase !== undefined &&
+  Number.isFinite(
+    Number(
+      promotionGoal
+        ?.attendanceAfterBase
+    )
+  )
+    ? Number(
+        promotionGoal
+          ?.attendanceAfterBase
+      )
+    : Math.max(
+        0,
+        attendanceCount -
+          promotionBaseAttendanceCount
+      );
 
 const requiredAfterPromotionCount =
-  Number(promotionGoal?.requiredAttendanceCount || 0);
+  isPromotionConfigured
+    ? Number(
+        requiredAttendanceValue
+      )
+    : 0;
 
 const remainingAfterPromotionCount =
-  Math.max(0, requiredAfterPromotionCount - afterPromotionCount);
+  isPromotionConfigured
+    ? promotionGoal
+        ?.remainingCount !== null &&
+      promotionGoal
+        ?.remainingCount !== undefined &&
+      Number.isFinite(
+        Number(
+          promotionGoal
+            ?.remainingCount
+        )
+      )
+      ? Math.max(
+          0,
+          Number(
+            promotionGoal
+              ?.remainingCount
+          )
+        )
+      : Math.max(
+          0,
+          requiredAfterPromotionCount -
+            afterPromotionCount
+        )
+    : 0;
 
 const promotionTargetCount =
-  Number(promotionGoal?.targetAttendanceCount) ||
-  Number(promotionGoal?.requiredAttendanceCount) ||
-  attendanceCount + Number(promotionGoal?.remainingCount || 0);
-const promotionRemainCount = Math.max(
-  0,
-  promotionTargetCount - attendanceCount
-);
+  isPromotionConfigured
+    ? Number(
+        targetAttendanceValue
+      )
+    : null;
+
+const promotionRemainCount =
+  isPromotionConfigured
+    ? remainingAfterPromotionCount
+    : null;
 
 const shouldShowPromotionScroll =
-  Boolean(promotionGoal) &&
-  promotionRemainCount <= 0 &&
-  attendanceCount >= promotionTargetCount &&
-  attendanceCount <= promotionTargetCount + 10;
+  isHighestRank ||
+  (
+    isPromotionConfigured &&
+    promotionGoal
+      ?.isEligible === true &&
+    promotionTargetCount != null &&
+    attendanceCount >=
+      promotionTargetCount &&
+    attendanceCount <=
+      promotionTargetCount + 10
+  );
 
-const nextDanEvent = promotionGoal
-  ? {
-      attendanceCount: promotionTargetCount,
-      title: promotionGoal.label || `${promotionGoal.nextRankLevel}단 승단심사`,
-      desc:
-        promotionRemainCount <= 0
-          ? `${promotionGoal.nextRankLevel}단 승단심사 자격이 되었습니다.`
-          : `${promotionGoal.nextRankLevel}단까지 앞으로 ${promotionRemainCount}회 남았습니다.`,
-      kind: "promotion",
-    }
-  : getFallbackNextPromotionEvent(member);
-  
+const nextDanEvent =
+  !promotionGoal
+    ? getFallbackNextPromotionEvent(
+        member
+      )
+    : isPromotionConfigured &&
+        promotionTargetCount != null
+      ? {
+          attendanceCount:
+            promotionTargetCount,
+          title:
+            promotionGoal.label ||
+            `${promotionGoal.nextRankLevel}단 승단심사`,
+          desc:
+            promotionGoal
+              ?.isEligible === true
+              ? `${promotionGoal.nextRankLevel}단 승단심사 자격이 되었습니다.`
+              : `${promotionGoal.nextRankLevel}단까지 앞으로 ${promotionRemainCount}회 남았습니다.`,
+          kind: "promotion",
+        }
+      : null;
 
 const mergedStages = [
   {
@@ -971,7 +1132,9 @@ locations={[0, 0.28, 0.66, 1]}
     />
 
     <Text style={styles.promotionScrollText}>
-      {nextDanEvent?.title || "승단심사"} 자격이 되었습니다.
+      {isHighestRank
+        ? "9단 최고단에 도달했습니다."
+        : `${nextDanEvent?.title || '승단심사'} 자격이 되었습니다.`}
     </Text>
   </View>
 ) : null}
@@ -1160,9 +1323,14 @@ locations={[0, 0.28, 0.66, 1]}
   statsProgressPercent={statsProgressPercent}
   latestPromotionRank={latestPromotionRank}
   afterPromotionCount={afterPromotionCount}
+  promotionBaseSource={promotionBaseSource}
   requiredAfterPromotionCount={requiredAfterPromotionCount}
   remainingAfterPromotionCount={remainingAfterPromotionCount}
-  hasLatestPromotion={Boolean(latestPromotion && activeNextDanEvent)}
+  hasLatestPromotion={Boolean(
+    currentRankLevel > 0 &&
+    activeNextDanEvent &&
+    isPromotionConfigured
+  )}
 />
       </View>
     </View>
