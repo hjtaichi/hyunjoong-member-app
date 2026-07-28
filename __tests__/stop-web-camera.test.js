@@ -1,7 +1,7 @@
 import { stopWebCamera } from "../src/utils/stopWebCamera";
 
 describe("stopWebCamera", () => {
-  test("stops ZXing controls and every MediaStream track", () => {
+  test("stops controls and every MediaStream track", () => {
     const controls = {
       stop: jest.fn(),
     };
@@ -16,8 +16,6 @@ describe("stopWebCamera", () => {
         getTracks: jest.fn(() => [firstTrack, secondTrack]),
       },
       pause: jest.fn(),
-      removeAttribute: jest.fn(),
-      load: jest.fn(),
     };
 
     stopWebCamera(video, controls);
@@ -25,10 +23,8 @@ describe("stopWebCamera", () => {
     expect(controls.stop).toHaveBeenCalledTimes(1);
     expect(firstTrack.stop).toHaveBeenCalledTimes(1);
     expect(secondTrack.stop).toHaveBeenCalledTimes(1);
-    expect(video.srcObject).toBeNull();
     expect(video.pause).toHaveBeenCalledTimes(1);
-    expect(video.removeAttribute).toHaveBeenCalledWith("src");
-    expect(video.load).toHaveBeenCalledTimes(1);
+    expect(video.srcObject).toBeNull();
   });
 
   test("does not throw when resources were already released", () => {
@@ -42,8 +38,6 @@ describe("stopWebCamera", () => {
       pause: jest.fn(() => {
         throw new Error("already detached");
       }),
-      removeAttribute: jest.fn(),
-      load: jest.fn(),
     };
 
     expect(() => stopWebCamera(video, controls)).not.toThrow();

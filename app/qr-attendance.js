@@ -100,18 +100,36 @@ export function getWebCameraErrorMessage(error) {
 function WebQrScanner({ onScan, disabled }) {
   const videoRef = useRef(null);
   const controlsRef = useRef(null);
+  const onScanRef = useRef(onScan);
   const [webError, setWebError] = useState("");
+
+  useEffect(() => {
+    onScanRef.current = onScan;
+  }, [onScan]);
 
   useEffect(() => {
     const videoElement = videoRef.current;
 
-    if (disabled) {
-      stopWebCamera(videoElement, controlsRef.current);
-      controlsRef.current = null;
+    if (!videoElement) {
       return undefined;
     }
 
-    let cancelled = false;
+    let disposed = false;
+
+    const releaseCamera = (controls = controlsRef.current) => {
+      stopWebCamera(videoElement, controls);
+
+      if (controlsRef.current === controls) {
+        controlsRef.current = null;
+      }
+    };
+
+    if (disabled) {
+      releaseCamera();
+      return undefined;
+    }
+
+    setWebError("");
 
     async function start() {
       let controls = null;
@@ -129,24 +147,24 @@ function WebQrScanner({ onScan, disabled }) {
           },
           videoElement,
           (result) => {
-            if (cancelled || disabled) return;
+            if (disposed || disabled) return;
 
             const text = result?.getText?.();
 
             if (text) {
-              onScan({ data: text });
+              onScanRef.current?.({ data: text });
             }
           }
         );
 
-        if (cancelled || disabled) {
+        if (disposed || disabled) {
           stopWebCamera(videoElement, controls);
           return;
         }
 
         controlsRef.current = controls;
       } catch (error) {
-        if (cancelled || disabled) {
+        if (disposed || disabled) {
           stopWebCamera(videoElement, controls);
           return;
         }
@@ -157,19 +175,13 @@ function WebQrScanner({ onScan, disabled }) {
       }
     }
 
-    if (videoElement) {
-      start();
-    }
+    start();
 
     return () => {
-      cancelled = true;
-
-      const controls = controlsRef.current;
-      controlsRef.current = null;
-
-      stopWebCamera(videoElement, controls);
+      disposed = true;
+      releaseCamera();
     };
-  }, [disabled, onScan]);
+  }, [disabled]);
 
   return (
     <View style={styles.webCameraBox}>

@@ -21,8 +21,6 @@ export function stopWebCamera(videoElement, controls) {
   try {
     if (videoElement) {
       videoElement.srcObject = null;
-      videoElement.removeAttribute?.("src");
-      videoElement.load?.();
     }
   } catch {}
 }
