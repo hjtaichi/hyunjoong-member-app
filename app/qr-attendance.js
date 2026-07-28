@@ -1,3 +1,4 @@
+import { stopWebCamera } from "../src/utils/stopWebCamera";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -102,24 +103,31 @@ function WebQrScanner({ onScan, disabled }) {
   const [webError, setWebError] = useState("");
 
   useEffect(() => {
-    if (disabled) return;
+    const videoElement = videoRef.current;
+
+    if (disabled) {
+      stopWebCamera(videoElement, controlsRef.current);
+      controlsRef.current = null;
+      return undefined;
+    }
 
     let cancelled = false;
 
     async function start() {
+      let controls = null;
+
       try {
         const { BrowserQRCodeReader } = await import("@zxing/browser");
-
         const codeReader = new BrowserQRCodeReader();
 
-        controlsRef.current = await codeReader.decodeFromConstraints(
+        controls = await codeReader.decodeFromConstraints(
           {
             video: {
               facingMode: { ideal: "environment" },
             },
             audio: false,
           },
-          videoRef.current,
+          videoElement,
           (result) => {
             if (cancelled || disabled) return;
 
@@ -130,24 +138,36 @@ function WebQrScanner({ onScan, disabled }) {
             }
           }
         );
+
+        if (cancelled || disabled) {
+          stopWebCamera(videoElement, controls);
+          return;
+        }
+
+        controlsRef.current = controls;
       } catch (error) {
-        console.log("❌ zxing qr scanner error:", error);
+        if (cancelled || disabled) {
+          stopWebCamera(videoElement, controls);
+          return;
+        }
+
+        console.log("ZXing QR scanner error:", error);
         setWebError(getWebCameraErrorMessage(error));
+        stopWebCamera(videoElement, controls);
       }
     }
 
-    if (videoRef.current) {
+    if (videoElement) {
       start();
     }
 
     return () => {
       cancelled = true;
 
-      try {
-        controlsRef.current?.stop?.();
-      } catch {}
-
+      const controls = controlsRef.current;
       controlsRef.current = null;
+
+      stopWebCamera(videoElement, controls);
     };
   }, [disabled, onScan]);
 
@@ -175,7 +195,6 @@ function WebQrScanner({ onScan, disabled }) {
     </View>
   );
 }
-
 export default function QrAttendanceScreen() {
   const { token } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
