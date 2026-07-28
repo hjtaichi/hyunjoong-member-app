@@ -143,6 +143,7 @@ export default function TabLayout() {
   name="taegukwon"
   options={{
     title: "태극권",
+    href: isPausedMember ? null : undefined,
     tabBarIcon: ({ color, focused }) => (
       <Image
         source={require("../../assets/images/taegukwon-tab.png")}
