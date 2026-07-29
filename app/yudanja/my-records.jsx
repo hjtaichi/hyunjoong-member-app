@@ -87,6 +87,9 @@ export default function MyYudanjaRecordsScreen() {
   return Array.from(map.values());
 }, [recentRecords]);
 
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [expandedRecordKey, setExpandedRecordKey] = useState(null);
 const recentTotalPages = Math.max(
   1,
   Math.ceil(
@@ -115,9 +118,6 @@ useEffect(() => {
   }
 }, [recentPage, recentTotalPages]);
 
-    const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [expandedRecordKey, setExpandedRecordKey] = useState(null);
   
   const availableYears = useMemo(() => {
   if (Array.isArray(data?.availableYears) && data.availableYears.length > 0) {
