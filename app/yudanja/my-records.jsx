@@ -51,6 +51,9 @@ export default function MyYudanjaRecordsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [recentPage, setRecentPage] = useState(1);
+
+  const RECENT_PAGE_SIZE = 5;
 
   const itemSummary = useMemo(() => data?.itemSummary || [], [data]);
   const categorySummary = useMemo(() => data?.categorySummary || [], [data]);
@@ -83,6 +86,34 @@ export default function MyYudanjaRecordsScreen() {
 
   return Array.from(map.values());
 }, [recentRecords]);
+
+const recentTotalPages = Math.max(
+  1,
+  Math.ceil(
+    recentSessions.length / RECENT_PAGE_SIZE,
+  ),
+);
+
+const pagedRecentSessions = useMemo(() => {
+  const start =
+    (recentPage - 1) * RECENT_PAGE_SIZE;
+
+  return recentSessions.slice(
+    start,
+    start + RECENT_PAGE_SIZE,
+  );
+}, [recentSessions, recentPage]);
+
+useEffect(() => {
+  setRecentPage(1);
+  setExpandedRecordKey(null);
+}, [selectedYear]);
+
+useEffect(() => {
+  if (recentPage > recentTotalPages) {
+    setRecentPage(recentTotalPages);
+  }
+}, [recentPage, recentTotalPages]);
 
     const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -293,7 +324,7 @@ export default function MyYudanjaRecordsScreen() {
                 <Text style={styles.emptyInlineText}>최근 기록이 없습니다.</Text>
               ) : (
                 <View style={styles.timelineList}>
-                  {recentSessions.map((session, index) => {
+                  {pagedRecentSessions.map((session, index) => {
   const expanded = expandedRecordKey === session.key;
 
   return (
@@ -308,7 +339,7 @@ export default function MyYudanjaRecordsScreen() {
           <View
             style={index === 0 ? styles.timelineDotActive : styles.timelineDot}
           />
-          {index < recentSessions.length - 1 ? (
+          {index < pagedRecentSessions.length - 1 ? (
             <View style={styles.timelineLine} />
           ) : null}
         </View>
@@ -343,6 +374,63 @@ export default function MyYudanjaRecordsScreen() {
 })}
                 </View>
               )}
+
+              {recentSessions.length >
+              RECENT_PAGE_SIZE ? (
+                <View style={styles.recordPagination}>
+                  {Array.from(
+                    {
+                      length: recentTotalPages,
+                    },
+                    (_, index) => index + 1,
+                  ).map((pageNumber) => {
+                    const active =
+                      pageNumber === recentPage;
+
+                    return (
+                      <React.Fragment
+                        key={pageNumber}
+                      >
+                        {pageNumber > 1 ? (
+                          <Text
+                            style={
+                              styles.recordPageDivider
+                            }
+                          >
+                            |
+                          </Text>
+                        ) : null}
+
+                        <Pressable
+                          style={[
+                            styles.recordPageButton,
+                            active &&
+                              styles.recordPageButtonActive,
+                          ]}
+                          onPress={() => {
+                            setRecentPage(
+                              pageNumber,
+                            );
+                            setExpandedRecordKey(
+                              null,
+                            );
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.recordPageText,
+                              active &&
+                                styles.recordPageTextActive,
+                            ]}
+                          >
+                            {pageNumber}
+                          </Text>
+                        </Pressable>
+                      </React.Fragment>
+                    );
+                  })}
+                </View>
+              ) : null}
 
               <Image
   pointerEvents="none"
@@ -721,6 +809,38 @@ itemMedalRow: {
     width: 170,
     height: 120,
     opacity: 0.18,
+  },
+
+  recordPagination: {
+    marginTop: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+  },
+  recordPageButton: {
+    minWidth: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  recordPageButtonActive: {
+    backgroundColor: "#3A2C27",
+  },
+  recordPageText: {
+    fontFamily: fonts.semi,
+    fontSize: 14,
+    color: "#7A6C63",
+  },
+  recordPageTextActive: {
+    color: "#FFFFFF",
+  },
+  recordPageDivider: {
+    marginHorizontal: 4,
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: "#C8B7A6",
   },
 
   emptyCard: {

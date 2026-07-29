@@ -227,28 +227,45 @@ const pagedItems = useMemo(() => {
           </View>
           {filteredItems.length > PAGE_SIZE ? (
   <View style={styles.pagination}>
-    <Pressable
-      style={[styles.pageButton, page <= 1 && styles.pageButtonDisabled]}
-      disabled={page <= 1}
-      onPress={() => setPage((prev) => Math.max(1, prev - 1))}
-    >
-      <Text style={styles.pageButtonText}>이전</Text>
-    </Pressable>
+    {Array.from(
+      {
+        length: totalPages,
+      },
+      (_, index) => index + 1,
+    ).map((pageNumber) => {
+      const active = pageNumber === page;
 
-    <Text style={styles.pageInfo}>
-      {page} / {totalPages}
-    </Text>
+      return (
+        <React.Fragment key={pageNumber}>
+          {pageNumber > 1 ? (
+            <Text style={styles.pageDivider}>
+              |
+            </Text>
+          ) : null}
 
-    <Pressable
-      style={[
-        styles.pageButton,
-        page >= totalPages && styles.pageButtonDisabled,
-      ]}
-      disabled={page >= totalPages}
-      onPress={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-    >
-      <Text style={styles.pageButtonText}>다음</Text>
-    </Pressable>
+          <Pressable
+            style={[
+              styles.pageNumberButton,
+              active &&
+                styles.pageNumberButtonActive,
+            ]}
+            onPress={() =>
+              setPage(pageNumber)
+            }
+          >
+            <Text
+              style={[
+                styles.pageNumberText,
+                active &&
+                  styles.pageNumberTextActive,
+              ]}
+            >
+              {pageNumber}
+            </Text>
+          </Pressable>
+        </React.Fragment>
+      );
+    })}
   </View>
 ) : null}
  </>
@@ -465,33 +482,39 @@ itemArrow: {
     textAlign: "center",
   },
   pagination: {
-  marginTop: 16,
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 12,
-},
+    marginTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+  },
 
-pageButton: {
-  borderRadius: 999,
-  paddingHorizontal: 16,
-  paddingVertical: 9,
-  backgroundColor: "#3A2C27",
-},
+  pageNumberButton: {
+    minWidth: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-pageButtonDisabled: {
-  opacity: 0.28,
-},
+  pageNumberButtonActive: {
+    backgroundColor: "#3A2C27",
+  },
 
-pageButtonText: {
-  fontFamily: fonts.semiBold,
-  fontSize: 13,
-  color: "#FFFFFF",
-},
+  pageNumberText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 14,
+    color: "#6F625A",
+  },
 
-pageInfo: {
-  fontFamily: fonts.semiBold,
-  fontSize: 13,
-  color: "#6F625A",
-},
+  pageNumberTextActive: {
+    color: "#FFFFFF",
+  },
+
+  pageDivider: {
+    marginHorizontal: 4,
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: "#C8B7A6",
+  },
 });
