@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import ScreenHeader from "../../src/components/ScreenHeader";
 import FavoriteModal from "./components/FavoriteModal";
@@ -28,7 +28,7 @@ export default function DobokShowroomScreen() {
   const showroom = useDobokShowroom();
   const {
     gender, setGender, setStyle, style, sleeve, setSleeve,
-    fabricGroups, fabricKey, showChest, showClouds, canUseCloudEmbroidery, embroideryColors,
+    fabricGroups, fabricKey, showChest, showClouds, setShowClouds, canUseCloudEmbroidery, embroideryColors,
     chestColor, setChestColor, cloudColor, setCloudColor,
     sheet, setSheet, saved, favoritesVisible, setFavoritesVisible,
     nameModalVisible, setNameModalVisible, favoriteName, setFavoriteName,
@@ -39,6 +39,39 @@ export default function DobokShowroomScreen() {
     openSaveDialog, openRenameDialog, confirmFavoriteName,
     applyFavorite, deleteFavorite,
   } = showroom;
+
+  const embroideryColorOptions = useMemo(() => {
+    const candidates = [
+      {
+        key: "garment-top-color",
+        label: "상의와 같은 색",
+        hex: topColor?.hex,
+      },
+      {
+        key: "garment-pants-color",
+        label: "하의와 같은 색",
+        hex: pantsColor?.hex,
+      },
+      ...(Array.isArray(embroideryColors) ? embroideryColors : []),
+    ];
+
+    const seen = new Set();
+
+    return candidates
+      .map((item, index) => ({
+        ...item,
+        key: String(item?.key || `embroidery-option-${index + 1}`),
+        label: String(item?.label || `실색 ${index + 1}`),
+        hex: String(item?.hex || "").toUpperCase(),
+      }))
+      .filter((item) => {
+        if (!/^#[0-9A-F]{6}$/.test(item.hex) || seen.has(item.hex)) {
+          return false;
+        }
+        seen.add(item.hex);
+        return true;
+      });
+  }, [embroideryColors, topColor?.hex, pantsColor?.hex]);
 
   return <ScrollView style={styles.screen} contentContainerStyle={[styles.page, { width: contentWidth }]}>
     <ScreenHeader title="나만의 맞춤 도복" />
@@ -78,7 +111,7 @@ export default function DobokShowroomScreen() {
     </View>
 
     <View style={styles.twoColumns}><OptionCard icon={DOBOK_TOP_COLOR_ICON} title="상의 색상" subtitle={`${fabric.label} · ${topColor.position}`} swatch={topColor.hex} onPress={() => setSheet("top")} /><OptionCard icon={DOBOK_PANTS_COLOR_ICON} title="하의 색상" subtitle={`${fabric.label} · ${pantsColor.position}`} swatch={pantsColor.hex} onPress={() => setSheet("pants")} /></View>
-    <View style={styles.twoColumns}><OptionCard icon={DOBOK_CHEST_ICON} title="가슴 자수" subtitle={`${showChest ? "사용함" : "사용 안 함"} · ${embroideryColors.find((x) => x.hex === chestColor)?.label || "색상"}`} swatch={chestColor} onPress={() => setSheet("chest")} /><OptionCard icon={DOBOK_CLOUD_ICON} title="구름무늬" subtitle={canUseCloudEmbroidery ? `${showClouds ? "사용함" : "사용 안 함"} · ${embroideryColors.find((x) => x.hex === cloudColor)?.label || "색상"}` : "유단자 전용"} swatch={canUseCloudEmbroidery ? cloudColor : null} locked={!canUseCloudEmbroidery} onPress={openCloudSheet} /></View>
+    <View style={styles.twoColumns}><OptionCard icon={DOBOK_CHEST_ICON} title="가슴 자수" subtitle={`${showChest ? "사용함" : "사용 안 함"} · ${embroideryColorOptions.find((x) => x.hex === chestColor)?.label || "색상"}`} swatch={chestColor} onPress={() => setSheet("chest")} /><OptionCard icon={DOBOK_CLOUD_ICON} title="구름무늬" subtitle={canUseCloudEmbroidery ? `${showClouds ? "사용함" : "사용 안 함"} · ${embroideryColorOptions.find((x) => x.hex === cloudColor)?.label || "색상"}` : "유단자 전용"} swatch={canUseCloudEmbroidery ? cloudColor : null} locked={!canUseCloudEmbroidery} onPress={openCloudSheet} /></View>
 
     <View style={styles.notice}><Image source={DOBOK_NOTICE_BADGE} style={styles.noticeBadgeIcon} resizeMode="contain" /><View style={{ flex: 1 }}><Text style={styles.noticeTitle}>도장에서 관장님께 문의해주세요.</Text><Text style={styles.noticeText}>화면의 색상은 기기와 조명에 따라 실제 원단과 다를 수 있습니다.</Text></View></View>
 
@@ -88,7 +121,7 @@ export default function DobokShowroomScreen() {
     <SaveNameModal visible={nameModalVisible} editingFavoriteId={editingFavoriteId} favoriteName={favoriteName} onChangeName={setFavoriteName} onClose={() => { setNameModalVisible(false); setEditingFavoriteId(null); }} onConfirm={confirmFavoriteName} />
     <ColorSheet visible={sheet === "top"} title="상의 색상 선택" group={fabric} selectedKey={topColor.key} onClose={() => setSheet(null)} onSelect={chooseTopColor} />
     <ColorSheet visible={sheet === "pants"} title="하의 색상 선택" group={fabric} selectedKey={pantsColor.key} onClose={() => setSheet(null)} onSelect={choosePantsColor} />
-    <EmbroiderySheet visible={sheet === "chest"} title="가슴 자수 색상 선택" colors={embroideryColors} selectedHex={chestColor} onClose={() => setSheet(null)} onSelect={setChestColor} />
-    <EmbroiderySheet visible={sheet === "cloud" && canUseCloudEmbroidery} title="구름무늬 색상 선택" colors={embroideryColors} selectedHex={cloudColor} onClose={() => setSheet(null)} onSelect={setCloudColor} />
+    <EmbroiderySheet visible={sheet === "chest"} title="가슴 자수 색상 선택" colors={embroideryColorOptions} selectedHex={chestColor} onClose={() => setSheet(null)} onSelect={setChestColor} />
+    <EmbroiderySheet visible={sheet === "cloud" && canUseCloudEmbroidery} title="구름무늬 색상 선택" colors={embroideryColorOptions} selectedHex={cloudColor} onClose={() => setSheet(null)} onSelect={(hex) => { setCloudColor(hex); setShowClouds(true); }} />
   </ScrollView>;
 }
