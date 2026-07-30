@@ -59,10 +59,14 @@ export function useHomeScreen({
       return;
     }
 
-const [homeRes, calendarRes, noticeRes] = await Promise.all([
-  
+const nextCalendarDate = new Date(currentYear, currentMonth, 1);
+const nextCalendarYear = nextCalendarDate.getFullYear();
+const nextCalendarMonth = nextCalendarDate.getMonth() + 1;
+
+const [homeRes, calendarRes, nextCalendarRes, noticeRes] = await Promise.all([
   getMemberHome(token),
   getMemberCalendar(token, currentYear, currentMonth),
+  getMemberCalendar(token, nextCalendarYear, nextCalendarMonth),
   getMemberNoticeList(token),
 ]);
     if (DEBUG_HOME) {
@@ -74,7 +78,13 @@ const [homeRes, calendarRes, noticeRes] = await Promise.all([
     }
 
     setHomeData(homeRes);
-    setCalendarData(calendarRes);
+    setCalendarData({
+      ...calendarRes,
+      scheduleByDate: {
+        ...(calendarRes?.scheduleByDate || {}),
+        ...(nextCalendarRes?.scheduleByDate || {}),
+      },
+    });
     setNoticeList(noticeRes || []);
 
     if (DEBUG_HOME) {

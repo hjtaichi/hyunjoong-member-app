@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -89,6 +89,8 @@ export default function RecurringReservationsScreen() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const toastTimerRef = useRef(null);
 
   const [selectedRecurringMap, setSelectedRecurringMap] = useState({});
   const [isYudanjaEnabled, setIsYudanjaEnabled] = useState(false);
@@ -134,6 +136,26 @@ const loadData = useCallback(async () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
+
+  const showSavedToast = useCallback(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    setToastVisible(true);
+    toastTimerRef.current = setTimeout(() => {
+      setToastVisible(false);
+      toastTimerRef.current = null;
+    }, 1800);
+  }, []);
 
   const selectedNormalCount = useMemo(() => {
     return Object.values(selectedRecurringMap).reduce((acc, arr) => {
@@ -224,7 +246,7 @@ const loadData = useCallback(async () => {
         items: finalItems,
       });
 
-      Alert.alert("완료", "정기출석 설정이 저장되었습니다.");
+      showSavedToast();
     } catch (error) {
       Alert.alert(
         "오류",
@@ -233,7 +255,7 @@ const loadData = useCallback(async () => {
     } finally {
       setSaving(false);
     }
-  }, [selectedRecurringMap, isYudanjaEnabled, canUseYudanja, token]);
+  }, [selectedRecurringMap, isYudanjaEnabled, canUseYudanja, token, showSavedToast]);
 
   if (loading) {
     return (
@@ -245,8 +267,9 @@ const loadData = useCallback(async () => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <ScreenHeader title="정기출석 설정" />
+    <View style={styles.screen}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <ScreenHeader title="정기출석 설정" />
 
       <Text style={styles.subtitle}>
         요일마다 여러 시간대를 선택할 수 있어요. {"\n"}자주 가는 시간으로 저장해두면 자동 예약과 연결됩니다.
@@ -430,11 +453,24 @@ const loadData = useCallback(async () => {
     </View>
   </View>
 </Modal>
-    </ScrollView>
+      </ScrollView>
+
+      {toastVisible ? (
+        <View pointerEvents="none" style={styles.toastWrap}>
+          <View style={styles.toast}>
+            <Text style={styles.toastText}>✓ 저장되었습니다.</Text>
+          </View>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
   flex: 1,
   backgroundColor: colors.background,
@@ -770,6 +806,31 @@ sheetCheckText: {
   fontWeight: "900",
   color: "#8C6330",
 },
+toastWrap: {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: 28,
+  alignItems: "center",
+  paddingHorizontal: 20,
+},
+
+toast: {
+  minHeight: 44,
+  paddingHorizontal: 18,
+  borderRadius: 999,
+  backgroundColor: "rgba(31, 26, 23, 0.94)",
+  alignItems: "center",
+  justifyContent: "center",
+  ...shadow.card,
+},
+
+toastText: {
+  fontSize: 14,
+  fontFamily: fonts.bold,
+  color: colors.white,
+},
+
 topHeader: {
   flexDirection: "row",
   alignItems: "center",
