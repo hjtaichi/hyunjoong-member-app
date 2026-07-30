@@ -1,6 +1,6 @@
 import React from "react";
 import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
-import ScreenHeader from "../../review-results/member-app-final-release-readiness-20260720-160436/isolated-export-workspace/src/components/ScreenHeader";
+import ScreenHeader from "../../src/components/ScreenHeader";
 import FavoriteModal from "./components/FavoriteModal";
 import OptionCard from "./components/OptionCard";
 import PreviewCard from "./components/PreviewCard";
