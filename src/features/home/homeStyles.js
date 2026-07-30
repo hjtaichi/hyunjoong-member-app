@@ -79,12 +79,20 @@ homeHeaderTextBlock: {
   marginBottom: 4,
 },
 
+homeNameRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: 8,
+  marginBottom: 7,
+},
+
 homeName: {
+  flexShrink: 1,
   fontSize: isWeb ? 35 : 38,
   fontFamily: fonts.title,
   letterSpacing: 0.1,
   color: colors.textMain,
-  marginBottom: 10,
 },
 
   homeBadgeRow: {
@@ -111,6 +119,41 @@ homeName: {
   fontFamily: fonts.bold,
   color: colors.warmBrown,
 },
+
+homeRankBadgeInline: {
+  minHeight: isWeb ? 24 : 27,
+  paddingHorizontal: isWeb ? 8 : 9,
+  paddingVertical: isWeb ? 3 : 4,
+},
+
+homeMemberBadgeRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: isWeb ? 5 : 6,
+  minHeight: isWeb ? 40 : 38,
+  marginBottom: -5,
+},
+
+homeMemberBadgeButton: {
+  width: isWeb ? 34 : 36,
+  height: isWeb ? 34 : 36,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 999,
+},
+
+homeMemberBadgeButtonPressed: {
+  opacity: 0.72,
+  transform: [{ scale: 0.95 }],
+},
+
+homeMemberBadgeIcon: {
+  width: "100%",
+  height: "100%",
+},
+
+// HJTAICHI_HOME_MEMBER_BADGE_STYLES_V1
 
 homeBadgeYudanja: {
   backgroundColor: "#6A4B3F",

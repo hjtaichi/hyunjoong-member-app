@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "../homeStyles";
+import BadgeInfoModal from "./BadgeInfoModal";
+import { getMemberBadgeImageSource } from "../memberBadges";
 
 export default function HomeHeader({
   displayName,
@@ -17,12 +19,23 @@ export default function HomeHeader({
   yudanjaEmblemFrame,
   promotionBadgeText,
   monthlyGoalRate,
+  memberBadges = [],
 }) {
   const monthlyRate = Math.min(
     100,
     Math.max(0, Number(monthlyGoalRate?.rate || 0))
   );
   const filledBars = Math.ceil(monthlyRate / 25);
+  const [selectedBadge, setSelectedBadge] = useState(null);
+  const visibleBadges = useMemo(
+    () =>
+      (Array.isArray(memberBadges) ? memberBadges : []).filter((badge) =>
+        Boolean(getMemberBadgeImageSource(badge?.code)),
+      ),
+    [memberBadges],
+  );
+
+  // HJTAICHI_HOME_MEMBER_BADGES_V1
   return (
     <View style={styles.homeHeader}>
       <Image
@@ -54,14 +67,15 @@ export default function HomeHeader({
       <View style={styles.homeHeaderTextBlock}>
         <Text style={styles.homeGreeting}>안녕하세요!</Text>
 
-        <Text style={styles.homeName}>
-          {displayName}님
-        </Text>
+        <View style={styles.homeNameRow}>
+          <Text style={styles.homeName}>
+            {displayName}님
+          </Text>
 
-        <View style={styles.homeBadgeRow}>
           <View
             style={[
               styles.homeBadge,
+              styles.homeRankBadgeInline,
               {
                 backgroundColor: rankBadgeColors.backgroundColor,
                 borderColor: rankBadgeColors.borderColor,
@@ -78,20 +92,31 @@ export default function HomeHeader({
               {levelLabel}
             </Text>
           </View>
-
-          {isYudanja && (
-            <View style={[styles.homeBadge, styles.homeBadgeYudanja]}>
-              <Text
-                style={[
-                  styles.homeBadgeText,
-                  styles.homeBadgeTextYudanja,
-                ]}
-              >
-                유단자회
-              </Text>
-            </View>
-          )}
         </View>
+
+        {visibleBadges.length > 0 ? (
+          <View style={styles.homeMemberBadgeRow}>
+            {visibleBadges.map((badge) => (
+              <Pressable
+                key={badge.code}
+                accessibilityRole="button"
+                accessibilityLabel={`${badge.title} 뱃지 설명 보기`}
+                hitSlop={6}
+                style={({ pressed }) => [
+                  styles.homeMemberBadgeButton,
+                  pressed && styles.homeMemberBadgeButtonPressed,
+                ]}
+                onPress={() => setSelectedBadge(badge)}
+              >
+                <Image
+                  source={getMemberBadgeImageSource(badge.code)}
+                  style={styles.homeMemberBadgeIcon}
+                  resizeMode="contain"
+                />
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
 
         {joinDayCount != null ? (
           <Text style={styles.homeAttendanceSummary}>
@@ -147,6 +172,11 @@ export default function HomeHeader({
           />
         )}
       </View>
+
+      <BadgeInfoModal
+        badge={selectedBadge}
+        onClose={() => setSelectedBadge(null)}
+      />
     </View>
   );
 }

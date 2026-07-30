@@ -461,6 +461,7 @@ const handleNoticeDetail = useCallback(() => {
   profileImageSource={profileImageSource}
   yudanjaEmblemFrame={yudanjaEmblemFrame}
   promotionBadgeText={promotionBadgeText}
+  memberBadges={homeData?.member?.badges || []} // HJTAICHI_HOME_BADGES_PROP_V1
 />
 
 <TodayTrainingCard
