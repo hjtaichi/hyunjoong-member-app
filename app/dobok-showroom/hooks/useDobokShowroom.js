@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { useAuth } from "../../../src/contexts/AuthContext";
+import { getMemberTaegukwon } from "../../../src/api/memberTaegukwon";
 import { DOBOK_V9_COMBO_LIST } from "../../../src/features/dobok/v9/dobokV9Assets";
 import {
   DOBOK_V9_EMBROIDERY_CONFIG,
@@ -35,7 +36,7 @@ function makeFabricSelections(groups) {
 }
 
 export default function useDobokShowroom() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [fabricGroups, setFabricGroups] = useState(DOBOK_V9_FABRIC_GROUPS);
   const [catalogSource, setCatalogSource] = useState("fallback");
   const [catalogVersion, setCatalogVersion] = useState(0);
@@ -70,6 +71,41 @@ export default function useDobokShowroom() {
   const [editingFavoriteId, setEditingFavoriteId] = useState(null);
   const [appliedFavoriteId, setAppliedFavoriteId] = useState(null);
 
+  // SHOWROOM_MEMBER_RANK_FROM_TAEGUKWON
+  useEffect(() => {
+    let active = true;
+
+    async function loadMemberRankLevel() {
+      if (!token) {
+        if (active) {
+          setMemberRankLevel(Number(user?.rankLevel || 0));
+        }
+        return;
+      }
+
+      try {
+        const result = await getMemberTaegukwon(token);
+        const payload = result?.data || result;
+        const nextRankLevel = Number(payload?.member?.rankLevel || 0);
+
+        if (active) {
+          setMemberRankLevel(nextRankLevel);
+        }
+      } catch (error) {
+        if (active) {
+          setMemberRankLevel(Number(user?.rankLevel || 0));
+        }
+        console.log("도복 쇼룸 회원 단수 불러오기 실패:", error);
+      }
+    }
+
+    void loadMemberRankLevel();
+
+    return () => {
+      active = false;
+    };
+  }, [token, user?.rankLevel]);
+
   useEffect(() => {
     Promise.all([
       AsyncStorage.getItem(SAVE_KEY),
@@ -99,7 +135,6 @@ export default function useDobokShowroom() {
         setCatalogConfig(catalog.config);
         setCatalogSource(catalog.source);
         setCatalogVersion(catalog.version);
-        setMemberRankLevel(Number(catalog.rankLevel || 0));
         setFabricSelections(makeFabricSelections(groups));
 
         setFabricKey((current) =>
