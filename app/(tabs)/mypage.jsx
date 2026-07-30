@@ -328,6 +328,7 @@ const recurringMenuSummary = hasRecurring
 <MyPageHeroCard
   styles={styles}
   isYudanja={isYudanja}
+  memberBadges={homeData?.member?.badges || []}
   memberName={memberName}
   levelLabel={levelLabel}
   rankBadgeColors={rankBadgeColors}
