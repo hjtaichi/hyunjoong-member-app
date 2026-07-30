@@ -37,7 +37,7 @@ function makeFabricSelections(groups) {
 export default function useDobokShowroom() {
   const { user } = useAuth();
   const rankLevel = Number(user?.rankLevel || 0);
-  const canUseCloudEmbroidery = rankLevel >= 1 && rankLevel <= 9;
+  const canUseCloudEmbroidery = rankLevel >= 1;
   const [fabricGroups, setFabricGroups] = useState(DOBOK_V9_FABRIC_GROUPS);
   const [catalogSource, setCatalogSource] = useState("fallback");
   const [catalogVersion, setCatalogVersion] = useState(0);
@@ -76,8 +76,19 @@ export default function useDobokShowroom() {
       loadDobokCatalog(),
     ])
       .then(([rawSaved, rawApplied, catalog]) => {
-        setSaved(rawSaved ? JSON.parse(rawSaved) : []);
+        const parsedSaved = rawSaved ? JSON.parse(rawSaved) : [];
+        const permissionSafeSaved = Array.isArray(parsedSaved)
+          ? parsedSaved.map((item) =>
+              canUseCloudEmbroidery
+                ? item
+                : { ...item, showClouds: false }
+            )
+          : [];
+        setSaved(permissionSafeSaved);
         setAppliedFavoriteId(rawApplied || null);
+        if (!canUseCloudEmbroidery && rawSaved) {
+          void AsyncStorage.setItem(SAVE_KEY, JSON.stringify(permissionSafeSaved));
+        }
 
         const groups = catalog.fabrics;
         const firstFabric = groups[0];
@@ -109,7 +120,7 @@ export default function useDobokShowroom() {
         setSaved([]);
         setAppliedFavoriteId(null);
       });
-  }, []);
+  }, [canUseCloudEmbroidery]);
 
   const styleLabels = catalogConfig?.styleLabels || DOBOK_V9_STYLE_LABELS;
   const sleeveLabels = catalogConfig?.sleeveLabels || DOBOK_V9_SLEEVE_LABELS;
@@ -118,6 +129,17 @@ export default function useDobokShowroom() {
   const embroideryColors = Array.isArray(catalogConfig?.embroideryColors) && catalogConfig.embroideryColors.length > 0
     ? catalogConfig.embroideryColors
     : DEFAULT_EMBROIDERY_COLORS;
+
+  useEffect(() => {
+    const firstColor = embroideryColors[0]?.hex;
+    if (!firstColor) return;
+    if (!embroideryColors.some((item) => item.hex === chestColor)) {
+      setChestColor(firstColor);
+    }
+    if (!embroideryColors.some((item) => item.hex === cloudColor)) {
+      setCloudColor(firstColor);
+    }
+  }, [embroideryColors, chestColor, cloudColor]);
 
   useEffect(() => {
     if (!canUseCloudEmbroidery) {

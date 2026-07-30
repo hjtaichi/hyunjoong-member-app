@@ -23,6 +23,9 @@ function normalizeEmbroideryColors(value) {
   const source = Array.isArray(value) ? value : [];
   const colors = source
     .filter((item) => item?.enabled !== false && item?.hex)
+    .sort(
+      (a, b) => Number(a?.sortOrder ?? 0) - Number(b?.sortOrder ?? 0)
+    )
     .map((item, index) => ({
       key: String(item?.id || item?.key || `embroidery-${index + 1}`),
       label: String(item?.name || item?.label || `실색 ${index + 1}`),
