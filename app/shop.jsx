@@ -368,7 +368,7 @@ export default function ShopScreen() {
 
 <Pressable
   style={styles.showroomBannerButton}
-  onPress={() => router.push("/dobok-showroom-demo")}
+  onPress={() => router.push("/dobok-showroom")}
   accessibilityRole="button"
   accessibilityLabel="나만의 맞춤 도복 만들기"
 >
