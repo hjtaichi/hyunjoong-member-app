@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
+import { subscribeAttendanceDataChanged } from "../../events/attendanceRefreshEvents";
 
 import { getMemberCalendar } from "../../api/memberCalendar";
 import {
@@ -117,15 +119,23 @@ export function useScheduleScreen({
     previousMonthKeyRef.current = monthKey;
     loadAll({ silent: true });
   }, [currentYear, currentMonth, loadAll]);
+  useEffect(() => {
+    if (!token || isPausedMember) return undefined;
 
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     if (!hasMountedRef.current) return;
-  //
-  //     loadAll({ silent: true });
-  //   }, [loadAll])
-  // );
+    return subscribeAttendanceDataChanged(() => {
+      refreshScreenData().catch((error) => {
+        console.log("SCHEDULE attendance refresh 실패:", error);
+      });
+    });
+  }, [token, isPausedMember, refreshScreenData]);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasMountedRef.current || !token || isPausedMember) return;
+
+      loadAll({ silent: true });
+    }, [loadAll, token, isPausedMember])
+  );
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadAll({ silent: true });

@@ -18,6 +18,7 @@ import {
 import { getMemberHome } from "../src/api/memberHome";
 import { colors, radius, shadow } from "../src/theme";
 import ScreenHeader from "../src/components/ScreenHeader";
+import { emitAttendanceDataChanged } from "../src/events/attendanceRefreshEvents";
 
 const fonts = {
   medium: "PretendardMedium",
@@ -245,7 +246,8 @@ const loadData = useCallback(async () => {
         isEnabled: finalItems.length > 0,
         items: finalItems,
       });
-
+
+      emitAttendanceDataChanged();
       showSavedToast();
     } catch (error) {
       Alert.alert(

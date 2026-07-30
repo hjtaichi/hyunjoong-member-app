@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import { getMemberHome } from "../../api/memberHome";
 import { getMemberCalendar } from "../../api/memberCalendar";
 import { getMemberNoticeList } from "../../api/memberNotice";
+import { subscribeAttendanceDataChanged } from "../../events/attendanceRefreshEvents";
 
 export const DEBUG_HOME = false;
 
@@ -155,6 +156,17 @@ loadMemberNotifications();
   loadAll();
 }, [loadAll]);
 
+  useEffect(() => {
+    if (!token || isPausedMember) return undefined;
+
+    return subscribeAttendanceDataChanged(() => {
+      refreshScreenData().catch((error) => {
+        if (DEBUG_HOME) {
+          console.log("HOME attendance refresh 실패:", error);
+        }
+      });
+    });
+  }, [token, isPausedMember, refreshScreenData]);
 useFocusEffect(
   useCallback(() => {
     if (!token || isPausedMember) return;
