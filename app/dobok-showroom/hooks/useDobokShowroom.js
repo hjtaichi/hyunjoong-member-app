@@ -36,11 +36,12 @@ function makeFabricSelections(groups) {
 
 export default function useDobokShowroom() {
   const { user } = useAuth();
-  const rankLevel = Number(user?.rankLevel || 0);
+  const rankLevel = memberRankLevel;
   const canUseCloudEmbroidery = rankLevel >= 1;
   const [fabricGroups, setFabricGroups] = useState(DOBOK_V9_FABRIC_GROUPS);
   const [catalogSource, setCatalogSource] = useState("fallback");
   const [catalogVersion, setCatalogVersion] = useState(0);
+  const [memberRankLevel, setMemberRankLevel] = useState(0);
   const [catalogConfig, setCatalogConfig] = useState(() => ({
     styleLabels: DOBOK_V9_STYLE_LABELS,
     sleeveLabels: DOBOK_V9_SLEEVE_LABELS,
@@ -98,6 +99,7 @@ export default function useDobokShowroom() {
         setCatalogConfig(catalog.config);
         setCatalogSource(catalog.source);
         setCatalogVersion(catalog.version);
+        setMemberRankLevel(Number(catalog.rankLevel || 0));
         setFabricSelections(makeFabricSelections(groups));
 
         setFabricKey((current) =>

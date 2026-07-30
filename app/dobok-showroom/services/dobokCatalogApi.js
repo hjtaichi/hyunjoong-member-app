@@ -143,8 +143,44 @@ export function normalizePublishedCatalog(payload) {
   return {
     version: Number(payload?.version || 0),
     published: Boolean(payload?.published),
-    config,
-    fabrics: config.fabrics,
+    config,    fabrics: config.fabrics,
+    rankLevel: Number(
+      payload?.rankLevel ??
+      payload?.member?.rankLevel ??
+      payload?.danLevel ??
+      payload?.member?.danLevel ??
+      payload?.rank?.level ??
+      payload?.member?.rank?.level ??
+      0
+    ),
+  };
+}
+
+function selectPublishedCatalogPayload(responseData) {
+  const publishedData =
+    responseData?.publishedData ??
+    responseData?.data?.publishedData ??
+    null;
+
+  if (!publishedData) {
+    return responseData;
+  }
+
+  const publishedPayload = publishedData?.config
+    ? publishedData
+    : { config: publishedData };
+
+  return {
+    ...responseData,
+    ...publishedPayload,
+    version:
+      responseData?.version ??
+      publishedPayload?.version ??
+      0,
+    published:
+      responseData?.published ??
+      publishedPayload?.published ??
+      true,
   };
 }
 
@@ -161,7 +197,9 @@ async function fetchRemoteCatalog() {
     );
   }
 
-  return normalizePublishedCatalog(body.data);
+  return normalizePublishedCatalog(
+    selectPublishedCatalogPayload(body.data)
+  );
 }
 
 export async function loadDobokCatalog() {
