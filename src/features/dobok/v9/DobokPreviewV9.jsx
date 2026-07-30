@@ -1,5 +1,11 @@
-﻿import React from "react";
-import { Image, Platform, StyleSheet, View } from "react-native";
+import React, { memo } from "react";
+import {
+  Image as NativeImage,
+  Platform,
+  StyleSheet,
+  View,
+} from "react-native";
+import { Image as CachedImage } from "expo-image";
 
 import {
   DOBOK_V9_COMBINATIONS,
@@ -9,19 +15,51 @@ import { DOBOK_V9_EMBROIDERY_LAYOUTS } from "./dobokV9Config";
 
 const ASPECT = 1024 / 1536;
 
-function FullLayer({ source, style }) {
+const CachedFullLayer = memo(function CachedFullLayer({
+  source,
+  style,
+  recyclingKey,
+}) {
   if (!source) return null;
+
   return (
-    <Image
+    <CachedImage
       source={source}
       style={[styles.full, style]}
-      resizeMode="stretch"
+      contentFit="fill"
+      cachePolicy="memory-disk"
+      transition={0}
+      priority="high"
+      recyclingKey={recyclingKey}
       pointerEvents="none"
     />
   );
-}
+});
 
-function PositionedTintLayer({ source, layout, color, scale, index = 0 }) {
+const NativeTintFullLayer = memo(function NativeTintFullLayer({
+  source,
+  color,
+}) {
+  if (!source) return null;
+
+  return (
+    <NativeImage
+      source={source}
+      style={[styles.full, { tintColor: color }]}
+      resizeMode="stretch"
+      pointerEvents="none"
+      fadeDuration={0}
+    />
+  );
+});
+
+const PositionedTintLayer = memo(function PositionedTintLayer({
+  source,
+  layout,
+  color,
+  scale,
+  index = 0,
+}) {
   if (!source || !layout || layout.count === 0) return null;
 
   const gap = Number(layout.gap || 0);
@@ -29,10 +67,11 @@ function PositionedTintLayer({ source, layout, color, scale, index = 0 }) {
   const centeredOffset = (index - (count - 1) / 2) * gap;
 
   return (
-    <Image
+    <NativeImage
       source={source}
       resizeMode="contain"
       pointerEvents="none"
+      fadeDuration={0}
       style={{
         position: "absolute",
         left: (layout.left + centeredOffset) * scale,
@@ -44,10 +83,11 @@ function PositionedTintLayer({ source, layout, color, scale, index = 0 }) {
       }}
     />
   );
-}
+});
 
 function RepeatedTintLayer(props) {
   const count = Math.max(0, Math.min(6, Number(props.layout?.count ?? 1)));
+
   return (
     <>
       {Array.from({ length: count }, (_, index) => (
@@ -75,7 +115,9 @@ export default function DobokPreviewV9({
   const height = width / ASPECT;
   const scale = width / 1024;
   const allLayouts = embroideryLayouts || DOBOK_V9_EMBROIDERY_LAYOUTS;
-  const layout = allLayouts[comboKey] || DOBOK_V9_EMBROIDERY_LAYOUTS[comboKey];
+  const layout =
+    allLayouts[comboKey] || DOBOK_V9_EMBROIDERY_LAYOUTS[comboKey];
+
   const chestColor = chestEmbroideryColor || embroideryColor;
   const cloudColor = cloudEmbroideryColor || embroideryColor;
 
@@ -85,14 +127,35 @@ export default function DobokPreviewV9({
       : { opacity: 0.34 };
 
   return (
-    <View style={[styles.stage, { width, height }]}>
-      <FullLayer source={combo.base} />
+    <View
+      style={[styles.stage, { width, height }]}
+      collapsable={false}
+      removeClippedSubviews={false}
+    >
+      <CachedFullLayer
+        source={combo.base}
+        recyclingKey={`${comboKey}-base`}
+      />
 
-      <FullLayer source={combo.pantsMask} style={{ tintColor: pantsColor }} />
-      <FullLayer source={combo.pantsTexture} style={textureStyle} />
+      <NativeTintFullLayer
+        source={combo.pantsMask}
+        color={pantsColor}
+      />
+      <CachedFullLayer
+        source={combo.pantsTexture}
+        style={textureStyle}
+        recyclingKey={`${comboKey}-pants-texture`}
+      />
 
-      <FullLayer source={combo.topMask} style={{ tintColor: topColor }} />
-      <FullLayer source={combo.topTexture} style={textureStyle} />
+      <NativeTintFullLayer
+        source={combo.topMask}
+        color={topColor}
+      />
+      <CachedFullLayer
+        source={combo.topTexture}
+        style={textureStyle}
+        recyclingKey={`${comboKey}-top-texture`}
+      />
 
       {showChest ? (
         <RepeatedTintLayer
@@ -105,12 +168,42 @@ export default function DobokPreviewV9({
 
       {showBlackBeltClouds ? (
         <>
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarLeftOuter} color={cloudColor} scale={scale} />
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarLeftInner} color={cloudColor} scale={scale} />
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarRightInner} color={cloudColor} scale={scale} />
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarRightOuter} color={cloudColor} scale={scale} />
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.leftCuff} color={cloudColor} scale={scale} />
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.rightCuff} color={cloudColor} scale={scale} />
+          <RepeatedTintLayer
+            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
+            layout={layout.collarLeftOuter}
+            color={cloudColor}
+            scale={scale}
+          />
+          <RepeatedTintLayer
+            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
+            layout={layout.collarLeftInner}
+            color={cloudColor}
+            scale={scale}
+          />
+          <RepeatedTintLayer
+            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
+            layout={layout.collarRightInner}
+            color={cloudColor}
+            scale={scale}
+          />
+          <RepeatedTintLayer
+            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
+            layout={layout.collarRightOuter}
+            color={cloudColor}
+            scale={scale}
+          />
+          <RepeatedTintLayer
+            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
+            layout={layout.leftCuff}
+            color={cloudColor}
+            scale={scale}
+          />
+          <RepeatedTintLayer
+            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
+            layout={layout.rightCuff}
+            color={cloudColor}
+            scale={scale}
+          />
         </>
       ) : null}
     </View>
@@ -123,6 +216,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: 0,
     backgroundColor: "transparent",
+    isolation: Platform.OS === "web" ? "isolate" : undefined,
   },
   full: {
     ...StyleSheet.absoluteFillObject,
@@ -130,4 +224,3 @@ const styles = StyleSheet.create({
     height: "100%",
   },
 });
-
