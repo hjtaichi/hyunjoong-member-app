@@ -15,6 +15,34 @@ import { DOBOK_V9_EMBROIDERY_LAYOUTS } from "./dobokV9Config";
 
 const ASPECT = 1024 / 1536;
 
+function getAssetUri(source) {
+  if (!source) return null;
+
+  if (typeof source === "string") return source;
+  if (typeof source?.uri === "string") return source.uri;
+
+  return NativeImage.resolveAssetSource(source)?.uri || null;
+}
+
+function createWebMaskStyle(source, color) {
+  const uri = getAssetUri(source);
+  if (!uri) return null;
+
+  const maskImage = `url("${String(uri).replace(/"/g, "%22")}")`;
+
+  return {
+    backgroundColor: color,
+    WebkitMaskImage: maskImage,
+    WebkitMaskRepeat: "no-repeat",
+    WebkitMaskPosition: "center",
+    WebkitMaskSize: "100% 100%",
+    maskImage,
+    maskRepeat: "no-repeat",
+    maskPosition: "center",
+    maskSize: "100% 100%",
+  };
+}
+
 const CachedFullLayer = memo(function CachedFullLayer({
   source,
   style,
@@ -42,6 +70,23 @@ const NativeTintFullLayer = memo(function NativeTintFullLayer({
 }) {
   if (!source) return null;
 
+  if (Platform.OS === "web") {
+    const maskStyle = createWebMaskStyle(source, color);
+    if (!maskStyle) return null;
+
+    return React.createElement("div", {
+      "aria-hidden": true,
+      style: {
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        ...maskStyle,
+      },
+    });
+  }
+
   return (
     <NativeImage
       source={source}
@@ -66,6 +111,29 @@ const PositionedTintLayer = memo(function PositionedTintLayer({
   const count = Math.max(1, Number(layout.count || 1));
   const centeredOffset = (index - (count - 1) / 2) * gap;
 
+  const positionedStyle = {
+    position: "absolute",
+    left: (layout.left + centeredOffset) * scale,
+    top: layout.top * scale,
+    width: layout.width * scale,
+    height: layout.height * scale,
+    transform: `rotate(${Number(layout.rotation || 0)}deg)`,
+    pointerEvents: "none",
+  };
+
+  if (Platform.OS === "web") {
+    const maskStyle = createWebMaskStyle(source, color);
+    if (!maskStyle) return null;
+
+    return React.createElement("div", {
+      "aria-hidden": true,
+      style: {
+        ...positionedStyle,
+        ...maskStyle,
+      },
+    });
+  }
+
   return (
     <NativeImage
       source={source}
@@ -74,10 +142,10 @@ const PositionedTintLayer = memo(function PositionedTintLayer({
       fadeDuration={0}
       style={{
         position: "absolute",
-        left: (layout.left + centeredOffset) * scale,
-        top: layout.top * scale,
-        width: layout.width * scale,
-        height: layout.height * scale,
+        left: positionedStyle.left,
+        top: positionedStyle.top,
+        width: positionedStyle.width,
+        height: positionedStyle.height,
         tintColor: color,
         transform: [{ rotate: `${Number(layout.rotation || 0)}deg` }],
       }}
@@ -168,42 +236,12 @@ export default function DobokPreviewV9({
 
       {showBlackBeltClouds ? (
         <>
-          <RepeatedTintLayer
-            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
-            layout={layout.collarLeftOuter}
-            color={cloudColor}
-            scale={scale}
-          />
-          <RepeatedTintLayer
-            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
-            layout={layout.collarLeftInner}
-            color={cloudColor}
-            scale={scale}
-          />
-          <RepeatedTintLayer
-            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
-            layout={layout.collarRightInner}
-            color={cloudColor}
-            scale={scale}
-          />
-          <RepeatedTintLayer
-            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
-            layout={layout.collarRightOuter}
-            color={cloudColor}
-            scale={scale}
-          />
-          <RepeatedTintLayer
-            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
-            layout={layout.leftCuff}
-            color={cloudColor}
-            scale={scale}
-          />
-          <RepeatedTintLayer
-            source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource}
-            layout={layout.rightCuff}
-            color={cloudColor}
-            scale={scale}
-          />
+          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarLeftOuter} color={cloudColor} scale={scale} />
+          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarLeftInner} color={cloudColor} scale={scale} />
+          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarRightInner} color={cloudColor} scale={scale} />
+          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarRightOuter} color={cloudColor} scale={scale} />
+          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.leftCuff} color={cloudColor} scale={scale} />
+          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.rightCuff} color={cloudColor} scale={scale} />
         </>
       ) : null}
     </View>
