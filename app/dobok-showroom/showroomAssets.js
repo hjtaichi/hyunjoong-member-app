@@ -1,0 +1,10 @@
+export const FAVORITE_STAR = require("../../assets/images/dobok-favorite-star.png");
+export const DOBOK_LANDSCAPE_BACKGROUND = require("../../assets/images/dobok-showroom-landscape.png");
+export const DOBOK_FORM_ICON = require("../../assets/images/dobok-section-form.png");
+export const DOBOK_FABRIC_ICON = require("../../assets/images/dobok-section-fabric.png");
+export const DOBOK_TOP_COLOR_ICON = require("../../assets/images/dobok-option-top-color.png");
+export const DOBOK_PANTS_COLOR_ICON = require("../../assets/images/dobok-option-pants-color.png");
+export const DOBOK_CHEST_ICON = require("../../assets/images/dobok-option-chest-embroidery.png");
+export const DOBOK_CLOUD_ICON = require("../../assets/images/dobok-option-cloud.png");
+export const DOBOK_NOTICE_BADGE = require("../../assets/images/dobok-notice-badge.png");
+export const DOBOK_LOCK_ICON = require("../../assets/images/dobok-option-lock.png");

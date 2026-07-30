@@ -270,9 +270,6 @@ export default function ShopScreen() {
     loadProducts();
   }, [loadProducts]);
 
-const bestProducts = useMemo(() => {
-  return [...products].slice(0, 5);
-}, [products]);
 
   const newProducts = useMemo(() => {
     return [...products].slice(0, 5);
@@ -351,47 +348,43 @@ const bestProducts = useMemo(() => {
   </Pressable>
 </View>
 
-  <View style={styles.heroArea}>
+  <View style={styles.showroomHero}>
   <Image
-    source={require("../assets/images/shop-mountain-bg.png")}
-    style={styles.heroBg}
+    source={require("../assets/images/shop-dobok-showroom-hero.png")}
+    style={styles.showroomHeroImage}
     resizeMode="cover"
   />
 
-  <Text style={styles.heroDesc}>
-    수련에 필요한 도장 물품과 용품 안내
-  </Text>
+  <View style={styles.showroomOverlay}>
+    <Text style={styles.heroDesc}>
+      수련 용품 안내
+    </Text>
 
-<Text style={styles.noticeText}>
-  상품 구매는 문의창 혹은 도장에서 관장님께 문의해주세요.
-</Text>
-</View>
-</View>
-
-      {bestProducts.length > 0 ? (
-  <View style={styles.section}>
-    <View style={styles.sectionHeader}>
-      <View>
-        <Text style={styles.sectionTitle}>추천 상품</Text>
-        <Text style={styles.sectionDesc}>도장에서 자주 찾는 수련용품</Text>
-      </View>
-    </View>
-
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.horizontalList}
-    >
-      {bestProducts.map((product) => (
-        <SmallProductCard
-          key={product.id}
-          product={product}
-          badge="추천"
-        />
-      ))}
-    </ScrollView>
+    <Text style={styles.noticeText}>
+      상품 구매는 문의창 혹은 도장에서{"\n"}관장님께 문의해주세요.
+    </Text>
   </View>
-) : null}
+</View>
+
+<Pressable
+  style={styles.showroomBannerButton}
+  onPress={() => router.push("/dobok-showroom-demo")}
+  accessibilityRole="button"
+  accessibilityLabel="나만의 맞춤 도복 만들기"
+>
+  <View>
+    <Text style={styles.showroomBannerTitle}>
+      나만의 맞춤 도복 만들기
+    </Text>
+
+    <Text style={styles.showroomBannerDesc}>
+      원하는 원단과 색상으로 도복을 미리 꾸며보세요
+    </Text>
+  </View>
+
+  <Text style={styles.showroomBannerArrow}>→</Text>
+</Pressable>
+</View>
 
 {newProducts.length > 0 ? (
   <View style={styles.section}>
@@ -607,39 +600,89 @@ topContent: {
     color: "#7A6A61",
   },
 
-heroArea: {
-  marginTop: 6,
-  minHeight: 128,
-  paddingHorizontal: 16,
-  paddingTop: 52,
-  paddingBottom: 18,
-  justifyContent: "flex-start",
+showroomHero: {
+  position: "relative",
+  marginTop: 10,
+  height: 240,
+  borderRadius: 24,
   overflow: "hidden",
+  backgroundColor: "#F5EFE9",
+  borderWidth: 1,
+  borderColor: colors.border,
+  ...shadow.card,
 },
 
-heroBg: {
+showroomHeroImage: {
+  width: "100%",
+  height: "100%",
+  backgroundColor: "#F5EFE9",
+},
+
+showroomOverlay: {
   position: "absolute",
-  right: -24,
-  top: 4,
-  width: "112%",
-  height: 128,
-  opacity: 0.42,
+  left: 20,
+  right: 120,
+  bottom: 66,
+},
+
+showroomHeroCopy: {
+  paddingHorizontal: 18,
+  paddingTop: 16,
+  paddingBottom: 18,
 },
 
 heroDesc: {
-  fontSize: 16,
-  lineHeight: 23,
-  fontFamily: fonts.semiBold,
-  color: colors.textMain,
+  fontSize: 26,
+  lineHeight: 20,
+  fontFamily: fonts.bold,
+  color: "#352B27",
 },
 
 noticeText: {
-  marginTop: 3,
-  fontSize: 14,
-  lineHeight: 20,
+  marginTop: 10,
+  fontSize: 13,
+  lineHeight: 17,
   fontFamily: fonts.medium,
-  color: colors.textSub,
+  color: "#6E625D",
 },
+
+showroomBannerButton: {
+  marginTop: 10,
+  marginBottom: 24,
+  minHeight: 70,
+  borderRadius: 18,
+  paddingHorizontal: 18,
+  paddingVertical: 14,
+  backgroundColor: "#071A39",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  ...shadow.card,
+},
+
+showroomBannerTitle: {
+  fontSize: 19,
+  lineHeight: 21,
+  fontFamily: fonts.bold,
+  color: "#FFFFFF",
+},
+
+showroomBannerDesc: {
+  marginTop: 4,
+  fontSize: 14,
+  lineHeight: 17,
+  fontFamily: fonts.medium,
+  color: "#D8E0EC",
+},
+
+showroomBannerArrow: {
+  marginLeft: 12,
+  fontSize: 24,
+  lineHeight: 28,
+  fontFamily: fonts.medium,
+  color: "#FFFFFF",
+},
+
   section: {
     marginBottom: 18,
   },
