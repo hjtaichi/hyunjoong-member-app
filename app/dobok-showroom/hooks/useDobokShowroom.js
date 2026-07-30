@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { getMemberTaegukwon } from "../../../src/api/memberTaegukwon";
 import { DOBOK_V9_COMBO_LIST } from "../../../src/features/dobok/v9/dobokV9Assets";
@@ -316,17 +316,38 @@ export default function useDobokShowroom() {
     setFavoritesVisible(false);
   }
 
+  async function removeFavorite(item) {
+    const next = saved.filter((savedItem) => savedItem.id !== item.id);
+    await persistFavorites(next);
+
+    if (appliedFavoriteId === item.id) {
+      setAppliedFavoriteId(null);
+      await AsyncStorage.removeItem(APPLIED_KEY);
+    }
+  }
+
   function deleteFavorite(item) {
-    Alert.alert("즐겨찾기 삭제", `${item.name}을(를) 삭제할까요?`, [
+    const message = `${item.name}을(를) 삭제할까요?`;
+
+    if (Platform.OS === "web") {
+      const confirmed =
+        typeof window !== "undefined" ? window.confirm(message) : true;
+
+      if (confirmed) {
+        void removeFavorite(item);
+      }
+      return;
+    }
+
+    Alert.alert("즐겨찾기 삭제", message, [
       { text: "취소", style: "cancel" },
-      { text: "삭제", style: "destructive", onPress: async () => {
-        const next = saved.filter((savedItem) => savedItem.id !== item.id);
-        await persistFavorites(next);
-        if (appliedFavoriteId === item.id) {
-          setAppliedFavoriteId(null);
-          await AsyncStorage.removeItem(APPLIED_KEY);
-        }
-      } },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: () => {
+          void removeFavorite(item);
+        },
+      },
     ]);
   }
 

@@ -55,11 +55,11 @@ page: {
   },
   optionTitle: {
     color: "#4E3426",
-    fontSize: 14,
-    fontWeight: "900"
+    fontSize: 12,
+    fontWeight: "800"
   },
   optionSubtitle: {
-    marginTop: 5,
+    marginTop: 3,
     color: "#7D7066",
     fontSize: 11,
   },
@@ -111,13 +111,13 @@ page: {
   },
   sheetTitle: {
     color: DARK,
-    fontSize: 19,
-    fontWeight: "900"
+    fontSize: 20,
+    fontWeight: "700"
   },
   sheetSub: {
     marginTop: 4,
     color: "#87796F",
-    fontSize: 11
+    fontSize: 13,
   },
   close: {
     color: DARK,
@@ -317,29 +317,29 @@ page: {
   favoriteName: {
     flexShrink: 1,
     color: DARK,
-    fontSize: 15,
-    fontWeight: "900"
+    fontSize: 17,
+    fontWeight: "700"
   },
   currentBadge: {
     paddingHorizontal: 7,
     paddingVertical: 4,
     overflow: "hidden",
-    borderRadius: 9,
+    borderRadius: 11,
     color: "#FFF",
     backgroundColor: BROWN,
-    fontSize: 8,
-    fontWeight: "900"
+    fontSize: 11,
+    fontWeight: "700"
   },
   favoriteMeta: {
     marginTop: 5,
     color: "#74675D",
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: "700"
   },
   favoriteApplyText: {
     marginTop: 10,
     color: BROWN,
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: "900"
   },
   favoriteActions: {
@@ -355,8 +355,8 @@ page: {
   },
   favoriteActionText: {
     color: "#6F5C4F",
-    fontSize: 10,
-    fontWeight: "900"
+    fontSize: 14,
+    fontWeight: "700"
   },
   deleteText: {
     color: "#B44D49"
@@ -485,18 +485,18 @@ page: {
   noticeTitle: {
     color: "#4F372B",
     fontSize: 16,
-    fontWeight: "900"
+    fontWeight: "800"
   },
   noticeText: {
     marginTop: 5,
     color: "#806E61",
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 15,
     fontWeight: "600"
   },
   saveStarIcon: {
-    width: 27,
-    height: 27,
+    width: 24,
+    height: 24,
     marginRight: 10
   },
   saveButtonText: {
@@ -537,14 +537,14 @@ page: {
   },
   saveButton: {
     width: "100%",
-    minHeight: 67,
+    minHeight: 62,
     marginTop: 16,
     marginBottom: 30,
     paddingHorizontal: 22,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 27,
+    borderRadius: 20,
     backgroundColor: "#6B452F"
   },
   introRow: {
@@ -610,8 +610,8 @@ savedListButton: {
   },
   previewSummaryMain: {
     color: "#4E3426",
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 14,
+    fontWeight: "800",
     textAlign: "center"
   },
   previewSummarySub: {
@@ -674,8 +674,8 @@ savedListButton: {
   },
   fabricCard: {
     position: "relative",
-    width: 158,
-    minHeight: 82,
+    width: 130,
+    minHeight: 62,
     paddingHorizontal: 14,
     paddingVertical: 13,
     alignItems: "center",
@@ -693,11 +693,11 @@ savedListButton: {
     marginTop: 0,
     color: "#563829",
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "700",
     textAlign: "center"
   },
   fabricCount: {
-    marginTop: 5,
+    marginTop: 3,
     color: "#806A5A",
     fontSize: 11,
     fontWeight: "700",
