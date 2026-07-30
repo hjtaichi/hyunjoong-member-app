@@ -3,11 +3,75 @@ import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { DEFAULT_EMBROIDERY_COLORS } from "../showroomConstants";
 import styles from "../styles/showroomStyles";
 
-export default function EmbroiderySheet({ visible, title, selectedHex, colors = DEFAULT_EMBROIDERY_COLORS, onClose, onSelect }) {
+export default function EmbroiderySheet({
+  visible,
+  title,
+  selectedHex,
+  colors = DEFAULT_EMBROIDERY_COLORS,
+  enabled,
+  onToggleEnabled,
+  onClose,
+  onSelect,
+}) {
+  const hasToggle = typeof enabled === "boolean" && typeof onToggleEnabled === "function";
   return <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
     <View style={styles.modalBackdrop}><View style={[styles.sheet, styles.smallSheet]}>
       <View style={styles.sheetHandle} />
       <View style={styles.sheetHeader}><Text style={styles.sheetTitle}>{title}</Text><Pressable onPress={onClose}><Text style={styles.close}>×</Text></Pressable></View>
+      {hasToggle ? (
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 10,
+            marginBottom: 18,
+          }}
+        >
+          <Pressable
+            onPress={() => onToggleEnabled(false)}
+            style={{
+              flex: 1,
+              paddingVertical: 13,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: !enabled ? "#9A6A2F" : "#DDD5CC",
+              backgroundColor: !enabled ? "#F5EBDD" : "#FFFFFF",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "800",
+                color: !enabled ? "#6F4822" : "#756D66",
+              }}
+            >
+              사용 안 함
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => onToggleEnabled(true)}
+            style={{
+              flex: 1,
+              paddingVertical: 13,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: enabled ? "#9A6A2F" : "#DDD5CC",
+              backgroundColor: enabled ? "#F5EBDD" : "#FFFFFF",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "800",
+                color: enabled ? "#6F4822" : "#756D66",
+              }}
+            >
+              사용함
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
       <ScrollView
         style={{ maxHeight: 470 }}
         contentContainerStyle={{ paddingBottom: 28 }}
@@ -23,7 +87,7 @@ export default function EmbroiderySheet({ visible, title, selectedHex, colors = 
             return (
               <Pressable
                 key={item.key}
-                onPress={() => onSelect(item.hex)}
+                onPress={() => { if (hasToggle && !enabled) onToggleEnabled(true); onSelect(item.hex); }}
                 style={styles.embroideryItem}
               >
                 <View

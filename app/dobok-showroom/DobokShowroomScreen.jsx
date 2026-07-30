@@ -122,6 +122,18 @@ export default function DobokShowroomScreen() {
     <ColorSheet visible={sheet === "top"} title="상의 색상 선택" group={fabric} selectedKey={topColor.key} onClose={() => setSheet(null)} onSelect={chooseTopColor} />
     <ColorSheet visible={sheet === "pants"} title="하의 색상 선택" group={fabric} selectedKey={pantsColor.key} onClose={() => setSheet(null)} onSelect={choosePantsColor} />
     <EmbroiderySheet visible={sheet === "chest"} title="가슴 자수 색상 선택" colors={embroideryColorOptions} selectedHex={chestColor} onClose={() => setSheet(null)} onSelect={setChestColor} />
-    <EmbroiderySheet visible={sheet === "cloud" && canUseCloudEmbroidery} title="구름무늬 색상 선택" colors={embroideryColorOptions} selectedHex={cloudColor} onClose={() => setSheet(null)} onSelect={(hex) => { setCloudColor(hex); setShowClouds(true); }} />
+    <EmbroiderySheet
+      visible={sheet === "cloud" && canUseCloudEmbroidery}
+      title="구름무늬 선택"
+      colors={embroideryColorOptions}
+      selectedHex={cloudColor}
+      enabled={showClouds}
+      onToggleEnabled={setShowClouds}
+      onClose={() => setSheet(null)}
+      onSelect={(hex) => {
+        setCloudColor(hex);
+        setShowClouds(true);
+      }}
+    />
   </ScrollView>;
 }
