@@ -167,6 +167,19 @@ export default function useDobokShowroom() {
     ? catalogConfig.embroideryColors
     : DEFAULT_EMBROIDERY_COLORS;
 
+
+  useEffect(() => {
+    if (!canUseCloudEmbroidery) {
+      setShowClouds(false);
+      setSheet((current) => current === "cloud" ? null : current);
+    }
+  }, [canUseCloudEmbroidery]);
+
+  const effectiveStyle = gender === "male" ? "straight" : style;
+  const combo = useMemo(() => DOBOK_V9_COMBO_LIST.find((item) => item.gender === gender && item.style === effectiveStyle && item.sleeve === sleeve), [gender, effectiveStyle, sleeve]);
+  const fabric = getFabricGroup(fabricGroups, fabricKey);
+  const topColor = getFabricColor(fabricGroups, fabricKey, topColorKey) || fabric.colors[0];
+  const pantsColor = getFabricColor(fabricGroups, fabricKey, pantsColorKey) || fabric.colors[0];
   useEffect(() => {
     const firstColor = embroideryColors[0]?.hex;
     if (!firstColor) return;
@@ -190,19 +203,6 @@ export default function useDobokShowroom() {
     chestColor,
     cloudColor,
   ]);
-
-  useEffect(() => {
-    if (!canUseCloudEmbroidery) {
-      setShowClouds(false);
-      setSheet((current) => current === "cloud" ? null : current);
-    }
-  }, [canUseCloudEmbroidery]);
-
-  const effectiveStyle = gender === "male" ? "straight" : style;
-  const combo = useMemo(() => DOBOK_V9_COMBO_LIST.find((item) => item.gender === gender && item.style === effectiveStyle && item.sleeve === sleeve), [gender, effectiveStyle, sleeve]);
-  const fabric = getFabricGroup(fabricGroups, fabricKey);
-  const topColor = getFabricColor(fabricGroups, fabricKey, topColorKey) || fabric.colors[0];
-  const pantsColor = getFabricColor(fabricGroups, fabricKey, pantsColorKey) || fabric.colors[0];
 
   function openCloudSheet() {
     if (!canUseCloudEmbroidery) {
