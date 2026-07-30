@@ -170,13 +170,26 @@ export default function useDobokShowroom() {
   useEffect(() => {
     const firstColor = embroideryColors[0]?.hex;
     if (!firstColor) return;
-    if (!embroideryColors.some((item) => item.hex === chestColor)) {
+
+    const allowedHexes = new Set([
+      ...embroideryColors.map((item) => String(item?.hex || "").toUpperCase()),
+      String(topColor?.hex || "").toUpperCase(),
+      String(pantsColor?.hex || "").toUpperCase(),
+    ]);
+
+    if (!allowedHexes.has(String(chestColor || "").toUpperCase())) {
       setChestColor(firstColor);
     }
-    if (!embroideryColors.some((item) => item.hex === cloudColor)) {
+    if (!allowedHexes.has(String(cloudColor || "").toUpperCase())) {
       setCloudColor(firstColor);
     }
-  }, [embroideryColors, chestColor, cloudColor]);
+  }, [
+    embroideryColors,
+    topColor?.hex,
+    pantsColor?.hex,
+    chestColor,
+    cloudColor,
+  ]);
 
   useEffect(() => {
     if (!canUseCloudEmbroidery) {
