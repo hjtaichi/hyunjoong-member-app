@@ -115,8 +115,10 @@ const [homeRes, calendarRes, nextCalendarRes, noticeRes] = await Promise.all([
           setLoading(true);
         }
 
-await refreshScreenData();
-loadMemberNotifications();
+        await Promise.all([
+          refreshScreenData(),
+          loadMemberNotifications(),
+        ]);
       } catch (error) {
         const errorMessage =
           error?.message || error?.response?.data?.message || "";
@@ -171,6 +173,8 @@ useFocusEffect(
   useCallback(() => {
     if (!token || isPausedMember) return;
 
+    void loadMemberNotifications();
+
     const now = Date.now();
 
     if (now - lastFocusRefreshRef.current < 3000) return;
@@ -186,7 +190,7 @@ useFocusEffect(
           console.log("HOME focus refresh 실패:", error);
         }
       });
-  }, [token, isPausedMember])
+  }, [token, isPausedMember, loadMemberNotifications])
 );
   const onRefresh = useCallback(() => {
     setRefreshing(true);

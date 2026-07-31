@@ -1,61 +1,41 @@
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
-
-async function parseJsonSafe(res) {
-  const text = await res.text();
-
-  try {
-    return text ? JSON.parse(text) : {};
-  } catch {
-    return { message: text || "서버 응답을 읽지 못했습니다." };
-  }
-}
+import { memberInquiryRequest } from "./memberInquiryRequest";
 
 export async function getMemberInquiryDetail(token, roomId) {
-  const res = await fetch(
-    `${API_BASE_URL}/api/member/me/inquiries/${roomId}?t=${Date.now()}`,
+  const data = await memberInquiryRequest(
+    `/api/member/me/inquiries/${roomId}`,
+    token,
     {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        "Cache-Control": "no-cache",
-        Pragma: "no-cache",
-      },
-      cache: "no-store",
+      fallbackMessage: "문의 상세를 불러오지 못했습니다.",
     }
   );
-
-  const data = await parseJsonSafe(res);
-
-  if (!res.ok) {
-    throw new Error(data?.message || "문의 상세를 불러오지 못했습니다.");
-  }
 
   return data.data || data;
 }
 
 export async function sendMemberInquiryMessage(token, roomId, message) {
-  const res = await fetch(
-    `${API_BASE_URL}/api/member/me/inquiries/${roomId}/messages`,
+  const data = await memberInquiryRequest(
+    `/api/member/me/inquiries/${roomId}/messages`,
+    token,
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ message }),
+      data: { message },
+      fallbackMessage: "메시지 전송에 실패했습니다.",
     }
   );
-
-  const data = await parseJsonSafe(res);
-
-  if (!res.ok) {
-    throw new Error(data?.message || "메시지 전송에 실패했습니다.");
-  }
 
   return data.data || data;
 }
 
 export async function markMemberInquiryRead(token, roomId) {
-  return { ok: true };
+  const data = await memberInquiryRequest(
+    `/api/member/me/inquiries/${roomId}/read`,
+    token,
+    {
+      method: "POST",
+      fallbackMessage: "문의 읽음 처리에 실패했습니다.",
+    }
+  );
+
+  return data.data || data;
 }
