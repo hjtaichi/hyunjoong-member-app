@@ -36,6 +36,9 @@ const fonts = {
   titleSemi: "MaruBuriSemiBold",
 };
 
+const INQUIRY_MESSAGE_MAX_LENGTH = 200;
+const INQUIRY_MESSAGE_OVER_LIMIT = "200자를 초과했습니다.";
+
 function formatDateTime(value) {
   if (!value) return "";
 
@@ -152,6 +155,11 @@ export default function InquiryDetailScreen() {
 
     if (!trimmed) {
       Alert.alert("안내", "문의 내용을 입력해주세요.");
+      return;
+    }
+
+    if (trimmed.length > INQUIRY_MESSAGE_MAX_LENGTH) {
+      Alert.alert("안내", INQUIRY_MESSAGE_OVER_LIMIT);
       return;
     }
 
@@ -281,16 +289,28 @@ export default function InquiryDetailScreen() {
           },
         ]}
       >
-        <TextInput
-          style={styles.input}
-          placeholder="문의 내용을 입력하세요"
-          placeholderTextColor={colors.textSub}
-          value={input}
-          onChangeText={setInput}
-          multiline
-          maxLength={1000}
-          textAlignVertical="top"
-        />
+        <View style={styles.inputFieldWrap}>
+          <TextInput
+            style={styles.input}
+            placeholder="문의 내용을 입력하세요"
+            placeholderTextColor={colors.textSub}
+            value={input}
+            onChangeText={setInput}
+            multiline
+            maxLength={INQUIRY_MESSAGE_MAX_LENGTH}
+            textAlignVertical="top"
+          />
+          <Text
+            style={[
+              styles.inputCounter,
+              input.length >= INQUIRY_MESSAGE_MAX_LENGTH &&
+                styles.inputCounterLimit,
+            ]}
+          >
+            {String(input.length).padStart(2, "0")}/
+            {INQUIRY_MESSAGE_MAX_LENGTH}
+          </Text>
+        </View>
 
         <Pressable
           style={[styles.sendButton, sending && styles.sendButtonDisabled]}
@@ -493,8 +513,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 
-  input: {
+  inputFieldWrap: {
     flex: 1,
+  },
+
+  input: {
+    width: "100%",
     minHeight: 52,
     maxHeight: 120,
     backgroundColor: colors.card,
@@ -507,6 +531,19 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontFamily: fonts.medium,
     color: colors.textMain,
+  },
+
+  inputCounter: {
+    alignSelf: "flex-end",
+    marginTop: 4,
+    paddingRight: 2,
+    fontSize: 11,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+  },
+
+  inputCounterLimit: {
+    color: "#B42318",
   },
 
   sendButton: {
