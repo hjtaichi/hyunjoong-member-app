@@ -25,14 +25,7 @@ export default function HomeHeader({
     100,
     Math.max(0, Number(monthlyGoalRate?.rate || 0))
   );
-  const monthlyAttendedCount = Math.max(
-    0,
-    Number(monthlyGoalRate?.attendedCount || 0)
-  );
-  const monthlyReservationCount = Math.max(
-    0,
-    Number(monthlyGoalRate?.targetCount || 0)
-  );
+
   const filledBars = Math.ceil(monthlyRate / 25);
   const [selectedBadge, setSelectedBadge] = useState(null);
   const visibleBadges = useMemo(
@@ -134,8 +127,7 @@ export default function HomeHeader({
         {monthlyGoalRate ? (
   <View style={styles.monthlyGoalMiniRow}>
     <Text style={styles.monthlyGoalMiniText}>
-      출석 목표 달성률 {monthlyRate}% · 예약 출석{" "}
-      {monthlyAttendedCount}/{monthlyReservationCount}
+      출석 목표 달성률 {monthlyRate}%
     </Text>
 
     <View style={styles.monthlyGoalSignal}>

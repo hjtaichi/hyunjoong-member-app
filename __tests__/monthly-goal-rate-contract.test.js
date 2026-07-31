@@ -10,15 +10,18 @@ const source = fs.readFileSync(
 );
 
 describe("월간 출석 목표 달성률 표시", () => {
-  test("예약 출석 횟수와 이번 달 유효 예약 횟수를 함께 표시한다", () => {
+  test("홈에는 달성률만 표시하고 예약 출석 분수는 표시하지 않는다", () => {
     expect(source).toContain(
-      "monthlyGoalRate?.attendedCount",
+      "출석 목표 달성률 {monthlyRate}%",
     );
-    expect(source).toContain(
-      "monthlyGoalRate?.targetCount",
+    expect(source).not.toContain(
+      "예약 출석",
     );
-    expect(source).toContain(
-      "monthlyAttendedCount}/{monthlyReservationCount",
+    expect(source).not.toContain(
+      "monthlyAttendedCount",
+    );
+    expect(source).not.toContain(
+      "monthlyReservationCount",
     );
   });
 });
