@@ -1398,16 +1398,20 @@ weeklyGoalSectionHelper: {
 },
 
 weeklyGoalNumberRow: {
+  width: 206,
+  maxWidth: "100%",
+  alignSelf: "center",
   flexDirection: "row",
   alignItems: "center",
-  justifyContent: "center",
-  gap: 12,
+  justifyContent: "space-between",
   marginTop: 14,
 },
 
 weeklyGoalStepButton: {
-  width: 52,
+  width: 48,
   height: 48,
+  flexGrow: 0,
+  flexShrink: 0,
   alignItems: "center",
   justifyContent: "center",
   borderRadius: 14,
@@ -1434,12 +1438,16 @@ weeklyGoalStepButtonTextDisabled: {
 },
 
 weeklyGoalNumberInputWrap: {
-  minWidth: 118,
+  width: 86,
+  minWidth: 0,
+  maxWidth: 86,
   height: 48,
+  flexGrow: 0,
+  flexShrink: 0,
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "center",
-  paddingHorizontal: 15,
+  paddingHorizontal: 10,
   borderRadius: 14,
   borderWidth: 1,
   borderColor: "#CFAE8F",
@@ -1447,7 +1455,11 @@ weeklyGoalNumberInputWrap: {
 },
 
 weeklyGoalNumberInput: {
-  minWidth: 42,
+  width: 42,
+  minWidth: 0,
+  maxWidth: 42,
+  flexGrow: 0,
+  flexShrink: 0,
   paddingVertical: 0,
   paddingHorizontal: 0,
   fontSize: 21,
@@ -1458,7 +1470,8 @@ weeklyGoalNumberInput: {
 },
 
 weeklyGoalNumberSuffix: {
-  marginLeft: 3,
+  width: 18,
+  marginLeft: 2,
   fontSize: 17,
   lineHeight: 21,
   fontFamily: fonts.bold,
