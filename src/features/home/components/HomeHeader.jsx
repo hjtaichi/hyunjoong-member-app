@@ -18,15 +18,10 @@ export default function HomeHeader({
   profileImageSource,
   yudanjaEmblemFrame,
   promotionBadgeText,
-  monthlyGoalRate,
+  weeklyGoalSummary,
+  onPressWeeklyGoal,
   memberBadges = [],
 }) {
-  const monthlyRate = Math.min(
-    100,
-    Math.max(0, Number(monthlyGoalRate?.rate || 0))
-  );
-
-  const filledBars = Math.ceil(monthlyRate / 25);
   const [selectedBadge, setSelectedBadge] = useState(null);
   const visibleBadges = useMemo(
     () =>
@@ -124,26 +119,26 @@ export default function HomeHeader({
             입관 {joinDayCount}일째 · 누적 출석 {attendanceCount}회
           </Text>
         ) : null}
-        {monthlyGoalRate ? (
-  <View style={styles.monthlyGoalMiniRow}>
-    <Text style={styles.monthlyGoalMiniText}>
-      출석 목표 달성률 {monthlyRate}%
-    </Text>
-
-    <View style={styles.monthlyGoalSignal}>
-      {[1, 2, 3, 4].map((bar) => (
-        <View
-          key={bar}
-          style={[
-            styles.monthlyGoalSignalBar,
-            styles[`monthlyGoalSignalBar${bar}`],
-            bar <= filledBars && styles.monthlyGoalSignalBarFilled,
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${weeklyGoalSummary?.title || "이번 주 목표 출석일수"} ${
+            weeklyGoalSummary?.valueText || "설정"
+          }`}
+          disabled={weeklyGoalSummary?.loading === true}
+          onPress={onPressWeeklyGoal}
+          style={({ pressed }) => [
+            styles.weeklyGoalMiniButton,
+            pressed && styles.weeklyGoalMiniButtonPressed,
           ]}
-        />
-      ))}
-    </View>
-  </View>
-) : null}
+        >
+          <Text style={styles.weeklyGoalMiniText}>
+            {weeklyGoalSummary?.title || "이번 주 출석 목표"}
+          </Text>
+          <Text style={styles.weeklyGoalMiniValue}>
+            {weeklyGoalSummary?.valueText || "설정"}
+          </Text>
+          <Text style={styles.weeklyGoalMiniArrow}>›</Text>
+        </Pressable>
       </View>
 
       <View

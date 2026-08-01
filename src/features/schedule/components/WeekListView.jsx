@@ -21,17 +21,7 @@ function WeekListView({
         const dateString = toDateString(dateObj);
         const schedules = calendarData?.scheduleByDate?.[dateString] || [];
 
-        const visibleSchedules = schedules.filter((item) => {
-          const uiMeta = getScheduleUiMeta(item, { isReservableDate: true });
-
-          return (
-            item?.attendanceStatus === "present" ||
-            item?.attendanceStatus === "reserved" ||
-            uiMeta.label === "정기출석 예정" ||
-            String(item?.title || item?.name || "").includes("세미나") ||
-            String(item?.title || item?.name || "").includes("행사")
-          );
-        });
+        const visibleSchedules = schedules;
 
         const isToday = dateString === todayString;
 
@@ -70,27 +60,29 @@ function WeekListView({
                       {getSessionDisplayLabel(item)}
                     </Text>
 
-                    <View
-                      style={[
-                        styles.weekScheduleStatusChip,
-                        uiMeta.tone === "done" &&
-                          styles.weekScheduleStatusChipDone,
-                        uiMeta.tone === "reserved" &&
-                          styles.weekScheduleStatusChipReserved,
-                      ]}
-                    >
-                      <Text
+                    {uiMeta.label ? (
+                      <View
                         style={[
-                          styles.weekScheduleStatusText,
+                          styles.weekScheduleStatusChip,
                           uiMeta.tone === "done" &&
-                            styles.weekScheduleStatusTextDone,
+                            styles.weekScheduleStatusChipDone,
                           uiMeta.tone === "reserved" &&
-                            styles.weekScheduleStatusTextReserved,
+                            styles.weekScheduleStatusChipReserved,
                         ]}
                       >
-                        {uiMeta.label}
-                      </Text>
-                    </View>
+                        <Text
+                          style={[
+                            styles.weekScheduleStatusText,
+                            uiMeta.tone === "done" &&
+                              styles.weekScheduleStatusTextDone,
+                            uiMeta.tone === "reserved" &&
+                              styles.weekScheduleStatusTextReserved,
+                          ]}
+                        >
+                          {uiMeta.label}
+                        </Text>
+                      </View>
+                    ) : null}
                   </Pressable>
                 );
               })

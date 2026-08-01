@@ -1,27 +1,75 @@
 const fs = require("fs");
 const path = require("path");
 
-const source = fs.readFileSync(
-  path.join(
-    process.cwd(),
-    "src/features/home/components/HomeHeader.jsx",
-  ),
-  "utf8",
-);
+function read(...segments) {
+  return fs.readFileSync(
+    path.join(process.cwd(), ...segments),
+    "utf8",
+  );
+}
 
-describe("월간 출석 목표 달성률 표시", () => {
-  test("홈에는 달성률만 표시하고 예약 출석 분수는 표시하지 않는다", () => {
-    expect(source).toContain(
-      "출석 목표 달성률 {monthlyRate}%",
+describe("일반수련 주간 목표 홈 표시", () => {
+  test("기존 월간 달성률 대신 주간 일반수련 목표를 표시한다", () => {
+    const header = read(
+      "src",
+      "features",
+      "home",
+      "components",
+      "HomeHeader.jsx",
     );
-    expect(source).not.toContain(
-      "예약 출석",
+    const home = read(
+      "app",
+      "(tabs)",
+      "home.jsx",
     );
-    expect(source).not.toContain(
-      "monthlyAttendedCount",
+
+    expect(header).toContain(
+      "이번 주 출석 목표",
     );
-    expect(source).not.toContain(
-      "monthlyReservationCount",
+    expect(header).toContain(
+      "weeklyGoalSummary?.valueText",
+    );
+    expect(home).toContain(
+      "weeklyGoalSummary={weeklyGoal.summary}",
+    );
+    expect(home).toContain(
+      "onPressWeeklyGoal",
+    );
+
+    expect(header).not.toContain(
+      "출석 목표 달성률",
+    );
+    expect(header).not.toContain(
+      "monthlyGoalRate",
+    );
+    expect(home).not.toContain(
+      "monthlyGoalRate={homeData?.monthlyGoalRate}",
+    );
+  });
+
+  test("목표 설정 바텀시트에 이번 주·반복·쉬는 주가 있다", () => {
+    const modal = read(
+      "src",
+      "features",
+      "home",
+      "components",
+      "WeeklyGoalModal.jsx",
+    );
+
+    expect(modal).toContain(
+      "일반수련 주간 목표",
+    );
+    expect(modal).toContain(
+      "이번 주만",
+    );
+    expect(modal).toContain(
+      "매주 반복",
+    );
+    expect(modal).toContain(
+      "이번 주 목표 쉬기",
+    );
+    expect(modal).toContain(
+      "유단자회 수련은 목표 횟수에 포함되지",
     );
   });
 });

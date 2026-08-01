@@ -3,6 +3,11 @@ import { Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import { subscribeAttendanceDataChanged } from "../../events/attendanceRefreshEvents";
+import {
+  isYudanjaSchedule,
+  shouldOpenScheduleBottomSheet,
+  shouldShowSelectedSchedule,
+} from "./scheduleUtils";
 
 import { getMemberCalendar } from "../../api/memberCalendar";
 import {
@@ -21,7 +26,6 @@ export function useScheduleScreen({
   toDateString,
   getMonthMatrix,
   getDateDiffInDays,
-  formatRecurringReservations,
 }) {
   const authUser = user || {};
   const memberStatus = authUser?.memberStatus || authUser?.status;
@@ -41,6 +45,20 @@ export function useScheduleScreen({
 
   const [calendarData, setCalendarData] = useState(null);
   const [isScheduleSheetVisible, setIsScheduleSheetVisible] = useState(false);
+
+  const isYudanjaMember = useMemo(() => {
+    if (
+      authUser?.canAccessYudanjaClass === true ||
+      calendarData?.member?.canAccessYudanjaClass === true ||
+      calendarData?.canAccessYudanjaClass === true
+    ) {
+      return true;
+    }
+
+    return Object.values(calendarData?.scheduleByDate || {}).some((items) => {
+      return Array.isArray(items) && items.some(isYudanjaSchedule);
+    });
+  }, [authUser?.canAccessYudanjaClass, calendarData]);
 
   const refreshScreenData = useCallback(async () => {
   if (!token) return;
@@ -164,31 +182,99 @@ export function useScheduleScreen({
 
   const calendarMap = useMemo(() => {
     const days = calendarData?.days ?? [];
+    const scheduleByDate = calendarData?.scheduleByDate || {};
     const map = {};
 
-    for (const item of days) {
-      if (item?.date) {
-        map[item.date] = item;
-      }
+    for (const day of days) {
+      if (!day?.date) continue;
+
+      const schedules = scheduleByDate[day.date] || [];
+      const hasPresent = schedules.some(
+        (item) => item?.attendanceStatus === "present"
+      );
+      const hasYudanjaReserved = schedules.some(
+        (item) =>
+          isYudanjaSchedule(item) && item?.attendanceStatus === "reserved"
+      );
+
+      map[day.date] = {
+        ...day,
+        attendanceStatus: hasPresent
+          ? "present"
+          : hasYudanjaReserved
+          ? "reserved"
+          : null,
+      };
     }
 
     return map;
   }, [calendarData]);
 
+  const selectedDateDiff = getDateDiffInDays(todayString, selectedDate);
+  const selectedDayInfo = calendarMap[selectedDate] || null;
+
   const selectedSchedules = useMemo(() => {
-    return calendarData?.scheduleByDate?.[selectedDate] || [];
-  }, [calendarData, selectedDate]);
+    const schedules = calendarData?.scheduleByDate?.[selectedDate] || [];
+
+    if (selectedDateDiff === null) return [];
+
+    const isHoliday = selectedDayInfo?.isHoliday === true;
+    const isOpenHoliday = selectedDayInfo?.isOpenHoliday === true;
+
+    if (isHoliday) {
+      if (selectedDateDiff < 0) {
+        return schedules.filter(
+          (item) => item?.attendanceStatus === "present"
+        );
+      }
+
+      if (selectedDateDiff === 0 && isOpenHoliday) {
+        return schedules;
+      }
+
+      return [];
+    }
+
+    return schedules.filter((item) =>
+      shouldShowSelectedSchedule(item, {
+        dateDiff: selectedDateDiff,
+        isYudanjaMember,
+      })
+    );
+  }, [
+    calendarData,
+    selectedDate,
+    selectedDateDiff,
+    selectedDayInfo,
+    isYudanjaMember,
+  ]);
 
   const selectedMySchedules = useMemo(() => {
-    return selectedSchedules.filter((item) => {
-      return (
-        item?.attendanceStatus === "reserved" ||
-        item?.attendanceStatus === "present"
-      );
-    });
+    return selectedSchedules;
   }, [selectedSchedules]);
 
-  const recurringInfoText = useMemo(() => {
+  const shouldShowSelectedSummary =
+    Boolean(selectedDayInfo?.holidayName) ||
+    selectedMySchedules.length > 0;
+
+  const canOpenSelectedScheduleSheet = useMemo(() => {
+    const schedules = calendarData?.scheduleByDate?.[selectedDate] || [];
+
+    return shouldOpenScheduleBottomSheet({
+      dateDiff: selectedDateDiff,
+      dayInfo: selectedDayInfo,
+      schedules,
+      isYudanjaMember,
+    });
+  }, [
+    calendarData,
+    selectedDate,
+    selectedDateDiff,
+    selectedDayInfo,
+    isYudanjaMember,
+  ]);
+
+  const yudanjaRecurringEnabled = useMemo(() => {
     const recurringList =
       calendarData?.recurringReservations ||
       calendarData?.memberRecurringReservations ||
@@ -196,10 +282,10 @@ export function useScheduleScreen({
       calendarData?.myRecurringReservations ||
       [];
 
-    return formatRecurringReservations(recurringList);
-  }, [calendarData, formatRecurringReservations]);
-
-  const selectedDateDiff = getDateDiffInDays(todayString, selectedDate);
+    return recurringList.some(
+      (item) => item?.sessionTimeKey === "MON_YUDANJA"
+    );
+  }, [calendarData]);
 
   const isReservableDate =
     selectedDateDiff !== null &&
@@ -292,11 +378,30 @@ export function useScheduleScreen({
       if (!dateObj || !token) return;
 
       const nextDate = toDateString(dateObj);
+      const nextDateDiff = getDateDiffInDays(todayString, nextDate);
+      const dayInfo = calendarMap[nextDate] || null;
+      const schedules =
+        calendarData?.scheduleByDate?.[nextDate] || [];
+
+      const shouldOpenSheet = shouldOpenScheduleBottomSheet({
+        dateDiff: nextDateDiff,
+        dayInfo,
+        schedules,
+        isYudanjaMember,
+      });
 
       setSelectedDate(nextDate);
-      setIsScheduleSheetVisible(true);
+      setIsScheduleSheetVisible(shouldOpenSheet);
     },
-    [token, toDateString]
+    [
+      token,
+      toDateString,
+      getDateDiffInDays,
+      todayString,
+      calendarMap,
+      calendarData,
+      isYudanjaMember,
+    ]
   );
 
   const closeScheduleSheet = useCallback(() => {
@@ -304,8 +409,10 @@ export function useScheduleScreen({
   }, []);
 
   const openScheduleSheet = useCallback(() => {
+    if (!canOpenSelectedScheduleSheet) return;
+
     setIsScheduleSheetVisible(true);
-  }, []);
+  }, [canOpenSelectedScheduleSheet]);
 
   const updateScheduleItemLocally = useCallback((date, sessionId, updater) => {
     setCalendarData((prev) => {
@@ -328,8 +435,9 @@ export function useScheduleScreen({
         if (day.date !== date) return day;
 
         const daySchedules = nextScheduleByDate[date] || [];
-        const hasReserved = daySchedules.some(
-          (item) => item?.attendanceStatus === "reserved"
+        const hasYudanjaReserved = daySchedules.some(
+          (item) =>
+            isYudanjaSchedule(item) && item?.attendanceStatus === "reserved"
         );
         const hasPresent = daySchedules.some(
           (item) => item?.attendanceStatus === "present"
@@ -340,7 +448,11 @@ export function useScheduleScreen({
 
         return {
           ...day,
-          attendanceStatus: hasPresent ? "present" : hasReserved ? "reserved" : null,
+          attendanceStatus: hasPresent
+            ? "present"
+            : hasYudanjaReserved
+            ? "reserved"
+            : null,
           hasRecurringException: hasException,
         };
       });
@@ -618,6 +730,17 @@ export function useScheduleScreen({
 
   const handleScheduleAction = useCallback(
     (item, actionType) => {
+      const reservationActions = new Set([
+        "reserve",
+        "cancelReserve",
+        "skipOnce",
+        "undoSkip",
+      ]);
+
+      if (reservationActions.has(actionType) && !isYudanjaSchedule(item)) {
+        return;
+      }
+
       switch (actionType) {
         case "attendance":
           return handleAttendance(item);
@@ -664,9 +787,13 @@ export function useScheduleScreen({
 
     calendarData,
     calendarMap,
+    selectedDayInfo,
     selectedSchedules,
     selectedMySchedules,
-    recurringInfoText,
+    shouldShowSelectedSummary,
+    canOpenSelectedScheduleSheet,
+    isYudanjaMember,
+    yudanjaRecurringEnabled,
 
     isScheduleSheetVisible,
     setIsScheduleSheetVisible,

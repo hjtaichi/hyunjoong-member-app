@@ -75,7 +75,7 @@ function ScheduleBottomSheet({
 
               {!calendarMap[selectedDate]?.isOpenHoliday ? (
                 <Text style={styles.selectedEventNoticeSubText}>
-                  이 날은 예약이 제한될 수 있습니다.
+                  이 날은 수업이 운영되지 않습니다.
                 </Text>
               ) : null}
             </View>
@@ -152,16 +152,18 @@ function ScheduleBottomSheet({
                             {getSessionDisplayLabel(item)}
                           </Text>
 
-                          <View style={[styles.compactStatusChip, toneStyles.chip]}>
-                            <Text
-                              style={[
-                                styles.compactStatusChipText,
-                                toneStyles.chipText,
-                              ]}
-                            >
-                              {finalUiMeta.label}
-                            </Text>
-                          </View>
+                          {finalUiMeta.label ? (
+                            <View style={[styles.compactStatusChip, toneStyles.chip]}>
+                              <Text
+                                style={[
+                                  styles.compactStatusChipText,
+                                  toneStyles.chipText,
+                                ]}
+                              >
+                                {finalUiMeta.label}
+                              </Text>
+                            </View>
+                          ) : null}
                         </View>
 
                         {showHelperText && finalUiMeta.helperText ? (

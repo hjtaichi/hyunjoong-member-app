@@ -1245,52 +1245,272 @@ todayTrainingButtonDone: {
   backgroundColor: "#9A8A80",
   opacity: 0.85,
 },
-monthlyGoalMiniRow: {
-  marginTop: 6,
+weeklyGoalMiniButton: {
+  marginTop: 3,
+  minHeight: 28,
+  alignSelf: "flex-start",
   flexDirection: "row",
-  alignItems: "flex-end",
+  alignItems: "center",
+  gap: 5,
+  paddingLeft: 2,
+  paddingRight: 4,
+  borderRadius: 10,
+},
+
+weeklyGoalMiniButtonPressed: {
+  opacity: 0.62,
+},
+
+weeklyGoalMiniText: {
+  fontSize: 16,
+  lineHeight: 16,
+  fontFamily: fonts.medium,
+  color: "#7A634D",
+},
+
+weeklyGoalMiniValue: {
+  fontSize: 15,
+  lineHeight: 18,
+  fontFamily: fonts.bold,
+  color: "#A76518",
+},
+
+weeklyGoalMiniArrow: {
+  marginTop: -3,
+  fontSize: 20,
+  lineHeight: 20,
+  fontFamily: fonts.medium,
+  color: "#9A7651",
+},
+
+weeklyGoalOverlay: {
+  flex: 1,
+  justifyContent: "flex-end",
+  backgroundColor: "rgba(43,37,34,0.38)",
+},
+
+weeklyGoalSheet: {
+  width: "100%",
+  maxWidth: 430,
+  alignSelf: "center",
+  paddingHorizontal: 20,
+  paddingTop: 10,
+  paddingBottom: isWeb ? 24 : 34,
+  borderTopLeftRadius: 26,
+  borderTopRightRadius: 26,
+  backgroundColor: "#FFFDF9",
+  borderWidth: 1,
+  borderBottomWidth: 0,
+  borderColor: "#E7D6C4",
+},
+
+weeklyGoalHandle: {
+  width: 42,
+  height: 4,
+  alignSelf: "center",
+  marginBottom: 16,
+  borderRadius: 999,
+  backgroundColor: "#D7C5B3",
+},
+
+weeklyGoalTitleRow: {
+  flexDirection: "row",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: 12,
+},
+
+weeklyGoalTitleBlock: {
+  flex: 1,
+},
+
+weeklyGoalTitle: {
+  fontSize: 22,
+  lineHeight: 28,
+  fontFamily: fonts.title,
+  color: colors.textMain,
+},
+
+weeklyGoalDescription: {
+  marginTop: 7,
+  fontSize: 16,
+  lineHeight: 21,
+  fontFamily: fonts.medium,
+  color: colors.textSubStrong,
+},
+
+weeklyGoalExclusionText: {
+  marginTop: 2,
+  fontSize: 14,
+  lineHeight: 18,
+  fontFamily: fonts.medium,
+  color: "#9A6C4A",
+},
+
+weeklyGoalCloseButton: {
+  width: 34,
+  height: 34,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 999,
+  backgroundColor: "#F5ECE4",
+},
+
+weeklyGoalCloseText: {
+  marginTop: -2,
+  fontSize: 23,
+  lineHeight: 26,
+  fontFamily: fonts.medium,
+  color: colors.softBrown,
+},
+
+weeklyGoalLoading: {
+  minHeight: 180,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+weeklyGoalSection: {
+  marginTop: 20,
+},
+
+weeklyGoalSectionTitle: {
+  marginBottom: 10,
+  fontSize: 17,
+  lineHeight: 21,
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+
+weeklyGoalOptionRow: {
+  flexDirection: "row",
   gap: 7,
 },
 
-monthlyGoalMiniText: {
-  fontSize: readability.metadataStrong.fontSize,
-  lineHeight: readability.metadataStrong.lineHeight,
-  fontFamily: "PretendardSemiBold",
-  marginLeft: 2,
-  color: "#6F5132",
+weeklyGoalOptionButton: {
+  flex: 1,
+  minWidth: 0,
+  minHeight: 42,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 13,
+  borderWidth: 1,
+  borderColor: "#DECAB6",
+  backgroundColor: "#FFF9F3",
 },
 
-monthlyGoalSignal: {
-  flexDirection: "row",
-  alignItems: "flex-end",
-  gap: 3,
-  paddingBottom: 2,
+weeklyGoalOptionButtonSelected: {
+  borderColor: "#A96B2E",
+  backgroundColor: "#A96B2E",
 },
 
-monthlyGoalSignalBar: {
-  width: 5,
-  borderRadius: 999,
-  backgroundColor: "rgba(120, 92, 55, 0.22)",
+weeklyGoalOptionButtonDisabled: {
+  borderColor: "#E7DED5",
+  backgroundColor: "#F3EFEB",
 },
 
-monthlyGoalSignalBar1: {
-  height: 5,
+weeklyGoalOptionButtonPressed: {
+  opacity: 0.72,
 },
 
-monthlyGoalSignalBar2: {
-  height: 7,
+weeklyGoalOptionText: {
+  fontSize: 17,
+  lineHeight: 19,
+  fontFamily: fonts.bold,
+  color: "#76563B",
 },
 
-monthlyGoalSignalBar3: {
-  height: 11,
+weeklyGoalOptionTextSelected: {
+  color: colors.white,
 },
 
-monthlyGoalSignalBar4: {
-  height: 14,
+weeklyGoalOptionTextDisabled: {
+  color: "#B9AEA5",
 },
 
-monthlyGoalSignalBarFilled: {
-  backgroundColor: "#B87924",
+weeklyGoalRestButton: {
+  minHeight: 43,
+  marginTop: 10,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 13,
+  borderWidth: 1,
+  borderColor: "#DCC7B3",
+  backgroundColor: "#F8F1EA",
+},
+
+weeklyGoalRestButtonSelected: {
+  borderColor: "#886B54",
+  backgroundColor: "#886B54",
+},
+
+weeklyGoalRestButtonDisabled: {
+  borderColor: "#E7DED5",
+  backgroundColor: "#F3EFEB",
+},
+
+weeklyGoalRestButtonText: {
+  fontSize: 16,
+  lineHeight: 19,
+  fontFamily: fonts.bold,
+  color: "#76563B",
+},
+
+weeklyGoalRestButtonTextSelected: {
+  color: colors.white,
+},
+
+weeklyGoalRuleText: {
+  marginTop: 9,
+  fontSize: 14,
+  lineHeight: 18,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+weeklyGoalPendingText: {
+  marginTop: 9,
+  fontSize: 14,
+  lineHeight: 18,
+  fontFamily: fonts.semiBold,
+  color: "#A76518",
+},
+
+weeklyGoalDivider: {
+  height: 1,
+  marginTop: 20,
+  backgroundColor: "#EADDD2",
+},
+
+weeklyGoalActionArea: {
+  marginTop: 22,
+},
+
+weeklyGoalSaveButton: {
+  minHeight: 48,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 14,
+  backgroundColor: "#8A5D3B",
+},
+
+weeklyGoalSaveButtonDisabled: {
+  backgroundColor: "#E8E0D9",
+},
+
+weeklyGoalSaveButtonPressed: {
+  opacity: 0.78,
+},
+
+weeklyGoalSaveButtonText: {
+  fontSize: 16,
+  lineHeight: 21,
+  fontFamily: fonts.bold,
+  color: colors.white,
+},
+
+weeklyGoalSaveButtonTextDisabled: {
+  color: "#B3A79D",
 },
 });
 

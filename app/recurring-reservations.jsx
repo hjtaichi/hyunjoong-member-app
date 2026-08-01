@@ -1,15 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import {
   getRecurringReservations,
@@ -28,62 +26,7 @@ const fonts = {
   titleSemi: "MaruBuriSemiBold",
 };
 
-const WEEKDAY_ROWS = [
-  { value: 2, label: "화요일", shortLabel: "화" },
-  { value: 3, label: "수요일", shortLabel: "수" },
-  { value: 4, label: "목요일", shortLabel: "목" },
-  { value: 5, label: "금요일", shortLabel: "금" },
-  { value: 6, label: "토요일", shortLabel: "토" },
-];
-
-const TIME_OPTIONS_BY_WEEKDAY = {
-  2: [
-    { value: "AM_10", label: "오전 10시부" },
-    { value: "PM_4", label: "오후 4시부" },
-    { value: "PM_7", label: "오후 7시부" },
-  ],
-  3: [
-    { value: "AM_10", label: "오전 10시부" },
-    { value: "PM_4", label: "오후 4시부" },
-    { value: "PM_7", label: "오후 7시부" },
-  ],
-  4: [
-    { value: "AM_10", label: "오전 10시부" },
-    { value: "PM_4", label: "오후 4시부" },
-    { value: "PM_7", label: "오후 7시부" },
-  ],
-  5: [
-    { value: "AM_10", label: "오전 10시부" },
-    { value: "PM_4", label: "오후 4시부" },
-    { value: "PM_7", label: "오후 7시부" },
-  ],
-  6: [
-    { value: "AM_10", label: "오전 10시부" },
-    { value: "PM_130", label: "오후 1시 30분부" },
-  ],
-};
-
-function makeInitialRecurringMap(items) {
-  const map = {};
-
-  for (const item of items) {
-    const weekday = Number(item?.weekday);
-    const sessionTimeKey = String(item?.sessionTimeKey || "");
-
-    if (!weekday || !sessionTimeKey) continue;
-    if (sessionTimeKey === "MON_YUDANJA") continue;
-
-    if (!Array.isArray(map[weekday])) {
-      map[weekday] = [];
-    }
-
-    if (!map[weekday].includes(sessionTimeKey)) {
-      map[weekday].push(sessionTimeKey);
-    }
-  }
-
-  return map;
-}
+const YUDANJA_SESSION_TIME_KEY = "MON_YUDANJA";
 
 export default function RecurringReservationsScreen() {
   const { token } = useAuth();
@@ -93,46 +36,38 @@ export default function RecurringReservationsScreen() {
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimerRef = useRef(null);
 
-  const [selectedRecurringMap, setSelectedRecurringMap] = useState({});
   const [isYudanjaEnabled, setIsYudanjaEnabled] = useState(false);
-
   const [canUseYudanja, setCanUseYudanja] = useState(false);
-  const [activeDay, setActiveDay] = useState(null);
 
-const loadData = useCallback(async () => {
-  if (!token) return;
+  const loadData = useCallback(async () => {
+    if (!token) return;
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const [result, homeResult] = await Promise.all([
-      getRecurringReservations(token),
-      getMemberHome(token),
-    ]);
+      const [result, homeResult] = await Promise.all([
+        getRecurringReservations(token),
+        getMemberHome(token),
+      ]);
 
-    setCanUseYudanja(homeResult?.member?.canAccessYudanjaClass === true);
+      const hasYudanjaAccess =
+        homeResult?.member?.canAccessYudanjaClass === true;
+      const items = Array.isArray(result?.items) ? result.items : [];
+      const yudanjaItem = items.find(
+        (item) => item?.sessionTimeKey === YUDANJA_SESSION_TIME_KEY
+      );
 
-    const items = Array.isArray(result?.items) ? result.items : [];
-
-    const normalItems = items.filter(
-      (item) => item.sessionTimeKey !== "MON_YUDANJA"
-    );
-
-    const yudanjaItem = items.find(
-      (item) => item.sessionTimeKey === "MON_YUDANJA"
-    );
-
-    setSelectedRecurringMap(makeInitialRecurringMap(normalItems));
-    setIsYudanjaEnabled(Boolean(yudanjaItem));
-  } catch (error) {
-    Alert.alert(
-      "오류",
-      error.message || "정기출석 설정을 불러오지 못했습니다."
-    );
-  } finally {
-    setLoading(false);
-  }
-}, [token]);
+      setCanUseYudanja(hasYudanjaAccess);
+      setIsYudanjaEnabled(hasYudanjaAccess && Boolean(yudanjaItem));
+    } catch (error) {
+      Alert.alert(
+        "오류",
+        error.message || "유단자수련 정기예약 설정을 불러오지 못했습니다."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
 
   useEffect(() => {
     loadData();
@@ -158,112 +93,44 @@ const loadData = useCallback(async () => {
     }, 1800);
   }, []);
 
-  const selectedNormalCount = useMemo(() => {
-    return Object.values(selectedRecurringMap).reduce((acc, arr) => {
-      return acc + (Array.isArray(arr) ? arr.length : 0);
-    }, 0);
-  }, [selectedRecurringMap]);
-
-  const toggleWeekdayTime = useCallback((weekday, sessionTimeKey) => {
-    setSelectedRecurringMap((prev) => {
-      const current = Array.isArray(prev[weekday]) ? prev[weekday] : [];
-      const exists = current.includes(sessionTimeKey);
-
-      let nextForDay;
-      if (exists) {
-        nextForDay = current.filter((item) => item !== sessionTimeKey);
-      } else {
-        nextForDay = [...current, sessionTimeKey];
-      }
-
-      const next = { ...prev };
-
-      if (nextForDay.length === 0) {
-        delete next[weekday];
-      } else {
-        next[weekday] = nextForDay;
-      }
-
-      return next;
-    });
-  }, []);
-
-  const clearWeekdayTime = useCallback((weekday) => {
-    setSelectedRecurringMap((prev) => {
-      const next = { ...prev };
-      delete next[weekday];
-      return next;
-    });
-  }, []);
-  
-  const getSelectedLabelsForDay = useCallback(
-  (weekday) => {
-    const selectedTimeKeys = Array.isArray(selectedRecurringMap[weekday])
-      ? selectedRecurringMap[weekday]
-      : [];
-
-    if (selectedTimeKeys.length === 0) {
-      return "선택 안 함";
-    }
-
-    const options = TIME_OPTIONS_BY_WEEKDAY[weekday] || [];
-
-    return selectedTimeKeys
-      .map((key) => options.find((option) => option.value === key)?.label)
-      .filter(Boolean)
-      .join(" · ");
-  },
-  [selectedRecurringMap]
-);
-
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
 
-      const normalItems = Object.entries(selectedRecurringMap).flatMap(
-        ([weekday, sessionTimeKeys]) => {
-          const list = Array.isArray(sessionTimeKeys) ? sessionTimeKeys : [];
-          return list.map((sessionTimeKey) => ({
-            weekday: Number(weekday),
-            sessionTimeKey: String(sessionTimeKey),
-          }));
-        }
-      );
-
-      const yudanjaItems =
+      const items =
         canUseYudanja && isYudanjaEnabled
           ? [
               {
                 weekday: 1,
-                sessionTimeKey: "MON_YUDANJA",
+                sessionTimeKey: YUDANJA_SESSION_TIME_KEY,
               },
             ]
           : [];
 
-      const finalItems = [...normalItems, ...yudanjaItems];
-
       await saveRecurringReservations(token, {
-        isEnabled: finalItems.length > 0,
-        items: finalItems,
+        isEnabled: items.length > 0,
+        items,
       });
-
+
       emitAttendanceDataChanged();
       showSavedToast();
     } catch (error) {
       Alert.alert(
         "오류",
-        error.message || "정기출석 설정 저장에 실패했습니다."
+        error.message || "유단자수련 정기예약 저장에 실패했습니다."
       );
     } finally {
       setSaving(false);
     }
-  }, [selectedRecurringMap, isYudanjaEnabled, canUseYudanja, token, showSavedToast]);
+  }, [canUseYudanja, isYudanjaEnabled, token, showSavedToast]);
 
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>정기출석 설정을 불러오는 중입니다.</Text>
+        <Text style={styles.loadingText}>
+          유단자수련 정기예약 설정을 불러오는 중입니다.
+        </Text>
       </View>
     );
   }
@@ -271,190 +138,65 @@ const loadData = useCallback(async () => {
   return (
     <View style={styles.screen}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <ScreenHeader title="정기출석 설정" />
+        <ScreenHeader title="유단자수련 정기예약" />
 
-      <Text style={styles.subtitle}>
-        요일마다 여러 시간대를 선택할 수 있어요. {"\n"}자주 가는 시간으로 저장해두면 자동 예약과 연결됩니다.
-      </Text>
-
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>일반 정기출석</Text>
-        <Text style={styles.summaryText}>
-          선택된 시간 수: {selectedNormalCount}개
-        </Text>
-        <Text style={styles.summarySubText}>
-          같은 요일에 여러 시간대를 함께 선택할 수 있습니다.
-        </Text>
-      </View>
-
-      <View style={styles.card}>
-  <Text style={styles.cardTitle}>요일별 설정</Text>
-
-  {WEEKDAY_ROWS.map((day, index) => {
-    const selectedTimeKeys = Array.isArray(selectedRecurringMap[day.value])
-      ? selectedRecurringMap[day.value]
-      : [];
-
-    const selectedText = getSelectedLabelsForDay(day.value);
-
-    return (
-      <Pressable
-        key={day.value}
-        style={[
-          styles.dayRow,
-          index !== WEEKDAY_ROWS.length - 1 && styles.dayRowBorder,
-        ]}
-        onPress={() => setActiveDay(day)}
-      >
-        <View style={styles.dayRowMain}>
-  <Text style={styles.dayRowTitle}>{day.label}</Text>
-
-  <Text
-    numberOfLines={1}
-    style={[
-      styles.dayRowValue,
-      selectedTimeKeys.length > 0 && styles.dayRowValueActive,
-    ]}
-  >
-    {selectedText}
-  </Text>
-</View>
-
-<Text style={styles.dayRowArrow}>›</Text>
-      </Pressable>
-    );
-  })}
-</View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>월요일 유단자수련</Text>
-        <Text style={styles.helperText}>
-          유단자수련은 일반 정기출석과 별도로 관리합니다.
+        <Text style={styles.subtitle}>
+          월요일 유단자수련만 자동 예약할 수 있어요. {"\n"}
+          일반 수업은 일정에서 수업과 실제 출석만 확인합니다.
         </Text>
 
-        {canUseYudanja ? (
-          <Pressable
-            style={[
-              styles.toggleButton,
-              isYudanjaEnabled && styles.toggleButtonActive,
-            ]}
-            onPress={() => setIsYudanjaEnabled((prev) => !prev)}
-          >
-            <Text
-              style={[
-                styles.toggleButtonText,
-                isYudanjaEnabled && styles.toggleButtonTextActive,
-              ]}
-            >
-              {isYudanjaEnabled
-                ? "유단자수련 자동 예약 사용 중"
-                : "유단자수련 자동 예약 사용 안 함"}
-            </Text>
-          </Pressable>
-        ) : (
-          <Text style={styles.blockedText}>
-            유단자수련 권한이 있는 회원만 설정할 수 있습니다.
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>월요일 유단자수련</Text>
+          <Text style={styles.helperText}>
+            사용하면 매주 월요일 유단자수련이 자동으로 예약됩니다.
           </Text>
-        )}
-      </View>
 
-      <Pressable
-        style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-        onPress={handleSave}
-        disabled={saving}
-      >
-        <Text style={styles.saveButtonText}>
-          {saving ? "저장 중..." : "저장"}
-        </Text>
-      </Pressable>
-      <Modal
-  visible={!!activeDay}
-  transparent
-  animationType="slide"
-  onRequestClose={() => setActiveDay(null)}
->
-  <View style={styles.sheetOverlay}>
-    <Pressable
-      style={styles.sheetBackdrop}
-      onPress={() => setActiveDay(null)}
-    />
-
-    <View style={styles.sheetContainer}>
-      <View style={styles.sheetHandle} />
-
-      <View style={styles.sheetHeaderRow}>
-        <Text style={styles.sheetTitle}>
-          {activeDay?.label || "요일"} 정기출석
-        </Text>
-
-        <Pressable onPress={() => setActiveDay(null)}>
-          <Text style={styles.sheetCloseText}>닫기</Text>
-        </Pressable>
-      </View>
-
-      <Text style={styles.sheetDesc}>
-        같은 요일에 여러 시간대를 선택할 수 있어요.
-      </Text>
-
-      {activeDay ? (
-        <>
-          <Pressable
-            style={[
-              styles.sheetOption,
-              !(selectedRecurringMap[activeDay.value]?.length > 0) &&
-                styles.sheetOptionActive,
-            ]}
-            onPress={() => clearWeekdayTime(activeDay.value)}
-          >
-            <Text
+          {canUseYudanja ? (
+            <Pressable
               style={[
-                styles.sheetOptionText,
-                !(selectedRecurringMap[activeDay.value]?.length > 0) &&
-                  styles.sheetOptionTextActive,
+                styles.toggleButton,
+                isYudanjaEnabled && styles.toggleButtonActive,
               ]}
+              onPress={() => setIsYudanjaEnabled((prev) => !prev)}
             >
-              선택 안 함
-            </Text>
-          </Pressable>
-
-          {(TIME_OPTIONS_BY_WEEKDAY[activeDay.value] || []).map((option) => {
-            const selectedTimeKeys = Array.isArray(
-              selectedRecurringMap[activeDay.value]
-            )
-              ? selectedRecurringMap[activeDay.value]
-              : [];
-
-            const active = selectedTimeKeys.includes(option.value);
-
-            return (
-              <Pressable
-                key={option.value}
+              <Text
                 style={[
-                  styles.sheetOption,
-                  active && styles.sheetOptionActive,
+                  styles.toggleButtonText,
+                  isYudanjaEnabled && styles.toggleButtonTextActive,
                 ]}
-                onPress={() =>
-                  toggleWeekdayTime(activeDay.value, option.value)
-                }
               >
-                <Text
-                  style={[
-                    styles.sheetOptionText,
-                    active && styles.sheetOptionTextActive,
-                  ]}
-                >
-                  {option.label}
-                </Text>
+                {isYudanjaEnabled
+                  ? "유단자수련 정기예약 사용 중"
+                  : "유단자수련 정기예약 사용 안 함"}
+              </Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.blockedText}>
+              유단자수련 권한이 있는 회원만 설정할 수 있습니다.
+            </Text>
+          )}
+        </View>
 
-                {active ? <Text style={styles.sheetCheckText}>✓</Text> : null}
-              </Pressable>
-            );
-          })}
-        </>
-      ) : null}
-    </View>
-  </View>
-</Modal>
+        <View style={styles.noticeCard}>
+          <Text style={styles.noticeTitle}>일반 수업 예약 안내</Text>
+          <Text style={styles.noticeText}>
+            화요일부터 토요일까지의 일반 수업은 개별 예약과 정기예약을
+            사용하지 않으며, 실제 출석 완료만 일정에 표시됩니다.
+          </Text>
+        </View>
+
+        <Pressable
+          style={[
+            styles.saveButton,
+            (saving || !canUseYudanja) && styles.saveButtonDisabled,
+          ]}
+          onPress={handleSave}
+          disabled={saving || !canUseYudanja}
+        >
+          <Text style={styles.saveButtonText}>
+            {saving ? "저장 중..." : "저장"}
+          </Text>
+        </Pressable>
       </ScrollView>
 
       {toastVisible ? (
@@ -474,151 +216,57 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   container: {
-  flex: 1,
-  backgroundColor: colors.background,
-},
-
-content: {
-  paddingHorizontal: 16,
-  paddingTop: 24,
-  paddingBottom: 110,
-  width: "100%",
-  maxWidth: 430,
-  alignSelf: "center",
-},
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 110,
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+  },
   center: {
-  flex: 1,
-  backgroundColor: "#f6f3ee",
-  alignItems: "center",
-  justifyContent: "center",
-},
+    flex: 1,
+    backgroundColor: "#f6f3ee",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   loadingText: {
     marginTop: 10,
     fontSize: 14,
     color: "#666",
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 8,
-  },
   subtitle: {
-  fontSize: 14,
-  fontFamily: fonts.medium,
-  color: colors.textSub,
-  lineHeight: 22,
-  marginBottom: 18,
-},
-
-summaryCard: {
-  backgroundColor: colors.card,
-  borderRadius: radius.lg,
-  padding: 18,
-  marginBottom: 14,
-  borderWidth: 1,
-  borderColor: colors.border,
-  ...shadow.card,
-},
-summaryTitle: {
-  fontSize: 16,
-  fontFamily: fonts.bold,
-  color: colors.textMain,
-  marginBottom: 6,
-},
-
-summaryText: {
-  fontSize: 14,
-  fontFamily: fonts.bold,
-  color: colors.warmBrown,
-  marginBottom: 4,
-},
-
-summarySubText: {
-  fontSize: 13,
-  fontFamily: fonts.medium,
-  color: colors.textSub,
-  lineHeight: 19,
-},
-card: {
-  backgroundColor: colors.card,
-  borderRadius: radius.lg,
-  paddingHorizontal: 16,
-  paddingVertical: 18,
-  marginBottom: 16,
-  borderWidth: 1,
-  borderColor: colors.border,
-  ...shadow.card,
-},
-saveButton: {
-  marginTop: 6,
-  height: 54,
-  borderRadius: 16,
-  backgroundColor: colors.warmBrown,
-  alignItems: "center",
-  justifyContent: "center",
-},
-  dayHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
+    fontSize: 14,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+    lineHeight: 22,
+    marginBottom: 18,
   },
-  dayBadge: {
-    minWidth: 34,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "#F3F4F6",
-    alignItems: "center",
-  },
-  dayBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#374151",
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.card,
   },
   cardTitle: {
-  fontSize: 18,
-  fontFamily: fonts.titleSemi,
-  color: colors.textMain,
-},
-
+    fontSize: 18,
+    fontFamily: fonts.titleSemi,
+    color: colors.textMain,
+    marginBottom: 8,
+  },
   helperText: {
-    fontSize: 12,
-    color: "#6B7280",
-    lineHeight: 18,
-    marginBottom: 10,
-  },
-  chipGroup: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  choiceChip: {
-    minHeight: 42,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: "#F3F4F6",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  clearChip: {
-    backgroundColor: "#F9FAFB",
-  },
-  choiceChipActive: {
-    backgroundColor: "#DCFCE7",
-    borderColor: "#86EFAC",
-  },
-  choiceChipText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#374151",
-  },
-  choiceChipTextActive: {
-    color: "#166534",
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+    lineHeight: 20,
+    marginBottom: 14,
   },
   toggleButton: {
     backgroundColor: "#F3F4F6",
@@ -627,229 +275,79 @@ saveButton: {
     alignItems: "center",
   },
   toggleButtonActive: {
-    backgroundColor: "#DBEAFE",
+    backgroundColor: "#F6EFE3",
+    borderWidth: 1,
+    borderColor: colors.warmBrown,
   },
   toggleButtonText: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: fonts.bold,
     color: "#374151",
   },
   toggleButtonTextActive: {
-    color: "#1D4ED8",
+    color: colors.warmBrown,
   },
   blockedText: {
     fontSize: 13,
+    fontFamily: fonts.medium,
     color: "#B91C1C",
     lineHeight: 20,
   },
-
+  noticeCard: {
+    backgroundColor: "#F8F5EF",
+    borderRadius: radius.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 16,
+  },
+  noticeTitle: {
+    fontSize: 15,
+    fontFamily: fonts.bold,
+    color: colors.textMain,
+    marginBottom: 6,
+  },
+  noticeText: {
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    color: colors.textSub,
+    lineHeight: 20,
+  },
+  saveButton: {
+    marginTop: 6,
+    height: 54,
+    borderRadius: 16,
+    backgroundColor: colors.warmBrown,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   saveButtonDisabled: {
     opacity: 0.6,
   },
   saveButtonText: {
-  fontSize: 16,
-  fontFamily: fonts.bold,
-  color: colors.white,
-},
-  rowItem: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  paddingVertical: 14,
-  borderBottomWidth: 1,
-  borderBottomColor: "#eee",
-},
-
-rowTitle: {
-  fontSize: 15,
-  fontWeight: "600",
-},
-
-rowValue: {
-  fontSize: 14,
-  color: "#6B7280",
-},
-dayRow: {
-  minHeight: 62,
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 12,
-  paddingVertical: 10,
-},
-
-dayRowMain: {
-  flex: 1,
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 18,
-},
-
-dayRowValue: {
-  flexShrink: 1,
-  fontSize: 14,
-  color: "#9A8F81",
-},
-
-dayRowBorder: {
-  borderBottomWidth: 1,
-  borderBottomColor: "#ECE7DE",
-},
-dayRowTitle: {
-  fontSize: 15,
-  fontFamily: fonts.bold,
-  color: colors.textMain,
-},
-
-dayRowValue: {
-  marginTop: 5,
-  fontSize: 13,
-  fontFamily: fonts.medium,
-  lineHeight: 18,
-  color: colors.textSub,
-},
-
-dayRowValueActive: {
-  color: colors.warmBrown,
-  fontFamily: fonts.bold,
-},
-
-dayRowArrow: {
-  fontSize: 18,
-  color: colors.textMuted,
-  fontFamily: fonts.medium,
-  marginLeft: 10,
-},
-sheetOverlay: {
-  flex: 1,
-  justifyContent: "flex-end",
-  backgroundColor: "rgba(17, 24, 39, 0.25)",
-},
-
-sheetBackdrop: {
-  flex: 1,
-},
-
-sheetContainer: {
-  backgroundColor: "#FFFDF9",
-  borderTopLeftRadius: 28,
-  borderTopRightRadius: 28,
-  paddingTop: 10,
-  paddingHorizontal: 18,
-  paddingBottom: 50,
-  borderWidth: 1,
-  borderColor: "#ECE7DE",
-},
-
-sheetHandle: {
-  alignSelf: "center",
-  width: 44,
-  height: 5,
-  borderRadius: 999,
-  backgroundColor: "#D8D0C5",
-  marginBottom: 14,
-},
-
-sheetHeaderRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginBottom: 8,
-},
-
-sheetTitle: {
-  fontSize: 22,
-  fontWeight: "800",
-  color: "#1F1A17",
-},
-
-sheetCloseText: {
-  fontSize: 14,
-  fontWeight: "800",
-  color: "#8C6330",
-},
-
-sheetDesc: {
-  fontSize: 13,
-  lineHeight: 19,
-  color: "#7A7168",
-  marginBottom: 14,
-},
-
-sheetOption: {
-  minHeight: 50,
-  borderRadius: 16,
-  paddingHorizontal: 14,
-  marginBottom: 8,
-  backgroundColor: "#F8F5EF",
-  borderWidth: 1,
-  borderColor: "#E8E1D6",
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-},
-
-sheetOptionActive: {
-  backgroundColor: "#F6EFE3",
-  borderColor: "#8C6330",
-},
-
-sheetOptionText: {
-  fontSize: 15,
-  fontWeight: "800",
-  color: "#5F554B",
-},
-
-sheetOptionTextActive: {
-  color: "#8C6330",
-},
-
-sheetCheckText: {
-  fontSize: 18,
-  fontWeight: "900",
-  color: "#8C6330",
-},
-toastWrap: {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  bottom: 28,
-  alignItems: "center",
-  paddingHorizontal: 20,
-},
-
-toast: {
-  minHeight: 44,
-  paddingHorizontal: 18,
-  borderRadius: 999,
-  backgroundColor: "rgba(31, 26, 23, 0.94)",
-  alignItems: "center",
-  justifyContent: "center",
-  ...shadow.card,
-},
-
-toastText: {
-  fontSize: 14,
-  fontFamily: fonts.bold,
-  color: colors.white,
-},
-
-topHeader: {
-  flexDirection: "row",
-  alignItems: "center",
-  marginBottom: 14,
-},
-
-backButton: {
-  width: 28,
-  fontSize: 30,
-  lineHeight: 32,
-  color: "#6b4f46",
-  marginRight: 8,
-},
-
-topTitle: {
-  fontSize: 24,
-  fontWeight: "900",
-  color: "#111827",
-},
+    fontSize: 16,
+    fontFamily: fonts.bold,
+    color: colors.white,
+  },
+  toastWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 28,
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  toast: {
+    minWidth: 180,
+    backgroundColor: "rgba(31, 26, 23, 0.92)",
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  toastText: {
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    color: colors.white,
+  },
 });

@@ -26,6 +26,7 @@ import TrainingRecordModal from "../../src/features/home/components/TrainingReco
 import HomeHeader from "../../src/features/home/components/HomeHeader";
 import TodayTrainingCard from "../../src/features/home/components/Today/TodayTrainingCard";
 import AttendanceCalendar from "../../src/features/home/components/AttendanceCalendar";
+import WeeklyGoalModal from "../../src/features/home/components/WeeklyGoalModal";
 
 import {
   getPopupNotice,
@@ -33,6 +34,7 @@ import {
 } from "../../src/api/memberNotice";
 
 import { DEBUG_HOME, useHomeScreen } from "../../src/features/home/useHomeScreen";
+import { useWeeklyGoal } from "../../src/features/home/useWeeklyGoal";
 
 
 export default function HomeScreen() {
@@ -80,6 +82,7 @@ const {
 
   const [closedNoticeIds, setClosedNoticeIds] = useState([]);
   const [trainingRecordSheetVisible, setTrainingRecordSheetVisible] = useState(false);
+  const [weeklyGoalModalVisible, setWeeklyGoalModalVisible] = useState(false);
 
   const yudanjaEmblemFrame = require("../../assets/images/yudanja-emblem-frame.png");
   const yudanjaProfileBg = require("../../assets/images/yudanja-profile-card-bg.png");
@@ -92,18 +95,28 @@ const calendarMap = useMemo(() => {
     const hasPresent = schedules.some(
       (item) => item?.attendanceStatus === "present"
     );
+    const hasYudanjaReserved = schedules.some((item) => {
+      const title = String(item?.title || item?.name || "");
+      const className = String(item?.className || "");
+      const sessionTimeKey = String(
+        item?.sessionTimeKey ||
+          item?.recurringMeta?.sessionTimeKey ||
+          item?.recurringMeta?.matchedSessionTimeKey ||
+          ""
+      );
 
-    const hasReserved = schedules.some(
-      (item) => item?.attendanceStatus === "reserved"
-    );
-
-    map[date] = {
+      return (
+        item?.attendanceStatus === "reserved" &&
+        (
+          title.includes("유단자") ||
+          className.includes("유단자") ||
+          sessionTimeKey === "MON_YUDANJA"
+        )
+      );
+    });
+map[date] = {
       date,
-      attendanceStatus: hasPresent
-        ? "present"
-        : hasReserved
-        ? "reserved"
-        : null,
+      attendanceStatus: hasPresent ? "present" : hasYudanjaReserved ? "reserved" : null,
       hasClass: schedules.length > 0,
       classCount: schedules.length,
       isHoliday: schedules.some((item) => item?.isHoliday === true),
@@ -136,6 +149,28 @@ const calendarMap = useMemo(() => {
   user?.name ||
   homeData?.user?.name ||
   "회원님";
+
+const weeklyGoalMemberKey =
+  homeData?.member?.id ||
+  user?.memberId ||
+  user?.id ||
+  null;
+
+const weeklyGoal = useWeeklyGoal({
+  token,
+  memberKey: weeklyGoalMemberKey,
+  enabled: !isPausedMember,
+});
+
+useEffect(() => {
+  if (!weeklyGoal.autoResumeMessage) return;
+
+  Alert.alert(
+    "주간 목표 안내",
+    weeklyGoal.autoResumeMessage,
+  );
+  weeklyGoal.clearAutoResumeMessage();
+}, [weeklyGoal.autoResumeMessage]);
 
 const joinDayCount = getJoinDayCountFromHome(homeData);
 
@@ -447,7 +482,8 @@ const handleNoticeDetail = useCallback(() => {
   displayName={displayName}
   joinDayCount={joinDayCount}
   attendanceCount={attendanceCount}
-  monthlyGoalRate={homeData?.monthlyGoalRate}
+  weeklyGoalSummary={weeklyGoal.summary}
+  onPressWeeklyGoal={() => setWeeklyGoalModalVisible(true)}
   hasUnreadNotice={hasUnreadNotice}
   hasUnreadMemberNotification={hasUnreadMemberNotification}
   onPressNotification={() => router.push("/member-notifications")}
@@ -488,6 +524,7 @@ const handleNoticeDetail = useCallback(() => {
   selectedDate={selectedDate}
   miniCalendarWeeks={miniCalendarWeeks}
   calendarMap={calendarMap}
+  showYudanjaReservation={isYudanja}
   onPressDate={handlePressDate}
   onPressMore={() => router.push("/(tabs)/schedule")}
 />
@@ -507,6 +544,29 @@ const handleNoticeDetail = useCallback(() => {
   }
 />
 </ScrollView>
+<WeeklyGoalModal
+  visible={weeklyGoalModalVisible}
+  loading={weeklyGoal.loading}
+  attendanceCount={weeklyGoal.attendanceCount}
+  currentGoal={weeklyGoal.currentGoal}
+  currentMode={weeklyGoal.currentMode}
+  isRestWeek={weeklyGoal.isRestWeek}
+  recurringGoal={weeklyGoal.recurringGoal}
+  pendingRecurringGoal={weeklyGoal.pendingRecurringGoal}
+  onClose={() => setWeeklyGoalModalVisible(false)}
+  onSave={async (draft) => {
+    try {
+      const result = await weeklyGoal.saveSettings(draft);
+      setWeeklyGoalModalVisible(false);
+      Alert.alert("목표 설정", result.message);
+    } catch (error) {
+      Alert.alert(
+        "안내",
+        error.message || "목표를 변경하지 못했습니다.",
+      );
+    }
+  }}
+/>
 <TrainingRecordModal
   visible={trainingRecordSheetVisible}
   onClose={() => setTrainingRecordSheetVisible(false)}

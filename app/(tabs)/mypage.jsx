@@ -189,15 +189,7 @@ const trainingGoals =
   member?.goals ||
   null;
 
-const recurringSummary =
-  homeData?.recurringReservationSummary ||
-  homeData?.recurringReservationsText ||
-  homeData?.recurringSummary ||
-  member?.recurringReservationSummary ||
-  member?.recurringReservationsText ||
-  null;
-
-  const paymentDaysLeftText = useMemo(() => {
+const paymentDaysLeftText = useMemo(() => {
     if (typeof payment?.daysLeft === "number") {
       if (payment.daysLeft === 0) return "오늘 결제일";
       if (payment.daysLeft < 0) return `${Math.abs(payment.daysLeft)}일 지남`;
@@ -234,11 +226,6 @@ const joinedDateLabel = joinedAtText
 
 const joinDayCount = getJoinDayCountFromHome(homeData);
 const joinedPeriodLabel = formatJoinDayCountLabel(joinDayCount);
-
-  /*{const recurringSummary =
-    homeData?.recurringReservationSummary ||
-    homeData?.recurringReservationsText ||
-    null;}*/
 
   const paymentSummaryText =
   paymentDueText && paymentDueText !== "-"
@@ -283,11 +270,6 @@ const promotionSummary = (() => {
   return "수련 목표 확인";
 })();
 
-const hasRecurring = !!recurringSummary;
-
-const recurringMenuSummary = hasRecurring
-  ? recurringSummary
-  : "정기 출석 요일과 시간을 설정해보세요";
 
 
   if (loading) {
@@ -369,15 +351,6 @@ const recurringMenuSummary = hasRecurring
   title="함께 수련하기"
   description="지인에게 현중태극권 무료 체험을 추천해보세요"
   onPress={() => router.push("/trial-application")}
-/>
-
-<MenuDivider styles={styles} />
-
-<MenuRow
-  styles={styles}
-  title="정기 출석 설정"
-  description={recurringMenuSummary}
-  onPress={() => router.push("/recurring-reservations")}
 />
 
 <MenuDivider styles={styles} />

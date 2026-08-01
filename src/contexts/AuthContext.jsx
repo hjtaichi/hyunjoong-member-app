@@ -38,6 +38,7 @@ function normalizeAuthUser(rawUser, fallback = {}) {
     name: source.name || previous.name,
     status: memberStatus,
     memberStatus,
+    rankLevel: Number(source.rankLevel ?? previous.rankLevel ?? 0),
   };
 }
 

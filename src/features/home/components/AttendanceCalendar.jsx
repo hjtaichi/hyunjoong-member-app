@@ -14,6 +14,7 @@ export default function AttendanceCalendar({
   selectedDate,
   miniCalendarWeeks,
   calendarMap,
+  showYudanjaReservation,
   onPressDate,
   onPressMore,
 }) {
@@ -67,7 +68,17 @@ export default function AttendanceCalendar({
 
             const selected = selectedDate === dateString;
             const todayFlag = dateString === todayString;
-            const statusMeta = getStatusMeta(dayInfo);
+            const visibleDayInfo =
+
+              !showYudanjaReservation &&
+
+              dayInfo?.attendanceStatus === "reserved"
+
+                ? { ...dayInfo, attendanceStatus: null }
+
+                : dayInfo;
+
+            const statusMeta = getStatusMeta(visibleDayInfo);
             const isSunday = dateObj.getDay() === 0;
             const isOpenEvent = dayInfo?.isOpenHoliday === true;
             const isClosedHoliday =
@@ -128,11 +139,12 @@ export default function AttendanceCalendar({
           <View style={styles.legendDotPresent} />
           <Text style={styles.legendText}>출석</Text>
         </View>
-
-        <View style={styles.legendItem}>
-          <View style={styles.legendDotReserved} />
-          <Text style={styles.legendText}>예약</Text>
-        </View>
+          {showYudanjaReservation ? (
+            <View style={styles.legendItem}>
+              <View style={styles.legendDotReserved} />
+              <Text style={styles.legendText}>유단자회 예약</Text>
+            </View>
+          ) : null}
       </View>
     </View>
   );

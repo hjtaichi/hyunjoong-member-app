@@ -132,9 +132,92 @@ export function getSessionDisplayLabel(item) {
   return item?.timeLabel || title || "수업";
 }
 
+export function isSpecialScheduleNotice(item) {
+  const text = [
+    item?.title,
+    item?.name,
+    item?.className,
+    item?.topicTitle,
+    item?.description,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return ["세미나", "행사", "특강", "워크숍", "워크샵"].some((keyword) =>
+    text.includes(keyword)
+  );
+}
+
+export function isYudanjaSchedule(item) {
+  const title = String(item?.title || item?.name || "");
+  const className = String(item?.className || "");
+  const sessionTimeKey = String(
+    item?.sessionTimeKey ||
+      item?.recurringMeta?.sessionTimeKey ||
+      item?.recurringMeta?.matchedSessionTimeKey ||
+      ""
+  );
+
+  return (
+    title.includes("유단자") ||
+    className.includes("유단자") ||
+    sessionTimeKey === "MON_YUDANJA"
+  );
+}
+
+export function shouldShowSelectedSchedule(
+  item,
+  { dateDiff, isYudanjaMember = false }
+) {
+  if (dateDiff === null || dateDiff === undefined) {
+    return false;
+  }
+
+  const isPresent = item?.attendanceStatus === "present";
+  const isSpecial = isSpecialScheduleNotice(item);
+  const isYudanja =
+    isYudanjaMember && isYudanjaSchedule(item);
+
+  if (dateDiff < 0) {
+    return isPresent || isSpecial;
+  }
+
+  if (dateDiff === 0) {
+    return isPresent || isSpecial || isYudanja;
+  }
+
+  return isSpecial || isYudanja;
+}
+
+export function shouldOpenScheduleBottomSheet({
+  dateDiff,
+  dayInfo,
+  schedules = [],
+  isYudanjaMember = false,
+}) {
+  if (dateDiff === null || dateDiff === undefined || dateDiff < 0) {
+    return false;
+  }
+
+  const isHoliday = dayInfo?.isHoliday === true;
+  const isOpenHoliday = dayInfo?.isOpenHoliday === true;
+
+  if (isHoliday) {
+    return isOpenHoliday && dateDiff === 0 && schedules.length > 0;
+  }
+
+  return schedules.some((item) =>
+    shouldShowSelectedSchedule(item, {
+      dateDiff,
+      isYudanjaMember,
+    })
+  );
+}
+
 export function getScheduleUiMeta(item, { isReservableDate }) {
   const attendanceStatus = item?.attendanceStatus || null;
   const recurringMeta = item?.recurringMeta || {};
+  const isYudanja = isYudanjaSchedule(item);
 
   const hasMatchedRecurringRule =
     recurringMeta?.matchedRecurringRule === true &&
@@ -145,21 +228,20 @@ export function getScheduleUiMeta(item, { isReservableDate }) {
     !!recurringMeta?.memberRecurringReservationId;
 
   const isRecurringReserved =
-  attendanceStatus === "reserved" &&
-  recurringMeta?.isRecurring === true &&
-  !hasRecurringException;
+    attendanceStatus === "reserved" &&
+    recurringMeta?.isRecurring === true &&
+    !hasRecurringException;
 
-const isManualReserved =
-  attendanceStatus === "reserved" &&
-  recurringMeta?.isRecurring !== true;
+  const isManualReserved =
+    attendanceStatus === "reserved" &&
+    recurringMeta?.isRecurring !== true;
 
   const canUndoSkip =
     isReservableDate &&
     hasRecurringException &&
     item?.canReserve !== false;
 
-  const canCancelReservation =
-    item?.canCancelReservation === true;
+  const canCancelReservation = item?.canCancelReservation === true;
 
   const canSkipOnce =
     isReservableDate &&
@@ -181,19 +263,6 @@ const isManualReserved =
 
   const canCancelAttendance = item?.canCancelAttendance === true;
 
-if (hasRecurringException) {
-  return {
-    tone: canUndoSkip ? "available" : "disabled",
-    label: canUndoSkip ? "예약 가능" : "이번만 쉬기",
-    helperText: canUndoSkip
-      ? null
-      : item?.reserveBlockedReason || null,
-    actionLabel: canUndoSkip ? "출석 예정" : null,
-    actionType: canUndoSkip ? "undoSkip" : null,
-    isRecurring: false,
-  };
-}
-
   if (attendanceStatus === "present") {
     return {
       tone: "done",
@@ -203,7 +272,33 @@ if (hasRecurringException) {
         : item?.cancelAttendanceReason || null,
       actionLabel: canCancelAttendance ? "출석 취소" : null,
       actionType: canCancelAttendance ? "cancelAttendance" : null,
-      isRecurring: hasMatchedRecurringRule,
+      isRecurring: isYudanja && hasMatchedRecurringRule,
+      isYudanja,
+    };
+  }
+
+  // 일반 수업은 수업 자체만 표시하고 예약 상태·예약 동작은 감춥니다.
+  if (!isYudanja) {
+    return {
+      tone: "plain",
+      label: null,
+      helperText: null,
+      actionLabel: null,
+      actionType: null,
+      isRecurring: false,
+      isYudanja: false,
+    };
+  }
+
+  if (hasRecurringException) {
+    return {
+      tone: canUndoSkip ? "available" : "disabled",
+      label: canUndoSkip ? "예약 가능" : "이번만 쉬기",
+      helperText: canUndoSkip ? null : item?.reserveBlockedReason || null,
+      actionLabel: canUndoSkip ? "출석 예정" : null,
+      actionType: canUndoSkip ? "undoSkip" : null,
+      isRecurring: false,
+      isYudanja: true,
     };
   }
 
@@ -212,11 +307,12 @@ if (hasRecurringException) {
       tone: "reserved",
       label: "정기출석 예정",
       helperText: canSkipOnce
-        ? "정기출석으로 자동 예약된 수업입니다."
+        ? "유단자회 정기예약으로 자동 등록된 수련입니다."
         : item?.cancelReservationReason || null,
       actionLabel: canSkipOnce ? "이번만 쉬기" : null,
       actionType: canSkipOnce ? "skipOnce" : null,
       isRecurring: true,
+      isYudanja: true,
     };
   }
 
@@ -224,12 +320,11 @@ if (hasRecurringException) {
     return {
       tone: "reserved",
       label: "출석 예정",
-      helperText: canCancelReserve
-        ? null
-        : item?.cancelReservationReason || null,
+      helperText: canCancelReserve ? null : item?.cancelReservationReason || null,
       actionLabel: canCancelReserve ? "예약 취소" : null,
       actionType: canCancelReserve ? "cancelReserve" : null,
       isRecurring: false,
+      isYudanja: true,
     };
   }
 
@@ -241,6 +336,7 @@ if (hasRecurringException) {
       actionLabel: "출석 예정",
       actionType: "reserve",
       isRecurring: hasMatchedRecurringRule,
+      isYudanja: true,
     };
   }
 
@@ -254,11 +350,18 @@ if (hasRecurringException) {
     actionLabel: null,
     actionType: null,
     isRecurring: hasMatchedRecurringRule,
+    isYudanja: true,
   };
 }
 
 export function getScheduleCardStyle(styles, tone) {
   switch (tone) {
+    case "plain":
+      return {
+        container: null,
+        chip: null,
+        chipText: null,
+      };
     case "done":
       return {
         container: styles.scheduleCardDone,

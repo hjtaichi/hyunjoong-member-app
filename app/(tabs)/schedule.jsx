@@ -12,7 +12,6 @@ import {
   toDateString,
   getDateDiffInDays,
   getMonthMatrix,
-  formatRecurringReservations,
   getSessionDisplayLabel,
   getScheduleUiMeta,
   getScheduleCardStyle,
@@ -45,9 +44,13 @@ export default function ScheduleScreen() {
 
     calendarData,
     calendarMap,
+    selectedDayInfo,
     selectedSchedules,
     selectedMySchedules,
-    recurringInfoText,
+    shouldShowSelectedSummary,
+    canOpenSelectedScheduleSheet,
+    isYudanjaMember,
+    yudanjaRecurringEnabled,
 
     isScheduleSheetVisible,
     setIsScheduleSheetVisible,
@@ -73,8 +76,7 @@ export default function ScheduleScreen() {
     toDateString,
     getMonthMatrix,
     getDateDiffInDays,
-    formatRecurringReservations,
-  });
+    });
 
   if (loading) {
     return (
@@ -151,22 +153,30 @@ export default function ScheduleScreen() {
 <SelectedScheduleSummary
   styles={styles}
   selectedDate={selectedDate}
+  selectedDayInfo={selectedDayInfo}
   selectedMySchedules={selectedMySchedules}
+  shouldShow={shouldShowSelectedSummary}
+  canOpenSheet={canOpenSelectedScheduleSheet}
   isReservableDate={isReservableDate}
   getScheduleUiMeta={getScheduleUiMeta}
   getSessionDisplayLabel={getSessionDisplayLabel}
   openScheduleSheet={openScheduleSheet}
 />
 
-{recurringInfoText ? (
+{isYudanjaMember ? (
   <Pressable
     style={styles.recurringInfoBox}
     onPress={() => router.push("/recurring-reservations")}
   >
-    <Text style={styles.recurringInfoLabel}>정기출석</Text>
+    <View style={styles.recurringInfoContent}>
+      <Text style={styles.recurringInfoLabel}>유단자회 정기예약</Text>
+      <Text numberOfLines={1} style={styles.recurringInfoText}>
+        매주 월요일 유단자수련 자동 예약
+      </Text>
+    </View>
 
-    <Text numberOfLines={1} style={styles.recurringInfoText}>
-      {recurringInfoText}
+    <Text style={styles.recurringInfoStatus}>
+      {yudanjaRecurringEnabled ? "사용 중" : "설정 안 함"}
     </Text>
 
     <View style={styles.recurringSettingButton}>

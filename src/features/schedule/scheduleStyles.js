@@ -674,9 +674,9 @@ weekScheduleStatusTextReserved: {
 },
 recurringInfoBox: {
   marginTop: 10,
-  paddingLeft: 14,
-  paddingRight: 8,
-  paddingVertical: 9,
+  paddingLeft: 17,
+  paddingRight: 9,
+  paddingVertical: 11,
   borderRadius: radius.md,
   backgroundColor: "#F8F1EA",
   borderWidth: 1,
@@ -686,9 +686,14 @@ recurringInfoBox: {
   gap: 8,
 },
 
+recurringInfoContent: {
+  flex: 1,
+  minWidth: 0,
+},
+
 recurringInfoLabel: {
-  fontSize: 15,
-  lineHeight: 21,
+  fontSize: 16,
+  lineHeight: 22,
   fontFamily: fonts.bold,
   color: colors.warmBrown,
 },
@@ -701,17 +706,24 @@ recurringInfoText: {
   color: colors.textSubStrong,
 },
 
+recurringInfoStatus: {
+  fontSize: readability.statusLabel.fontSize,
+  lineHeight: readability.statusLabel.lineHeight,
+  fontFamily: fonts.bold,
+  color: colors.warmBrown,
+},
+
 recurringSettingButton: {
-  width: 28,
-  height: 28,
+  width: 29,
+  height: 29,
   borderRadius: 999,
   alignItems: "center",
   justifyContent: "center",
 },
 
 recurringSettingIcon: {
-  width: 18,
-  height: 18,
+  width: 20,
+  height: 20,
   opacity: 0.75,
 },
 dayStampPresent: {
