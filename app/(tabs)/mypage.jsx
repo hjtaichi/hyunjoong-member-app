@@ -228,8 +228,9 @@ const joinDayCount = getJoinDayCountFromHome(homeData);
 const joinedPeriodLabel = formatJoinDayCountLabel(joinDayCount);
 
   const paymentSummaryText =
-  payment?.isCovered && payment?.coverageEndMonthLabel
-    ? `${payment.coverageEndMonthLabel}까지 납부 완료`
+  payment?.isCovered &&
+  (payment?.coverageEndDateLabel || payment?.coverageEndMonthLabel)
+    ? `${payment.coverageEndDateLabel || payment.coverageEndMonthLabel}까지 납부 완료`
     : paymentDueText && paymentDueText !== "-"
       ? `다음 회비 납부 ${paymentDueText} · ${paymentDaysLeftText}`
       : `다음 회비 납부일 확인 필요 · ${paymentDaysLeftText}`;

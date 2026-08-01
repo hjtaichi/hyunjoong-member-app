@@ -8,17 +8,17 @@ function read(relativePath) {
   );
 }
 
-describe("member fee and cumulative attendance display policy v1", () => {
-  test("a covered member quietly sees the paid-through month", () => {
+describe("member fee and cumulative attendance display policy v1.1", () => {
+  test("a covered member quietly sees the exact paid-through date", () => {
     const hero = read(
       "src/features/mypage/components/MyPageHeroCard.jsx",
     );
     const myPage = read("app/(tabs)/mypage.jsx");
 
-    expect(hero).toContain("coverageEndMonthLabel");
+    expect(hero).toContain("coverageEndDateLabel");
     expect(hero).toContain("까지 납부 완료");
     expect(hero).toContain("납부 안내");
-    expect(myPage).toContain("오늘 납부일");
+    expect(myPage).toContain("coverageEndDateLabel");
     expect(myPage).toContain("다음 회비 납부");
   });
 

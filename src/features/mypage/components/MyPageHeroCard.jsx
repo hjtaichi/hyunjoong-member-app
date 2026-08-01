@@ -160,8 +160,9 @@ function MyPageHeroCard({
           </View>
       
           <Text style={styles.heroPaymentDueText}>
-            {payment?.isCovered && payment?.coverageEndMonthLabel
-              ? `${payment.coverageEndMonthLabel}까지 납부 완료`
+            {payment?.isCovered &&
+            (payment?.coverageEndDateLabel || payment?.coverageEndMonthLabel)
+              ? `${payment.coverageEndDateLabel || payment.coverageEndMonthLabel}까지 납부 완료`
               : `다음 납부일 ${paymentDueText} · ${paymentDaysLeftText}`}
           </Text>
         </View>
