@@ -160,7 +160,9 @@ function MyPageHeroCard({
           </View>
       
           <Text style={styles.heroPaymentDueText}>
-            다음 결제일 {paymentDueText} · {paymentDaysLeftText}
+            {payment?.isCovered && payment?.coverageEndMonthLabel
+              ? `${payment.coverageEndMonthLabel}까지 납부 완료`
+              : `다음 납부일 ${paymentDueText} · ${paymentDaysLeftText}`}
           </Text>
         </View>
       
@@ -168,7 +170,7 @@ function MyPageHeroCard({
           style={styles.heroPayButton}
           onPress={onOpenPayment}
         >
-          <Text style={styles.heroPayButtonText}>결제하기</Text>
+          <Text style={styles.heroPayButtonText}>납부 안내</Text>
         </Pressable>
       </View>
       <BadgeInfoModal

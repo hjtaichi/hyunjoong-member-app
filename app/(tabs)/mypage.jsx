@@ -191,7 +191,7 @@ const trainingGoals =
 
 const paymentDaysLeftText = useMemo(() => {
     if (typeof payment?.daysLeft === "number") {
-      if (payment.daysLeft === 0) return "오늘 결제일";
+      if (payment.daysLeft === 0) return "오늘 납부일";
       if (payment.daysLeft < 0) return `${Math.abs(payment.daysLeft)}일 지남`;
       return `${payment.daysLeft}일 남음`;
     }
@@ -228,9 +228,11 @@ const joinDayCount = getJoinDayCountFromHome(homeData);
 const joinedPeriodLabel = formatJoinDayCountLabel(joinDayCount);
 
   const paymentSummaryText =
-  paymentDueText && paymentDueText !== "-"
-    ? `다음 회비 결제 ${paymentDueText} · ${paymentDaysLeftText}`
-    : `다음 회비 결제일 확인 필요 · ${paymentDaysLeftText}`;
+  payment?.isCovered && payment?.coverageEndMonthLabel
+    ? `${payment.coverageEndMonthLabel}까지 납부 완료`
+    : paymentDueText && paymentDueText !== "-"
+      ? `다음 회비 납부 ${paymentDueText} · ${paymentDaysLeftText}`
+      : `다음 회비 납부일 확인 필요 · ${paymentDaysLeftText}`;
 
 const promotionSummary = (() => {
   const promotion =
