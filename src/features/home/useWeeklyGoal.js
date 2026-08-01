@@ -346,16 +346,7 @@ export function useWeeklyGoal({
         );
       }
 
-      const currentCoveredByRecurring =
-        recurringChanged &&
-        currentChanged &&
-        !isRestWeek &&
-        currentGoal === recurringGoal;
-
-      if (
-        currentChanged &&
-        !currentCoveredByRecurring
-      ) {
+      if (currentChanged) {
         const currentResult = isRestWeek
           ? applyRestWeek(nextState, {
               weekKey:

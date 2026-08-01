@@ -1,4 +1,4 @@
-﻿const fs = require("node:fs");
+const fs = require("node:fs");
 const path = require("node:path");
 const {
   getScheduleUiMeta,
@@ -265,4 +265,25 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
     expect(recurring).not.toContain("WEEKDAY_ROWS");
     expect(recurring).toContain('sessionTimeKey: YUDANJA_SESSION_TIME_KEY');
   });
+
+  test("주간 목표 모달은 1~15회 숫자 입력형으로 간결하게 표시한다", () => {
+    const modal = read(
+      "src/features/home/components/WeeklyGoalModal.jsx"
+    );
+
+    expect(modal).toContain("TextInput");
+    expect(modal).toContain("WEEKLY_GOAL_MAX");
+    expect(modal).toContain("이번 주 일반수련 출석");
+    expect(modal).toContain(
+      "이미 출석한 횟수보다 낮게 설정할 수"
+    );
+    expect(modal).toContain(
+      "다음 주부터 적용할 목표를"
+    );
+    expect(modal).toContain("저장하기");
+    expect(modal).not.toContain("GOAL_OPTIONS");
+    expect(modal).not.toContain("이번 주 목표 쉬기");
+    expect(modal).not.toContain("변경사항 저장");
+  });
+
 });

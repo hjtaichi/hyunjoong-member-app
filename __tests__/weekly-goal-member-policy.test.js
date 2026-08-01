@@ -135,10 +135,13 @@ describe("일반수련 주간 목표 계산", () => {
     ).toBe(2);
     expect(
       getMinimumSelectableWeeklyGoal(6, null),
-    ).toBe(5);
+    ).toBe(6);
     expect(
       getMinimumSelectableWeeklyGoal(5, 3),
-    ).toBe(3);
+    ).toBe(5);
+    expect(
+      getMinimumSelectableWeeklyGoal(12, 10),
+    ).toBe(12);
 
     const sameAsAttendance =
       applyCurrentWeekGoal(
@@ -156,44 +159,56 @@ describe("일반수련 주간 목표 계산", () => {
     });
     expect(sameAsAttendance.record.completedAt).toBeTruthy();
 
-    const cappedAtFive =
+    const highFrequencyGoal =
       applyCurrentWeekGoal(
         normalizeWeeklyGoalState(null),
         {
           weekKey: WEEK_KEY,
           attendanceCount: 6,
-          goal: 5,
+          goal: 15,
         },
       );
 
-    expect(cappedAtFive.record).toMatchObject({
-      goal: 5,
+    expect(highFrequencyGoal.record).toMatchObject({
+      goal: 15,
       attendanceCount: 6,
     });
+
+    expect(() =>
+      applyCurrentWeekGoal(
+        normalizeWeeklyGoalState(null),
+        {
+          weekKey: WEEK_KEY,
+          attendanceCount: 6,
+          goal: 16,
+        },
+      ),
+    ).toThrow(
+      "목표 횟수는 1회부터 15회까지 입력해주세요.",
+    );
   });
 
-  test("매주 반복 목표는 이번 주와 이후 주에 적용된다", () => {
+  test("매주 반복 목표는 다음 주부터 적용된다", () => {
     const result = applyRecurringGoal(
       normalizeWeeklyGoalState(null),
       {
         weekKey: WEEK_KEY,
         nextWeekKey: NEXT_WEEK_KEY,
         attendanceCount: 0,
-        goal: 3,
-        nowIso: "2026-07-27T00:00:00.000Z",
+        goal: 15,
       },
     );
 
-    expect(result.state.recurringGoal).toBe(3);
-    expect(result.record).toMatchObject({
-      goal: 3,
-      mode: "recurring",
-      isRestWeek: false,
-    });
-    expect(result.appliesFromNextWeek).toBe(false);
+    expect(result.state.recurringGoal).toBeNull();
+    expect(result.state.pendingRecurringGoal).toBe(15);
+    expect(result.state.pendingRecurringWeekKey).toBe(
+      NEXT_WEEK_KEY,
+    );
+    expect(result.record.goal).toBeNull();
+    expect(result.appliesFromNextWeek).toBe(true);
   });
 
-  test("목표 미설정 상태에서 반복 목표가 현재 출석과 같으면 이번 주부터 적용한다", () => {
+  test("현재 출석과 같은 반복 목표도 다음 주부터 적용한다", () => {
     const result = applyRecurringGoal(
       normalizeWeeklyGoalState(null),
       {
@@ -204,11 +219,9 @@ describe("일반수련 주간 목표 계산", () => {
       },
     );
 
-    expect(result.appliesFromNextWeek).toBe(false);
-    expect(result.record).toMatchObject({
-      goal: 5,
-      attendanceCount: 5,
-    });
+    expect(result.appliesFromNextWeek).toBe(true);
+    expect(result.state.pendingRecurringGoal).toBe(5);
+    expect(result.record.goal).toBeNull();
   });
 
   test("출석을 시작한 뒤 이번 주 목표를 낮추거나 유지할 수 없다", () => {
@@ -242,16 +255,16 @@ describe("일반수련 주간 목표 계산", () => {
     );
   });
 
-  test("출석 후 반복 목표를 낮추면 다음 주부터 적용한다", () => {
-    const initial = applyRecurringGoal(
-      normalizeWeeklyGoalState(null),
-      {
-        weekKey: WEEK_KEY,
-        nextWeekKey: NEXT_WEEK_KEY,
-        attendanceCount: 0,
-        goal: 5,
+  test("반복 목표 변경은 현재 주와 관계없이 다음 주부터 적용한다", () => {
+    const initial = normalizeWeeklyGoalState({
+      recurringGoal: 5,
+      weeks: {
+        [WEEK_KEY]: {
+          goal: 5,
+          mode: "recurring",
+        },
       },
-    ).state;
+    });
 
     const result = applyRecurringGoal(initial, {
       weekKey: WEEK_KEY,

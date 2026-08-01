@@ -1382,6 +1382,97 @@ weeklyGoalSectionTitle: {
   color: colors.textMain,
 },
 
+weeklyGoalSectionHelperStrong: {
+  fontSize: 15,
+  lineHeight: 20,
+  fontFamily: fonts.semiBold,
+  color: colors.textMain,
+},
+
+weeklyGoalSectionHelper: {
+  marginTop: 3,
+  fontSize: 14,
+  lineHeight: 19,
+  fontFamily: fonts.medium,
+  color: colors.textSub,
+},
+
+weeklyGoalNumberRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 12,
+  marginTop: 14,
+},
+
+weeklyGoalStepButton: {
+  width: 52,
+  height: 48,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 14,
+  borderWidth: 1,
+  borderColor: "#DCC7B3",
+  backgroundColor: "#FFF9F3",
+},
+
+weeklyGoalStepButtonDisabled: {
+  borderColor: "#E7DED5",
+  backgroundColor: "#F3EFEB",
+},
+
+weeklyGoalStepButtonText: {
+  marginTop: -2,
+  fontSize: 27,
+  lineHeight: 30,
+  fontFamily: fonts.medium,
+  color: "#76563B",
+},
+
+weeklyGoalStepButtonTextDisabled: {
+  color: "#B9AEA5",
+},
+
+weeklyGoalNumberInputWrap: {
+  minWidth: 118,
+  height: 48,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  paddingHorizontal: 15,
+  borderRadius: 14,
+  borderWidth: 1,
+  borderColor: "#CFAE8F",
+  backgroundColor: colors.white,
+},
+
+weeklyGoalNumberInput: {
+  minWidth: 42,
+  paddingVertical: 0,
+  paddingHorizontal: 0,
+  fontSize: 21,
+  lineHeight: 25,
+  textAlign: "right",
+  fontFamily: fonts.bold,
+  color: colors.textMain,
+},
+
+weeklyGoalNumberSuffix: {
+  marginLeft: 3,
+  fontSize: 17,
+  lineHeight: 21,
+  fontFamily: fonts.bold,
+  color: "#76563B",
+},
+
+weeklyGoalInputError: {
+  marginTop: 8,
+  fontSize: 13,
+  lineHeight: 18,
+  fontFamily: fonts.medium,
+  color: "#B34A3C",
+},
+
 weeklyGoalOptionRow: {
   flexDirection: "row",
   gap: 7,

@@ -1,5 +1,5 @@
 const MIN_GOAL = 1;
-const MAX_GOAL = 5;
+const MAX_GOAL = 15;
 const KOREA_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 function clampGoal(value) {
@@ -21,12 +21,7 @@ export function getMinimumSelectableWeeklyGoal(
   currentGoal,
 ) {
   const normalizedCurrentGoal =
-    clampGoal(currentGoal);
-
-  if (normalizedCurrentGoal) {
-    return normalizedCurrentGoal;
-  }
-
+    clampGoal(currentGoal) || 0;
   const normalizedAttendanceCount =
     Math.max(
       0,
@@ -35,14 +30,11 @@ export function getMinimumSelectableWeeklyGoal(
       ),
     );
 
-  if (normalizedAttendanceCount <= 0) {
-    return MIN_GOAL;
-  }
-
   return Math.min(
     MAX_GOAL,
     Math.max(
       MIN_GOAL,
+      normalizedCurrentGoal,
       normalizedAttendanceCount,
     ),
   );
@@ -436,7 +428,7 @@ function requireGoal(value) {
   const goal = clampGoal(value);
 
   if (!goal) {
-    throw new Error("목표 횟수는 1회부터 5회까지 선택해주세요.");
+    throw new Error("목표 횟수는 1회부터 15회까지 입력해주세요.");
   }
 
   return goal;
@@ -522,66 +514,20 @@ export function applyRecurringGoal(
     nextWeekKey,
     attendanceCount,
     goal: goalValue,
-    nowIso = new Date().toISOString(),
   },
 ) {
   const goal = requireGoal(goalValue);
   const state = normalizeWeeklyGoalState(rawState);
   const current = getCurrentRecord(state, weekKey);
-  const currentGoal = clampGoal(current.goal);
 
-  const minimumSelectableGoal =
-    getMinimumSelectableWeeklyGoal(
-      attendanceCount,
-      currentGoal,
-    );
-
-  const canApplyThisWeek =
-    attendanceCount === 0 ||
-    (currentGoal && goal >= currentGoal) ||
-    (
-      !currentGoal &&
-      goal >= minimumSelectableGoal
-    );
-
-  if (!canApplyThisWeek) {
-    state.pendingRecurringGoal = goal;
-    state.pendingRecurringWeekKey = nextWeekKey;
-
-    return {
-      state,
-      record: current,
-      message: `매주 ${goal}회 목표는 다음 주부터 적용돼요.`,
-      appliesFromNextWeek: true,
-    };
-  }
-
-  state.recurringGoal = goal;
-  state.pendingRecurringGoal = null;
-  state.pendingRecurringWeekKey = null;
-
-  const nextRecord = reconcileCompletion(
-    {
-      ...current,
-      goal,
-      mode: "recurring",
-      isRestWeek: false,
-      baseRecurringGoal: goal,
-    },
-    attendanceCount,
-    nowIso,
-  );
-
-  state.weeks = pruneWeeks({
-    ...state.weeks,
-    [weekKey]: nextRecord,
-  });
+  state.pendingRecurringGoal = goal;
+  state.pendingRecurringWeekKey = nextWeekKey;
 
   return {
     state,
-    record: nextRecord,
-    message: `매주 ${goal}회 목표로 설정했어요.`,
-    appliesFromNextWeek: false,
+    record: current,
+    message: `매주 ${goal}회 목표는 다음 주부터 적용돼요.`,
+    appliesFromNextWeek: true,
   };
 }
 

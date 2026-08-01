@@ -5,54 +5,171 @@ import {
   Modal,
   Pressable,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
 import { styles } from "../homeStyles";
 import {
   getMinimumSelectableWeeklyGoal,
+  WEEKLY_GOAL_MAX,
+  WEEKLY_GOAL_MIN,
 } from "../weeklyGoalUtils";
 
-const GOAL_OPTIONS = [1, 2, 3, 4, 5];
-
-function GoalOptionButton({
-  value,
-  selected,
-  disabled,
-  onPress,
-}) {
+function isValidGoal(value, minimum = WEEKLY_GOAL_MIN) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{
-        selected,
-        disabled,
-      }}
-      disabled={disabled}
-      onPress={() => onPress(value)}
-      style={({ pressed }) => [
-        styles.weeklyGoalOptionButton,
-        disabled &&
-          styles.weeklyGoalOptionButtonDisabled,
-        selected &&
-          styles.weeklyGoalOptionButtonSelected,
-        pressed &&
-          !disabled &&
-          styles.weeklyGoalOptionButtonPressed,
-      ]}
-    >
-      <Text
-        style={[
-          styles.weeklyGoalOptionText,
-          disabled &&
-            styles.weeklyGoalOptionTextDisabled,
-          selected &&
-            styles.weeklyGoalOptionTextSelected,
+    Number.isInteger(value) &&
+    value >= minimum &&
+    value <= WEEKLY_GOAL_MAX
+  );
+}
+
+function normalizeGoal(value, minimum = WEEKLY_GOAL_MIN) {
+  const number = Math.trunc(Number(value));
+
+  if (!Number.isFinite(number)) {
+    return minimum;
+  }
+
+  return Math.min(
+    WEEKLY_GOAL_MAX,
+    Math.max(minimum, number),
+  );
+}
+
+function GoalNumberControl({
+  accessibilityLabel,
+  value,
+  minimum = WEEKLY_GOAL_MIN,
+  disabled,
+  onChange,
+}) {
+  const normalizedValue = isValidGoal(value, minimum)
+    ? value
+    : minimum;
+  const minusDisabled =
+    disabled || normalizedValue <= minimum;
+  const plusDisabled =
+    disabled || normalizedValue >= WEEKLY_GOAL_MAX;
+
+  const handleTextChange = (text) => {
+    const digits = String(text || "")
+      .replace(/[^0-9]/g, "")
+      .slice(0, 2);
+
+    if (!digits) {
+      onChange(null);
+      return;
+    }
+
+    const number = Number(digits);
+
+    if (number > WEEKLY_GOAL_MAX) {
+      onChange(WEEKLY_GOAL_MAX);
+      return;
+    }
+
+    onChange(number);
+  };
+
+  return (
+    <View style={styles.weeklyGoalNumberRow}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${accessibilityLabel} 1회 줄이기`}
+        accessibilityState={{
+          disabled: minusDisabled,
+        }}
+        disabled={minusDisabled}
+        onPress={() =>
+          onChange(
+            Math.max(
+              minimum,
+              normalizedValue - 1,
+            ),
+          )
+        }
+        style={({ pressed }) => [
+          styles.weeklyGoalStepButton,
+          minusDisabled &&
+            styles.weeklyGoalStepButtonDisabled,
+          pressed &&
+            !minusDisabled &&
+            styles.weeklyGoalOptionButtonPressed,
         ]}
       >
-        {value}회
-      </Text>
-    </Pressable>
+        <Text
+          style={[
+            styles.weeklyGoalStepButtonText,
+            minusDisabled &&
+              styles.weeklyGoalStepButtonTextDisabled,
+          ]}
+        >
+          −
+        </Text>
+      </Pressable>
+
+      <View style={styles.weeklyGoalNumberInputWrap}>
+        <TextInput
+          accessibilityLabel={accessibilityLabel}
+          value={
+            value == null
+              ? ""
+              : String(value)
+          }
+          editable={!disabled}
+          keyboardType="number-pad"
+          inputMode="numeric"
+          maxLength={2}
+          selectTextOnFocus
+          onChangeText={handleTextChange}
+          onBlur={() =>
+            onChange(
+              normalizeGoal(value, minimum),
+            )
+          }
+          style={styles.weeklyGoalNumberInput}
+        />
+        <Text style={styles.weeklyGoalNumberSuffix}>
+          회
+        </Text>
+      </View>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${accessibilityLabel} 1회 늘리기`}
+        accessibilityState={{
+          disabled: plusDisabled,
+        }}
+        disabled={plusDisabled}
+        onPress={() =>
+          onChange(
+            Math.min(
+              WEEKLY_GOAL_MAX,
+              normalizedValue + 1,
+            ),
+          )
+        }
+        style={({ pressed }) => [
+          styles.weeklyGoalStepButton,
+          plusDisabled &&
+            styles.weeklyGoalStepButtonDisabled,
+          pressed &&
+            !plusDisabled &&
+            styles.weeklyGoalOptionButtonPressed,
+        ]}
+      >
+        <Text
+          style={[
+            styles.weeklyGoalStepButtonText,
+            plusDisabled &&
+              styles.weeklyGoalStepButtonTextDisabled,
+          ]}
+        >
+          +
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -70,8 +187,6 @@ export default function WeeklyGoalModal({
 }) {
   const [draftCurrentGoal, setDraftCurrentGoal] =
     useState(null);
-  const [draftIsRestWeek, setDraftIsRestWeek] =
-    useState(false);
   const [draftRecurringGoal, setDraftRecurringGoal] =
     useState(null);
   const [saving, setSaving] = useState(false);
@@ -82,31 +197,6 @@ export default function WeeklyGoalModal({
   const savedRecurringGoal =
     pendingRecurringGoal || recurringGoal || null;
 
-  useEffect(() => {
-    if (!visible) {
-      return;
-    }
-
-    setDraftCurrentGoal(savedCurrentGoal);
-    setDraftIsRestWeek(isRestWeek === true);
-    setDraftRecurringGoal(savedRecurringGoal);
-    setSaving(false);
-  }, [
-    visible,
-    savedCurrentGoal,
-    savedRecurringGoal,
-    isRestWeek,
-    currentMode,
-  ]);
-
-  const currentChanged =
-    draftIsRestWeek !== (isRestWeek === true) ||
-    (!draftIsRestWeek &&
-      draftCurrentGoal !== savedCurrentGoal);
-  const recurringChanged =
-    draftRecurringGoal !== savedRecurringGoal;
-  const hasChanges = currentChanged || recurringChanged;
-
   const minimumSelectableGoal = useMemo(
     () =>
       getMinimumSelectableWeeklyGoal(
@@ -115,6 +205,51 @@ export default function WeeklyGoalModal({
       ),
     [attendanceCount, savedCurrentGoal],
   );
+
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+
+    setDraftCurrentGoal(
+      Math.max(
+        minimumSelectableGoal,
+        savedCurrentGoal || WEEKLY_GOAL_MIN,
+      ),
+    );
+    setDraftRecurringGoal(
+      savedRecurringGoal || WEEKLY_GOAL_MIN,
+    );
+    setSaving(false);
+  }, [
+    visible,
+    savedCurrentGoal,
+    savedRecurringGoal,
+    minimumSelectableGoal,
+    isRestWeek,
+    currentMode,
+  ]);
+
+  const currentGoalValid =
+    isValidGoal(
+      draftCurrentGoal,
+      minimumSelectableGoal,
+    );
+  const recurringGoalValid =
+    isValidGoal(draftRecurringGoal);
+
+  const currentChanged =
+    isRestWeek === true ||
+    draftCurrentGoal !== savedCurrentGoal;
+  const recurringChanged =
+    draftRecurringGoal !== savedRecurringGoal;
+  const hasChanges =
+    currentChanged || recurringChanged;
+  const canSave =
+    hasChanges &&
+    currentGoalValid &&
+    recurringGoalValid &&
+    !saving;
 
   const requestClose = () => {
     if (saving) {
@@ -128,7 +263,7 @@ export default function WeeklyGoalModal({
 
     Alert.alert(
       "변경사항을 저장하지 않고 닫을까요?",
-      "선택한 내용은 적용되지 않습니다.",
+      "입력한 내용은 적용되지 않습니다.",
       [
         {
           text: "계속 설정",
@@ -144,7 +279,7 @@ export default function WeeklyGoalModal({
   };
 
   const handleSave = async () => {
-    if (!hasChanges || saving) {
+    if (!canSave) {
       return;
     }
 
@@ -152,10 +287,8 @@ export default function WeeklyGoalModal({
       setSaving(true);
 
       await onSave({
-        currentGoal: draftIsRestWeek
-          ? null
-          : draftCurrentGoal,
-        isRestWeek: draftIsRestWeek,
+        currentGoal: draftCurrentGoal,
+        isRestWeek: false,
         recurringGoal: draftRecurringGoal,
         currentChanged,
         recurringChanged,
@@ -187,10 +320,6 @@ export default function WeeklyGoalModal({
               <Text style={styles.weeklyGoalTitle}>
                 일반수련 주간 목표
               </Text>
-              <Text style={styles.weeklyGoalDescription}>
-                이번 주 몇 회 수련에 참여할지
-                정해주세요.
-              </Text>
               <Text style={styles.weeklyGoalExclusionText}>
                 유단자회 수련은 목표 횟수에 포함되지
                 않습니다.
@@ -220,75 +349,28 @@ export default function WeeklyGoalModal({
                 <Text style={styles.weeklyGoalSectionTitle}>
                   이번 주만
                 </Text>
+                <Text style={styles.weeklyGoalSectionHelperStrong}>
+                  이번 주 일반수련 출석{" "}
+                  {attendanceCount}회
+                </Text>
+                <Text style={styles.weeklyGoalSectionHelper}>
+                  이미 출석한 횟수보다 낮게 설정할 수
+                  없습니다.
+                </Text>
 
-                <View style={styles.weeklyGoalOptionRow}>
-                  {GOAL_OPTIONS.map((goal) => {
-                    const selected =
-                      !draftIsRestWeek &&
-                      draftCurrentGoal === goal;
-                    const disabled =
-                      saving ||
-                      (attendanceCount > 0 &&
-                        goal < minimumSelectableGoal);
+                <GoalNumberControl
+                  accessibilityLabel="이번 주 목표 횟수"
+                  value={draftCurrentGoal}
+                  minimum={minimumSelectableGoal}
+                  disabled={saving}
+                  onChange={setDraftCurrentGoal}
+                />
 
-                    return (
-                      <GoalOptionButton
-                        key={`current-${goal}`}
-                        value={goal}
-                        selected={selected}
-                        disabled={disabled}
-                        onPress={(value) => {
-                          setDraftIsRestWeek(false);
-                          setDraftCurrentGoal(value);
-                        }}
-                      />
-                    );
-                  })}
-                </View>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{
-                    selected: draftIsRestWeek,
-                    disabled:
-                      attendanceCount > 0 || saving,
-                  }}
-                  disabled={
-                    attendanceCount > 0 || saving
-                  }
-                  onPress={() => {
-                    setDraftIsRestWeek(true);
-                    setDraftCurrentGoal(null);
-                  }}
-                  style={({ pressed }) => [
-                    styles.weeklyGoalRestButton,
-                    (attendanceCount > 0 || saving) &&
-                      styles.weeklyGoalRestButtonDisabled,
-                    draftIsRestWeek &&
-                      styles.weeklyGoalRestButtonSelected,
-                    pressed &&
-                      attendanceCount === 0 &&
-                      !saving &&
-                      styles.weeklyGoalOptionButtonPressed,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.weeklyGoalRestButtonText,
-                      (attendanceCount > 0 || saving) &&
-                        styles.weeklyGoalOptionTextDisabled,
-                      draftIsRestWeek &&
-                        styles.weeklyGoalRestButtonTextSelected,
-                    ]}
-                  >
-                    이번 주 목표 쉬기
-                  </Text>
-                </Pressable>
-
-                {attendanceCount > 0 ? (
-                  <Text style={styles.weeklyGoalRuleText}>
-                    일반수련 출석을 시작해 이번 주 목표는
-                    높이는 것만 가능해요.
+                {!currentGoalValid ? (
+                  <Text style={styles.weeklyGoalInputError}>
+                    이번 주 목표는{" "}
+                    {minimumSelectableGoal}회부터{" "}
+                    {WEEKLY_GOAL_MAX}회까지 입력해주세요.
                   </Text>
                 ) : null}
               </View>
@@ -299,65 +381,40 @@ export default function WeeklyGoalModal({
                 <Text style={styles.weeklyGoalSectionTitle}>
                   매주 반복
                 </Text>
+                <Text style={styles.weeklyGoalSectionHelper}>
+                  다음 주부터 적용할 목표를
+                  입력해주세요.
+                </Text>
 
-                <View style={styles.weeklyGoalOptionRow}>
-                  {GOAL_OPTIONS.map((goal) => (
-                    <GoalOptionButton
-                      key={`recurring-${goal}`}
-                      value={goal}
-                      selected={
-                        draftRecurringGoal === goal
-                      }
-                      disabled={saving}
-                      onPress={setDraftRecurringGoal}
-                    />
-                  ))}
-                </View>
+                <GoalNumberControl
+                  accessibilityLabel="매주 반복 목표 횟수"
+                  value={draftRecurringGoal}
+                  disabled={saving}
+                  onChange={setDraftRecurringGoal}
+                />
 
-                {recurringChanged &&
-                attendanceCount > 0 &&
-                savedCurrentGoal &&
-                draftRecurringGoal < savedCurrentGoal ? (
-                  <Text style={styles.weeklyGoalPendingText}>
-                    낮춘 반복 목표는 다음 주부터
-                    적용됩니다.
+                {!recurringGoalValid ? (
+                  <Text style={styles.weeklyGoalInputError}>
+                    반복 목표는 1회부터{" "}
+                    {WEEKLY_GOAL_MAX}회까지 입력해주세요.
                   </Text>
-                ) : pendingRecurringGoal &&
-                  !recurringChanged ? (
-                  <Text style={styles.weeklyGoalPendingText}>
-                    다음 주부터 매주{" "}
-                    {pendingRecurringGoal}회 목표가
-                    적용됩니다.
-                  </Text>
-                ) : draftRecurringGoal ? (
-                  <Text style={styles.weeklyGoalRuleText}>
-                    매주 월요일마다 0 /{" "}
-                    {draftRecurringGoal}회로 새로 시작해요.
-                  </Text>
-                ) : (
-                  <Text style={styles.weeklyGoalRuleText}>
-                    한 번 설정하면 매주 같은 목표가
-                    자동으로 적용돼요.
-                  </Text>
-                )}
+                ) : null}
               </View>
 
               <View style={styles.weeklyGoalActionArea}>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityState={{
-                    disabled:
-                      !hasChanges || saving,
+                    disabled: !canSave,
                   }}
-                  disabled={!hasChanges || saving}
+                  disabled={!canSave}
                   onPress={handleSave}
                   style={({ pressed }) => [
                     styles.weeklyGoalSaveButton,
-                    (!hasChanges || saving) &&
+                    !canSave &&
                       styles.weeklyGoalSaveButtonDisabled,
                     pressed &&
-                      hasChanges &&
-                      !saving &&
+                      canSave &&
                       styles.weeklyGoalSaveButtonPressed,
                   ]}
                 >
@@ -367,11 +424,11 @@ export default function WeeklyGoalModal({
                     <Text
                       style={[
                         styles.weeklyGoalSaveButtonText,
-                        !hasChanges &&
+                        !canSave &&
                           styles.weeklyGoalSaveButtonTextDisabled,
                       ]}
                     >
-                      변경사항 저장
+                      저장하기
                     </Text>
                   )}
                 </Pressable>
