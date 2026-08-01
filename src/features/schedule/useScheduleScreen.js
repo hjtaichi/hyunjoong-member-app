@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import { subscribeAttendanceDataChanged } from "../../events/attendanceRefreshEvents";
 import {
+  getCalendarMonthKeysForDates,
+  getCurrentWeekDateKeys,
   isYudanjaSchedule,
   shouldOpenScheduleBottomSheet,
   shouldShowSelectedSchedule,
@@ -44,7 +46,35 @@ export function useScheduleScreen({
   const [submittingAttendance, setSubmittingAttendance] = useState(false);
 
   const [calendarData, setCalendarData] = useState(null);
+  const [weekScheduleByDate, setWeekScheduleByDate] = useState({});
+  const [weeklyListLoading, setWeeklyListLoading] = useState(false);
   const [isScheduleSheetVisible, setIsScheduleSheetVisible] = useState(false);
+
+  const thisWeekDateKeys = useMemo(
+    () => getCurrentWeekDateKeys(todayString),
+    [todayString]
+  );
+
+  const thisWeekDates = useMemo(
+    () =>
+      thisWeekDateKeys.map(
+        (dateKey) => new Date(`${dateKey}T00:00:00`)
+      ),
+    [thisWeekDateKeys]
+  );
+
+  const weekMonthKeys = useMemo(
+    () => getCalendarMonthKeysForDates(thisWeekDateKeys),
+    [thisWeekDateKeys]
+  );
+
+  const combinedScheduleByDate = useMemo(
+    () => ({
+      ...weekScheduleByDate,
+      ...(calendarData?.scheduleByDate || {}),
+    }),
+    [weekScheduleByDate, calendarData]
+  );
 
   const isYudanjaMember = useMemo(() => {
     if (
@@ -55,22 +85,73 @@ export function useScheduleScreen({
       return true;
     }
 
-    return Object.values(calendarData?.scheduleByDate || {}).some((items) => {
+    return Object.values(combinedScheduleByDate).some((items) => {
       return Array.isArray(items) && items.some(isYudanjaSchedule);
     });
-  }, [authUser?.canAccessYudanjaClass, calendarData]);
+  }, [
+    authUser?.canAccessYudanjaClass,
+    calendarData?.member?.canAccessYudanjaClass,
+    calendarData?.canAccessYudanjaClass,
+    combinedScheduleByDate,
+  ]);
 
   const refreshScreenData = useCallback(async () => {
-  if (!token) return;
+    if (!token) return;
 
-  const calendarRes = await getMemberCalendar(
-    token,
-    currentYear,
-    currentMonth
+    const calendarRes = await getMemberCalendar(
+      token,
+      currentYear,
+      currentMonth
+    );
+
+    setCalendarData(calendarRes);
+  }, [token, currentYear, currentMonth]);
+
+  const loadWeeklyAttendanceData = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!token || isPausedMember) {
+        setWeeklyListLoading(false);
+        return;
+      }
+
+      try {
+        if (!silent) {
+          setWeeklyListLoading(true);
+        }
+
+        const responses = await Promise.all(
+          weekMonthKeys.map((monthKey) => {
+            const [yearText, monthText] = monthKey.split("-");
+
+            return getMemberCalendar(
+              token,
+              Number(yearText),
+              Number(monthText)
+            );
+          })
+        );
+
+        const mergedScheduleByDate = responses.reduce(
+          (result, response) => ({
+            ...result,
+            ...(response?.scheduleByDate || {}),
+          }),
+          {}
+        );
+
+        setWeekScheduleByDate(mergedScheduleByDate);
+      } catch (error) {
+        Alert.alert(
+          "오류",
+          error?.message ||
+            "이번 주 참여 수업을 불러오지 못했습니다."
+        );
+      } finally {
+        setWeeklyListLoading(false);
+      }
+    },
+    [token, isPausedMember, weekMonthKeys]
   );
-
-  setCalendarData(calendarRes);
-}, [token, currentYear, currentMonth]);
 
   const loadAll = useCallback(
     async ({ silent = false } = {}) => {
@@ -138,26 +219,95 @@ export function useScheduleScreen({
     loadAll({ silent: true });
   }, [currentYear, currentMonth, loadAll]);
   useEffect(() => {
+    if (
+      scheduleViewMode !== "list" ||
+      !token ||
+      isPausedMember
+    ) {
+      return;
+    }
+
+    loadWeeklyAttendanceData();
+  }, [
+    scheduleViewMode,
+    token,
+    isPausedMember,
+    loadWeeklyAttendanceData,
+  ]);
+
+  useEffect(() => {
     if (!token || isPausedMember) return undefined;
 
     return subscribeAttendanceDataChanged(() => {
-      refreshScreenData().catch((error) => {
-        console.log("SCHEDULE attendance refresh 실패:", error);
+      const refreshTasks = [refreshScreenData()];
+
+      if (scheduleViewMode === "list") {
+        refreshTasks.push(
+          loadWeeklyAttendanceData({ silent: true })
+        );
+      }
+
+      Promise.all(refreshTasks).catch((error) => {
+        console.log(
+          "SCHEDULE attendance refresh 실패:",
+          error
+        );
       });
     });
-  }, [token, isPausedMember, refreshScreenData]);
+  }, [
+    token,
+    isPausedMember,
+    refreshScreenData,
+    scheduleViewMode,
+    loadWeeklyAttendanceData,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!hasMountedRef.current || !token || isPausedMember) return;
+      if (!hasMountedRef.current || !token || isPausedMember) {
+        return;
+      }
 
-      loadAll({ silent: true });
-    }, [loadAll, token, isPausedMember])
+      const refreshTasks = [loadAll({ silent: true })];
+
+      if (scheduleViewMode === "list") {
+        refreshTasks.push(
+          loadWeeklyAttendanceData({ silent: true })
+        );
+      }
+
+      Promise.all(refreshTasks).catch((error) => {
+        console.log(
+          "SCHEDULE focus refresh 실패:",
+          error
+        );
+      });
+    }, [
+      loadAll,
+      token,
+      isPausedMember,
+      scheduleViewMode,
+      loadWeeklyAttendanceData,
+    ])
   );
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadAll({ silent: true });
-  }, [loadAll]);
+
+    const refreshTasks = [loadAll({ silent: true })];
+
+    if (scheduleViewMode === "list") {
+      refreshTasks.push(
+        loadWeeklyAttendanceData({ silent: true })
+      );
+    }
+
+    await Promise.all(refreshTasks);
+  }, [
+    loadAll,
+    scheduleViewMode,
+    loadWeeklyAttendanceData,
+  ]);
 
   const moveMonth = useCallback(
     (diff) => {
@@ -182,7 +332,7 @@ export function useScheduleScreen({
 
   const calendarMap = useMemo(() => {
     const days = calendarData?.days ?? [];
-    const scheduleByDate = calendarData?.scheduleByDate || {};
+    const scheduleByDate = combinedScheduleByDate;
     const map = {};
 
     for (const day of days) {
@@ -208,13 +358,13 @@ export function useScheduleScreen({
     }
 
     return map;
-  }, [calendarData]);
+  }, [calendarData?.days, combinedScheduleByDate]);
 
   const selectedDateDiff = getDateDiffInDays(todayString, selectedDate);
   const selectedDayInfo = calendarMap[selectedDate] || null;
 
   const selectedSchedules = useMemo(() => {
-    const schedules = calendarData?.scheduleByDate?.[selectedDate] || [];
+    const schedules = combinedScheduleByDate[selectedDate] || [];
 
     if (selectedDateDiff === null) return [];
 
@@ -242,7 +392,7 @@ export function useScheduleScreen({
       })
     );
   }, [
-    calendarData,
+    combinedScheduleByDate,
     selectedDate,
     selectedDateDiff,
     selectedDayInfo,
@@ -258,7 +408,7 @@ export function useScheduleScreen({
     selectedMySchedules.length > 0;
 
   const canOpenSelectedScheduleSheet = useMemo(() => {
-    const schedules = calendarData?.scheduleByDate?.[selectedDate] || [];
+    const schedules = combinedScheduleByDate[selectedDate] || [];
 
     return shouldOpenScheduleBottomSheet({
       dateDiff: selectedDateDiff,
@@ -267,7 +417,7 @@ export function useScheduleScreen({
       isYudanjaMember,
     });
   }, [
-    calendarData,
+    combinedScheduleByDate,
     selectedDate,
     selectedDateDiff,
     selectedDayInfo,
@@ -300,20 +450,6 @@ export function useScheduleScreen({
   );
 
   const weekDayNames = ["일", "월", "화", "수", "목", "금", "토"];
-
-  const thisWeekDates = useMemo(() => {
-    const base = new Date(todayString + "T00:00:00");
-    const day = base.getDay();
-
-    const monday = new Date(base);
-    monday.setDate(base.getDate() - (day === 0 ? 6 : day - 1));
-
-    return Array.from({ length: 6 }).map((_, index) => {
-      const date = new Date(monday);
-      date.setDate(monday.getDate() + index);
-      return date;
-    });
-  }, [todayString]);
 
   function parseKoreanStartTimeToDate(dateString, startTimeText) {
     if (!dateString || !startTimeText) return null;
@@ -381,7 +517,7 @@ export function useScheduleScreen({
       const nextDateDiff = getDateDiffInDays(todayString, nextDate);
       const dayInfo = calendarMap[nextDate] || null;
       const schedules =
-        calendarData?.scheduleByDate?.[nextDate] || [];
+        combinedScheduleByDate[nextDate] || [];
 
       const shouldOpenSheet = shouldOpenScheduleBottomSheet({
         dateDiff: nextDateDiff,
@@ -399,7 +535,7 @@ export function useScheduleScreen({
       getDateDiffInDays,
       todayString,
       calendarMap,
-      calendarData,
+      combinedScheduleByDate,
       isYudanjaMember,
     ]
   );
@@ -414,13 +550,10 @@ export function useScheduleScreen({
     setIsScheduleSheetVisible(true);
   }, [canOpenSelectedScheduleSheet]);
 
-  const updateScheduleItemLocally = useCallback((date, sessionId, updater) => {
-    setCalendarData((prev) => {
-      if (!prev?.scheduleByDate?.[date]) return prev;
-
-      const nextScheduleByDate = {
-        ...prev.scheduleByDate,
-        [date]: prev.scheduleByDate[date].map((item) => {
+  const updateScheduleItemLocally = useCallback(
+    (date, sessionId, updater) => {
+      const updateItems = (items = []) =>
+        items.map((item) => {
           const itemSessionId = item?.sessionId || item?.id;
 
           if (String(itemSessionId) !== String(sessionId)) {
@@ -428,42 +561,62 @@ export function useScheduleScreen({
           }
 
           return updater(item);
-        }),
-      };
+        });
 
-      const nextDays = (prev.days || []).map((day) => {
-        if (day.date !== date) return day;
-
-        const daySchedules = nextScheduleByDate[date] || [];
-        const hasYudanjaReserved = daySchedules.some(
-          (item) =>
-            isYudanjaSchedule(item) && item?.attendanceStatus === "reserved"
-        );
-        const hasPresent = daySchedules.some(
-          (item) => item?.attendanceStatus === "present"
-        );
-        const hasException = daySchedules.some(
-          (item) => item?.recurringMeta?.hasRecurringException === true
-        );
+      setWeekScheduleByDate((prev) => {
+        if (!prev?.[date]) return prev;
 
         return {
-          ...day,
-          attendanceStatus: hasPresent
-            ? "present"
-            : hasYudanjaReserved
-            ? "reserved"
-            : null,
-          hasRecurringException: hasException,
+          ...prev,
+          [date]: updateItems(prev[date]),
         };
       });
 
-      return {
-        ...prev,
-        scheduleByDate: nextScheduleByDate,
-        days: nextDays,
-      };
-    });
-  }, []);
+      setCalendarData((prev) => {
+        if (!prev?.scheduleByDate?.[date]) return prev;
+
+        const nextScheduleByDate = {
+          ...prev.scheduleByDate,
+          [date]: updateItems(prev.scheduleByDate[date]),
+        };
+
+        const nextDays = (prev.days || []).map((day) => {
+          if (day.date !== date) return day;
+
+          const daySchedules = nextScheduleByDate[date] || [];
+          const hasYudanjaReserved = daySchedules.some(
+            (item) =>
+              isYudanjaSchedule(item) &&
+              item?.attendanceStatus === "reserved"
+          );
+          const hasPresent = daySchedules.some(
+            (item) => item?.attendanceStatus === "present"
+          );
+          const hasException = daySchedules.some(
+            (item) =>
+              item?.recurringMeta?.hasRecurringException === true
+          );
+
+          return {
+            ...day,
+            attendanceStatus: hasPresent
+              ? "present"
+              : hasYudanjaReserved
+              ? "reserved"
+              : null,
+            hasRecurringException: hasException,
+          };
+        });
+
+        return {
+          ...prev,
+          scheduleByDate: nextScheduleByDate,
+          days: nextDays,
+        };
+      });
+    },
+    []
+  );
 
   const handleAttendance = useCallback(
     async (item) => {
@@ -786,6 +939,8 @@ export function useScheduleScreen({
     submittingAttendance,
 
     calendarData,
+    weekScheduleByDate,
+    weeklyListLoading,
     calendarMap,
     selectedDayInfo,
     selectedSchedules,

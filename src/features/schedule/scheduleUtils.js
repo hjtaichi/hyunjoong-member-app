@@ -1,4 +1,4 @@
-export function pad(n) {
+﻿export function pad(n) {
   return String(n).padStart(2, "0");
 }
 
@@ -18,6 +18,92 @@ export function getDateDiffInDays(fromDateString, toDateStringValue) {
 
   const diffMs = to.getTime() - from.getTime();
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+
+export function getCurrentWeekDateKeys(dateString) {
+  const base = new Date(`${dateString}T00:00:00Z`);
+
+  if (Number.isNaN(base.getTime())) {
+    return [];
+  }
+
+  const weekday = base.getUTCDay();
+  const daysFromMonday = (weekday + 6) % 7;
+  const monday = new Date(base);
+
+  monday.setUTCDate(base.getUTCDate() - daysFromMonday);
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(monday);
+    date.setUTCDate(monday.getUTCDate() + index);
+    return date.toISOString().slice(0, 10);
+  });
+}
+
+export function getCalendarMonthKeysForDates(dateKeys = []) {
+  return Array.from(
+    new Set(
+      (Array.isArray(dateKeys) ? dateKeys : [])
+        .filter((dateKey) => /^\d{4}-\d{2}-\d{2}$/.test(String(dateKey)))
+        .map((dateKey) => String(dateKey).slice(0, 7))
+    )
+  );
+}
+
+export function isExcludedScheduleAttendance(item) {
+  const excludedFlag =
+    item?.isAdminAdjustment === true ||
+    item?.isAdminAdjusted === true ||
+    item?.isAttendanceAdjustment === true ||
+    item?.isSecretAttendance === true ||
+    item?.isHiddenAttendance === true ||
+    item?.attendance?.isAdminAdjustment === true ||
+    item?.attendance?.isSecretAttendance === true;
+
+  if (excludedFlag) {
+    return true;
+  }
+
+  const sourceText = [
+    item?.attendanceSource,
+    item?.attendance?.source,
+    item?.attendanceType,
+    item?.recordSource,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return [
+    "admin_adjustment",
+    "admin-adjustment",
+    "secret_attendance",
+    "secret-attendance",
+    "attendance_adjustment",
+    "attendance-adjustment",
+    "보정출석",
+    "비밀출석",
+  ].some((keyword) => sourceText.includes(keyword));
+}
+
+export function shouldShowWeeklyAttendedSchedule(
+  item,
+  { isYudanjaMember = false } = {}
+) {
+  if (item?.attendanceStatus !== "present") {
+    return false;
+  }
+
+  if (isExcludedScheduleAttendance(item)) {
+    return false;
+  }
+
+  if (isYudanjaSchedule(item) && !isYudanjaMember) {
+    return false;
+  }
+
+  return true;
 }
 
 export function getMonthMatrix(year, month) {

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   ActivityIndicator,
   Image,
@@ -15,6 +15,7 @@ import {
   getSessionDisplayLabel,
   getScheduleUiMeta,
   getScheduleCardStyle,
+  shouldShowWeeklyAttendedSchedule,
 } from "../../src/features/schedule/scheduleUtils";
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
@@ -34,7 +35,6 @@ export default function ScheduleScreen() {
     currentYear,
     currentMonth,
     selectedDate,
-    setSelectedDate,
     scheduleViewMode,
     setScheduleViewMode,
 
@@ -43,6 +43,8 @@ export default function ScheduleScreen() {
     submittingAttendance,
 
     calendarData,
+    weekScheduleByDate,
+    weeklyListLoading,
     calendarMap,
     selectedDayInfo,
     selectedSchedules,
@@ -53,7 +55,6 @@ export default function ScheduleScreen() {
     yudanjaRecurringEnabled,
 
     isScheduleSheetVisible,
-    setIsScheduleSheetVisible,
     closeScheduleSheet,
     openScheduleSheet,
 
@@ -193,14 +194,18 @@ export default function ScheduleScreen() {
   <WeekListView
   styles={styles}
   thisWeekDates={thisWeekDates}
-  calendarData={calendarData}
+  weekScheduleByDate={weekScheduleByDate}
+  weeklyListLoading={weeklyListLoading}
   todayString={todayString}
   weekDayNames={weekDayNames}
   toDateString={toDateString}
   getScheduleUiMeta={getScheduleUiMeta}
   getSessionDisplayLabel={getSessionDisplayLabel}
-  setSelectedDate={setSelectedDate}
-  setIsScheduleSheetVisible={setIsScheduleSheetVisible}
+  shouldShowWeeklyAttendedSchedule={
+    shouldShowWeeklyAttendedSchedule
+  }
+  isYudanjaMember={isYudanjaMember}
+  handlePressDate={handlePressDate}
 />
 )}
       </ScrollView>

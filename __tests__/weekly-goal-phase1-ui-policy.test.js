@@ -1,4 +1,4 @@
-const fs = require("node:fs");
+﻿const fs = require("node:fs");
 const path = require("node:path");
 const {
   getScheduleUiMeta,
@@ -102,7 +102,7 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
     });
   });
 
-  test("일정 리스트는 일반 수업을 포함하고 빈 예약 배지는 렌더링하지 않는다", () => {
+  test("일정 리스트는 이번 주 실제 참여 수업만 표시한다", () => {
     const weekList = read("src/features/schedule/components/WeekListView.jsx");
     const summary = read(
       "src/features/schedule/components/SelectedScheduleSummary.jsx"
@@ -111,7 +111,10 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
       "src/features/schedule/components/ScheduleBottomSheet.jsx"
     );
 
-    expect(weekList).toContain("const visibleSchedules = schedules;");
+    expect(weekList).toContain("이번 주 참여 수업");
+    expect(weekList).toContain("shouldShowWeeklyAttendedSchedule");
+    expect(weekList).toContain("이번 주 참여한 수업이 없습니다.");
+    expect(weekList).not.toContain("일정이 없습니다.");
     expect(weekList).toContain("{uiMeta.label ? (");
     expect(summary).toContain("{uiMeta.label ? (");
     expect(summary).toContain("if (!shouldShow)");
