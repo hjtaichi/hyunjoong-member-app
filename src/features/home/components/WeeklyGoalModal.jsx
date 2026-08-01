@@ -9,6 +9,9 @@ import {
 } from "react-native";
 
 import { styles } from "../homeStyles";
+import {
+  getMinimumSelectableWeeklyGoal,
+} from "../weeklyGoalUtils";
 
 const GOAL_OPTIONS = [1, 2, 3, 4, 5];
 
@@ -104,17 +107,14 @@ export default function WeeklyGoalModal({
     draftRecurringGoal !== savedRecurringGoal;
   const hasChanges = currentChanged || recurringChanged;
 
-  const minimumSelectableGoal = useMemo(() => {
-    if (attendanceCount <= 0) {
-      return 1;
-    }
-
-    if (savedCurrentGoal) {
-      return savedCurrentGoal;
-    }
-
-    return attendanceCount + 1;
-  }, [attendanceCount, savedCurrentGoal]);
+  const minimumSelectableGoal = useMemo(
+    () =>
+      getMinimumSelectableWeeklyGoal(
+        attendanceCount,
+        savedCurrentGoal,
+      ),
+    [attendanceCount, savedCurrentGoal],
+  );
 
   const requestClose = () => {
     if (saving) {

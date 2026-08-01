@@ -175,18 +175,24 @@ export function shouldShowSelectedSchedule(
 
   const isPresent = item?.attendanceStatus === "present";
   const isSpecial = isSpecialScheduleNotice(item);
-  const isYudanja =
-    isYudanjaMember && isYudanjaSchedule(item);
+  const isYudanjaItem =
+    isYudanjaSchedule(item);
+  const isVisibleYudanja =
+    isYudanjaMember && isYudanjaItem;
 
   if (dateDiff < 0) {
     return isPresent || isSpecial;
   }
 
   if (dateDiff === 0) {
-    return isPresent || isSpecial || isYudanja;
+    if (isYudanjaItem) {
+      return isVisibleYudanja;
+    }
+
+    return true;
   }
 
-  return isSpecial || isYudanja;
+  return isSpecial || isVisibleYudanja;
 }
 
 export function shouldOpenScheduleBottomSheet({

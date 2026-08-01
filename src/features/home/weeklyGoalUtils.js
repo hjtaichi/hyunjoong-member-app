@@ -16,6 +16,38 @@ function clampGoal(value) {
   return number;
 }
 
+export function getMinimumSelectableWeeklyGoal(
+  attendanceCount,
+  currentGoal,
+) {
+  const normalizedCurrentGoal =
+    clampGoal(currentGoal);
+
+  if (normalizedCurrentGoal) {
+    return normalizedCurrentGoal;
+  }
+
+  const normalizedAttendanceCount =
+    Math.max(
+      0,
+      Math.trunc(
+        Number(attendanceCount || 0),
+      ),
+    );
+
+  if (normalizedAttendanceCount <= 0) {
+    return MIN_GOAL;
+  }
+
+  return Math.min(
+    MAX_GOAL,
+    Math.max(
+      MIN_GOAL,
+      normalizedAttendanceCount,
+    ),
+  );
+}
+
 function toUtcDate(dateKey) {
   const date = new Date(`${dateKey}T00:00:00Z`);
 
@@ -444,9 +476,18 @@ export function applyCurrentWeekGoal(
       );
     }
 
-    if (!currentGoal && goal <= attendanceCount) {
+    const minimumSelectableGoal =
+      getMinimumSelectableWeeklyGoal(
+        attendanceCount,
+        null,
+      );
+
+    if (
+      !currentGoal &&
+      goal < minimumSelectableGoal
+    ) {
       throw new Error(
-        "이미 출석한 횟수보다 높은 목표를 선택해주세요.",
+        "현재 선택 가능한 목표보다 낮게 설정할 수 없습니다.",
       );
     }
   }
@@ -489,10 +530,19 @@ export function applyRecurringGoal(
   const current = getCurrentRecord(state, weekKey);
   const currentGoal = clampGoal(current.goal);
 
+  const minimumSelectableGoal =
+    getMinimumSelectableWeeklyGoal(
+      attendanceCount,
+      currentGoal,
+    );
+
   const canApplyThisWeek =
     attendanceCount === 0 ||
     (currentGoal && goal >= currentGoal) ||
-    (!currentGoal && goal > attendanceCount);
+    (
+      !currentGoal &&
+      goal >= minimumSelectableGoal
+    );
 
   if (!canApplyThisWeek) {
     state.pendingRecurringGoal = goal;

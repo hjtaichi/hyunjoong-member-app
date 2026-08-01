@@ -4,6 +4,7 @@ const {
   applyRestWeek,
   countWeeklyGeneralAttendance,
   getKoreaWeekRange,
+  getMinimumSelectableWeeklyGoal,
   normalizeWeeklyGoalState,
   resolveCurrentWeeklyGoalState,
 } = require("../src/features/home/weeklyGoalUtils");
@@ -125,6 +126,52 @@ describe("일반수련 주간 목표 계산", () => {
     expect(count).toBe(3);
   });
 
+  test("목표 미설정 상태에서는 현재 출석 횟수 이상을 선택할 수 있다", () => {
+    expect(
+      getMinimumSelectableWeeklyGoal(0, null),
+    ).toBe(1);
+    expect(
+      getMinimumSelectableWeeklyGoal(2, null),
+    ).toBe(2);
+    expect(
+      getMinimumSelectableWeeklyGoal(6, null),
+    ).toBe(5);
+    expect(
+      getMinimumSelectableWeeklyGoal(5, 3),
+    ).toBe(3);
+
+    const sameAsAttendance =
+      applyCurrentWeekGoal(
+        normalizeWeeklyGoalState(null),
+        {
+          weekKey: WEEK_KEY,
+          attendanceCount: 2,
+          goal: 2,
+        },
+      );
+
+    expect(sameAsAttendance.record).toMatchObject({
+      goal: 2,
+      attendanceCount: 2,
+    });
+    expect(sameAsAttendance.record.completedAt).toBeTruthy();
+
+    const cappedAtFive =
+      applyCurrentWeekGoal(
+        normalizeWeeklyGoalState(null),
+        {
+          weekKey: WEEK_KEY,
+          attendanceCount: 6,
+          goal: 5,
+        },
+      );
+
+    expect(cappedAtFive.record).toMatchObject({
+      goal: 5,
+      attendanceCount: 6,
+    });
+  });
+
   test("매주 반복 목표는 이번 주와 이후 주에 적용된다", () => {
     const result = applyRecurringGoal(
       normalizeWeeklyGoalState(null),
@@ -144,6 +191,24 @@ describe("일반수련 주간 목표 계산", () => {
       isRestWeek: false,
     });
     expect(result.appliesFromNextWeek).toBe(false);
+  });
+
+  test("목표 미설정 상태에서 반복 목표가 현재 출석과 같으면 이번 주부터 적용한다", () => {
+    const result = applyRecurringGoal(
+      normalizeWeeklyGoalState(null),
+      {
+        weekKey: WEEK_KEY,
+        nextWeekKey: NEXT_WEEK_KEY,
+        attendanceCount: 5,
+        goal: 5,
+      },
+    );
+
+    expect(result.appliesFromNextWeek).toBe(false);
+    expect(result.record).toMatchObject({
+      goal: 5,
+      attendanceCount: 5,
+    });
   });
 
   test("출석을 시작한 뒤 이번 주 목표를 낮추거나 유지할 수 없다", () => {

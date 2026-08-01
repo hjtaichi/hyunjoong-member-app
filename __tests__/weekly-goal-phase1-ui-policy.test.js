@@ -121,7 +121,7 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
     expect(bottomSheet).toContain("{finalUiMeta.label ? (");
   });
 
-  test("달력 아래 일정은 출석 기록·특별 일정·유단자 예약만 표시한다", () => {
+  test("달력 아래 일정은 오늘 일반수업과 출석 기록·특별 일정·유단자 예약을 표시한다", () => {
     const generalClass = { title: "오후 7시 태극권반" };
     const attendedClass = {
       title: "오후 7시 태극권반",
@@ -139,6 +139,12 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
     expect(
       shouldShowSelectedSchedule(attendedClass, {
         dateDiff: -1,
+        isYudanjaMember: false,
+      })
+    ).toBe(true);
+    expect(
+      shouldShowSelectedSchedule(generalClass, {
+        dateDiff: 0,
         isYudanjaMember: false,
       })
     ).toBe(true);
@@ -163,6 +169,12 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
     ).toBe(true);
     expect(
       shouldShowSelectedSchedule(yudanja, {
+        dateDiff: 0,
+        isYudanjaMember: false,
+      })
+    ).toBe(false);
+    expect(
+      shouldShowSelectedSchedule(yudanja, {
         dateDiff: 3,
         isYudanjaMember: false,
       })
@@ -170,7 +182,7 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
   });
 
 
-  test("바텀시트는 과거·휴관일에 열리지 않고 공휴일 특별운영 당일에만 열린다", () => {
+  test("바텀시트는 오늘 일반수업에 열리고 과거·휴관일에는 열리지 않는다", () => {
     const attended = {
       title: "오후 7시 태극권반",
       attendanceStatus: "present",
@@ -185,6 +197,14 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
         schedules: [attended],
       })
     ).toBe(false);
+
+    expect(
+      shouldOpenScheduleBottomSheet({
+        dateDiff: 0,
+        dayInfo: {},
+        schedules: [general],
+      })
+    ).toBe(true);
 
     expect(
       shouldOpenScheduleBottomSheet({
@@ -209,6 +229,15 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
         schedules: [general],
       })
     ).toBe(true);
+
+    expect(
+      shouldOpenScheduleBottomSheet({
+        dateDiff: 0,
+        dayInfo: {},
+        schedules: [yudanja],
+        isYudanjaMember: false,
+      })
+    ).toBe(false);
 
     expect(
       shouldOpenScheduleBottomSheet({
