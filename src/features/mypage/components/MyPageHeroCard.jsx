@@ -6,6 +6,21 @@ import { getAvatarSource } from "../mypageUtils";
 import BadgeInfoModal from "../../home/components/BadgeInfoModal";
 import { getMemberBadgeImageSource } from "../../home/memberBadges";
 
+function formatRegistrationDate(value) {
+  const normalized = String(value || "").trim();
+  const match = /^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/.exec(
+    normalized,
+  );
+
+  if (!match) {
+    return normalized && normalized !== "-"
+      ? normalized
+      : "확인 필요";
+  }
+
+  return `${Number(match[1])}년 ${Number(match[2])}월 ${Number(match[3])}일`;
+}
+
 function MyPageHeroCard({
   styles,
   isYudanja,
@@ -21,9 +36,7 @@ function MyPageHeroCard({
   profileImageVersion,
   payment,
   paymentDueText,
-  paymentDaysLeftText,
   onOpenAvatar,
-  onOpenPayment,
 }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const visibleBadges = useMemo(
@@ -151,28 +164,31 @@ function MyPageHeroCard({
       
         <View style={styles.heroPaymentRow}>
         <View style={styles.heroPaymentInfo}>
-          <Text style={styles.heroSmallLabel}>회비 상태</Text>
-      
-          <View style={styles.heroPaymentBadge}>
-            <Text style={styles.heroPaymentBadgeText}>
-              {payment?.statusLabel || payment?.status || "확인 필요"}
+          <View style={myPagePaymentStyles.titleRow}>
+            <Text
+              style={[
+                styles.heroSmallLabel,
+                myPagePaymentStyles.titleLabel,
+              ]}
+            >
+              회비 상태
             </Text>
+
+            <View style={styles.heroPaymentBadge}>
+              <Text style={styles.heroPaymentBadgeText}>
+                {payment?.statusLabel || payment?.status || "확인 필요"}
+              </Text>
+            </View>
           </View>
-      
+
           <Text style={styles.heroPaymentDueText}>
-            {payment?.isCovered &&
-            (payment?.coverageEndDateLabel || payment?.coverageEndMonthLabel)
-              ? `${payment.coverageEndDateLabel || payment.coverageEndMonthLabel}까지 납부 완료`
-              : `다음 납부일 ${paymentDueText} · ${paymentDaysLeftText}`}
+            {payment?.isCovered
+              ? "재등록되었습니다."
+              : "재등록 상태를 확인해주세요."}
+            {"\n"}
+            다음 등록일은 {formatRegistrationDate(paymentDueText)}입니다.
           </Text>
         </View>
-      
-        <Pressable
-          style={styles.heroPayButton}
-          onPress={onOpenPayment}
-        >
-          <Text style={styles.heroPayButtonText}>납부 안내</Text>
-        </Pressable>
       </View>
       <BadgeInfoModal
         badge={selectedBadge}
@@ -181,6 +197,19 @@ function MyPageHeroCard({
     </View>
   );
 }
+
+const myPagePaymentStyles = StyleSheet.create({
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    columnGap: 10,
+    rowGap: 6,
+  },
+  titleLabel: {
+    marginBottom: 0,
+  },
+});
 
 const myPageBadgeStyles = StyleSheet.create({
   badgeRow: {

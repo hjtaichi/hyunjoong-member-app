@@ -9,17 +9,19 @@ function read(relativePath) {
 }
 
 describe("member fee and cumulative attendance display policy v1.1", () => {
-  test("a covered member quietly sees the exact paid-through date", () => {
+  test("the fee card shows registration status without a payment-guide button", () => {
     const hero = read(
       "src/features/mypage/components/MyPageHeroCard.jsx",
     );
-    const myPage = read("app/(tabs)/mypage.jsx");
 
-    expect(hero).toContain("coverageEndDateLabel");
-    expect(hero).toContain("까지 납부 완료");
-    expect(hero).toContain("납부 안내");
-    expect(myPage).toContain("coverageEndDateLabel");
-    expect(myPage).toContain("다음 회비 납부");
+    expect(hero).toContain("회비 상태");
+    expect(hero).toContain("재등록되었습니다.");
+    expect(hero).toContain("다음 등록일은");
+    expect(hero).toContain("formatRegistrationDate");
+    expect(hero).toContain("myPagePaymentStyles.titleRow");
+    expect(hero).not.toContain("까지 납부 완료");
+    expect(hero).not.toContain("납부 안내");
+    expect(hero).not.toContain("heroPayButton");
   });
 
   test("member cumulative attendance uses the backend display total", () => {
