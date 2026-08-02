@@ -201,9 +201,8 @@ export default function WeeklyGoalModal({
     () =>
       getMinimumSelectableWeeklyGoal(
         attendanceCount,
-        savedCurrentGoal,
       ),
-    [attendanceCount, savedCurrentGoal],
+    [attendanceCount],
   );
 
   useEffect(() => {

@@ -18,10 +18,7 @@ function clampGoal(value) {
 
 export function getMinimumSelectableWeeklyGoal(
   attendanceCount,
-  currentGoal,
 ) {
-  const normalizedCurrentGoal =
-    clampGoal(currentGoal) || 0;
   const normalizedAttendanceCount =
     Math.max(
       0,
@@ -34,7 +31,6 @@ export function getMinimumSelectableWeeklyGoal(
     MAX_GOAL,
     Math.max(
       MIN_GOAL,
-      normalizedCurrentGoal,
       normalizedAttendanceCount,
     ),
   );
@@ -95,6 +91,28 @@ export function getKoreaWeekRange(date = new Date()) {
     endDate,
     nextWeekKey,
   };
+}
+
+export function getPreviousKoreaWeekRange(
+  date = new Date(),
+) {
+  const currentWeek = getKoreaWeekRange(date);
+
+  if (!currentWeek.weekKey) {
+    return {
+      weekKey: null,
+      startDate: null,
+      endDate: null,
+      nextWeekKey: null,
+    };
+  }
+
+  return getKoreaWeekRange(
+    addDateKeyDays(
+      currentWeek.weekKey,
+      -7,
+    ),
+  );
 }
 
 export function getWeekMonthKeys(startDate, endDate) {
@@ -424,6 +442,69 @@ export function resolveCurrentWeeklyGoalState(
   };
 }
 
+export function resolvePreviousWeekGoalAchievement(
+  rawState,
+  {
+    weekRange,
+    attendanceCount,
+    nowIso = new Date().toISOString(),
+  },
+) {
+  const state = normalizeWeeklyGoalState(rawState);
+  const weekKey = weekRange?.weekKey || null;
+  const existingRecord = weekKey
+    ? state.weeks[weekKey]
+    : null;
+
+  if (!weekKey || !existingRecord) {
+    return {
+      state,
+      record: null,
+      achievement: null,
+    };
+  }
+
+  const record = reconcileCompletion(
+    existingRecord,
+    attendanceCount,
+    nowIso,
+  );
+
+  state.weeks = pruneWeeks({
+    ...state.weeks,
+    [weekKey]: record,
+  });
+
+  const goal = clampGoal(record.goal);
+  const achieved =
+    record.isRestWeek !== true &&
+    goal != null &&
+    record.attendanceCount >= goal;
+
+  return {
+    state,
+    record,
+    achievement: {
+      weekKey,
+      startDate:
+        weekRange.startDate || weekKey,
+      endDate:
+        weekRange.endDate || null,
+      goal,
+      attendanceCount:
+        record.attendanceCount,
+      isRestWeek:
+        record.isRestWeek === true,
+      achieved,
+      exceeded:
+        achieved &&
+        record.attendanceCount > goal,
+      completedAt:
+        record.completedAt || null,
+    },
+  };
+}
+
 function requireGoal(value) {
   const goal = clampGoal(value);
 
@@ -459,29 +540,15 @@ export function applyCurrentWeekGoal(
   const goal = requireGoal(goalValue);
   const state = normalizeWeeklyGoalState(rawState);
   const current = getCurrentRecord(state, weekKey);
-  const currentGoal = clampGoal(current.goal);
+  const minimumSelectableGoal =
+    getMinimumSelectableWeeklyGoal(
+      attendanceCount,
+    );
 
-  if (attendanceCount > 0) {
-    if (currentGoal && goal <= currentGoal) {
-      throw new Error(
-        "출석을 시작한 뒤에는 이번 주 목표를 높이는 것만 가능합니다.",
-      );
-    }
-
-    const minimumSelectableGoal =
-      getMinimumSelectableWeeklyGoal(
-        attendanceCount,
-        null,
-      );
-
-    if (
-      !currentGoal &&
-      goal < minimumSelectableGoal
-    ) {
-      throw new Error(
-        "현재 선택 가능한 목표보다 낮게 설정할 수 없습니다.",
-      );
-    }
+  if (goal < minimumSelectableGoal) {
+    throw new Error(
+      "이번 주 실제 일반수련 출석 횟수보다 낮게 설정할 수 없습니다.",
+    );
   }
 
   const nextRecord = reconcileCompletion(

@@ -172,6 +172,69 @@ useEffect(() => {
   weeklyGoal.clearAutoResumeMessage();
 }, [weeklyGoal.autoResumeMessage]);
 
+useEffect(() => {
+  const achievement =
+    weeklyGoal.previousWeekAchievementPopup;
+
+  if (!achievement) return;
+
+  const resultText =
+    achievement.exceeded === true
+      ? `목표 ${achievement.goal}회를 넘어서 ${achievement.attendanceCount}회 출석했어요.`
+      : `일반수련 ${achievement.attendanceCount}회로 목표 ${achievement.goal}회를 달성했어요.`;
+
+  Alert.alert(
+    "지난주 목표 달성!",
+    `${resultText}\n이번 주도 힘차게 수련해봐요!`,
+    [
+      {
+        text: "이번 주도 화이팅",
+        onPress:
+          weeklyGoal.clearPreviousWeekAchievementPopup,
+      },
+    ],
+    {
+      cancelable: false,
+    },
+  );
+}, [
+  weeklyGoal.previousWeekAchievementPopup,
+  weeklyGoal.clearPreviousWeekAchievementPopup,
+]);
+
+const homeMemberBadges = useMemo(() => {
+  const badges = Array.isArray(
+    homeData?.member?.badges,
+  )
+    ? [...homeData.member.badges]
+    : [];
+  const achievement =
+    weeklyGoal.previousWeekAchievement;
+
+  if (
+    achievement?.achieved === true &&
+    !badges.some(
+      (badge) =>
+        badge?.code ===
+        "PREVIOUS_WEEK_GOAL_ACHIEVED",
+    )
+  ) {
+    badges.push({
+      code: "PREVIOUS_WEEK_GOAL_ACHIEVED",
+      title: "지난주 목표달성",
+      description:
+        `지난주 일반수련 목표 ${achievement.goal}회를 ` +
+        `${achievement.attendanceCount}회 출석으로 달성해 ` +
+        "이번 주 동안 표시되는 뱃지입니다.",
+    });
+  }
+
+  return badges;
+}, [
+  homeData?.member?.badges,
+  weeklyGoal.previousWeekAchievement,
+]);
+
 const joinDayCount = getJoinDayCountFromHome(homeData);
 
 const attendanceCount =
@@ -497,7 +560,7 @@ const handleNoticeDetail = useCallback(() => {
   profileImageSource={profileImageSource}
   yudanjaEmblemFrame={yudanjaEmblemFrame}
   promotionBadgeText={promotionBadgeText}
-  memberBadges={homeData?.member?.badges || []} // HJTAICHI_HOME_BADGES_PROP_V1
+  memberBadges={homeMemberBadges} // HJTAICHI_HOME_BADGES_PROP_V1
 />
 
 <TodayTrainingCard

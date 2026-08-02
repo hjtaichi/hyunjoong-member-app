@@ -15,7 +15,9 @@ import {
 } from "../../api/memberWeeklyGoal";
 import { subscribeAttendanceDataChanged } from "../../events/attendanceRefreshEvents";
 import {
+  hasSeenPreviousWeekAchievement,
   loadWeeklyGoalState,
+  markPreviousWeekAchievementSeen,
   saveWeeklyGoalState,
 } from "./weeklyGoalStorage";
 import {
@@ -25,9 +27,11 @@ import {
   buildWeeklyGoalSummary,
   countWeeklyGeneralAttendance,
   getKoreaWeekRange,
+  getPreviousKoreaWeekRange,
   getWeekMonthKeys,
   hasConfiguredWeeklyGoalState,
   resolveCurrentWeeklyGoalState,
+  resolvePreviousWeekGoalAchievement,
 } from "./weeklyGoalUtils";
 
 function splitMonthKey(monthKey) {
@@ -52,12 +56,72 @@ export function useWeeklyGoal({
     useState(0);
   const [autoResumeMessage, setAutoResumeMessage] =
     useState(null);
+  const [
+    previousWeekAchievement,
+    setPreviousWeekAchievement,
+  ] = useState(null);
+  const [
+    previousWeekAchievementPopup,
+    setPreviousWeekAchievementPopup,
+  ] = useState(null);
   const loadSequenceRef = useRef(0);
 
-  const weekRange = useMemo(
-    () => getKoreaWeekRange(new Date()),
-    [],
-  );
+  const [weekRange, setWeekRange] =
+    useState(() =>
+      getKoreaWeekRange(new Date()),
+    );
+
+  const applyPreviousWeekAchievement =
+    useCallback(
+      async (
+        achievement,
+        currentWeekKey,
+      ) => {
+        const achieved =
+          achievement?.achieved === true
+            ? achievement
+            : null;
+
+        setPreviousWeekAchievement(
+          achieved,
+        );
+
+        if (
+          !achieved ||
+          !memberKey ||
+          !currentWeekKey
+        ) {
+          return;
+        }
+
+        try {
+          const alreadySeen =
+            await hasSeenPreviousWeekAchievement(
+              memberKey,
+              currentWeekKey,
+            );
+
+          if (alreadySeen) {
+            return;
+          }
+
+          await markPreviousWeekAchievementSeen(
+            memberKey,
+            currentWeekKey,
+          );
+
+          setPreviousWeekAchievementPopup(
+            achieved,
+          );
+        } catch (error) {
+          console.log(
+            "지난주 목표 달성 팝업 상태 저장 실패:",
+            error,
+          );
+        }
+      },
+      [memberKey],
+    );
 
   const applySnapshot = useCallback(
     async (snapshot) => {
@@ -77,6 +141,13 @@ export function useWeeklyGoal({
         ),
       );
 
+      await applyPreviousWeekAchievement(
+        snapshot?.previousWeekAchievement ||
+          null,
+        snapshot?.weekRange?.weekKey ||
+          weekRange.weekKey,
+      );
+
       if (snapshot?.autoResumed) {
         setAutoResumeMessage(
           "일반수련에 출석해 이번 주 목표가 다시 시작됐어요.",
@@ -85,11 +156,19 @@ export function useWeeklyGoal({
 
       return normalizedState;
     },
-    [memberKey],
+    [
+      memberKey,
+      weekRange.weekKey,
+      applyPreviousWeekAchievement,
+    ],
   );
 
   const persistResolvedLocalState = useCallback(
-    async (rawState, nextAttendanceCount) => {
+    async (
+      rawState,
+      nextAttendanceCount,
+      previousAttendanceCount = null,
+    ) => {
       const resolved = resolveCurrentWeeklyGoalState(
         rawState,
         {
@@ -97,14 +176,44 @@ export function useWeeklyGoal({
           attendanceCount: nextAttendanceCount,
         },
       );
+      const previousWeekRange =
+        getPreviousKoreaWeekRange(
+          weekRange.weekKey,
+        );
+      const storedPreviousAttendanceCount =
+        Math.max(
+          0,
+          Number(
+            resolved.state?.weeks?.[
+              previousWeekRange.weekKey
+            ]?.attendanceCount || 0,
+          ),
+        );
+      const previousResolved =
+        resolvePreviousWeekGoalAchievement(
+          resolved.state,
+          {
+            weekRange:
+              previousWeekRange,
+            attendanceCount:
+              previousAttendanceCount == null
+                ? storedPreviousAttendanceCount
+                : previousAttendanceCount,
+          },
+        );
 
       const saved = await saveWeeklyGoalState(
         memberKey,
-        resolved.state,
+        previousResolved.state,
       );
 
       setState(saved);
       setAttendanceCount(nextAttendanceCount);
+
+      await applyPreviousWeekAchievement(
+        previousResolved.achievement,
+        weekRange.weekKey,
+      );
 
       if (resolved.autoResumed) {
         setAutoResumeMessage(
@@ -114,14 +223,30 @@ export function useWeeklyGoal({
 
       return saved;
     },
-    [memberKey, weekRange.weekKey],
+    [
+      memberKey,
+      weekRange.weekKey,
+      applyPreviousWeekAchievement,
+    ],
   );
 
   const loadFallbackFromCalendar = useCallback(
     async (storedState) => {
-      const monthKeys = getWeekMonthKeys(
-        weekRange.startDate,
-        weekRange.endDate,
+      const previousWeekRange =
+        getPreviousKoreaWeekRange(
+          weekRange.weekKey,
+        );
+      const monthKeys = Array.from(
+        new Set([
+          ...getWeekMonthKeys(
+            weekRange.startDate,
+            weekRange.endDate,
+          ),
+          ...getWeekMonthKeys(
+            previousWeekRange.startDate,
+            previousWeekRange.endDate,
+          ),
+        ]),
       );
 
       const calendarResponses = await Promise.all(
@@ -150,10 +275,16 @@ export function useWeeklyGoal({
           scheduleByDate,
           weekRange,
         );
+      const previousAttendanceCount =
+        countWeeklyGeneralAttendance(
+          scheduleByDate,
+          previousWeekRange,
+        );
 
       return persistResolvedLocalState(
         storedState,
         nextAttendanceCount,
+        previousAttendanceCount,
       );
     },
     [
@@ -266,6 +397,24 @@ export function useWeeklyGoal({
   useEffect(() => {
     void load();
   }, [load]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const nextWeekRange =
+        getKoreaWeekRange(new Date());
+
+      if (
+        nextWeekRange.weekKey !==
+        weekRange.weekKey
+      ) {
+        setWeekRange(
+          nextWeekRange,
+        );
+      }
+
+      return undefined;
+    }, [weekRange.weekKey]),
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -448,6 +597,13 @@ export function useWeeklyGoal({
     ],
   );
 
+  const clearPreviousWeekAchievementPopup =
+    useCallback(() => {
+      setPreviousWeekAchievementPopup(
+        null,
+      );
+    }, []);
+
   return {
     loading,
     summary,
@@ -465,6 +621,9 @@ export function useWeeklyGoal({
     autoResumeMessage,
     clearAutoResumeMessage: () =>
       setAutoResumeMessage(null),
+    previousWeekAchievement,
+    previousWeekAchievementPopup,
+    clearPreviousWeekAchievementPopup,
     saveSettings,
     refresh: load,
   };

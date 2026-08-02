@@ -23,14 +23,20 @@ describe("홈 회원 뱃지 계약", () => {
       "BadgeInfoModal.jsx"
     );
 
-    expect(home).toContain("memberBadges={homeData?.member?.badges || []}");
+    expect(home).toContain("memberBadges={homeMemberBadges}");
     expect(header).toContain("HJTAICHI_HOME_MEMBER_BADGES_V1");
     expect(header).toContain("setSelectedBadge(badge)");
     expect(header).not.toContain(">유단자회<");
+    expect(home).toContain(
+      "PREVIOUS_WEEK_GOAL_ACHIEVED"
+    );
+    expect(home).toContain(
+      "지난주 목표달성"
+    );
     expect(modal).toContain('backgroundColor: "rgba(255, 252, 248, 0.95)"');
   });
 
-  test("다섯 개 투명 PNG 자산을 정적 require로 연결한다", () => {
+  test("여섯 개 투명 PNG 자산을 정적 require로 연결한다", () => {
     const assets = readSource("src", "features", "home", "memberBadges.js");
     const names = [
       "badge_yudanja_association.png",
@@ -38,6 +44,7 @@ describe("홈 회원 뱃지 계약", () => {
       "badge_instructor_course.png",
       "badge_sports_instructor_l2.png",
       "badge_previous_month_goal_100.png",
+      "badge_previous_week_goal_achieved.png",
     ];
 
     for (const name of names) {

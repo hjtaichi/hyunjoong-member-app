@@ -44,6 +44,12 @@ describe("weekly goal server sync contract", () => {
     expect(hook).toContain(
       "loadFallbackFromCalendar",
     );
+    expect(hook).toContain(
+      "setWeekRange"
+    );
+    expect(hook).toContain(
+      "nextWeekRange.weekKey"
+    );
   });
 
   test("existing configured local goal is imported only when server has no state", () => {
@@ -58,4 +64,33 @@ describe("weekly goal server sync contract", () => {
       "hasConfiguredWeeklyGoalState",
     );
   });
+  test("지난주 달성 팝업은 회원·주차별 1회만 표시한다", () => {
+    const hook = read(
+      "src/features/home/useWeeklyGoal.js",
+    );
+    const storage = read(
+      "src/features/home/weeklyGoalStorage.js",
+    );
+    const home = read(
+      "app/(tabs)/home.jsx",
+    );
+
+    expect(hook).toContain(
+      "previousWeekAchievementPopup"
+    );
+    expect(hook).toContain(
+      "hasSeenPreviousWeekAchievement"
+    );
+    expect(storage).toContain(
+      "WEEKLY_GOAL_ACHIEVEMENT_SEEN_PREFIX"
+    );
+    expect(home).toContain(
+      "지난주 목표 달성!"
+    );
+    expect(home).toContain(
+      "이번 주도 힘차게 수련해봐요!"
+    );
+  });
+
+
 });

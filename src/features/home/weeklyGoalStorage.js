@@ -5,6 +5,9 @@ import { normalizeWeeklyGoalState } from "./weeklyGoalUtils";
 const WEEKLY_GOAL_STORAGE_PREFIX =
   "hjtaichi:member-weekly-goal:v1:";
 
+const WEEKLY_GOAL_ACHIEVEMENT_SEEN_PREFIX =
+  "hjtaichi:weekly-goal-achievement-seen:v1:";
+
 function getStorageKey(memberKey) {
   const normalized = String(memberKey || "").trim();
 
@@ -42,4 +45,51 @@ export async function saveWeeklyGoalState(
   );
 
   return normalized;
+}
+
+function getAchievementSeenKey(
+  memberKey,
+  currentWeekKey,
+) {
+  const normalizedMemberKey =
+    String(memberKey || "").trim();
+  const normalizedWeekKey =
+    String(currentWeekKey || "").trim();
+
+  if (!normalizedMemberKey || !normalizedWeekKey) {
+    throw new Error(
+      "주간 목표 달성 확인 정보를 만들 수 없습니다.",
+    );
+  }
+
+  return [
+    WEEKLY_GOAL_ACHIEVEMENT_SEEN_PREFIX,
+    normalizedMemberKey,
+    ":",
+    normalizedWeekKey,
+  ].join("");
+}
+
+export async function hasSeenPreviousWeekAchievement(
+  memberKey,
+  currentWeekKey,
+) {
+  const key = getAchievementSeenKey(
+    memberKey,
+    currentWeekKey,
+  );
+
+  return (await AsyncStorage.getItem(key)) === "1";
+}
+
+export async function markPreviousWeekAchievementSeen(
+  memberKey,
+  currentWeekKey,
+) {
+  const key = getAchievementSeenKey(
+    memberKey,
+    currentWeekKey,
+  );
+
+  await AsyncStorage.setItem(key, "1");
 }

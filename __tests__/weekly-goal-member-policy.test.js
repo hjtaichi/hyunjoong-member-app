@@ -4,9 +4,11 @@ const {
   applyRestWeek,
   countWeeklyGeneralAttendance,
   getKoreaWeekRange,
+  getPreviousKoreaWeekRange,
   getMinimumSelectableWeeklyGoal,
   normalizeWeeklyGoalState,
   resolveCurrentWeeklyGoalState,
+  resolvePreviousWeekGoalAchievement,
 } = require("../src/features/home/weeklyGoalUtils");
 
 const WEEK_KEY = "2026-07-27";
@@ -137,8 +139,11 @@ describe("일반수련 주간 목표 계산", () => {
       getMinimumSelectableWeeklyGoal(6, null),
     ).toBe(6);
     expect(
-      getMinimumSelectableWeeklyGoal(5, 3),
-    ).toBe(5);
+      getMinimumSelectableWeeklyGoal(0, 5),
+    ).toBe(1);
+    expect(
+      getMinimumSelectableWeeklyGoal(2, 5),
+    ).toBe(2);
     expect(
       getMinimumSelectableWeeklyGoal(12, 10),
     ).toBe(12);
@@ -224,34 +229,47 @@ describe("일반수련 주간 목표 계산", () => {
     expect(result.record.goal).toBeNull();
   });
 
-  test("출석을 시작한 뒤 이번 주 목표를 낮추거나 유지할 수 없다", () => {
-    const initial = applyCurrentWeekGoal(
-      normalizeWeeklyGoalState(null),
-      {
+  test("반복 목표로 시작한 이번 주 목표도 실제 출석 횟수까지 낮출 수 있다", () => {
+    const initial = normalizeWeeklyGoalState({
+      recurringGoal: 5,
+      weeks: {
+        [WEEK_KEY]: {
+          goal: 5,
+          mode: "recurring",
+        },
+      },
+    });
+
+    const beforeAttendance =
+      applyCurrentWeekGoal(initial, {
         weekKey: WEEK_KEY,
         attendanceCount: 0,
-        goal: 5,
-      },
-    ).state;
+        goal: 1,
+      });
 
-    expect(() =>
+    expect(
+      beforeAttendance.record.goal,
+    ).toBe(1);
+
+    const afterAttendance =
       applyCurrentWeekGoal(initial, {
         weekKey: WEEK_KEY,
         attendanceCount: 2,
         goal: 2,
-      }),
-    ).toThrow(
-      "출석을 시작한 뒤에는 이번 주 목표를 높이는 것만 가능합니다.",
-    );
+      });
+
+    expect(
+      afterAttendance.record.goal,
+    ).toBe(2);
 
     expect(() =>
       applyCurrentWeekGoal(initial, {
         weekKey: WEEK_KEY,
         attendanceCount: 2,
-        goal: 5,
+        goal: 1,
       }),
     ).toThrow(
-      "출석을 시작한 뒤에는 이번 주 목표를 높이는 것만 가능합니다.",
+      "실제 일반수련 출석 횟수보다 낮게",
     );
   });
 
@@ -366,6 +384,52 @@ describe("일반수련 주간 목표 계산", () => {
     expect(
       JSON.stringify(next.weeks[previousWeek]),
     ).toBe(previousSnapshot);
+  });
+
+  test("지난주 목표를 달성하거나 초과하면 이번 주 달성 정보가 생성된다", () => {
+    const previousWeekRange =
+      getPreviousKoreaWeekRange(
+        NEXT_WEEK_KEY,
+      );
+
+    expect(previousWeekRange).toMatchObject({
+      weekKey: WEEK_KEY,
+      startDate: WEEK_KEY,
+      endDate: "2026-08-02",
+    });
+
+    const achieved =
+      resolvePreviousWeekGoalAchievement(
+        {
+          recurringGoal: 5,
+          weeks: {
+            [WEEK_KEY]: {
+              goal: 5,
+              mode: "recurring",
+              attendanceCount: 4,
+            },
+          },
+        },
+        {
+          weekRange:
+            previousWeekRange,
+          attendanceCount: 6,
+          nowIso:
+            "2026-08-03T00:00:00.000Z",
+        },
+      );
+
+    expect(
+      achieved.achievement,
+    ).toMatchObject({
+      goal: 5,
+      attendanceCount: 6,
+      achieved: true,
+      exceeded: true,
+    });
+    expect(
+      achieved.record.completedAt,
+    ).toBeTruthy();
   });
 
   test("한국시간 날짜를 월요일 시작 주간으로 계산한다", () => {
