@@ -1,6 +1,7 @@
-﻿import React from "react";
+﻿import React, { useEffect } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   RefreshControl,
@@ -17,7 +18,7 @@ import {
   getScheduleCardStyle,
   shouldShowWeeklyAttendedSchedule,
 } from "../../src/features/schedule/scheduleUtils";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 
 import ScheduleBottomSheet from "../../src/features/schedule/components/ScheduleBottomSheet";
@@ -29,6 +30,7 @@ import { styles } from "../../src/features/schedule/scheduleStyles";
 
 export default function ScheduleScreen() {
   const { token, user, logout } = useAuth();
+  const { view, menuAction } = useLocalSearchParams();
 
   const {
     todayString,
@@ -78,6 +80,39 @@ export default function ScheduleScreen() {
     getMonthMatrix,
     getDateDiffInDays,
     });
+
+  useEffect(() => {
+    const normalizedView = Array.isArray(view) ? view[0] : String(view || "");
+
+    if (normalizedView === "calendar" || normalizedView === "list") {
+      setScheduleViewMode(normalizedView);
+    }
+  }, [view, setScheduleViewMode]);
+
+  useEffect(() => {
+    if (loading || !menuAction) return;
+
+    const normalizedAction = Array.isArray(menuAction)
+      ? menuAction[0]
+      : String(menuAction);
+
+    if (normalizedAction !== "yudanjaReservation") return;
+
+    setScheduleViewMode("calendar");
+
+    const timer = setTimeout(() => {
+      if (isYudanjaMember) {
+        Alert.alert(
+          "유단자회 예약",
+          "예약할 유단자회 수련 날짜를 달력에서 선택해주세요."
+        );
+      }
+
+      router.setParams({ menuAction: "", view: "calendar" });
+    }, 180);
+
+    return () => clearTimeout(timer);
+  }, [isYudanjaMember, loading, menuAction, setScheduleViewMode]);
 
   if (loading) {
     return (

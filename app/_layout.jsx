@@ -22,6 +22,7 @@ import {
 import {
   ensureWebPushSubscription,
 } from "../src/features/push/webPushSubscription";
+import GlobalMenuLayer from "../src/features/globalMenu/GlobalMenuLayer";
 const WEB_PUSH_PUBLIC_KEY =
 "BA6OM0kZQC_j7BTZzAJi3fO783dpcCgLBThg8mc0pYe11abMEry7fRi1hoH6bMr90agBGTsRZqx2Z6JsMKznzSM";
 
@@ -423,6 +424,8 @@ export default function RootLayout() {
               options={{ presentation: "modal", title: "Modal" }}
             />
           </Stack>
+
+          <GlobalMenuLayer />
 
           <StatusBar style="auto" />
         </ThemeProvider>

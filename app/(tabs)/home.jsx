@@ -39,7 +39,12 @@ import { useWeeklyGoal } from "../../src/features/home/useWeeklyGoal";
 
 export default function HomeScreen() {
   const { token, user, logout } = useAuth();
-  const { attendanceResult } = useLocalSearchParams();
+  const { attendanceResult, menuAction } = useLocalSearchParams();
+  const scrollViewRef = useRef(null);
+  const [menuTargetY, setMenuTargetY] = useState({
+    today: 0,
+    attendance: 0,
+  });
   const attendanceResultShownRef = useRef(false);
   const authUser = user || {};
 const memberStatus = authUser?.memberStatus || authUser?.status;
@@ -83,6 +88,38 @@ const {
   const [closedNoticeIds, setClosedNoticeIds] = useState([]);
   const [trainingRecordSheetVisible, setTrainingRecordSheetVisible] = useState(false);
   const [weeklyGoalModalVisible, setWeeklyGoalModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (loading || !menuAction) return;
+
+    const normalizedAction = Array.isArray(menuAction)
+      ? menuAction[0]
+      : String(menuAction);
+
+    const timer = setTimeout(() => {
+      if (normalizedAction === "weeklyGoal") {
+        setWeeklyGoalModalVisible(true);
+      }
+
+      if (normalizedAction === "today") {
+        scrollViewRef.current?.scrollTo({
+          y: Math.max(0, Number(menuTargetY.today || 0) - 12),
+          animated: true,
+        });
+      }
+
+      if (normalizedAction === "attendance") {
+        scrollViewRef.current?.scrollTo({
+          y: Math.max(0, Number(menuTargetY.attendance || 0) - 12),
+          animated: true,
+        });
+      }
+
+      router.setParams({ menuAction: "" });
+    }, 180);
+
+    return () => clearTimeout(timer);
+  }, [loading, menuAction, menuTargetY.attendance, menuTargetY.today]);
 
   const yudanjaEmblemFrame = require("../../assets/images/yudanja-emblem-frame.png");
   const yudanjaProfileBg = require("../../assets/images/yudanja-profile-card-bg.png");
@@ -535,6 +572,7 @@ const handleNoticeDetail = useCallback(() => {
   return (
     <>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.screen}
         contentContainerStyle={styles.content}
         refreshControl={
@@ -563,6 +601,14 @@ const handleNoticeDetail = useCallback(() => {
   memberBadges={homeMemberBadges} // HJTAICHI_HOME_BADGES_PROP_V1
 />
 
+<View
+  onLayout={(event) =>
+    setMenuTargetY((previous) => ({
+      ...previous,
+      today: event.nativeEvent.layout.y,
+    }))
+  }
+>
 <TodayTrainingCard
   isYudanja={isYudanja}
   yudanjaProfileBg={yudanjaProfileBg}
@@ -576,11 +622,20 @@ const handleNoticeDetail = useCallback(() => {
     router.push("/qr-attendance");
   }}
 />
+</View>
 
 <TrainingRecordBanner
   onPress={() => setTrainingRecordSheetVisible(true)}
 />
 
+<View
+  onLayout={(event) =>
+    setMenuTargetY((previous) => ({
+      ...previous,
+      attendance: event.nativeEvent.layout.y,
+    }))
+  }
+>
 <AttendanceCalendar
   today={today}
   todayString={todayString}
@@ -591,6 +646,7 @@ const handleNoticeDetail = useCallback(() => {
   onPressDate={handlePressDate}
   onPressMore={() => router.push("/(tabs)/schedule")}
 />
+</View>
 
         
 

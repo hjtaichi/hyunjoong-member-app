@@ -115,6 +115,7 @@ const addDebugLog = useCallback((message, data) => {
   const [activeTab, setActiveTab] = useState("training");
 
   useEffect(() => {
+    if (tab === "training") setActiveTab("training");
     if (tab === "gongbeop") setActiveTab("gongbeop");
     if (tab === "formRecord") setActiveTab("formRecord");
   }, [tab]);

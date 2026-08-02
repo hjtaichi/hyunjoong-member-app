@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 import { useAuth } from "../../src/contexts/AuthContext";
 import { APP_VERSION } from "../../src/config/appVersion";
@@ -41,6 +41,9 @@ import YudanjaCard from "../../src/features/mypage/components/YudanjaCard";
 export default function MyPageScreen() {
   
   const { user, token, logout } = useAuth();
+  const { menuAction } = useLocalSearchParams();
+  const scrollViewRef = useRef(null);
+  const [yudanjaCardY, setYudanjaCardY] = useState(0);
   
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [phoneModalVisible, setPhoneModalVisible] = useState(false);
@@ -220,6 +223,31 @@ const attendanceDayCount =
 
   const isYudanja = homeData?.member?.canAccessYudanjaClass === true;
 
+  useEffect(() => {
+    if (loading || !menuAction) return;
+
+    const normalizedAction = Array.isArray(menuAction)
+      ? menuAction[0]
+      : String(menuAction);
+
+    const timer = setTimeout(() => {
+      if (normalizedAction === "payment") {
+        setPaymentModalVisible(true);
+      }
+
+      if (normalizedAction === "yudanjaCard" && isYudanja) {
+        scrollViewRef.current?.scrollTo({
+          y: Math.max(0, Number(yudanjaCardY || 0) - 16),
+          animated: true,
+        });
+      }
+
+      router.setParams({ menuAction: "" });
+    }, 180);
+
+    return () => clearTimeout(timer);
+  }, [isYudanja, loading, menuAction, yudanjaCardY]);
+
 const joinedDateLabel = joinedAtText
   ? String(joinedAtText).slice(0, 10)
   : "입관일 확인 필요";
@@ -286,6 +314,7 @@ const promotionSummary = (() => {
 
   return (
     <ScrollView
+  ref={scrollViewRef}
   style={[styles.screen, isYudanja && styles.screenYudanja]}
   contentContainerStyle={styles.content}
       refreshControl={
@@ -330,6 +359,7 @@ const promotionSummary = (() => {
   onOpenPayment={() => setPaymentModalVisible(true)}
 />
 
+<View onLayout={(event) => setYudanjaCardY(event.nativeEvent.layout.y)}>
 <YudanjaCard
   isYudanja={isYudanja}
   isYudanjaBackVisible={isYudanjaBackVisible}
@@ -338,6 +368,7 @@ const promotionSummary = (() => {
   yudanjaBackRotate={yudanjaBackRotate}
   styles={styles}
 />
+</View>
 
 <View style={[styles.menuSection, isYudanja && styles.menuSectionYudanja]}>
 <MenuRow

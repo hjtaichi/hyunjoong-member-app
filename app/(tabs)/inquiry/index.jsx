@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -66,19 +66,24 @@ function getStatusStyle(status) {
 
 export default function InquiryScreen() {
   const { token, user, logout } = useAuth();
-  const { tab } = useLocalSearchParams();
+  const { tab, menuAction } = useLocalSearchParams();
+  const startInquiryHandledRef = useRef(false);
 
   const authUser = user || {};
   const memberStatus = authUser?.memberStatus || authUser?.status;
   const isPausedMember = memberStatus === "paused";
 
   const [activeTab, setActiveTab] = useState(
-    tab === "inquiry" ? "inquiry" : "notice"
+    ["notice", "guide", "inquiry"].includes(String(tab))
+      ? String(tab)
+      : "notice"
   );
 
   useEffect(() => {
-    if (tab === "inquiry") {
-      setActiveTab("inquiry");
+    const normalizedTab = Array.isArray(tab) ? tab[0] : String(tab || "");
+
+    if (["notice", "guide", "inquiry"].includes(normalizedTab)) {
+      setActiveTab(normalizedTab);
     }
   }, [tab]);
   const [loading, setLoading] = useState(true);
@@ -177,6 +182,24 @@ const previewRooms = activeRooms.slice(0, 1);
       setStarting(false);
     }
   }, [rooms, token, loadInquiries]);
+
+  useEffect(() => {
+    const normalizedAction = Array.isArray(menuAction)
+      ? menuAction[0]
+      : String(menuAction || "");
+
+    if (normalizedAction !== "startInquiry") {
+      startInquiryHandledRef.current = false;
+      return;
+    }
+
+    if (loading || starting || startInquiryHandledRef.current) return;
+
+    startInquiryHandledRef.current = true;
+    setActiveTab("inquiry");
+    router.setParams({ tab: "inquiry", menuAction: "" });
+    void handleStartInquiry();
+  }, [handleStartInquiry, loading, menuAction, starting]);
 
   if (loading) {
     return (
