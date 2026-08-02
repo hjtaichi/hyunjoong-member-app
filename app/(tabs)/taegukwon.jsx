@@ -91,6 +91,7 @@ const {
   hasPrivateLessonMenu,
   privateLessonMenuTitle,
   privateLessonMenuDesc,
+  hasCustomPracticeAccess,
 riverGlowAnim,
 debugLogs,
 } = screen;
@@ -226,6 +227,7 @@ debugLogs,
     hasPrivateLessonMenu={hasPrivateLessonMenu}
     privateLessonMenuTitle={privateLessonMenuTitle}
     privateLessonMenuDesc={privateLessonMenuDesc}
+    hasCustomPracticeAccess={hasCustomPracticeAccess}
   />
 ) : null}
 {debugLogs?.length > 0 && (
