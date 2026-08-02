@@ -73,7 +73,7 @@ function isMine(message, currentUser) {
 
 function getRoomStatusLabel(status) {
   if (status === "answered") return "답변완료";
-  if (status === "open") return "진행중";
+  if (status === "open") return "답변 대기";
   if (status === "urgent") return "긴급";
   if (status === "closed") return "종료";
   return "확인중";
