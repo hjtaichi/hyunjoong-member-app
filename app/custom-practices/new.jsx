@@ -14,6 +14,7 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
+import ScreenHeader from "../../src/components/ScreenHeader";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { createMyCustomPractice } from "../../src/api/customPractices";
 
@@ -78,15 +79,7 @@ export default function NewCustomPracticeScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backText}>‹</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>새 수련 만들기</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-            <MaterialCommunityIcons name="close" size={23} color="#554840" />
-          </TouchableOpacity>
-        </View>
+        <ScreenHeader title="새 수련 만들기" />
 
         <ScrollView
           contentContainerStyle={styles.content}
@@ -380,39 +373,6 @@ export default function NewCustomPracticeScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#f8f5ef" },
   flex: { flex: 1 },
-  header: {
-    height: 58,
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#fffdf9",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e7ded3",
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backText: {
-    marginTop: -4,
-    fontSize: 38,
-    color: "#493a32",
-    fontFamily: "PretendardRegular",
-  },
-  headerTitle: {
-    fontSize: 18,
-    color: "#362b26",
-    fontFamily: "PretendardSemiBold",
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   content: {
     padding: 20,
     paddingBottom: 32,

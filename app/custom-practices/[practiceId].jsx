@@ -18,6 +18,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { Calendar, LocaleConfig } from "react-native-calendars";
 
+import ScreenHeader from "../../src/components/ScreenHeader";
 import { useAuth } from "../../src/contexts/AuthContext";
 import {
   createMyCustomPracticeRecord,
@@ -302,6 +303,7 @@ export default function CustomPracticeDetailScreen() {
   if (loading || !practice) {
     return (
       <SafeAreaView style={styles.safe}>
+        <ScreenHeader title="개별수련" />
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#a56f34" />
           <Text style={styles.loadingText}>수련 기록을 불러오는 중입니다.</Text>
@@ -316,16 +318,11 @@ export default function CustomPracticeDetailScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backText}>‹</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {practice.name}
-          </Text>
+        <View style={styles.screenHeaderWrap}>
+          <ScreenHeader title="개별수련" />
           {practice.canEdit ? (
             <TouchableOpacity
-              style={styles.editButton}
+              style={styles.headerEditButton}
               onPress={() => setEditing((value) => !value)}
             >
               <MaterialCommunityIcons
@@ -334,9 +331,7 @@ export default function CustomPracticeDetailScreen() {
                 color="#5e4f45"
               />
             </TouchableOpacity>
-          ) : (
-            <View style={styles.headerSpacer} />
-          )}
+          ) : null}
         </View>
 
         <ScrollView
@@ -786,43 +781,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "PretendardRegular",
   },
-  header: {
-    height: 58,
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#fffdf9",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e7ded3",
+  screenHeaderWrap: {
+    position: "relative",
+    zIndex: 70,
+    elevation: 70,
   },
-  backButton: {
-    width: 40,
-    height: 40,
+  headerEditButton: {
+    position: "absolute",
+    top: 5,
+    right: 0,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 80,
+    elevation: 80,
   },
-  backText: {
-    marginTop: -4,
-    fontSize: 38,
-    color: "#493a32",
-    fontFamily: "PretendardRegular",
-  },
-  headerTitle: {
-    flex: 1,
-    paddingHorizontal: 8,
-    textAlign: "center",
-    fontSize: 18,
-    color: "#362b26",
-    fontFamily: "PretendardSemiBold",
-  },
-  editButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerSpacer: { width: 40 },
   content: {
     padding: 20,
     paddingBottom: 48,
