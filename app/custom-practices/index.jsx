@@ -17,6 +17,7 @@ import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 
 import ScreenHeader from "../../src/components/ScreenHeader";
+import { colors } from "../../src/theme";
 import { useAuth } from "../../src/contexts/AuthContext";
 import {
   createMyCustomPracticeRecord,
@@ -407,7 +408,9 @@ export default function CustomPracticesScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ScreenHeader title="개별수련" />
+        <View style={styles.headerShell}>
+          <ScreenHeader title="개별수련" />
+        </View>
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#a56f34" />
           <Text style={styles.loadingText}>개별수련을 불러오는 중입니다.</Text>
@@ -419,7 +422,9 @@ export default function CustomPracticesScreen() {
   if (!enabled) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ScreenHeader title="개별수련" />
+        <View style={styles.headerShell}>
+          <ScreenHeader title="개별수련" />
+        </View>
         <View style={styles.center}>
           <Text style={styles.emptyTitle}>현재 열려 있는 개별수련방이 없습니다.</Text>
         </View>
@@ -429,7 +434,9 @@ export default function CustomPracticesScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScreenHeader title="개별수련" />
+      <View style={styles.headerShell}>
+        <ScreenHeader title="개별수련" />
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -719,8 +726,22 @@ export default function CustomPracticesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f8f5ef" },
-  content: { padding: 20, paddingBottom: 48 },
+  safe: { flex: 1, backgroundColor: colors.background },
+  headerShell: {
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingTop: 24,
+  },
+  content: {
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingTop: 0,
+    paddingBottom: 110,
+  },
   center: { flex: 1, paddingHorizontal: 32, alignItems: "center", justifyContent: "center" },
   loadingText: { marginTop: 14, fontSize: 14, color: "#74675e", fontFamily: "PretendardRegular" },
   calendarCard: {

@@ -81,11 +81,22 @@ describe("회원앱 개별수련 UI 계약", () => {
     expect(detailScreen).toContain("수련 삭제");
     expect(detailScreen).toContain("모든 기록도 함께 삭제");
   });
-  test("개별수련 화면은 공통 ScreenHeader를 사용한다", () => {
+  test("개별수련 화면은 공통 ScreenHeader와 앱 배경을 사용한다", () => {
     expect(listScreen).toContain('import ScreenHeader from "../../src/components/ScreenHeader"');
     expect(listScreen).toContain('<ScreenHeader title="개별수련" />');
     expect(newScreen).toContain('<ScreenHeader title="새 수련 만들기" />');
     expect(detailScreen).toContain('<ScreenHeader title="개별수련" />');
+    expect(listScreen).toContain("colors.background");
+    expect(newScreen).toContain("colors.background");
+    expect(detailScreen).toContain("colors.background");
+    expect(listScreen).toContain("maxWidth: 430");
+  });
+
+  test("수련 삭제 확인은 PWA에서도 동작하는 전용 모달을 사용한다", () => {
+    expect(detailScreen).toContain("deleteConfirmVisible");
+    expect(detailScreen).toContain("handleDeletePractice");
+    expect(detailScreen).toContain("deleteModalCard");
+    expect(detailScreen).toContain("모든 기록도 함께 삭제");
   });
 
 });

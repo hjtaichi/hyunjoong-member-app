@@ -19,6 +19,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Calendar, LocaleConfig } from "react-native-calendars";
 
 import ScreenHeader from "../../src/components/ScreenHeader";
+import { colors } from "../../src/theme";
 import { useAuth } from "../../src/contexts/AuthContext";
 import {
   createMyCustomPracticeRecord,
@@ -90,6 +91,7 @@ export default function CustomPracticeDetailScreen() {
   const [savingRecord, setSavingRecord] = useState(false);
   const [deletingRecordId, setDeletingRecordId] = useState("");
   const [deletingPractice, setDeletingPractice] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [count, setCount] = useState("1");
   const [recordDate, setRecordDate] = useState(todayText());
   const [datePickerVisible, setDatePickerVisible] = useState(false);
@@ -231,34 +233,25 @@ export default function CustomPracticeDetailScreen() {
 
   function confirmDeletePractice() {
     if (!practice?.canDelete || deletingPractice) return;
+    setDeleteConfirmVisible(true);
+  }
 
-    Alert.alert(
-      "수련 삭제",
-      `“${practice.name}” 수련을 삭제할까요?\n\n이 수련에 작성한 모든 기록도 함께 삭제되며 되돌릴 수 없습니다.`,
-      [
-        { text: "취소", style: "cancel" },
-        {
-          text: "삭제",
-          style: "destructive",
-          onPress: async () => {
-            if (!token) return;
+  async function handleDeletePractice() {
+    if (!token || !practice?.id || deletingPractice) return;
 
-            try {
-              setDeletingPractice(true);
-              await deleteMyCustomPractice(practice.id, token);
-              router.replace("/custom-practices");
-            } catch (error) {
-              Alert.alert(
-                "삭제하지 못했습니다",
-                error?.message || "수련 삭제 중 오류가 발생했습니다."
-              );
-            } finally {
-              setDeletingPractice(false);
-            }
-          },
-        },
-      ]
-    );
+    try {
+      setDeletingPractice(true);
+      await deleteMyCustomPractice(practice.id, token);
+      setDeleteConfirmVisible(false);
+      router.replace("/custom-practices");
+    } catch (error) {
+      Alert.alert(
+        "삭제하지 못했습니다",
+        error?.message || "수련 삭제 중 오류가 발생했습니다."
+      );
+    } finally {
+      setDeletingPractice(false);
+    }
   }
 
   async function handleSaveEdit() {
@@ -303,7 +296,9 @@ export default function CustomPracticeDetailScreen() {
   if (loading || !practice) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ScreenHeader title="개별수련" />
+        <View style={styles.headerShell}>
+          <ScreenHeader title="개별수련" />
+        </View>
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#a56f34" />
           <Text style={styles.loadingText}>수련 기록을 불러오는 중입니다.</Text>
@@ -688,6 +683,54 @@ export default function CustomPracticeDetailScreen() {
         </ScrollView>
 
         <Modal
+          visible={deleteConfirmVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
+            if (!deletingPractice) setDeleteConfirmVisible(false);
+          }}
+        >
+          <View style={styles.deleteOverlay}>
+            <TouchableOpacity
+              style={StyleSheet.absoluteFill}
+              activeOpacity={1}
+              disabled={deletingPractice}
+              onPress={() => setDeleteConfirmVisible(false)}
+            />
+            <View style={styles.deleteModalCard}>
+              <Text style={styles.deleteModalTitle}>수련 삭제</Text>
+              <Text style={styles.deleteModalText}>
+                “{practice.name}” 수련을 삭제할까요?{"\n\n"}
+                이 수련에 작성한 모든 기록도 함께 삭제되며 되돌릴 수 없습니다.
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.deleteModalConfirmButton,
+                  deletingPractice && styles.deleteModalButtonDisabled,
+                ]}
+                onPress={handleDeletePractice}
+                disabled={deletingPractice}
+                activeOpacity={0.86}
+              >
+                <Text style={styles.deleteModalConfirmText}>
+                  {deletingPractice ? "삭제 중..." : "삭제하기"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.deleteModalCancelButton}
+                onPress={() => setDeleteConfirmVisible(false)}
+                disabled={deletingPractice}
+                activeOpacity={0.86}
+              >
+                <Text style={styles.deleteModalCancelText}>취소</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
           visible={datePickerVisible}
           transparent
           animationType="fade"
@@ -768,8 +811,15 @@ export default function CustomPracticeDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f8f5ef" },
+  safe: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
+  headerShell: {
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingTop: 24,
+  },
   center: {
     flex: 1,
     alignItems: "center",
@@ -785,11 +835,16 @@ const styles = StyleSheet.create({
     position: "relative",
     zIndex: 70,
     elevation: 70,
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingTop: 24,
   },
   headerEditButton: {
     position: "absolute",
-    top: 5,
-    right: 0,
+    top: 29,
+    right: 16,
     width: 44,
     height: 44,
     alignItems: "center",
@@ -798,8 +853,12 @@ const styles = StyleSheet.create({
     elevation: 80,
   },
   content: {
-    padding: 20,
-    paddingBottom: 48,
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingTop: 0,
+    paddingBottom: 110,
   },
   heroCard: {
     padding: 20,
@@ -1194,6 +1253,60 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#b05f58",
     fontFamily: "PretendardSemiBold",
+  },
+  deleteOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(43,34,29,0.28)",
+    justifyContent: "flex-end",
+  },
+  deleteModalCard: {
+    backgroundColor: "#FFFCFA",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 18,
+    paddingTop: 20,
+    paddingBottom: 28,
+  },
+  deleteModalTitle: {
+    fontSize: 18,
+    color: "#3A2C27",
+    fontFamily: "MaruBuriSemiBold",
+  },
+  deleteModalText: {
+    marginTop: 10,
+    marginBottom: 18,
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#6B4F46",
+    fontFamily: "PretendardMedium",
+  },
+  deleteModalConfirmButton: {
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#C45A4A",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteModalConfirmText: {
+    fontSize: 15,
+    color: "#FFFFFF",
+    fontFamily: "PretendardBold",
+  },
+  deleteModalCancelButton: {
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: "#F4EDE6",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+  },
+  deleteModalCancelText: {
+    fontSize: 15,
+    color: "#6B4F46",
+    fontFamily: "PretendardBold",
+  },
+  deleteModalButtonDisabled: {
+    opacity: 0.55,
   },
   calendarOverlay: {
     flex: 1,

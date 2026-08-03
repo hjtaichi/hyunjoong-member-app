@@ -15,6 +15,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import ScreenHeader from "../../src/components/ScreenHeader";
+import { colors } from "../../src/theme";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { createMyCustomPractice } from "../../src/api/customPractices";
 
@@ -79,7 +80,9 @@ export default function NewCustomPracticeScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <ScreenHeader title="새 수련 만들기" />
+        <View style={styles.headerShell}>
+          <ScreenHeader title="새 수련 만들기" />
+        </View>
 
         <ScrollView
           contentContainerStyle={styles.content}
@@ -371,8 +374,15 @@ export default function NewCustomPracticeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f8f5ef" },
+  safe: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
+  headerShell: {
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingTop: 24,
+  },
   content: {
     padding: 20,
     paddingBottom: 32,
@@ -550,11 +560,13 @@ const styles = StyleSheet.create({
     fontFamily: "PretendardRegular",
   },
   footer: {
-    padding: 16,
+    width: "100%",
+    maxWidth: 430,
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: Platform.OS === "ios" ? 10 : 16,
-    backgroundColor: "#fffdf9",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#e7ded3",
+    backgroundColor: colors.background,
   },
   saveButton: {
     height: 52,
