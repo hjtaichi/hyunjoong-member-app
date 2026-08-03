@@ -8,6 +8,7 @@ import { styles } from "../../homeStyles";
 export default function TodayTrainingCard({
   isYudanja,
   yudanjaProfileBg,
+  trainingLabel = "오늘의 수련",
   todayClassTitle,
   todayWeekProgressText,
   hasTodayCompletedSession,
@@ -38,7 +39,7 @@ export default function TodayTrainingCard({
       ) : null}
 
       <View style={styles.todayTrainingHeader}>
-        <Text style={styles.todayTrainingLabel}>오늘의 수련</Text>
+        <Text style={styles.todayTrainingLabel}>{trainingLabel}</Text>
 
         <Pressable onPress={onPressDetail}>
           <View style={styles.moreLinkRow}>

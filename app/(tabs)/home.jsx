@@ -37,6 +37,40 @@ import { DEBUG_HOME, useHomeScreen } from "../../src/features/home/useHomeScreen
 import { useWeeklyGoal } from "../../src/features/home/useWeeklyGoal";
 
 
+function isActiveYudanjaScheduleForHomeTitle(schedule) {
+  const sessionLabel = [
+    schedule?.title,
+    schedule?.className,
+    schedule?.name,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const isYudanjaSchedule =
+    sessionLabel.includes("유단자");
+
+  const isClosedHoliday =
+    schedule?.isHoliday === true &&
+    schedule?.isOpenHoliday !== true;
+
+  const normalizedStatus = String(
+    schedule?.status || "scheduled",
+  ).toLowerCase();
+
+  const isCancelled =
+    normalizedStatus === "cancelled" ||
+    normalizedStatus === "canceled" ||
+    schedule?.isYudanjaClosed === true ||
+    schedule?.closure?.isClosed === true;
+
+  return (
+    isYudanjaSchedule &&
+    !isClosedHoliday &&
+    !isCancelled
+  );
+}
+
+
 export default function HomeScreen() {
   const { token, user, logout } = useAuth();
   const { attendanceResult, menuAction } = useLocalSearchParams();
@@ -350,6 +384,25 @@ const todayAttendanceButtonText = hasTodayCompletedSession
 const todayWeekday = today.getDay(); // 일 0, 월 1, 화 2...
 const isMondayToday = todayWeekday === 1;
 
+const hasActiveTodayYudanjaSession = useMemo(
+  () =>
+    isYudanja &&
+    isMondayToday &&
+    todaySchedules.some(
+      isActiveYudanjaScheduleForHomeTitle,
+    ),
+  [
+    isYudanja,
+    isMondayToday,
+    todaySchedules,
+  ],
+);
+
+const todayTrainingLabel =
+  hasActiveTodayYudanjaSession
+    ? "지난주 수련"
+    : "오늘의 수련";
+
 const isTodayYudanjaSession =
   isYudanja &&
   isMondayToday &&
@@ -612,6 +665,7 @@ const handleNoticeDetail = useCallback(() => {
 <TodayTrainingCard
   isYudanja={isYudanja}
   yudanjaProfileBg={yudanjaProfileBg}
+  trainingLabel={todayTrainingLabel}
   todayClassTitle={todayClassTitle}
   todayWeekProgressText={todayWeekProgressText}
   hasTodayCompletedSession={hasTodayCompletedSession}
