@@ -40,8 +40,9 @@ describe("회원앱 개별수련 UI 계약", () => {
     );
   });
 
-  test("목표 달성형과 자유 기록형을 생성할 수 있다", () => {
+  test("목표·매일 실천·자유 기록형을 생성할 수 있다", () => {
     expect(newScreen).toContain("목표 달성형");
+    expect(newScreen).toContain("매일 실천형");
     expect(newScreen).toContain("자유 기록형");
     expect(newScreen).toContain(
       "createMyCustomPractice"
@@ -57,8 +58,18 @@ describe("회원앱 개별수련 UI 계약", () => {
     expect(detailScreen).toContain("기록 내역");
   });
 
+  test("첫 화면은 2주 달력과 오늘 수련 빠른 기록을 제공한다", () => {
+    expect(listScreen).toContain("한 달 펼쳐보기");
+    expect(listScreen).toContain("2주만 보기");
+    expect(listScreen).toContain("오늘의 개별수련");
+    expect(listScreen).toContain("createMyCustomPracticeRecord");
+  });
+
   test("목록은 관리자 지정과 회원 생성 수련을 구분한다", () => {
     expect(listScreen).toContain("관장님 지정");
     expect(listScreen).toContain("내가 만든 수련");
+    expect(listScreen).toContain("이번 주");
+    expect(listScreen).toContain("연속");
+    expect(detailScreen).toContain("횟수 없이 완료");
   });
 });

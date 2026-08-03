@@ -83,6 +83,8 @@ export default function CustomPracticeDetailScreen() {
   );
 
   const isGoal = practice?.mode === "goal";
+  const isDaily = practice?.mode === "daily";
+  const dailyStats = practice?.dailyStats || {};
   const progress = Number(practice?.progressPercent || 0);
 
   const recordGroups = useMemo(() => {
@@ -98,7 +100,7 @@ export default function CustomPracticeDetailScreen() {
     return [...groups.entries()];
   }, [practice?.records]);
 
-  async function handleSaveRecord() {
+  async function handleSaveRecord({ withoutCount = false } = {}) {
     if (!token || !practice || savingRecord) return;
 
     try {
@@ -107,7 +109,7 @@ export default function CustomPracticeDetailScreen() {
         practice.id,
         {
           recordDate,
-          count,
+          count: isDaily && withoutCount ? null : count,
           memo: memo.trim(),
         },
         token
@@ -129,7 +131,9 @@ export default function CustomPracticeDetailScreen() {
   function confirmDeleteRecord(record) {
     Alert.alert(
       "기록 삭제",
-      `${displayDate(record.recordDate)}의 ${record.count}회 기록을 삭제할까요?`,
+      `${displayDate(record.recordDate)}의 ${
+        Number(record.count || 0) > 0 ? `${record.count}회` : "완료"
+      } 기록을 삭제할까요?`,
       [
         { text: "취소", style: "cancel" },
         {
@@ -250,7 +254,11 @@ export default function CustomPracticeDetailScreen() {
               </View>
               <View style={styles.modeBadge}>
                 <Text style={styles.modeBadgeText}>
-                  {isGoal ? "목표 달성형" : "자유 기록형"}
+                  {isGoal
+                    ? "목표 달성형"
+                    : isDaily
+                      ? "매일 실천형"
+                      : "자유 기록형"}
                 </Text>
               </View>
             </View>
@@ -287,6 +295,32 @@ export default function CustomPracticeDetailScreen() {
                   <Text style={styles.progressText}>{progress}%</Text>
                 </View>
               </>
+            ) : isDaily ? (
+              <View style={styles.dailyHeroBox}>
+                <View style={styles.dailyHeroTopRow}>
+                  <View>
+                    <Text style={styles.dailyHeroLabel}>이번 주 실천</Text>
+                    <Text style={styles.dailyHeroValue}>
+                      {Number(dailyStats.thisWeekCompletedDays || 0)} / 7일
+                    </Text>
+                  </View>
+                  <View style={styles.dailyHeroRight}>
+                    <Text style={styles.dailyHeroLabel}>현재 연속</Text>
+                    <Text style={styles.dailyHeroValue}>
+                      {Number(dailyStats.currentStreak || 0)}일
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.dailyHeroDivider} />
+                <View style={styles.dailyHeroBottomRow}>
+                  <Text style={styles.dailyHeroBottomText}>
+                    총 {Number(dailyStats.completedDays || 0)}일 실천
+                  </Text>
+                  <Text style={styles.dailyHeroBottomText}>
+                    최장 연속 {Number(dailyStats.bestStreak || 0)}일
+                  </Text>
+                </View>
+              </View>
             ) : (
               <View style={styles.freeCountBox}>
                 <Text style={styles.freeCountLabel}>지금까지 기록</Text>
@@ -375,7 +409,14 @@ export default function CustomPracticeDetailScreen() {
 
           {practice.canRecord && practice.status !== "archived" ? (
             <View style={styles.recordCard}>
-              <Text style={styles.sectionTitle}>오늘 수련 기록</Text>
+              <Text style={styles.sectionTitle}>
+                {isDaily ? "오늘 실천 기록" : "오늘 수련 기록"}
+              </Text>
+              {isDaily ? (
+                <Text style={styles.dailyRecordGuide}>
+                  횟수는 선택입니다. 완료만 기록해도 실천일에 표시됩니다.
+                </Text>
+              ) : null}
 
               <View style={styles.counterRow}>
                 <TouchableOpacity
@@ -433,9 +474,27 @@ export default function CustomPracticeDetailScreen() {
               />
               <Text style={styles.memoCounter}>{memo.length}/100</Text>
 
+              {isDaily ? (
+                <TouchableOpacity
+                  style={styles.completeOnlyButton}
+                  onPress={() => handleSaveRecord({ withoutCount: true })}
+                  disabled={savingRecord}
+                  activeOpacity={0.88}
+                >
+                  <MaterialCommunityIcons
+                    name="calendar-check-outline"
+                    size={19}
+                    color="#8b5c2e"
+                  />
+                  <Text style={styles.completeOnlyButtonText}>
+                    횟수 없이 완료
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+
               <TouchableOpacity
                 style={styles.recordButton}
-                onPress={handleSaveRecord}
+                onPress={() => handleSaveRecord()}
                 disabled={savingRecord}
                 activeOpacity={0.88}
               >
@@ -445,7 +504,11 @@ export default function CustomPracticeDetailScreen() {
                   color="#ffffff"
                 />
                 <Text style={styles.recordButtonText}>
-                  {savingRecord ? "기록 중..." : "기록하기"}
+                  {savingRecord
+                    ? "기록 중..."
+                    : isDaily
+                      ? `${count}회 기록`
+                      : "기록하기"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -497,7 +560,11 @@ export default function CustomPracticeDetailScreen() {
                       </View>
 
                       <View style={styles.historyContent}>
-                        <Text style={styles.historyValue}>{record.count}회</Text>
+                        <Text style={styles.historyValue}>
+                          {Number(record.count || 0) > 0
+                            ? `${record.count}회`
+                            : "완료"}
+                        </Text>
                         {record.memo ? (
                           <Text style={styles.historyMemo}>{record.memo}</Text>
                         ) : null}
@@ -683,6 +750,45 @@ const styles = StyleSheet.create({
     color: "#4d4038",
     fontFamily: "PretendardSemiBold",
   },
+  dailyHeroBox: {
+    marginTop: 18,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#f8f3ec",
+  },
+  dailyHeroTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  dailyHeroRight: {
+    alignItems: "flex-end",
+  },
+  dailyHeroLabel: {
+    fontSize: 11,
+    color: "#928378",
+    fontFamily: "PretendardRegular",
+  },
+  dailyHeroValue: {
+    marginTop: 4,
+    fontSize: 20,
+    color: "#75491f",
+    fontFamily: "PretendardBold",
+  },
+  dailyHeroDivider: {
+    marginVertical: 13,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#e3d8cd",
+  },
+  dailyHeroBottomRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  dailyHeroBottomText: {
+    fontSize: 11,
+    color: "#78695e",
+    fontFamily: "PretendardMedium",
+  },
   freeCountBox: {
     marginTop: 20,
     padding: 16,
@@ -836,6 +942,31 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#aaa097",
     fontFamily: "PretendardRegular",
+  },
+  dailyRecordGuide: {
+    marginTop: 6,
+    marginBottom: 14,
+    fontSize: 11,
+    lineHeight: 17,
+    color: "#95877c",
+    fontFamily: "PretendardRegular",
+  },
+  completeOnlyButton: {
+    height: 48,
+    marginTop: 16,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#d9bea0",
+    backgroundColor: "#fff8ef",
+  },
+  completeOnlyButtonText: {
+    marginLeft: 7,
+    fontSize: 13,
+    color: "#8b5c2e",
+    fontFamily: "PretendardSemiBold",
   },
   recordButton: {
     height: 52,

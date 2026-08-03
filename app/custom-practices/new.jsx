@@ -157,6 +157,38 @@ export default function NewCustomPracticeScreen() {
           <TouchableOpacity
             style={[
               styles.modeCard,
+              mode === "daily" && styles.modeCardActive,
+            ]}
+            onPress={() => setMode("daily")}
+            activeOpacity={0.88}
+          >
+            <View style={styles.modeIcon}>
+              <MaterialCommunityIcons
+                name="calendar-check-outline"
+                size={27}
+                color={mode === "daily" ? "#9a6835" : "#9e9187"}
+              />
+            </View>
+            <View style={styles.modeTextWrap}>
+              <Text style={styles.modeTitle}>매일 실천형</Text>
+              <Text style={styles.modeDesc}>
+                매일 했는지를 중심으로 기록하고, 횟수는 선택해서 남겨요.
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name={
+                mode === "daily"
+                  ? "radiobox-marked"
+                  : "radiobox-blank"
+              }
+              size={22}
+              color={mode === "daily" ? "#a56f34" : "#b7aca3"}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.modeCard,
               mode === "free" && styles.modeCardActive,
             ]}
             onPress={() => setMode("free")}
@@ -250,6 +282,67 @@ export default function NewCustomPracticeScreen() {
             </>
           ) : null}
 
+          {mode === "daily" ? (
+            <>
+              <Text style={[styles.stepLabel, styles.sectionGap]}>3. 매일 실천 설정</Text>
+              <View style={styles.formCard}>
+                <View style={styles.dailyGuideRow}>
+                  <View style={styles.dailyGuideIcon}>
+                    <MaterialCommunityIcons
+                      name="calendar-check-outline"
+                      size={25}
+                      color="#9a6835"
+                    />
+                  </View>
+                  <View style={styles.dailyGuideTextWrap}>
+                    <Text style={styles.dailyGuideTitle}>매일 하는 수련으로 표시됩니다.</Text>
+                    <Text style={styles.dailyGuideDesc}>
+                      완료만 눌러도 되고, 그날의 횟수를 함께 입력해도 됩니다.
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.checkRow}
+                  onPress={() => {
+                    setHasEndDate((current) => !current);
+                    if (hasEndDate) setEndDate("");
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name={
+                      hasEndDate
+                        ? "checkbox-marked-circle"
+                        : "checkbox-blank-circle-outline"
+                    }
+                    size={22}
+                    color={hasEndDate ? "#a56f34" : "#a99d93"}
+                  />
+                  <View style={styles.checkTextWrap}>
+                    <Text style={styles.checkTitle}>실천 종료일 정하기</Text>
+                    <Text style={styles.checkDesc}>
+                      선택하지 않으면 매일 계속 표시됩니다.
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {hasEndDate ? (
+                  <>
+                    <Text style={[styles.label, styles.labelGap]}>종료일</Text>
+                    <TextInput
+                      value={endDate}
+                      onChangeText={setEndDate}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor="#b1a69d"
+                      style={styles.input}
+                      maxLength={10}
+                    />
+                  </>
+                ) : null}
+              </View>
+            </>
+          ) : null}
+
           <View style={styles.noticeCard}>
             <MaterialCommunityIcons
               name="information-outline"
@@ -257,7 +350,9 @@ export default function NewCustomPracticeScreen() {
               color="#8c663e"
             />
             <Text style={styles.noticeText}>
-              수련을 만든 뒤 날짜별 횟수와 메모를 기록할 수 있습니다.
+              {mode === "daily"
+                ? "달력에서 완료 여부를 확인하고, 횟수는 필요할 때만 입력할 수 있습니다."
+                : "수련을 만든 뒤 날짜별 횟수와 메모를 기록할 수 있습니다."}
             </Text>
           </View>
         </ScrollView>
@@ -448,6 +543,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 17,
     color: "#968980",
+    fontFamily: "PretendardRegular",
+  },
+  dailyGuideRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dailyGuideIcon: {
+    width: 46,
+    height: 46,
+    marginRight: 12,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f5eadb",
+  },
+  dailyGuideTextWrap: {
+    flex: 1,
+  },
+  dailyGuideTitle: {
+    fontSize: 14,
+    color: "#4d3d33",
+    fontFamily: "PretendardSemiBold",
+  },
+  dailyGuideDesc: {
+    marginTop: 5,
+    fontSize: 11,
+    lineHeight: 17,
+    color: "#93867c",
     fontFamily: "PretendardRegular",
   },
   noticeCard: {
