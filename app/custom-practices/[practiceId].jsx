@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -15,14 +16,59 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
+import { Calendar, LocaleConfig } from "react-native-calendars";
 
 import { useAuth } from "../../src/contexts/AuthContext";
 import {
   createMyCustomPracticeRecord,
+  deleteMyCustomPractice,
   deleteMyCustomPracticeRecord,
   getMyCustomPractice,
   updateMyCustomPractice,
 } from "../../src/api/customPractices";
+
+LocaleConfig.locales.ko = {
+  monthNames: [
+    "1월",
+    "2월",
+    "3월",
+    "4월",
+    "5월",
+    "6월",
+    "7월",
+    "8월",
+    "9월",
+    "10월",
+    "11월",
+    "12월",
+  ],
+  monthNamesShort: [
+    "1월",
+    "2월",
+    "3월",
+    "4월",
+    "5월",
+    "6월",
+    "7월",
+    "8월",
+    "9월",
+    "10월",
+    "11월",
+    "12월",
+  ],
+  dayNames: [
+    "일요일",
+    "월요일",
+    "화요일",
+    "수요일",
+    "목요일",
+    "금요일",
+    "토요일",
+  ],
+  dayNamesShort: ["일", "월", "화", "수", "목", "금", "토"],
+  today: "오늘",
+};
+LocaleConfig.defaultLocale = "ko";
 
 function todayText() {
   const now = new Date();
@@ -42,8 +88,10 @@ export default function CustomPracticeDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [savingRecord, setSavingRecord] = useState(false);
   const [deletingRecordId, setDeletingRecordId] = useState("");
-  const [count, setCount] = useState(1);
+  const [deletingPractice, setDeletingPractice] = useState(false);
+  const [count, setCount] = useState("1");
   const [recordDate, setRecordDate] = useState(todayText());
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [memo, setMemo] = useState("");
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -65,6 +113,7 @@ export default function CustomPracticeDetailScreen() {
         result?.targetCount ? String(result.targetCount) : ""
       );
       setEditEndDate(result?.endDate || "");
+      setCount(result?.mode === "daily" ? "" : "1");
     } catch (error) {
       Alert.alert(
         "불러오지 못했습니다",
@@ -100,8 +149,27 @@ export default function CustomPracticeDetailScreen() {
     return [...groups.entries()];
   }, [practice?.records]);
 
-  async function handleSaveRecord({ withoutCount = false } = {}) {
+  async function handleSaveRecord() {
     if (!token || !practice || savingRecord) return;
+
+    const normalizedCount = String(count || "").trim();
+    const numericCount = normalizedCount ? Number(normalizedCount) : null;
+
+    if (!isDaily && !normalizedCount) {
+      Alert.alert("확인", "오늘 수련 횟수를 입력해주세요.");
+      return;
+    }
+
+    if (
+      normalizedCount &&
+      (!/^\d+$/.test(normalizedCount) ||
+        !Number.isInteger(numericCount) ||
+        numericCount <= 0 ||
+        numericCount > 999)
+    ) {
+      Alert.alert("확인", "수련 횟수는 1회 이상 999회 이하로 입력해주세요.");
+      return;
+    }
 
     try {
       setSavingRecord(true);
@@ -109,14 +177,14 @@ export default function CustomPracticeDetailScreen() {
         practice.id,
         {
           recordDate,
-          count: isDaily && withoutCount ? null : count,
+          count: numericCount,
           memo: memo.trim(),
         },
         token
       );
 
       setPractice(updated);
-      setCount(1);
+      setCount(isDaily ? "" : "1");
       setMemo("");
     } catch (error) {
       Alert.alert(
@@ -153,6 +221,38 @@ export default function CustomPracticeDetailScreen() {
               );
             } finally {
               setDeletingRecordId("");
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  function confirmDeletePractice() {
+    if (!practice?.canDelete || deletingPractice) return;
+
+    Alert.alert(
+      "수련 삭제",
+      `“${practice.name}” 수련을 삭제할까요?\n\n이 수련에 작성한 모든 기록도 함께 삭제되며 되돌릴 수 없습니다.`,
+      [
+        { text: "취소", style: "cancel" },
+        {
+          text: "삭제",
+          style: "destructive",
+          onPress: async () => {
+            if (!token) return;
+
+            try {
+              setDeletingPractice(true);
+              await deleteMyCustomPractice(practice.id, token);
+              router.replace("/custom-practices");
+            } catch (error) {
+              Alert.alert(
+                "삭제하지 못했습니다",
+                error?.message || "수련 삭제 중 오류가 발생했습니다."
+              );
+            } finally {
+              setDeletingPractice(false);
             }
           },
         },
@@ -418,48 +518,40 @@ export default function CustomPracticeDetailScreen() {
                 </Text>
               ) : null}
 
-              <View style={styles.counterRow}>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => setCount((value) => Math.max(1, value - 1))}
-                >
-                  <Text style={styles.counterButtonText}>−</Text>
-                </TouchableOpacity>
-
-                <View style={styles.counterCenter}>
-                  <Text style={styles.counterValue}>{count}</Text>
-                  <Text style={styles.counterUnit}>회</Text>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => setCount((value) => Math.min(999, value + 1))}
-                >
-                  <Text style={styles.counterButtonText}>＋</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.quickRow}>
-                {[1, 2, 3, 5].map((value) => (
-                  <TouchableOpacity
-                    key={value}
-                    style={styles.quickButton}
-                    onPress={() => setCount(value)}
-                  >
-                    <Text style={styles.quickButtonText}>+{value}</Text>
-                  </TouchableOpacity>
-                ))}
+              <Text style={styles.fieldLabel}>
+                {isDaily ? "오늘 수련 횟수 · 선택" : "오늘 수련 횟수"}
+              </Text>
+              <View style={styles.countInputWrap}>
+                <TextInput
+                  value={count}
+                  onChangeText={(value) =>
+                    setCount(value.replace(/\D/g, "").slice(0, 3))
+                  }
+                  style={styles.countInput}
+                  keyboardType="number-pad"
+                  inputMode="numeric"
+                  placeholder={isDaily ? "횟수를 입력하지 않아도 완료로 기록됩니다." : "횟수 입력"}
+                  placeholderTextColor="#b2a69d"
+                  maxLength={3}
+                />
+                <Text style={styles.countInputUnit}>회</Text>
               </View>
 
               <Text style={styles.fieldLabel}>수련일</Text>
-              <TextInput
-                value={recordDate}
-                onChangeText={setRecordDate}
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#b2a69d"
-                maxLength={10}
-              />
+              <TouchableOpacity
+                style={[styles.input, styles.datePickerButton]}
+                onPress={() => setDatePickerVisible(true)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.datePickerText}>
+                  {displayDate(recordDate)}
+                </Text>
+                <MaterialCommunityIcons
+                  name="calendar-month-outline"
+                  size={21}
+                  color="#8c6744"
+                />
+              </TouchableOpacity>
 
               <Text style={styles.fieldLabel}>메모 · 선택</Text>
               <TextInput
@@ -474,27 +566,10 @@ export default function CustomPracticeDetailScreen() {
               />
               <Text style={styles.memoCounter}>{memo.length}/100</Text>
 
-              {isDaily ? (
-                <TouchableOpacity
-                  style={styles.completeOnlyButton}
-                  onPress={() => handleSaveRecord({ withoutCount: true })}
-                  disabled={savingRecord}
-                  activeOpacity={0.88}
-                >
-                  <MaterialCommunityIcons
-                    name="calendar-check-outline"
-                    size={19}
-                    color="#8b5c2e"
-                  />
-                  <Text style={styles.completeOnlyButtonText}>
-                    횟수 없이 완료
-                  </Text>
-                </TouchableOpacity>
-              ) : null}
 
               <TouchableOpacity
                 style={styles.recordButton}
-                onPress={() => handleSaveRecord()}
+                onPress={handleSaveRecord}
                 disabled={savingRecord}
                 activeOpacity={0.88}
               >
@@ -507,7 +582,9 @@ export default function CustomPracticeDetailScreen() {
                   {savingRecord
                     ? "기록 중..."
                     : isDaily
-                      ? `${count}회 기록`
+                      ? count
+                        ? `${count}회 기록`
+                        : "오늘 완료 기록"
                       : "기록하기"}
                 </Text>
               </TouchableOpacity>
@@ -595,7 +672,101 @@ export default function CustomPracticeDetailScreen() {
               </Text>
             </View>
           )}
+
+          {practice.canDelete ? (
+            <TouchableOpacity
+              style={styles.deletePracticeButton}
+              onPress={confirmDeletePractice}
+              disabled={deletingPractice}
+              activeOpacity={0.85}
+            >
+              <MaterialCommunityIcons
+                name="trash-can-outline"
+                size={19}
+                color="#b05f58"
+              />
+              <Text style={styles.deletePracticeButtonText}>
+                {deletingPractice ? "삭제 중..." : "수련 삭제"}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </ScrollView>
+
+        <Modal
+          visible={datePickerVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setDatePickerVisible(false)}
+        >
+          <View style={styles.calendarOverlay}>
+            <TouchableOpacity
+              style={StyleSheet.absoluteFill}
+              activeOpacity={1}
+              onPress={() => setDatePickerVisible(false)}
+            />
+            <View style={styles.calendarModal}>
+              <View style={styles.calendarModalHeader}>
+                <Text style={styles.calendarModalTitle}>수련일 선택</Text>
+                <TouchableOpacity
+                  style={styles.calendarCloseButton}
+                  onPress={() => setDatePickerVisible(false)}
+                >
+                  <MaterialCommunityIcons
+                    name="close"
+                    size={22}
+                    color="#5d4e45"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <Calendar
+                current={recordDate}
+                minDate={practice.startDate || undefined}
+                maxDate={todayText()}
+                firstDay={1}
+                onDayPress={(day) => {
+                  setRecordDate(day.dateString);
+                  setDatePickerVisible(false);
+                }}
+                markedDates={{
+                  [recordDate]: {
+                    selected: true,
+                    selectedColor: "#a56f34",
+                    selectedTextColor: "#ffffff",
+                  },
+                }}
+                theme={{
+                  backgroundColor: "#fffdf9",
+                  calendarBackground: "#fffdf9",
+                  textSectionTitleColor: "#8a7a6e",
+                  selectedDayBackgroundColor: "#a56f34",
+                  selectedDayTextColor: "#ffffff",
+                  todayTextColor: "#a56f34",
+                  dayTextColor: "#44372f",
+                  textDisabledColor: "#d1c8c0",
+                  arrowColor: "#8b5c2e",
+                  monthTextColor: "#43352d",
+                  textDayFontFamily: "PretendardRegular",
+                  textMonthFontFamily: "PretendardSemiBold",
+                  textDayHeaderFontFamily: "PretendardMedium",
+                  textDayFontSize: 14,
+                  textMonthFontSize: 16,
+                  textDayHeaderFontSize: 12,
+                }}
+              />
+
+              <TouchableOpacity
+                style={styles.todayDateButton}
+                onPress={() => {
+                  setRecordDate(todayText());
+                  setDatePickerVisible(false);
+                }}
+              >
+                <Text style={styles.todayDateButtonText}>오늘 날짜 선택</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -879,62 +1050,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "PretendardSemiBold",
   },
-  counterRow: {
-    marginTop: 22,
+  countInputWrap: {
+    minHeight: 54,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#ded4ca",
+    backgroundColor: "#ffffff",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
   },
-  counterButton: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f2ece4",
+  countInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 20,
+    color: "#3e332d",
+    fontFamily: "PretendardSemiBold",
   },
-  counterButtonText: {
-    fontSize: 27,
-    color: "#73563c",
-    fontFamily: "PretendardRegular",
-  },
-  counterCenter: {
-    width: 120,
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "center",
-  },
-  counterValue: {
-    fontSize: 34,
-    color: "#392e28",
-    fontFamily: "PretendardBold",
-  },
-  counterUnit: {
-    marginLeft: 5,
+  countInputUnit: {
+    marginLeft: 8,
     fontSize: 14,
     color: "#75685e",
     fontFamily: "PretendardMedium",
   },
-  quickRow: {
-    marginTop: 15,
+  datePickerButton: {
+    minHeight: 50,
     flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-  },
-  quickButton: {
-    minWidth: 48,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 999,
     alignItems: "center",
-    backgroundColor: "#f8f2ea",
-    borderWidth: 1,
-    borderColor: "#e4d8ca",
+    justifyContent: "space-between",
   },
-  quickButtonText: {
-    fontSize: 12,
-    color: "#7d5938",
-    fontFamily: "PretendardSemiBold",
+  datePickerText: {
+    fontSize: 14,
+    color: "#3e332d",
+    fontFamily: "PretendardRegular",
   },
   memoCounter: {
     marginTop: 5,
@@ -950,23 +1098,6 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     color: "#95877c",
     fontFamily: "PretendardRegular",
-  },
-  completeOnlyButton: {
-    height: 48,
-    marginTop: 16,
-    borderRadius: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#d9bea0",
-    backgroundColor: "#fff8ef",
-  },
-  completeOnlyButtonText: {
-    marginLeft: 7,
-    fontSize: 13,
-    color: "#8b5c2e",
-    fontFamily: "PretendardSemiBold",
   },
   recordButton: {
     height: 52,
@@ -1072,6 +1203,68 @@ const styles = StyleSheet.create({
     height: 38,
     alignItems: "center",
     justifyContent: "center",
+  },
+  deletePracticeButton: {
+    height: 48,
+    marginTop: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#e3c4c0",
+    backgroundColor: "#fff8f7",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deletePracticeButtonText: {
+    marginLeft: 7,
+    fontSize: 13,
+    color: "#b05f58",
+    fontFamily: "PretendardSemiBold",
+  },
+  calendarOverlay: {
+    flex: 1,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(40, 31, 25, 0.42)",
+  },
+  calendarModal: {
+    width: "100%",
+    maxWidth: 420,
+    padding: 16,
+    borderRadius: 22,
+    backgroundColor: "#fffdf9",
+  },
+  calendarModalHeader: {
+    paddingHorizontal: 4,
+    paddingBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  calendarModalTitle: {
+    fontSize: 17,
+    color: "#40332c",
+    fontFamily: "PretendardSemiBold",
+  },
+  calendarCloseButton: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  todayDateButton: {
+    height: 46,
+    marginTop: 10,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f5eadb",
+  },
+  todayDateButtonText: {
+    fontSize: 13,
+    color: "#83582f",
+    fontFamily: "PretendardSemiBold",
   },
   emptyHistory: {
     paddingVertical: 36,

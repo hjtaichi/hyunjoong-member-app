@@ -53,6 +53,16 @@ export function updateMyCustomPractice(practiceId, payload, token) {
   );
 }
 
+export function deleteMyCustomPractice(practiceId, token) {
+  return requestCustomPractice(
+    `/member/me/custom-practices/${encodeURIComponent(practiceId)}`,
+    token,
+    {
+      method: "DELETE",
+    }
+  );
+}
+
 export function createMyCustomPracticeRecord(practiceId, payload, token) {
   return requestCustomPractice(
     `/member/me/custom-practices/${encodeURIComponent(practiceId)}/records`,

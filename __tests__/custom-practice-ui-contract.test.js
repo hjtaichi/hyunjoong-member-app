@@ -56,6 +56,9 @@ describe("회원앱 개별수련 UI 계약", () => {
     );
     expect(detailScreen).toContain("progressPercent");
     expect(detailScreen).toContain("기록 내역");
+    expect(detailScreen).toContain("수련일 선택");
+    expect(detailScreen).toContain("react-native-calendars");
+    expect(detailScreen).toContain("keyboardType=\"number-pad\"");
   });
 
   test("첫 화면은 2주 달력과 오늘 수련 빠른 기록을 제공한다", () => {
@@ -70,6 +73,12 @@ describe("회원앱 개별수련 UI 계약", () => {
     expect(listScreen).toContain("내가 만든 수련");
     expect(listScreen).toContain("이번 주");
     expect(listScreen).toContain("연속");
-    expect(detailScreen).toContain("횟수 없이 완료");
+    expect(detailScreen).toContain("오늘 완료 기록");
+  });
+
+  test("본인이 만든 수련은 확인 후 삭제할 수 있다", () => {
+    expect(detailScreen).toContain("deleteMyCustomPractice");
+    expect(detailScreen).toContain("수련 삭제");
+    expect(detailScreen).toContain("모든 기록도 함께 삭제");
   });
 });
