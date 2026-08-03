@@ -117,6 +117,15 @@ describe("회원 지난 수련 메모", () => {
     expect(hookSource).toContain(
       "/api/member/me/personal-memo/"
     );
+    expect(hookSource).toContain(
+      'Platform.OS === "web"'
+    );
+    expect(hookSource).toContain(
+      "window.confirm("
+    );
+    expect(hookSource).toContain(
+      "void deleteMemo();"
+    );
     expect(modalSource).toContain(
       "handleDeleteMemberMemo(memo)"
     );

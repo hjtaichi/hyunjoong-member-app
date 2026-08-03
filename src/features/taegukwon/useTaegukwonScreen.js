@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Animated } from "react-native";
+import { Alert, Animated, Platform } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
 import { API_BASE_URL } from "../../config/env";
@@ -374,6 +374,104 @@ setTaegukwonData((prev) => ({
         return;
       }
 
+      const deleteMemo = async () => {
+        try {
+          setDeletingMemoId(memoId);
+
+          const response = await fetch(
+            `${API_BASE_URL}/api/member/me/personal-memo/${encodeURIComponent(
+              memoId
+            )}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          const responseText =
+            await response.text();
+
+          let result = {};
+          try {
+            result = responseText
+              ? JSON.parse(responseText)
+              : {};
+          } catch {
+            result = {
+              message: responseText,
+            };
+          }
+
+          if (!response.ok) {
+            throw new Error(
+              result.message ||
+                "수련 메모 삭제 실패"
+            );
+          }
+
+          const nextMemberMemo =
+            result?.data?.memberMemo ?? "";
+
+          setEditMemberMemo(nextMemberMemo);
+
+          setTaegukwonData((prev) => {
+            if (!prev) return prev;
+
+            const nextHistory = Array.isArray(
+              prev.memberMemoHistory
+            )
+              ? prev.memberMemoHistory.filter(
+                  (item) =>
+                    String(item?.id) !== memoId
+                )
+              : [];
+
+            return {
+              ...prev,
+              memberMemo: nextMemberMemo,
+              memberMemoHistory: nextHistory,
+              personalProgress:
+                prev.personalProgress
+                  ? {
+                      ...prev.personalProgress,
+                      memberMemo:
+                        nextMemberMemo,
+                    }
+                  : prev.personalProgress,
+            };
+          });
+
+          await loadData({
+            silent: true,
+          });
+        } catch (error) {
+          Alert.alert(
+            "오류",
+            error.message ||
+              "수련 메모 삭제 중 오류가 발생했습니다."
+          );
+        } finally {
+          setDeletingMemoId(null);
+        }
+      };
+
+      if (Platform.OS === "web") {
+        const confirmed =
+          typeof window !== "undefined" &&
+          typeof window.confirm === "function" &&
+          window.confirm(
+            "수련 메모 삭제\n\n이 수련 메모를 삭제할까요?"
+          );
+
+        if (confirmed) {
+          void deleteMemo();
+        }
+
+        return;
+      }
+
       Alert.alert(
         "수련 메모 삭제",
         "이 수련 메모를 삭제할까요?",
@@ -385,88 +483,7 @@ setTaegukwonData((prev) => ({
           {
             text: "삭제",
             style: "destructive",
-            onPress: async () => {
-              try {
-                setDeletingMemoId(memoId);
-
-                const response = await fetch(
-                  `${API_BASE_URL}/api/member/me/personal-memo/${encodeURIComponent(
-                    memoId
-                  )}`,
-                  {
-                    method: "DELETE",
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                    },
-                  }
-                );
-
-                const responseText =
-                  await response.text();
-
-                let result = {};
-                try {
-                  result = responseText
-                    ? JSON.parse(responseText)
-                    : {};
-                } catch {
-                  result = {
-                    message: responseText,
-                  };
-                }
-
-                if (!response.ok) {
-                  throw new Error(
-                    result.message ||
-                      "수련 메모 삭제 실패"
-                  );
-                }
-
-                const nextMemberMemo =
-                  result?.data?.memberMemo ?? "";
-
-                setEditMemberMemo(nextMemberMemo);
-
-                setTaegukwonData((prev) => {
-                  if (!prev) return prev;
-
-                  const nextHistory = Array.isArray(
-                    prev.memberMemoHistory
-                  )
-                    ? prev.memberMemoHistory.filter(
-                        (item) =>
-                          String(item?.id) !== memoId
-                      )
-                    : [];
-
-                  return {
-                    ...prev,
-                    memberMemo: nextMemberMemo,
-                    memberMemoHistory: nextHistory,
-                    personalProgress:
-                      prev.personalProgress
-                        ? {
-                            ...prev.personalProgress,
-                            memberMemo:
-                              nextMemberMemo,
-                          }
-                        : prev.personalProgress,
-                  };
-                });
-
-                await loadData({
-                  silent: true,
-                });
-              } catch (error) {
-                Alert.alert(
-                  "오류",
-                  error.message ||
-                    "수련 메모 삭제 중 오류가 발생했습니다."
-                );
-              } finally {
-                setDeletingMemoId(null);
-              }
-            },
+            onPress: deleteMemo,
           },
         ]
       );
