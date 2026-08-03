@@ -788,6 +788,79 @@ savedListButton: {
     fontSize: 13,
     fontWeight: "900"
   },
+  detailSection: {
+    width: "100%",
+    marginTop: 10,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E8D9C8",
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.9)"
+  },
+  detailToggle: {
+    minHeight: 64,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  detailToggleTextWrap: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 12
+  },
+  detailToggleTitle: {
+    color: "#4B3123",
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  detailToggleHint: {
+    marginTop: 3,
+    color: "#8A7D73",
+    fontSize: 11,
+    lineHeight: 15
+  },
+  detailToggleArrow: {
+    color: "#875B42",
+    fontSize: 22,
+    fontWeight: "800"
+  },
+  detailPanel: {
+    paddingHorizontal: 12,
+    paddingBottom: 13,
+    borderTopWidth: 1,
+    borderTopColor: "#EFE5DB"
+  },
+  detailResetRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    gap: 8
+  },
+  detailResetButton: {
+    minHeight: 34,
+    flex: 1,
+    paddingHorizontal: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#D9B787",
+    borderRadius: 11,
+    backgroundColor: "#FFF8EE"
+  },
+  detailResetButtonDisabled: {
+    borderColor: "#E9E1D9",
+    backgroundColor: "#F5F1ED"
+  },
+  detailResetText: {
+    color: "#70492F",
+    fontSize: 10,
+    fontWeight: "800",
+    textAlign: "center"
+  },
+  detailResetTextDisabled: {
+    color: "#A3978D"
+  },
   optionIcon: {
     width: 28,
     height: 28,

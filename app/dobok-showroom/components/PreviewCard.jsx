@@ -14,6 +14,8 @@ export default function PreviewCard({
   fabric,
   topColor,
   pantsColor,
+  neckColor,
+  wristColor,
   chestColor,
   cloudColor,
   showChest,
@@ -52,6 +54,8 @@ export default function PreviewCard({
               width={previewWidth}
               topColor={topColor.hex}
               pantsColor={pantsColor.hex}
+              neckColor={neckColor.hex}
+              wristColor={wristColor.hex}
               chestEmbroideryColor={chestColor}
               cloudEmbroideryColor={cloudColor}
               showChest={showChest}

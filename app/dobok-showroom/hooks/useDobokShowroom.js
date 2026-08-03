@@ -18,6 +18,11 @@ function getFabricGroup(groups, key) {
   return groups.find((item) => item.key === key) ?? groups[0];
 }
 
+function hasFabricColor(groups, groupKey, colorKey) {
+  const group = getFabricGroup(groups, groupKey);
+  return Boolean(group?.colors?.some((item) => item.key === colorKey));
+}
+
 function getFabricColor(groups, groupKey, colorKey) {
   const group = getFabricGroup(groups, groupKey);
   return group?.colors.find((item) => item.key === colorKey) ?? group?.colors[0];
@@ -25,18 +30,41 @@ function getFabricColor(groups, groupKey, colorKey) {
 
 function makeFabricSelections(groups) {
   return Object.fromEntries(
-    groups.map((group) => [
-      group.key,
-      {
-        topColorKey: group.colors[0]?.key,
-        pantsColorKey: group.colors[0]?.key,
-      },
-    ])
+    groups.map((group) => {
+      const firstColorKey = group.colors[0]?.key;
+      return [
+        group.key,
+        {
+          topColorKey: firstColorKey,
+          pantsColorKey: firstColorKey,
+          neckColorKey: firstColorKey,
+          wristColorKey: firstColorKey,
+          neckLinkedToTop: true,
+          wristLinkedToTop: true,
+        },
+      ];
+    })
   );
+}
+
+function normalizeSavedItem(item) {
+  return {
+    ...item,
+    neckColorKey: item?.neckColorKey || item?.topColorKey,
+    neckColorLabel: item?.neckColorLabel || item?.topColorLabel,
+    neckColorHex: item?.neckColorHex || item?.topColorHex,
+    wristColorKey: item?.wristColorKey || item?.topColorKey,
+    wristColorLabel: item?.wristColorLabel || item?.topColorLabel,
+    wristColorHex: item?.wristColorHex || item?.topColorHex,
+    neckLinkedToTop: item?.neckLinkedToTop !== false,
+    wristLinkedToTop: item?.wristLinkedToTop !== false,
+  };
 }
 
 export default function useDobokShowroom() {
   const { user, token } = useAuth();
+  const initialFabric = DOBOK_V9_FABRIC_GROUPS[0];
+  const initialColorKey = initialFabric.colors[0].key;
   const [fabricGroups, setFabricGroups] = useState(DOBOK_V9_FABRIC_GROUPS);
   const [catalogSource, setCatalogSource] = useState("fallback");
   const [catalogVersion, setCatalogVersion] = useState(0);
@@ -55,9 +83,13 @@ export default function useDobokShowroom() {
   const [gender, setGender] = useState("female");
   const [style, setStyle] = useState("straight");
   const [sleeve, setSleeve] = useState("plain");
-  const [fabricKey, setFabricKey] = useState(DOBOK_V9_FABRIC_GROUPS[0].key);
-  const [topColorKey, setTopColorKey] = useState(DOBOK_V9_FABRIC_GROUPS[0].colors[0].key);
-  const [pantsColorKey, setPantsColorKey] = useState(DOBOK_V9_FABRIC_GROUPS[0].colors[0].key);
+  const [fabricKey, setFabricKey] = useState(initialFabric.key);
+  const [topColorKey, setTopColorKey] = useState(initialColorKey);
+  const [pantsColorKey, setPantsColorKey] = useState(initialColorKey);
+  const [neckColorKey, setNeckColorKey] = useState(initialColorKey);
+  const [wristColorKey, setWristColorKey] = useState(initialColorKey);
+  const [neckLinkedToTop, setNeckLinkedToTop] = useState(true);
+  const [wristLinkedToTop, setWristLinkedToTop] = useState(true);
   const [fabricSelections, setFabricSelections] = useState(() => makeFabricSelections(DOBOK_V9_FABRIC_GROUPS));
   const [showChest, setShowChest] = useState(true);
   const [showClouds, setShowClouds] = useState(false);
@@ -114,16 +146,17 @@ export default function useDobokShowroom() {
     ])
       .then(([rawSaved, rawApplied, catalog]) => {
         const parsedSaved = rawSaved ? JSON.parse(rawSaved) : [];
-        const permissionSafeSaved = Array.isArray(parsedSaved)
-          ? parsedSaved.map((item) =>
-              canUseCloudEmbroidery
-                ? item
-                : { ...item, showClouds: false }
-            )
+        const normalizedSaved = Array.isArray(parsedSaved)
+          ? parsedSaved.map(normalizeSavedItem)
           : [];
+        const permissionSafeSaved = normalizedSaved.map((item) =>
+          canUseCloudEmbroidery
+            ? item
+            : { ...item, showClouds: false }
+        );
         setSaved(permissionSafeSaved);
         setAppliedFavoriteId(rawApplied || null);
-        if (!canUseCloudEmbroidery && rawSaved) {
+        if (rawSaved) {
           void AsyncStorage.setItem(SAVE_KEY, JSON.stringify(permissionSafeSaved));
         }
 
@@ -152,6 +185,16 @@ export default function useDobokShowroom() {
             ? current
             : firstColor.key
         );
+        setNeckColorKey((current) =>
+          firstFabric.colors.some((color) => color.key === current)
+            ? current
+            : firstColor.key
+        );
+        setWristColorKey((current) =>
+          firstFabric.colors.some((color) => color.key === current)
+            ? current
+            : firstColor.key
+        );
       })
       .catch(() => {
         setSaved([]);
@@ -167,7 +210,6 @@ export default function useDobokShowroom() {
     ? catalogConfig.embroideryColors
     : DEFAULT_EMBROIDERY_COLORS;
 
-
   useEffect(() => {
     if (!canUseCloudEmbroidery) {
       setShowClouds(false);
@@ -180,6 +222,13 @@ export default function useDobokShowroom() {
   const fabric = getFabricGroup(fabricGroups, fabricKey);
   const topColor = getFabricColor(fabricGroups, fabricKey, topColorKey) || fabric.colors[0];
   const pantsColor = getFabricColor(fabricGroups, fabricKey, pantsColorKey) || fabric.colors[0];
+  const neckColor = neckLinkedToTop
+    ? topColor
+    : (getFabricColor(fabricGroups, fabricKey, neckColorKey) || topColor);
+  const wristColor = wristLinkedToTop
+    ? topColor
+    : (getFabricColor(fabricGroups, fabricKey, wristColorKey) || topColor);
+
   useEffect(() => {
     const firstColor = embroideryColors[0]?.hex;
     if (!firstColor) return;
@@ -204,6 +253,22 @@ export default function useDobokShowroom() {
     cloudColor,
   ]);
 
+  function updateCurrentFabricSelection(patch) {
+    setFabricSelections((current) => ({
+      ...current,
+      [fabricKey]: {
+        topColorKey,
+        pantsColorKey,
+        neckColorKey,
+        wristColorKey,
+        neckLinkedToTop,
+        wristLinkedToTop,
+        ...(current[fabricKey] || {}),
+        ...patch,
+      },
+    }));
+  }
+
   function openCloudSheet() {
     if (!canUseCloudEmbroidery) {
       Alert.alert("유단자 전용", "구름무늬 자수는 1단 이상 승단한 회원만 선택할 수 있습니다.");
@@ -215,21 +280,65 @@ export default function useDobokShowroom() {
   function chooseFabric(nextKey) {
     const next = getFabricGroup(fabricGroups, nextKey);
     const remembered = fabricSelections[next.key] || {};
-    const nextTopKey = remembered.topColorKey && getFabricColor(fabricGroups, next.key, remembered.topColorKey) ? remembered.topColorKey : next.colors[0].key;
-    const nextPantsKey = remembered.pantsColorKey && getFabricColor(fabricGroups, next.key, remembered.pantsColorKey) ? remembered.pantsColorKey : next.colors[0].key;
+    const firstColorKey = next.colors[0].key;
+    const nextTopKey = hasFabricColor(fabricGroups, next.key, remembered.topColorKey) ? remembered.topColorKey : firstColorKey;
+    const nextPantsKey = hasFabricColor(fabricGroups, next.key, remembered.pantsColorKey) ? remembered.pantsColorKey : firstColorKey;
+    const nextNeckKey = hasFabricColor(fabricGroups, next.key, remembered.neckColorKey) ? remembered.neckColorKey : nextTopKey;
+    const nextWristKey = hasFabricColor(fabricGroups, next.key, remembered.wristColorKey) ? remembered.wristColorKey : nextTopKey;
+
     setFabricKey(next.key);
     setTopColorKey(nextTopKey);
     setPantsColorKey(nextPantsKey);
+    setNeckColorKey(nextNeckKey);
+    setWristColorKey(nextWristKey);
+    setNeckLinkedToTop(remembered.neckLinkedToTop !== false);
+    setWristLinkedToTop(remembered.wristLinkedToTop !== false);
   }
 
   function chooseTopColor(item) {
     setTopColorKey(item.key);
-    setFabricSelections((current) => ({ ...current, [fabricKey]: { ...(current[fabricKey] || {}), topColorKey: item.key, pantsColorKey: current[fabricKey]?.pantsColorKey || pantsColorKey } }));
+    updateCurrentFabricSelection({ topColorKey: item.key });
   }
 
   function choosePantsColor(item) {
     setPantsColorKey(item.key);
-    setFabricSelections((current) => ({ ...current, [fabricKey]: { ...(current[fabricKey] || {}), topColorKey: current[fabricKey]?.topColorKey || topColorKey, pantsColorKey: item.key } }));
+    updateCurrentFabricSelection({ pantsColorKey: item.key });
+  }
+
+  function chooseNeckColor(item) {
+    setNeckColorKey(item.key);
+    setNeckLinkedToTop(false);
+    updateCurrentFabricSelection({
+      neckColorKey: item.key,
+      neckLinkedToTop: false,
+    });
+  }
+
+  function chooseWristColor(item) {
+    setWristColorKey(item.key);
+    setWristLinkedToTop(false);
+    updateCurrentFabricSelection({
+      wristColorKey: item.key,
+      wristLinkedToTop: false,
+    });
+  }
+
+  function resetNeckColor() {
+    setNeckColorKey(topColor.key);
+    setNeckLinkedToTop(true);
+    updateCurrentFabricSelection({
+      neckColorKey: topColor.key,
+      neckLinkedToTop: true,
+    });
+  }
+
+  function resetWristColor() {
+    setWristColorKey(topColor.key);
+    setWristLinkedToTop(true);
+    updateCurrentFabricSelection({
+      wristColorKey: topColor.key,
+      wristLinkedToTop: true,
+    });
   }
 
   async function persistFavorites(next) {
@@ -286,6 +395,14 @@ export default function useDobokShowroom() {
       pantsColorKey: pantsColor.key,
       pantsColorLabel: pantsColor.position,
       pantsColorHex: pantsColor.hex,
+      neckColorKey: neckColor.key,
+      neckColorLabel: neckColor.position,
+      neckColorHex: neckColor.hex,
+      neckLinkedToTop,
+      wristColorKey: wristColor.key,
+      wristColorLabel: wristColor.position,
+      wristColorHex: wristColor.hex,
+      wristLinkedToTop,
       showChest,
       chestColor,
       showClouds: canUseCloudEmbroidery && showClouds,
@@ -299,14 +416,32 @@ export default function useDobokShowroom() {
     Alert.alert("즐겨찾기 저장 완료", `${item.name}을(를) 저장했습니다.`);
   }
 
-  async function applyFavorite(item) {
+  async function applyFavorite(rawItem) {
+    const item = normalizeSavedItem(rawItem);
+    const nextNeckLinkedToTop = item.neckLinkedToTop !== false;
+    const nextWristLinkedToTop = item.wristLinkedToTop !== false;
+
     setGender(item.gender);
     setStyle(item.style);
     setSleeve(item.sleeve);
     setFabricKey(item.fabricKey);
     setTopColorKey(item.topColorKey);
     setPantsColorKey(item.pantsColorKey);
-    setFabricSelections((current) => ({ ...current, [item.fabricKey]: { topColorKey: item.topColorKey, pantsColorKey: item.pantsColorKey } }));
+    setNeckColorKey(item.neckColorKey || item.topColorKey);
+    setWristColorKey(item.wristColorKey || item.topColorKey);
+    setNeckLinkedToTop(nextNeckLinkedToTop);
+    setWristLinkedToTop(nextWristLinkedToTop);
+    setFabricSelections((current) => ({
+      ...current,
+      [item.fabricKey]: {
+        topColorKey: item.topColorKey,
+        pantsColorKey: item.pantsColorKey,
+        neckColorKey: item.neckColorKey || item.topColorKey,
+        wristColorKey: item.wristColorKey || item.topColorKey,
+        neckLinkedToTop: nextNeckLinkedToTop,
+        wristLinkedToTop: nextWristLinkedToTop,
+      },
+    }));
     setShowChest(item.showChest !== false);
     setChestColor(item.chestColor || "#C69A2D");
     setShowClouds(canUseCloudEmbroidery && Boolean(item.showClouds));
@@ -356,14 +491,16 @@ export default function useDobokShowroom() {
     styleLabels, sleeveLabels, embroideryConfig, embroideryLayouts, embroideryColors,
     rankLevel, canUseCloudEmbroidery,
     gender, setGender, style, setStyle, sleeve, setSleeve,
-    fabricKey, topColorKey, pantsColorKey, showChest, setShowChest,
-    showClouds, setShowClouds,
+    fabricKey, topColorKey, pantsColorKey, neckColorKey, wristColorKey,
+    neckLinkedToTop, wristLinkedToTop,
+    showChest, setShowChest, showClouds, setShowClouds,
     chestColor, setChestColor, cloudColor, setCloudColor,
     sheet, setSheet, saved, favoritesVisible, setFavoritesVisible,
     nameModalVisible, setNameModalVisible, favoriteName, setFavoriteName,
     editingFavoriteId, setEditingFavoriteId, appliedFavoriteId,
-    effectiveStyle, combo, fabric, topColor, pantsColor,
-    chooseFabric, chooseTopColor, choosePantsColor, openCloudSheet,
+    effectiveStyle, combo, fabric, topColor, pantsColor, neckColor, wristColor,
+    chooseFabric, chooseTopColor, choosePantsColor, chooseNeckColor, chooseWristColor,
+    resetNeckColor, resetWristColor, openCloudSheet,
     openSaveDialog, openRenameDialog, confirmFavoriteName,
     applyFavorite, deleteFavorite,
   };
