@@ -1,0 +1,284 @@
+{
+  "version": "v12",
+  "sourceArchive": "까마귀(1).zip",
+  "combinationCount": 12,
+  "activeChestEmbroidery": "dragon-yinyang-longevity",
+  "combinations": {
+    "female-chest-2button": {
+      "gender": "female",
+      "style": "chest",
+      "sleeve": "2button",
+      "canvas": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sources": {
+        "base": "female/female-chest-2button/female-chest-2button_0010_female-chest-2button.png",
+        "top-mask": "female/female-chest-2button/female-chest-2button_0002_female-chest-2button-top-mask.png",
+        "top-texture": "female/female-chest-2button/female-chest-2button_0003_female-chest-2button-top-texture.png",
+        "pants-mask": "female/female-chest-2button/female-chest-2button_0004_female-chest-2button-pants-mask.png",
+        "pants-texture": "female/female-chest-2button/female-chest-2button_0005_female-chest-2button-pants-texture.png",
+        "neck-mask": "female/female-chest-2button/female-chest-2button_0009_female-chest-2button-neck-mask.png",
+        "neck-texture": "female/female-chest-2button/female-chest-2button_0008_female-chest-2button-neck-texture.png",
+        "wrist-mask": "female/female-chest-2button/female-chest-2button_0006_female-chest-2button-wrist-mask.png",
+        "wrist-texture": "female/female-chest-2button/female-chest-2button_0007_female-chest-2button-wrist-texture.png",
+        "neck-cloud": "female/female-chest-2button/female-chest-2button_0001_female-chest-2button-neck-cloud.png",
+        "wrist-cloud": "female/female-chest-2button/female-chest-2button_0000_female-chest-2button-wrist-cloud.png"
+      }
+    },
+    "female-chest-3button": {
+      "gender": "female",
+      "style": "chest",
+      "sleeve": "3button",
+      "canvas": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sources": {
+        "base": "female/female-chest-3button/female-chest-3button_0010_female-chest-3button.png",
+        "top-mask": "female/female-chest-3button/female-chest-3button_0000_female-chest-3button-top-mask.png",
+        "top-texture": "female/female-chest-3button/female-chest-3button_0001_female-chest-3button-top-texture.png",
+        "pants-mask": "female/female-chest-3button/female-chest-3button_0004_female-chest-3button-pants-mask.png",
+        "pants-texture": "female/female-chest-3button/female-chest-3button_0005_female-chest-3button-pants-texture.png",
+        "neck-mask": "female/female-chest-3button/female-chest-3button_0006_female-chest-3button-neck-mask.png",
+        "neck-texture": "female/female-chest-3button/female-chest-3button_0007_female-chest-3button-neck-texture.png",
+        "wrist-mask": "female/female-chest-3button/female-chest-3button_0009_female-chest-3button-wrist-mask.png",
+        "wrist-texture": "female/female-chest-3button/female-chest-3button_0008_female-chest-3button-wrist-texture.png",
+        "neck-cloud": "female/female-chest-3button/female-chest-3button_0003_female-chest-3button-neck-cloud-texture.png",
+        "wrist-cloud": "female/female-chest-3button/female-chest-3button_0002_female-chest-3button-wrist-cloud-texture.png"
+      }
+    },
+    "female-chest-plain": {
+      "gender": "female",
+      "style": "chest",
+      "sleeve": "plain",
+      "canvas": {
+        "width": 1022,
+        "height": 1536
+      },
+      "sources": {
+        "base": "female/female-chest-plain/female-chest-plain_0010_female-chest-plain.png",
+        "top-mask": "female/female-chest-plain/female-chest-plain_0000_female-chest-plain-top-mask.png",
+        "top-texture": "female/female-chest-plain/female-chest-plain_0001_female-chest-plain-top-texture.png",
+        "pants-mask": "female/female-chest-plain/female-chest-plain_0005_female-chest-plain-pants-mask.png",
+        "pants-texture": "female/female-chest-plain/female-chest-plain_0002_female-chest-plain-pants-texture.png",
+        "neck-mask": "female/female-chest-plain/female-chest-plain_0008_female-chest-plain-neck-mask.png",
+        "neck-texture": "female/female-chest-plain/female-chest-plain_0009_female-chest-plain-neck-texture.png",
+        "wrist-mask": "female/female-chest-plain/female-chest-plain_0006_female-chest-plain-wrsit-mask.png",
+        "wrist-texture": "female/female-chest-plain/female-chest-plain_0007_female-chest-plain-wrsit-texture.png",
+        "neck-cloud": "female/female-chest-plain/female-chest-plain_0004_female-chest-plain-neck-cloud.png",
+        "wrist-cloud": "female/female-chest-plain/female-chest-plain_0003_female-chest-plain-wrist-cloud.png"
+      }
+    },
+    "female-diagonal-waist-2button": {
+      "gender": "female",
+      "style": "diagonal-waist",
+      "sleeve": "2button",
+      "canvas": {
+        "width": 1022,
+        "height": 1536
+      },
+      "sources": {
+        "base": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0010_female-diagonal-waist-2button.png",
+        "top-mask": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0000_female-diagonal-waist-2button-top-mask.png",
+        "top-texture": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0001_female-diagonal-waist-2button-top-texture.png",
+        "pants-mask": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0004_female-diagonal-waist-2button-pants-mask.png",
+        "pants-texture": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0005_female-diagonal-waist-2button-pants-texture.png",
+        "neck-mask": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0008_female-diagonal-waist-2button-neck-mask.png",
+        "neck-texture": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0009_female-diagonal-waist-2button-neck-texture.png",
+        "wrist-mask": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0006_female-diagonal-waist-2button-wrist-mask.png",
+        "wrist-texture": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0007_female-diagonal-waist-2button-wrist-texture.png",
+        "neck-cloud": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0003_female-diagonal-waist-2button-neck-cloud.png",
+        "wrist-cloud": "female/female-diagonal-waist-2button/female-diagonal-waist-2button_0002_female-diagonal-waist-2button-wrist-cloud.png"
+      }
+    },
+    "female-diagonal-waist-3button": {
+      "gender": "female",
+      "style": "diagonal-waist",
+      "sleeve": "3button",
+      "canvas": {
+        "width": 1022,
+        "height": 1536
+      },
+      "sources": {
+        "base": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0010_female-diagonal-waist-3button.png",
+        "top-mask": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0000_female-diagonal-waist-3button-top-mask.png",
+        "top-texture": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0001_female-diagonal-waist-3button-top-texture.png",
+        "pants-mask": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0005_female-diagonal-waist-3button-pants-mask.png",
+        "pants-texture": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0004_female-diagonal-waist-3button-pants-texture.png",
+        "neck-mask": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0006_female-diagonal-waist-3button-neck-mask.png",
+        "neck-texture": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0007_female-diagonal-waist-3button-neck-texture.png",
+        "wrist-mask": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0008_female-diagonal-waist-3button-wrist-mask.png",
+        "wrist-texture": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0009_female-diagonal-waist-3button-wrist-texture.png",
+        "neck-cloud": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0003_female-diagonal-waist-3button-neck-cloud.png",
+        "wrist-cloud": "female/female-diagonal-waist-3button/female-diagonal-waist-3button_0002_female-diagonal-waist-3button-wrist-cloud.png"
+      }
+    },
+    "female-diagonal-waist-plain": {
+      "gender": "female",
+      "style": "diagonal-waist",
+      "sleeve": "plain",
+      "canvas": {
+        "width": 1022,
+        "height": 1536
+      },
+      "sources": {
+        "base": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0010_레이어-1.png",
+        "top-mask": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0001_top-mask.png",
+        "top-texture": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0002_top-texture.png",
+        "pants-mask": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0003_pants-mask.png",
+        "pants-texture": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0005_panst-texture.png",
+        "neck-mask": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0006_neck-mask.png",
+        "neck-texture": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0007_neck-texture.png",
+        "wrist-mask": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0008_wrist-mask.png",
+        "wrist-texture": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0009_wrist-texture.png",
+        "neck-cloud": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0004_neck-cloud.png",
+        "wrist-cloud": "female/female-diagonal-waist-plain/female-diagonal-waist-plain_0000_wrist-cloud.png"
+      }
+    },
+    "female-straight-2button": {
+      "gender": "female",
+      "style": "straight",
+      "sleeve": "2button",
+      "canvas": {
+        "width": 1023,
+        "height": 1537
+      },
+      "sources": {
+        "base": "female/female-straight-2button/female-straight-2button_0011_0.png",
+        "top-mask": "female/female-straight-2button/female-straight-2button_0003_top-mask.png",
+        "top-texture": "female/female-straight-2button/female-straight-2button_0002_top-texture.png",
+        "pants-mask": "female/female-straight-2button/female-straight-2button_0005_pants-mask.png",
+        "pants-texture": "female/female-straight-2button/female-straight-2button_0004_pants-texture.png",
+        "neck-mask": "female/female-straight-2button/female-straight-2button_0006_neck-mask.png",
+        "neck-texture": "female/female-straight-2button/female-straight-2button_0007_neck-texture.png",
+        "wrist-mask": "female/female-straight-2button/female-straight-2button_0008_wrist-mask.png",
+        "wrist-texture": "female/female-straight-2button/female-straight-2button_0009_wrist-texture.png",
+        "neck-cloud": "female/female-straight-2button/female-straight-2button_0001_neck-cloud.png",
+        "wrist-cloud": "female/female-straight-2button/female-straight-2button_0000_wrist-cloud.png"
+      }
+    },
+    "female-straight-3button": {
+      "gender": "female",
+      "style": "straight",
+      "sleeve": "3button",
+      "canvas": {
+        "width": 1086,
+        "height": 1448
+      },
+      "sources": {
+        "base": "female/female-straight-3button/female-straight-3button_0010_레이어-0.png",
+        "top-mask": "female/female-straight-3button/female-straight-3button_0001_top-mask.png",
+        "top-texture": "female/female-straight-3button/female-straight-3button_0000_top-texture.png",
+        "pants-mask": "female/female-straight-3button/female-straight-3button_0003_pants-mask.png",
+        "pants-texture": "female/female-straight-3button/female-straight-3button_0002_pants-texture.png",
+        "neck-mask": "female/female-straight-3button/female-straight-3button_0006_neck-mask.png",
+        "neck-texture": "female/female-straight-3button/female-straight-3button_0007_neck-texture.png",
+        "wrist-mask": "female/female-straight-3button/female-straight-3button_0008_wrist-mask.png",
+        "wrist-texture": "female/female-straight-3button/female-straight-3button_0009_wrist-texture.png",
+        "neck-cloud": "female/female-straight-3button/female-straight-3button_0004_neck-cloud.png",
+        "wrist-cloud": "female/female-straight-3button/female-straight-3button_0005_wrist-cloud.png"
+      }
+    },
+    "female-straight-plain": {
+      "gender": "female",
+      "style": "straight",
+      "sleeve": "plain",
+      "canvas": {
+        "width": 1086,
+        "height": 1448
+      },
+      "sources": {
+        "base": "female/female-straight-plain/female-straight-plain_0010_0.png",
+        "top-mask": "female/female-straight-plain/female-straight-plain_0002_top-mask.png",
+        "top-texture": "female/female-straight-plain/female-straight-plain_0003_top-texture.png",
+        "pants-mask": "female/female-straight-plain/female-straight-plain_0004_pants-mask.png",
+        "pants-texture": "female/female-straight-plain/female-straight-plain_0005_pants-texture.png",
+        "neck-mask": "female/female-straight-plain/female-straight-plain_0006_neck-mask.png",
+        "neck-texture": "female/female-straight-plain/female-straight-plain_0007_neck-texture.png",
+        "wrist-mask": "female/female-straight-plain/female-straight-plain_0008_wrist-mask.png",
+        "wrist-texture": "female/female-straight-plain/female-straight-plain_0009_wrist-texture.png",
+        "neck-cloud": "female/female-straight-plain/female-straight-plain_0001_neck-cloud.png",
+        "wrist-cloud": "female/female-straight-plain/female-straight-plain_0000_wrist-cloud.png"
+      }
+    },
+    "male-straight-2button": {
+      "gender": "male",
+      "style": "straight",
+      "sleeve": "2button",
+      "canvas": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sources": {
+        "base": "male/male-straight-2button/male-straight-2button_0010_0.png",
+        "top-mask": "male/male-straight-2button/male-straight-2button_0000_top-mask.png",
+        "top-texture": "male/male-straight-2button/male-straight-2button_0001_top-texture.png",
+        "pants-mask": "male/male-straight-2button/male-straight-2button_0003_pants-mask.png",
+        "pants-texture": "male/male-straight-2button/male-straight-2button_0002_pants-texture.png",
+        "neck-mask": "male/male-straight-2button/male-straight-2button_0006_neck-mask.png",
+        "neck-texture": "male/male-straight-2button/male-straight-2button_0007_neck-texture.png",
+        "wrist-mask": "male/male-straight-2button/male-straight-2button_0008_wrist-mask.png",
+        "wrist-texture": "male/male-straight-2button/male-straight-2button_0009_wrist-texture.png",
+        "neck-cloud": "male/male-straight-2button/male-straight-2button_0004_neck-cloud.png",
+        "wrist-cloud": "male/male-straight-2button/male-straight-2button_0005_wrist-cloud.png"
+      }
+    },
+    "male-straight-3button": {
+      "gender": "male",
+      "style": "straight",
+      "sleeve": "3button",
+      "canvas": {
+        "width": 1022,
+        "height": 1536
+      },
+      "sources": {
+        "base": "male/male-straight-3button/male-straight-3button_0010_0.png",
+        "top-mask": "male/male-straight-3button/male-straight-3button_0000_top-mask.png",
+        "top-texture": "male/male-straight-3button/male-straight-3button_0001_top-texture.png",
+        "pants-mask": "male/male-straight-3button/male-straight-3button_0002_pants-mask.png",
+        "pants-texture": "male/male-straight-3button/male-straight-3button_0003_pants-texture.png",
+        "neck-mask": "male/male-straight-3button/male-straight-3button_0006_neck-mask.png",
+        "neck-texture": "male/male-straight-3button/male-straight-3button_0007_neck-texture.png",
+        "wrist-mask": "male/male-straight-3button/male-straight-3button_0008_wrist-mask.png",
+        "wrist-texture": "male/male-straight-3button/male-straight-3button_0009_wrist-texture.png",
+        "neck-cloud": "male/male-straight-3button/male-straight-3button_0005_neck-cloud.png",
+        "wrist-cloud": "male/male-straight-3button/male-straight-3button_0004_wrist-cloud.png"
+      }
+    },
+    "male-straight-plain": {
+      "gender": "male",
+      "style": "straight",
+      "sleeve": "plain",
+      "canvas": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sources": {
+        "base": "male/male-straight-plain/male-straight-plain_0010_0.png",
+        "top-mask": "male/male-straight-plain/male-straight-plain_0002_top-mask.png",
+        "top-texture": "male/male-straight-plain/male-straight-plain_0003_top-texture.png",
+        "pants-mask": "male/male-straight-plain/male-straight-plain_0004_pants-mask.png",
+        "pants-texture": "male/male-straight-plain/male-straight-plain_0005_pants-texture.png",
+        "neck-mask": "male/male-straight-plain/male-straight-plain_0006_neck-mask.png",
+        "neck-texture": "male/male-straight-plain/male-straight-plain_0007_neck-texture.png",
+        "wrist-mask": "male/male-straight-plain/male-straight-plain_0008_wrist-mask.png",
+        "wrist-texture": "male/male-straight-plain/male-straight-plain_0009_wrist-texture.png",
+        "neck-cloud": "male/male-straight-plain/male-straight-plain_0000_neck-cloud.png",
+        "wrist-cloud": "male/male-straight-plain/male-straight-plain_0001_wrist-cloud.png"
+      }
+    }
+  },
+  "chestEmbroidery": {
+    "key": "dragon-yinyang-longevity",
+    "label": "용·음양·수 문양",
+    "source": "embroidery/chest-dragon-yinyang-longevity-source.png",
+    "tintMask": "embroidery/chest-dragon-yinyang-longevity-mask.png",
+    "preview": "embroidery/chest-dragon-yinyang-longevity-preview.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "tintable": true
+  }
+}

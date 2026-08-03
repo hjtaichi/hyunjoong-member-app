@@ -13,8 +13,6 @@ import {
 } from "./dobokV9Assets";
 import { DOBOK_V9_EMBROIDERY_LAYOUTS } from "./dobokV9Config";
 
-const ASPECT = 1024 / 1536;
-
 function getAssetUri(source) {
   if (!source) return null;
 
@@ -170,6 +168,8 @@ export default function DobokPreviewV9({
   width = 390,
   topColor = "#FFFFFF",
   pantsColor = "#FFFFFF",
+  neckColor,
+  wristColor,
   embroideryColor = "#C69A2D",
   chestEmbroideryColor,
   cloudEmbroideryColor,
@@ -180,12 +180,17 @@ export default function DobokPreviewV9({
   const combo = DOBOK_V9_COMBINATIONS[comboKey];
   if (!combo) return null;
 
-  const height = width / ASPECT;
-  const scale = width / 1024;
+  const sourceWidth = Number(combo.canvasWidth || 1024);
+  const sourceHeight = Number(combo.canvasHeight || 1536);
+  const height = width * (sourceHeight / sourceWidth);
+  // 기존 가슴 자수 배치값은 1024px 기준이므로 좌표 스케일은 유지합니다.
+  const embroideryScale = width / 1024;
   const allLayouts = embroideryLayouts || DOBOK_V9_EMBROIDERY_LAYOUTS;
   const layout =
     allLayouts[comboKey] || DOBOK_V9_EMBROIDERY_LAYOUTS[comboKey];
 
+  const effectiveNeckColor = neckColor || topColor;
+  const effectiveWristColor = wristColor || topColor;
   const chestColor = chestEmbroideryColor || embroideryColor;
   const cloudColor = cloudEmbroideryColor || embroideryColor;
 
@@ -202,46 +207,50 @@ export default function DobokPreviewV9({
     >
       <CachedFullLayer
         source={combo.base}
-        recyclingKey={`${comboKey}-base`}
+        recyclingKey={`${comboKey}-base-v12`}
       />
 
-      <NativeTintFullLayer
-        source={combo.pantsMask}
-        color={pantsColor}
-      />
+      <NativeTintFullLayer source={combo.pantsMask} color={pantsColor} />
       <CachedFullLayer
         source={combo.pantsTexture}
         style={textureStyle}
-        recyclingKey={`${comboKey}-pants-texture`}
+        recyclingKey={`${comboKey}-pants-texture-v12`}
       />
 
-      <NativeTintFullLayer
-        source={combo.topMask}
-        color={topColor}
-      />
+      <NativeTintFullLayer source={combo.topMask} color={topColor} />
       <CachedFullLayer
         source={combo.topTexture}
         style={textureStyle}
-        recyclingKey={`${comboKey}-top-texture`}
+        recyclingKey={`${comboKey}-top-texture-v12`}
       />
 
-      {showChest ? (
+      <NativeTintFullLayer source={combo.neckMask} color={effectiveNeckColor} />
+      <CachedFullLayer
+        source={combo.neckTexture}
+        style={textureStyle}
+        recyclingKey={`${comboKey}-neck-texture-v12`}
+      />
+
+      <NativeTintFullLayer source={combo.wristMask} color={effectiveWristColor} />
+      <CachedFullLayer
+        source={combo.wristTexture}
+        style={textureStyle}
+        recyclingKey={`${comboKey}-wrist-texture-v12`}
+      />
+
+      {showChest && layout?.chest ? (
         <RepeatedTintLayer
           source={DOBOK_V9_EMBROIDERY_ASSETS.chestTintMask}
           layout={layout.chest}
           color={chestColor}
-          scale={scale}
+          scale={embroideryScale}
         />
       ) : null}
 
       {showBlackBeltClouds ? (
         <>
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarLeftOuter} color={cloudColor} scale={scale} />
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarLeftInner} color={cloudColor} scale={scale} />
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarRightInner} color={cloudColor} scale={scale} />
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.collarRightOuter} color={cloudColor} scale={scale} />
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.leftCuff} color={cloudColor} scale={scale} />
-          <RepeatedTintLayer source={DOBOK_V9_EMBROIDERY_ASSETS.cloudSource} layout={layout.rightCuff} color={cloudColor} scale={scale} />
+          <NativeTintFullLayer source={combo.neckCloudMask} color={cloudColor} />
+          <NativeTintFullLayer source={combo.wristCloudMask} color={cloudColor} />
         </>
       ) : null}
     </View>
