@@ -1667,6 +1667,37 @@ memoHistoryModalItem: {
   borderBottomWidth: 1,
   borderBottomColor: "#eee4d7",
 },
+
+memoHistoryModalItemHeader: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  marginBottom: 4,
+},
+
+memoHistoryDeleteButton: {
+  minWidth: 52,
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 999,
+  borderWidth: 1,
+  borderColor: "#d6c3ad",
+  backgroundColor: "#fff8ef",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+memoHistoryDeleteButtonDisabled: {
+  opacity: 0.5,
+},
+
+memoHistoryDeleteText: {
+  fontSize: 12,
+  fontWeight: "700",
+  color: "#9a4f43",
+},
+
 memoEditModalCard: {
   width: "88%",
   backgroundColor: "#fffdf9",

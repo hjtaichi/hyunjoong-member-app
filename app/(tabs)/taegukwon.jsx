@@ -50,8 +50,10 @@ const {
   editMemberMemo,
   setEditMemberMemo,
   savingMemo,
+  deletingMemoId,
   MEMBER_MEMO_MAX_LENGTH,
   handleSaveMemberMemo,
+  handleDeleteMemberMemo,
   formRecordModalVisible,
   setFormRecordModalVisible,
   formGoalModalVisible,
@@ -86,7 +88,7 @@ const {
   personalProgress,
   memberMemo,
   personalProgressPercent,
-  previousMemoHistory,
+  memberMemoHistory,
   isYudanjaMember,
   hasPrivateLessonMenu,
   privateLessonMenuTitle,
@@ -273,9 +275,10 @@ debugLogs,
 <MemoHistoryModal
   visible={memoHistoryModalVisible}
   styles={styles}
-  personalProgress={personalProgress}
   memberMemo={memberMemo}
-  previousMemoHistory={previousMemoHistory}
+  memberMemoHistory={memberMemoHistory}
+  deletingMemoId={deletingMemoId}
+  handleDeleteMemberMemo={handleDeleteMemberMemo}
   setMemoHistoryModalVisible={setMemoHistoryModalVisible}
 />
 

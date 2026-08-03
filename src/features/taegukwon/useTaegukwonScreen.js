@@ -35,6 +35,7 @@ const addDebugLog = useCallback((message, data) => {
   const [customPracticeData, setCustomPracticeData] = useState(null);
 
   const [savingMemo, setSavingMemo] = useState(false);
+  const [deletingMemoId, setDeletingMemoId] = useState(null);
   const [memoEditModalVisible, setMemoEditModalVisible] = useState(false);
   const [editMemberMemo, setEditMemberMemo] = useState("");
   const MEMBER_MEMO_MAX_LENGTH = 60;
@@ -216,11 +217,11 @@ const memberMemo =
   personalProgress?.memberMemo ??
   "";
 
-const memberMemoHistory = Array.isArray(taegukwonData?.memberMemoHistory)
+const memberMemoHistory = Array.isArray(
+  taegukwonData?.memberMemoHistory
+)
   ? taegukwonData.memberMemoHistory
   : [];
-
-const previousMemoHistory = memberMemoHistory.slice(1);
 
   const personalProgressPercent = useMemo(() => {
     return Number(personalProgress?.progressPercent || 0);
@@ -365,6 +366,118 @@ setTaegukwonData((prev) => ({
   }
 }, [personalProgress, editMemberMemo, token, loadData]);
 
+  const handleDeleteMemberMemo = useCallback(
+    (memo) => {
+      const memoId = String(memo?.id || "").trim();
+
+      if (!memoId || deletingMemoId) {
+        return;
+      }
+
+      Alert.alert(
+        "수련 메모 삭제",
+        "이 수련 메모를 삭제할까요?",
+        [
+          {
+            text: "취소",
+            style: "cancel",
+          },
+          {
+            text: "삭제",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                setDeletingMemoId(memoId);
+
+                const response = await fetch(
+                  `${API_BASE_URL}/api/member/me/personal-memo/${encodeURIComponent(
+                    memoId
+                  )}`,
+                  {
+                    method: "DELETE",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+
+                const responseText =
+                  await response.text();
+
+                let result = {};
+                try {
+                  result = responseText
+                    ? JSON.parse(responseText)
+                    : {};
+                } catch {
+                  result = {
+                    message: responseText,
+                  };
+                }
+
+                if (!response.ok) {
+                  throw new Error(
+                    result.message ||
+                      "수련 메모 삭제 실패"
+                  );
+                }
+
+                const nextMemberMemo =
+                  result?.data?.memberMemo ?? "";
+
+                setEditMemberMemo(nextMemberMemo);
+
+                setTaegukwonData((prev) => {
+                  if (!prev) return prev;
+
+                  const nextHistory = Array.isArray(
+                    prev.memberMemoHistory
+                  )
+                    ? prev.memberMemoHistory.filter(
+                        (item) =>
+                          String(item?.id) !== memoId
+                      )
+                    : [];
+
+                  return {
+                    ...prev,
+                    memberMemo: nextMemberMemo,
+                    memberMemoHistory: nextHistory,
+                    personalProgress:
+                      prev.personalProgress
+                        ? {
+                            ...prev.personalProgress,
+                            memberMemo:
+                              nextMemberMemo,
+                          }
+                        : prev.personalProgress,
+                  };
+                });
+
+                await loadData({
+                  silent: true,
+                });
+              } catch (error) {
+                Alert.alert(
+                  "오류",
+                  error.message ||
+                    "수련 메모 삭제 중 오류가 발생했습니다."
+                );
+              } finally {
+                setDeletingMemoId(null);
+              }
+            },
+          },
+        ]
+      );
+    },
+    [
+      deletingMemoId,
+      loadData,
+      token,
+    ]
+  );
+
   return {
     loading,
     refreshing,
@@ -389,8 +502,10 @@ setTaegukwonData((prev) => ({
     editMemberMemo,
     setEditMemberMemo,
     savingMemo,
+    deletingMemoId,
     MEMBER_MEMO_MAX_LENGTH,
     handleSaveMemberMemo,
+    handleDeleteMemberMemo,
 
     formRecordModalVisible,
     setFormRecordModalVisible,
@@ -429,7 +544,6 @@ setTaegukwonData((prev) => ({
 
     personalProgress,
     memberMemo,
-    previousMemoHistory,
     memberMemoHistory,
     personalProgressPercent,
    
