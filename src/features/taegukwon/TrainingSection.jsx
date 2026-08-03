@@ -1,7 +1,6 @@
 import React from "react";
 import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function TrainingSection({
   styles,
@@ -11,7 +10,6 @@ export default function TrainingSection({
   hasPrivateLessonMenu,
   privateLessonMenuTitle,
   privateLessonMenuDesc,
-  hasCustomPracticeAccess,
 }) {
   return (
     <View style={styles.trainingSection}>
@@ -204,7 +202,7 @@ export default function TrainingSection({
         <TouchableOpacity
           style={[
             styles.menuRow,
-            !hasCustomPracticeAccess && styles.menuRowLast,
+            styles.menuRowLast,
             !hasPrivateLessonMenu && styles.menuRowLocked,
           ]}
           activeOpacity={0.85}
@@ -239,38 +237,6 @@ export default function TrainingSection({
           )}
         </TouchableOpacity>
 
-        {hasCustomPracticeAccess ? (
-          <TouchableOpacity
-            style={[styles.menuRow, styles.menuRowLast]}
-            activeOpacity={0.85}
-            onPress={() => router.push("/custom-practices")}
-          >
-            <View
-              style={[
-                styles.menuIcon,
-                {
-                  alignItems: "center",
-                  justifyContent: "center",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="meditation"
-                size={35}
-                color="#8f7b6f"
-              />
-            </View>
-
-            <View style={styles.menuTextWrap}>
-              <Text style={styles.menuTitle}>개별수련</Text>
-              <Text style={styles.menuDesc}>
-                나만의 수련 목표와 기록
-              </Text>
-            </View>
-
-            <Text style={styles.menuArrow}>〉</Text>
-          </TouchableOpacity>
-        ) : null}
       </View>
 
       <TouchableOpacity

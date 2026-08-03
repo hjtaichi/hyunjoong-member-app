@@ -6,7 +6,6 @@ import { API_BASE_URL } from "../../config/env";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMemberTaegukwon } from "../../api/memberTaegukwon";
 import { getMyPrivateLessons } from "../../api/privateLessons";
-import { getMyCustomPractices } from "../../api/customPractices";
 import { FORM_DEFINITIONS } from "./taegukwonMeta";
 import { useGongbeopRecords } from "./useGongbeopRecords";
 import { useFormRecords } from "./useFormRecords";
@@ -32,7 +31,6 @@ const addDebugLog = useCallback((message, data) => {
 
   const [taegukwonData, setTaegukwonData] = useState(null);
   const [privateLessonData, setPrivateLessonData] = useState(null);
-  const [customPracticeData, setCustomPracticeData] = useState(null);
 
   const [savingMemo, setSavingMemo] = useState(false);
   const [deletingMemoId, setDeletingMemoId] = useState(null);
@@ -131,14 +129,9 @@ const addDebugLog = useCallback((message, data) => {
         const [
           taegukwonResult,
           privateLessonResult,
-          customPracticeResult,
         ] = await Promise.all([
           getMemberTaegukwon(token),
           getMyPrivateLessons(token).catch(() => null),
-          getMyCustomPractices(token).catch(() => ({
-            enabled: false,
-            practices: [],
-          })),
         ]);
 
         const payload = taegukwonResult?.data
@@ -149,12 +142,6 @@ const addDebugLog = useCallback((message, data) => {
 
         setPrivateLessonData(
           privateLessonResult?.data ? privateLessonResult.data : privateLessonResult
-        );
-
-        setCustomPracticeData(
-          customPracticeResult?.data
-            ? customPracticeResult.data
-            : customPracticeResult
         );
 
         await Promise.all([
@@ -206,9 +193,6 @@ setEditMemberMemo(loadedMemo);
   const privateLessonMenuDesc = privateLessonData?.isActive
     ? `잔여 ${privateLessonData?.currentPackage?.remainingCount ?? 0}회 · 최근 수업 확인`
     : "지난 개인지도 기록 보기";
-
-  const hasCustomPracticeAccess =
-    customPracticeData?.enabled === true;
 
 const personalProgress = taegukwonData?.personalProgress || null;
 
@@ -568,7 +552,6 @@ setTaegukwonData((prev) => ({
     hasPrivateLessonMenu,
     privateLessonMenuTitle,
     privateLessonMenuDesc,
-    hasCustomPracticeAccess,
 
     riverGlowAnim,
     debugLogs,
