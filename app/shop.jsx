@@ -350,7 +350,7 @@ export default function ShopScreen() {
 
   <View style={styles.showroomHero}>
   <Image
-    source={require("../assets/images/shop-dobok-showroom-hero.png")}
+    source={require("../assets/images/shop/shop-training-goods-banner-v2.png")}
     style={styles.showroomHeroImage}
     resizeMode="cover"
   />
@@ -1041,3 +1041,4 @@ productPriceMuted: {
   color: colors.textSub,
 },
 });
+
