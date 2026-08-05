@@ -37,6 +37,7 @@ import { DEBUG_HOME, useHomeScreen } from "../../src/features/home/useHomeScreen
 import { useWeeklyGoal } from "../../src/features/home/useWeeklyGoal";
 
 
+// HJTAICHI_YUDANJA_ATTENDANCE_BUTTON_LOCK_V1_1
 function isActiveYudanjaScheduleForHomeTitle(schedule) {
   const sessionLabel = [
     schedule?.title,
@@ -45,9 +46,19 @@ function isActiveYudanjaScheduleForHomeTitle(schedule) {
   ]
     .filter(Boolean)
     .join(" ");
+  const sessionTimeKey = String(
+    schedule?.sessionTimeKey ||
+      schedule?.recurringMeta?.sessionTimeKey ||
+      schedule?.recurringMeta?.matchedSessionTimeKey ||
+      "",
+  );
+
 
   const isYudanjaSchedule =
-    sessionLabel.includes("유단자");
+    (
+    sessionLabel.includes("유단자") ||
+    sessionTimeKey === "MON_YUDANJA"
+  );
 
   const isClosedHoliday =
     schedule?.isHoliday === true &&
@@ -367,9 +378,15 @@ const profileImageSource = useMemo(() => {
 const hasUnreadMemberNotification = unreadMemberNotificationCount > 0;
 
 const todayCompletedSession = todaySchedules.find((item) => {
+  const isYudanjaSession =
+    isActiveYudanjaScheduleForHomeTitle(item);
+
   return (
     item?.attendanceStatus === "present" &&
-    isWithinTodayAttendanceLockWindow(item, todayString)
+    (
+      isYudanjaSession ||
+      isWithinTodayAttendanceLockWindow(item, todayString)
+    )
   );
 });
 
