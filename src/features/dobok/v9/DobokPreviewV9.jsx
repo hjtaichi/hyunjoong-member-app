@@ -2,7 +2,9 @@ import React, { memo } from "react";
 import {
   Image as NativeImage,
   Platform,
+  Pressable,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import { Image as CachedImage } from "expo-image";
@@ -96,6 +98,7 @@ const NativeTintFullLayer = memo(function NativeTintFullLayer({
   );
 });
 
+
 const PositionedTintLayer = memo(function PositionedTintLayer({
   source,
   layout,
@@ -179,7 +182,6 @@ export default function DobokPreviewV9({
 }) {
   const combo = DOBOK_V9_COMBINATIONS[comboKey];
   if (!combo) return null;
-
   const sourceWidth = Number(combo.canvasWidth || 1024);
   const sourceHeight = Number(combo.canvasHeight || 1536);
   const height = width * (sourceHeight / sourceWidth);
@@ -196,7 +198,7 @@ export default function DobokPreviewV9({
 
   const textureStyle =
     Platform.OS === "web"
-      ? { mixBlendMode: "multiply", opacity: 1 }
+      ? { mixBlendMode: "multiply", opacity: 0.34 }
       : { opacity: 0.34 };
 
   return (
@@ -210,29 +212,25 @@ export default function DobokPreviewV9({
         recyclingKey={`${comboKey}-base-v12`}
       />
 
-      <NativeTintFullLayer source={combo.pantsMask} color={pantsColor} />
-      <CachedFullLayer
+      <NativeTintFullLayer source={combo.pantsMask} color={pantsColor} />      <CachedFullLayer
         source={combo.pantsTexture}
         style={textureStyle}
         recyclingKey={`${comboKey}-pants-texture-v12`}
       />
 
-      <NativeTintFullLayer source={combo.topMask} color={topColor} />
-      <CachedFullLayer
+      <NativeTintFullLayer source={combo.topMask} color={topColor} />      <CachedFullLayer
         source={combo.topTexture}
         style={textureStyle}
         recyclingKey={`${comboKey}-top-texture-v12`}
       />
 
-      <NativeTintFullLayer source={combo.neckMask} color={effectiveNeckColor} />
-      <CachedFullLayer
+      <NativeTintFullLayer source={combo.neckMask} color={effectiveNeckColor} />      <CachedFullLayer
         source={combo.neckTexture}
         style={textureStyle}
         recyclingKey={`${comboKey}-neck-texture-v12`}
       />
 
-      <NativeTintFullLayer source={combo.wristMask} color={effectiveWristColor} />
-      <CachedFullLayer
+      <NativeTintFullLayer source={combo.wristMask} color={effectiveWristColor} />      <CachedFullLayer
         source={combo.wristTexture}
         style={textureStyle}
         recyclingKey={`${comboKey}-wrist-texture-v12`}

@@ -1,4 +1,4 @@
-import {
+﻿import {
   GLOBAL_MENU_DRAWER_RATIO,
   GLOBAL_MENU_SECTIONS,
   filterGlobalMenuSections,
@@ -9,8 +9,8 @@ function findSection(key) {
 }
 
 describe("회원앱 전체 메뉴 계약", () => {
-  test("좌측 사이드바 너비는 화면의 55%다", () => {
-    expect(GLOBAL_MENU_DRAWER_RATIO).toBe(0.55);
+  test("좌측 사이드바 너비는 화면의 65%다", () => {
+    expect(GLOBAL_MENU_DRAWER_RATIO).toBe(0.65);
   });
 
   test("홈 메뉴에는 중복 항목을 넣지 않는다", () => {
@@ -68,3 +68,4 @@ describe("회원앱 전체 메뉴 계약", () => {
     expect(mypage.items.some((item) => item.key === "yudanja-card")).toBe(false);
   });
 });
+

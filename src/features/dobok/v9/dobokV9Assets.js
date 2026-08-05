@@ -244,3 +244,6 @@ export const DOBOK_V9_FABRIC_REFERENCE_IMAGES = {
   fabricA: require("../../../../assets/dobok/v9/fabrics/reference/fabric-a-chart.png"),
   fabricB: require("../../../../assets/dobok/v9/fabrics/reference/fabric-b-chart.png"),
 };
+
+// 로컬 질감 테스트 모드용 공통 원단 질감입니다.
+// 물실크 한 장을 모든 도복 조합의 기존 마스크에 공통 적용합니다.

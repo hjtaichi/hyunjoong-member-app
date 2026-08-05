@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Alert,
   Animated,
+  Image,
   Modal,
   Platform,
   Pressable,
@@ -18,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMemberHome } from "../../api/memberHome";
 import { getMyPrivateLessons } from "../../api/privateLessons";
+import { getProfileImageSource } from "../home/homeImages";
 import {
   GLOBAL_MENU_DRAWER_RATIO,
   filterGlobalMenuSections,
@@ -109,9 +111,29 @@ export default function GlobalMenuLayer() {
 
       const homeMember = homeResult?.member || {};
       setMenuProfile({
-        name: homeMember?.name || user?.name || "회원",
-        rankLevel: Number(homeMember?.rankLevel ?? user?.rankLevel ?? 0),
-      });
+  name:
+    homeMember?.name ||
+    user?.name ||
+    "회원",
+
+  rankLevel: Number(
+    homeMember?.rankLevel ??
+      user?.rankLevel ??
+      0
+  ),
+
+  profileAvatar:
+    homeMember?.profileAvatar ??
+    user?.profileAvatar ??
+    null,
+
+  profileImageUpdatedAt:
+    homeMember?.profileImageUpdatedAt ||
+    homeMember?.updatedAt ||
+    user?.profileImageUpdatedAt ||
+    user?.updatedAt ||
+    "",
+});
       setCanAccessYudanja(
         homeMember?.canAccessYudanjaClass === true ||
           user?.canAccessYudanjaClass === true
@@ -203,10 +225,33 @@ export default function GlobalMenuLayer() {
 
   if (!shouldShowButton) return null;
 
-  const displayName = menuProfile?.name || user?.name || "회원";
-  const rankLevel = Number(menuProfile?.rankLevel ?? user?.rankLevel ?? 0);
-  const rankLabel = rankLevel > 0 ? `${rankLevel}단` : "일반회원";
-  const floatingBottom =
+const displayName =
+  menuProfile?.name ||
+  user?.name ||
+  "회원";
+
+const rankLevel = Number(
+  menuProfile?.rankLevel ??
+    user?.rankLevel ??
+    0
+);
+
+const rankLabel =
+  rankLevel > 0
+    ? `${rankLevel}단`
+    : "일반회원";
+
+const profileImageSource =
+  getProfileImageSource(
+    menuProfile?.profileAvatar ??
+      user?.profileAvatar,
+    menuProfile?.profileImageUpdatedAt ||
+      user?.profileImageUpdatedAt ||
+      user?.updatedAt ||
+      ""
+  );
+
+const floatingBottom =
     (Platform.OS === "web" ? 82 : 98) + Math.max(0, insets.bottom - 4);
 
   return (
@@ -289,8 +334,20 @@ export default function GlobalMenuLayer() {
             {!activeSection ? (
               <View style={styles.profileBox}>
                 <View style={styles.profileIcon}>
-                  <Ionicons name="person" size={22} color="#7B5944" />
-                </View>
+  {profileImageSource ? (
+    <Image
+      source={profileImageSource}
+      style={styles.profileImage}
+      resizeMode="cover"
+    />
+  ) : (
+    <Ionicons
+      name="person"
+      size={22}
+      color="#7B5944"
+    />
+  )}
+</View>
                 <View style={styles.profileTextWrap}>
                   <Text style={styles.profileName} numberOfLines={1}>
                     {displayName}님
@@ -505,14 +562,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  profileIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#EADFD3",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+profileIcon: {
+  width: 38,
+  height: 38,
+  borderRadius: 19,
+  backgroundColor: "#EADFD3",
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+},
+  profileImage: {
+  width: "100%",
+  height: "100%",
+},
   profileTextWrap: {
     flex: 1,
     marginLeft: 10,

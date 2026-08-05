@@ -1,4 +1,4 @@
-export const GLOBAL_MENU_DRAWER_RATIO = 0.55;
+export const GLOBAL_MENU_DRAWER_RATIO = 0.65;
 
 export const GLOBAL_MENU_SECTIONS = Object.freeze([
   {
