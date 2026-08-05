@@ -112,9 +112,12 @@ debugLogs,
     behavior={Platform.OS === "ios" ? "padding" : "height"}
     keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 20}
   >
-    <ScrollView
-     style={styles.container}
-      contentContainerStyle={styles.content}
+<ScrollView
+  style={styles.container}
+  contentContainerStyle={[
+    styles.content,
+    { paddingBottom: 80 },
+  ]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }

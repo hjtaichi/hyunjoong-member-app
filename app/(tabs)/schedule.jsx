@@ -125,9 +125,12 @@ export default function ScheduleScreen() {
 
   return (
     <>
-      <ScrollView
-        style={styles.screen}
-        contentContainerStyle={styles.content}
+<ScrollView
+  style={styles.screen}
+  contentContainerStyle={[
+    styles.content,
+    { paddingBottom: 80 },
+  ]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

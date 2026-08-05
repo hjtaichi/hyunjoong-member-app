@@ -624,10 +624,13 @@ const handleNoticeDetail = useCallback(() => {
 
   return (
     <>
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.screen}
-        contentContainerStyle={styles.content}
+<ScrollView
+  ref={scrollViewRef}
+  style={styles.screen}
+  contentContainerStyle={[
+    styles.content,
+    { paddingBottom: 80 },
+  ]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
