@@ -14,6 +14,11 @@ export default function IndexPage() {
       return;
     }
 
+    if (user?.passwordResetRequired) {
+      router.replace("/required-password-change");
+      return;
+    }
+
     const memberStatus = user?.memberStatus || user?.status;
 
     if (memberStatus === "paused") {

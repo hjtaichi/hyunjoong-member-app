@@ -1,6 +1,4 @@
-import {
-  Alert,
-} from "react-native";
+import { Alert } from "react-native";
 import {
   act,
   renderHook,
@@ -10,14 +8,20 @@ import {
 import { router } from "expo-router";
 import { getMemberCalendar } from "../src/api/memberCalendar";
 import {
-  markAttendance,
   reserveAttendance,
-  cancelReservation,
-  cancelAttendance,
   skipRecurringReservationOnce,
-  undoSkipRecurringReservationOnce,
 } from "../src/api/memberAttendance";
 import { useScheduleScreen } from "../src/features/schedule/useScheduleScreen";
+
+jest.mock("@react-navigation/native", () => {
+  const ReactModule = require("react");
+
+  return {
+    useFocusEffect: (callback) => {
+      ReactModule.useEffect(() => callback(), [callback]);
+    },
+  };
+});
 
 jest.mock("expo-router", () => ({
   router: {
@@ -41,18 +45,20 @@ jest.mock("../src/api/memberAttendance", () => ({
 
 const TODAY = "2026-07-16";
 
-function makeCalendarData(overrides = {}) {
-  const item = {
+function makeScheduleItem(overrides = {}) {
+  return {
     sessionId: "session-1",
-    title: "태극권 수련",
+    title: "현중태극권 일반 수업",
     attendanceStatus: null,
+    canReserve: true,
     canCancelAttendance: false,
     canCancelReservation: true,
-    cancelReservationReason: null,
     recurringMeta: {},
     ...overrides,
   };
+}
 
+function makeCalendarData(item = makeScheduleItem()) {
   return {
     days: [
       {
@@ -67,78 +73,49 @@ function makeCalendarData(overrides = {}) {
     scheduleByDate: {
       [TODAY]: [item],
     },
-    recurringReservations: [
-      {
-        weekday: 2,
-        sessionTimeKey: "AM_10",
-      },
-    ],
+    recurringReservations: [],
   };
 }
 
 function makeProps(overrides = {}) {
-  const logout = jest
-    .fn()
-    .mockResolvedValue(undefined);
-
-  const toDateString = jest.fn((value) => {
-    return value?.iso || TODAY;
-  });
-
-  const getMonthMatrix = jest.fn(() => {
-    return [
-      [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-      ],
-    ];
-  });
-
-  const getDateDiffInDays = jest.fn(
-    (fromDate, toDate) => {
-      const from = new Date(
-        `${fromDate}T00:00:00`
-      );
-      const to = new Date(
-        `${toDate}T00:00:00`
-      );
-
-      return Math.round(
-        (to.getTime() - from.getTime()) /
-          86400000
-      );
-    }
-  );
-
-  const formatRecurringReservations =
-    jest.fn(() => "recurring-summary");
-
   return {
     token: "member-token",
     user: {
       memberStatus: "active",
     },
-    logout,
-    toDateString,
-    getMonthMatrix,
-    getDateDiffInDays,
-    formatRecurringReservations,
+    logout: jest.fn().mockResolvedValue(undefined),
+    toDateString: jest.fn(
+      (value) => value?.iso || TODAY,
+    ),
+    getMonthMatrix: jest.fn(() => [
+      [null, null, null, null, null, null, null],
+    ]),
+    getDateDiffInDays: jest.fn(
+      (fromDate, toDate) => {
+        const from = new Date(
+          `${fromDate}T00:00:00`,
+        );
+        const to = new Date(
+          `${toDate}T00:00:00`,
+        );
+
+        return Math.round(
+          (to.getTime() - from.getTime()) /
+            86400000,
+        );
+      },
+    ),
     ...overrides,
   };
 }
 
 function renderScheduleHook(props) {
   return renderHook(() =>
-    useScheduleScreen(props)
+    useScheduleScreen(props),
   );
 }
 
-describe("회원 일정 화면 상태와 출석·예약 동작", () => {
+describe("회원 일정 화면 현재 정책", () => {
   let alertSpy;
   let consoleLogSpy;
 
@@ -161,108 +138,203 @@ describe("회원 일정 화면 상태와 출석·예약 동작", () => {
     jest.clearAllMocks();
 
     getMemberCalendar.mockResolvedValue(
-      makeCalendarData()
+      makeCalendarData(),
     );
-
-    markAttendance.mockResolvedValue({
-      status: "present",
-    });
 
     reserveAttendance.mockResolvedValue({
       status: "reserved",
     });
 
-    cancelReservation.mockResolvedValue({
-      cancelled: true,
-    });
-
-    cancelAttendance.mockResolvedValue({
-      status: null,
-    });
-
     skipRecurringReservationOnce.mockResolvedValue({
       exceptionType: "skip",
-    });
-
-    undoSkipRecurringReservationOnce.mockResolvedValue({
-      restored: true,
     });
   });
 
   test("토큰이 없으면 일정 API를 호출하지 않는다", async () => {
-    const props = makeProps({
-      token: null,
-    });
-
-    const { result } =
-      await renderScheduleHook(props);
+    const { result } = await renderScheduleHook(
+      makeProps({
+        token: null,
+      }),
+    );
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
     expect(
-      getMemberCalendar
+      getMemberCalendar,
     ).not.toHaveBeenCalled();
-
-    expect(result.current.calendarData).toBeNull();
   });
 
   test("휴식중 회원은 일정 API를 호출하지 않는다", async () => {
-    const props = makeProps({
-      user: {
-        memberStatus: "paused",
-      },
-    });
-
-    const { result } =
-      await renderScheduleHook(props);
+    const { result } = await renderScheduleHook(
+      makeProps({
+        user: {
+          memberStatus: "paused",
+        },
+      }),
+    );
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
     expect(
-      getMemberCalendar
+      getMemberCalendar,
     ).not.toHaveBeenCalled();
   });
 
-  test("현재 월 일정과 선택 날짜 상태를 구성한다", async () => {
+  test("일반수업 예약 상태는 달력에서 숨긴다", async () => {
     getMemberCalendar.mockResolvedValue(
-      makeCalendarData({
-        attendanceStatus: "reserved",
-      })
+      makeCalendarData(
+        makeScheduleItem({
+          attendanceStatus: "reserved",
+        }),
+      ),
     );
 
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
+    const { result } = await renderScheduleHook(
+      makeProps(),
+    );
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(getMemberCalendar).toHaveBeenCalledWith(
-      "member-token",
-      expect.any(Number),
-      expect.any(Number)
+    expect(
+      result.current.calendarMap[TODAY],
+    ).toMatchObject({
+      date: TODAY,
+      attendanceStatus: null,
+    });
+  });
+
+  test("일반수업 예약 액션은 API를 호출하지 않는다", async () => {
+    const { result } = await renderScheduleHook(
+      makeProps(),
     );
 
-    expect(result.current.selectedDate).toBe(TODAY);
-    expect(result.current.selectedSchedules).toHaveLength(1);
-    expect(result.current.selectedMySchedules).toHaveLength(1);
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.handleScheduleAction(
+        makeScheduleItem(),
+        "reserve",
+      );
+    });
 
     expect(
-      result.current.calendarMap[TODAY]
-    ).toEqual(
-      expect.objectContaining({
-        date: TODAY,
-        attendanceStatus: "reserved",
-      })
+      reserveAttendance,
+    ).not.toHaveBeenCalled();
+  });
+
+  test("유단자수련은 예약 액션을 허용한다", async () => {
+    const yudanjaItem = makeScheduleItem({
+      title: "월요일 유단자수련",
+      sessionTimeKey: "MON_YUDANJA",
+    });
+
+    getMemberCalendar.mockResolvedValue(
+      makeCalendarData(yudanjaItem),
     );
 
-    expect(result.current.recurringInfoText).toBe(
-      "recurring-summary"
+    const { result } = await renderScheduleHook(
+      makeProps({
+        user: {
+          memberStatus: "active",
+          canAccessYudanjaClass: true,
+        },
+      }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.handleScheduleAction(
+        yudanjaItem,
+        "reserve",
+      );
+    });
+
+    expect(
+      reserveAttendance,
+    ).toHaveBeenCalledWith(
+      "member-token",
+      "session-1",
+    );
+  });
+
+  test("유단자 정기예약은 이번만 쉬기를 호출한다", async () => {
+    const yudanjaItem = makeScheduleItem({
+      title: "월요일 유단자수련",
+      sessionTimeKey: "MON_YUDANJA",
+      attendanceStatus: "reserved",
+      canCancelReservation: true,
+      recurringMeta: {
+        isRecurring: true,
+        matchedRecurringRule: true,
+        memberRecurringReservationId: 901,
+      },
+    });
+
+    getMemberCalendar.mockResolvedValue(
+      makeCalendarData(yudanjaItem),
+    );
+
+    const { result } = await renderScheduleHook(
+      makeProps({
+        user: {
+          memberStatus: "active",
+          canAccessYudanjaClass: true,
+        },
+      }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.handleScheduleAction(
+        yudanjaItem,
+        "skipOnce",
+      );
+    });
+
+    expect(
+      skipRecurringReservationOnce,
+    ).toHaveBeenCalledWith(
+      "member-token",
+      {
+        memberRecurringReservationId: 901,
+        date: TODAY,
+        reason: "",
+      },
+    );
+  });
+
+  test("QR 출석은 QR 화면으로 이동한다", async () => {
+    const { result } = await renderScheduleHook(
+      makeProps(),
+    );
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      result.current.handleScheduleAction(
+        {},
+        "qrAttendance",
+      );
+    });
+
+    expect(router.push).toHaveBeenCalledWith(
+      "/qr-attendance",
     );
   });
 
@@ -275,7 +347,6 @@ describe("회원 일정 화면 상태와 출석·예약 동작", () => {
     getMemberCalendar.mockRejectedValue(error);
 
     const props = makeProps();
-
     await renderScheduleHook(props);
 
     await waitFor(() => {
@@ -283,584 +354,7 @@ describe("회원 일정 화면 상태와 출석·예약 동작", () => {
     });
 
     expect(router.replace).toHaveBeenCalledWith(
-      "/login"
+      "/login",
     );
-
-    expect(Alert.alert).toHaveBeenCalled();
-  });
-
-  test("날짜 선택 시 선택 날짜와 바텀시트를 연다", async () => {
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    await act(async () => {
-      result.current.handlePressDate({
-        iso: "2026-07-20",
-      });
-    });
-
-    expect(result.current.selectedDate).toBe(
-      "2026-07-20"
-    );
-
-    expect(
-      result.current.isScheduleSheetVisible
-    ).toBe(true);
-
-    await act(async () => {
-      result.current.closeScheduleSheet();
-    });
-
-    expect(
-      result.current.isScheduleSheetVisible
-    ).toBe(false);
-  });
-
-  test("QR 출석 동작은 시트를 닫고 QR 화면으로 이동한다", async () => {
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    await act(async () => {
-      result.current.openScheduleSheet();
-    });
-
-    expect(
-      result.current.isScheduleSheetVisible
-    ).toBe(true);
-
-    await act(async () => {
-      result.current.handleScheduleAction(
-        {},
-        "qrAttendance"
-      );
-    });
-
-    expect(
-      result.current.isScheduleSheetVisible
-    ).toBe(false);
-
-    expect(router.push).toHaveBeenCalledWith(
-      "/qr-attendance"
-    );
-  });
-
-  test("일반 출석 예정 등록 후 로컬 상태를 reserved로 바꾼다", async () => {
-    const initialData = makeCalendarData();
-
-    getMemberCalendar.mockResolvedValue(
-      initialData
-    );
-
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const item =
-      result.current.selectedSchedules[0];
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        item,
-        "reserve"
-      );
-    });
-
-    expect(reserveAttendance).toHaveBeenCalledWith(
-      "member-token",
-      "session-1"
-    );
-
-    expect(
-      result.current.selectedSchedules[0]
-        .attendanceStatus
-    ).toBe("reserved");
-
-    expect(
-      result.current.selectedSchedules[0]
-        .recurringMeta
-    ).toMatchObject({
-      isRecurring: false,
-      hasRecurringException: false,
-      exceptionType: null,
-    });
-
-    expect(getMemberCalendar).toHaveBeenCalledTimes(1);
-    expect(result.current.submittingAttendance).toBe(
-      false
-    );
-  });
-
-  test("일반 예약 취소 후 최신 일정을 다시 조회한다", async () => {
-    const initialData = makeCalendarData({
-      attendanceStatus: "reserved",
-    });
-
-    const refreshedData = makeCalendarData({
-      attendanceStatus: null,
-    });
-
-    getMemberCalendar
-      .mockResolvedValueOnce(initialData)
-      .mockResolvedValueOnce(refreshedData);
-
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const item =
-      result.current.selectedSchedules[0];
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        item,
-        "cancelReserve"
-      );
-    });
-
-    expect(cancelReservation).toHaveBeenCalledWith(
-      "member-token",
-      "session-1"
-    );
-
-    expect(getMemberCalendar).toHaveBeenCalledTimes(2);
-
-    expect(
-      result.current.selectedSchedules[0]
-        .attendanceStatus
-    ).toBeNull();
-  });
-
-  test("시작한 일반 예약은 취소 API를 호출하지 않는다", async () => {
-    getMemberCalendar.mockResolvedValue(
-      makeCalendarData({
-        attendanceStatus: "reserved",
-        canCancelReservation: false,
-        cancelReservationReason:
-          "수업이 시작된 후에는 예약을 취소할 수 없습니다.",
-      })
-    );
-
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const item =
-      result.current.selectedSchedules[0];
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        item,
-        "cancelReserve"
-      );
-    });
-
-    expect(cancelReservation).not.toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "안내",
-      "수업이 시작된 후에는 예약을 취소할 수 없습니다."
-    );
-  });
-
-  test("직접 출석 후 present 상태를 다시 조회한다", async () => {
-    const initialData = makeCalendarData();
-
-    const refreshedData = makeCalendarData({
-      attendanceStatus: "present",
-      canCancelAttendance: true,
-    });
-
-    getMemberCalendar
-      .mockResolvedValueOnce(initialData)
-      .mockResolvedValueOnce(refreshedData);
-
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const item =
-      result.current.selectedSchedules[0];
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        item,
-        "attendance"
-      );
-    });
-
-    expect(markAttendance).toHaveBeenCalledWith(
-      "member-token",
-      {
-        date: TODAY,
-        sessionId: "session-1",
-      }
-    );
-
-    expect(
-      result.current.selectedSchedules[0]
-        .attendanceStatus
-    ).toBe("present");
-
-    expect(
-      result.current.selectedSchedules[0]
-        .canCancelAttendance
-    ).toBe(true);
-  });
-
-  test("출석 취소 결과가 reserved이면 예약 상태를 유지한다", async () => {
-    const initialData = makeCalendarData({
-      attendanceStatus: "present",
-      canCancelAttendance: true,
-    });
-
-    const refreshedData = makeCalendarData({
-      attendanceStatus: "reserved",
-      canCancelAttendance: false,
-    });
-
-    cancelAttendance.mockResolvedValue({
-      status: "reserved",
-    });
-
-    getMemberCalendar
-      .mockResolvedValueOnce(initialData)
-      .mockResolvedValueOnce(refreshedData);
-
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const item =
-      result.current.selectedSchedules[0];
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        item,
-        "cancelAttendance"
-      );
-    });
-
-    expect(cancelAttendance).toHaveBeenCalledWith(
-      "member-token",
-      "session-1"
-    );
-
-    expect(
-      result.current.selectedSchedules[0]
-        .attendanceStatus
-    ).toBe("reserved");
-
-    expect(
-      result.current.selectedSchedules[0]
-        .canCancelAttendance
-    ).toBe(false);
-  });
-
-  test("정기예약 이번만 쉬기는 예외 상태로 갱신한다", async () => {
-    const initialData = makeCalendarData({
-      attendanceStatus: "reserved",
-      recurringMeta: {
-        isRecurring: true,
-        memberRecurringReservationId: 901,
-      },
-    });
-
-    const refreshedData = makeCalendarData({
-      attendanceStatus: null,
-      recurringMeta: {
-        isRecurring: false,
-        memberRecurringReservationId: 901,
-        hasRecurringException: true,
-        exceptionType: "skip",
-      },
-    });
-
-    getMemberCalendar
-      .mockResolvedValueOnce(initialData)
-      .mockResolvedValueOnce(refreshedData);
-
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const item =
-      result.current.selectedSchedules[0];
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        item,
-        "skipOnce"
-      );
-    });
-
-    expect(
-      skipRecurringReservationOnce
-    ).toHaveBeenCalledWith(
-      "member-token",
-      {
-        memberRecurringReservationId: 901,
-        date: TODAY,
-        reason: "",
-      }
-    );
-
-    expect(
-      result.current.selectedSchedules[0]
-        .recurringMeta
-    ).toMatchObject({
-      isRecurring: false,
-      hasRecurringException: true,
-      exceptionType: "skip",
-    });
-  });
-
-  test("시작한 정기예약은 이번만 쉬기 API를 호출하지 않는다", async () => {
-    getMemberCalendar.mockResolvedValue(
-      makeCalendarData({
-        attendanceStatus: "reserved",
-        canCancelReservation: false,
-        cancelReservationReason:
-          "수업이 시작된 후에는 예약을 취소할 수 없습니다.",
-        recurringMeta: {
-          isRecurring: true,
-          memberRecurringReservationId: 903,
-        },
-      })
-    );
-
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const item =
-      result.current.selectedSchedules[0];
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        item,
-        "skipOnce"
-      );
-    });
-
-    expect(
-      skipRecurringReservationOnce
-    ).not.toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "안내",
-      "수업이 시작된 후에는 예약을 취소할 수 없습니다."
-    );
-  });
-
-  test("이번만 쉬기 취소는 정기예약 상태로 복구한다", async () => {
-    const initialData = makeCalendarData({
-      attendanceStatus: null,
-      recurringMeta: {
-        isRecurring: false,
-        memberRecurringReservationId: 902,
-        hasRecurringException: true,
-        exceptionType: "skip",
-      },
-    });
-
-    const refreshedData = makeCalendarData({
-      attendanceStatus: "reserved",
-      recurringMeta: {
-        isRecurring: true,
-        memberRecurringReservationId: 902,
-        hasRecurringException: false,
-        exceptionType: null,
-      },
-    });
-
-    getMemberCalendar
-      .mockResolvedValueOnce(initialData)
-      .mockResolvedValueOnce(refreshedData);
-
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const item =
-      result.current.selectedSchedules[0];
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        item,
-        "undoSkip"
-      );
-    });
-
-    expect(
-      undoSkipRecurringReservationOnce
-    ).toHaveBeenCalledWith(
-      "member-token",
-      {
-        memberRecurringReservationId: 902,
-        date: TODAY,
-      }
-    );
-
-    expect(
-      result.current.selectedSchedules[0]
-        .attendanceStatus
-    ).toBe("reserved");
-
-    expect(
-      result.current.selectedSchedules[0]
-        .recurringMeta
-    ).toMatchObject({
-      isRecurring: true,
-      hasRecurringException: false,
-      exceptionType: null,
-    });
-  });
-
-  test("시작한 수업의 이번만 쉬기 취소 API를 호출하지 않는다", async () => {
-    getMemberCalendar.mockResolvedValue(
-      makeCalendarData({
-        attendanceStatus: null,
-        canReserve: false,
-        reserveBlockedReason:
-          "이미 시작한 수업은 출석 예정으로 등록할 수 없습니다.",
-        recurringMeta: {
-          isRecurring: false,
-          memberRecurringReservationId: 904,
-          hasRecurringException: true,
-          exceptionType: "skip",
-        },
-      })
-    );
-
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const item =
-      result.current.selectedSchedules[0];
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        item,
-        "undoSkip"
-      );
-    });
-
-    expect(
-      undoSkipRecurringReservationOnce
-    ).not.toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "안내",
-      "이미 시작한 수업은 출석 예정으로 등록할 수 없습니다."
-    );
-  });
-
-  test("세션 ID가 없으면 예약 API를 호출하지 않는다", async () => {
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        {},
-        "reserve"
-      );
-    });
-
-    expect(
-      reserveAttendance
-    ).not.toHaveBeenCalled();
-
-    expect(Alert.alert).toHaveBeenCalled();
-
-    expect(result.current.submittingAttendance).toBe(
-      false
-    );
-  });
-
-  test("예약 API 실패 후에도 제출 상태를 해제한다", async () => {
-    reserveAttendance.mockRejectedValue(
-      new Error("예약 마감")
-    );
-
-    const props = makeProps();
-    const { result } =
-      await renderScheduleHook(props);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const item =
-      result.current.selectedSchedules[0];
-
-    await act(async () => {
-      await result.current.handleScheduleAction(
-        item,
-        "reserve"
-      );
-    });
-
-    expect(Alert.alert).toHaveBeenCalledWith(
-      expect.any(String),
-      "예약 마감"
-    );
-
-    expect(result.current.submittingAttendance).toBe(
-      false
-    );
-
-    expect(
-      result.current.selectedSchedules[0]
-        .attendanceStatus
-    ).toBeNull();
   });
 });

@@ -81,9 +81,60 @@ describe("정기예약과 수업 표시", () => {
 });
 
 describe("예약·출석 화면 상태 판독", () => {
-  test("정기예약 쉬기 예외는 다시 출석 예정으로 복구할 수 있다", () => {
+  test("일반 수업은 예약 상태와 예약 동작을 숨긴다", () => {
     const meta = getScheduleUiMeta(
       {
+        title: "현중태극권 일반 수업",
+        attendanceStatus: "reserved",
+        canCancelReservation: true,
+        recurringMeta: {
+          isRecurring: true,
+          matchedRecurringRule: true,
+          memberRecurringReservationId: 101,
+        },
+      },
+      {
+        isReservableDate: true,
+      },
+    );
+
+    expect(meta).toMatchObject({
+      tone: "plain",
+      label: null,
+      helperText: null,
+      actionLabel: null,
+      actionType: null,
+      isRecurring: false,
+      isYudanja: false,
+    });
+  });
+
+  test("일반 수업도 출석 완료 상태는 표시한다", () => {
+    const meta = getScheduleUiMeta(
+      {
+        title: "현중태극권 일반 수업",
+        attendanceStatus: "present",
+        canCancelAttendance: false,
+      },
+      {
+        isReservableDate: true,
+      },
+    );
+
+    expect(meta).toMatchObject({
+      tone: "done",
+      label: "출석 완료",
+      actionLabel: null,
+      actionType: null,
+      isYudanja: false,
+    });
+  });
+
+  test("유단자 정기예약 쉬기 예외는 다시 출석 예정으로 복구할 수 있다", () => {
+    const meta = getScheduleUiMeta(
+      {
+        title: "월요일 유단자수련",
+        sessionTimeKey: "MON_YUDANJA",
         canReserve: true,
         recurringMeta: {
           hasRecurringException: true,
@@ -92,7 +143,7 @@ describe("예약·출석 화면 상태 판독", () => {
       },
       {
         isReservableDate: true,
-      }
+      },
     );
 
     expect(meta).toMatchObject({
@@ -101,39 +152,15 @@ describe("예약·출석 화면 상태 판독", () => {
       actionLabel: "출석 예정",
       actionType: "undoSkip",
       isRecurring: false,
+      isYudanja: true,
     });
   });
 
-  test("시작한 수업의 이번만 쉬기 상태는 유지하고 복구 동작을 숨긴다", () => {
+  test("유단자 정기예약은 이번만 쉬기 동작을 표시한다", () => {
     const meta = getScheduleUiMeta(
       {
-        canReserve: false,
-        reserveBlockedReason:
-          "이미 시작한 수업은 출석 예정으로 등록할 수 없습니다.",
-        recurringMeta: {
-          hasRecurringException: true,
-          memberRecurringReservationId: 104,
-        },
-      },
-      {
-        isReservableDate: true,
-      }
-    );
-
-    expect(meta).toMatchObject({
-      tone: "disabled",
-      label: "이번만 쉬기",
-      helperText:
-        "이미 시작한 수업은 출석 예정으로 등록할 수 없습니다.",
-      actionLabel: null,
-      actionType: null,
-      isRecurring: false,
-    });
-  });
-
-  test("정기예약 수업은 이번만 쉬기 동작을 표시한다", () => {
-    const meta = getScheduleUiMeta(
-      {
+        title: "월요일 유단자수련",
+        sessionTimeKey: "MON_YUDANJA",
         attendanceStatus: "reserved",
         canCancelReservation: true,
         recurringMeta: {
@@ -144,7 +171,7 @@ describe("예약·출석 화면 상태 판독", () => {
       },
       {
         isReservableDate: true,
-      }
+      },
     );
 
     expect(meta).toMatchObject({
@@ -153,65 +180,16 @@ describe("예약·출석 화면 상태 판독", () => {
       actionLabel: "이번만 쉬기",
       actionType: "skipOnce",
       isRecurring: true,
+      isYudanja: true,
     });
   });
 
-  test("일반예약 수업은 예약 취소 동작을 표시한다", () => {
+  test("시작한 유단자 정기예약은 상태를 유지하고 이번만 쉬기를 숨긴다", () => {
     const meta = getScheduleUiMeta(
       {
+        title: "월요일 유단자수련",
+        sessionTimeKey: "MON_YUDANJA",
         attendanceStatus: "reserved",
-        canCancelReservation: true,
-        recurringMeta: {
-          isRecurring: false,
-        },
-      },
-      {
-        isReservableDate: true,
-      }
-    );
-
-    expect(meta).toMatchObject({
-      tone: "reserved",
-      label: "출석 예정",
-      actionLabel: "예약 취소",
-      actionType: "cancelReserve",
-      isRecurring: false,
-    });
-  });
-
-  test("시작한 일반예약은 출석 예정 상태를 유지하고 취소 동작을 숨긴다", () => {
-    const meta = getScheduleUiMeta(
-      {
-        attendanceStatus: "reserved",
-        canReserve: false,
-        canCancelReservation: false,
-        cancelReservationReason:
-          "수업이 시작된 후에는 예약을 취소할 수 없습니다.",
-        recurringMeta: {
-          isRecurring: false,
-        },
-      },
-      {
-        isReservableDate: true,
-      }
-    );
-
-    expect(meta).toMatchObject({
-      tone: "reserved",
-      label: "출석 예정",
-      helperText:
-        "수업이 시작된 후에는 예약을 취소할 수 없습니다.",
-      actionLabel: null,
-      actionType: null,
-      isRecurring: false,
-    });
-  });
-
-  test("시작한 정기예약은 정기출석 예정 상태를 유지하고 이번만 쉬기를 숨긴다", () => {
-    const meta = getScheduleUiMeta(
-      {
-        attendanceStatus: "reserved",
-        canReserve: false,
         canCancelReservation: false,
         cancelReservationReason:
           "수업이 시작된 후에는 예약을 취소할 수 없습니다.",
@@ -223,7 +201,7 @@ describe("예약·출석 화면 상태 판독", () => {
       },
       {
         isReservableDate: true,
-      }
+      },
     );
 
     expect(meta).toMatchObject({
@@ -234,37 +212,21 @@ describe("예약·출석 화면 상태 판독", () => {
       actionLabel: null,
       actionType: null,
       isRecurring: true,
+      isYudanja: true,
     });
   });
 
-  test("출석 취소 가능 상태를 표시한다", () => {
+  test("예약 가능한 유단자수련은 출석 예정 동작을 표시한다", () => {
     const meta = getScheduleUiMeta(
       {
-        attendanceStatus: "present",
-        canCancelAttendance: true,
-      },
-      {
-        isReservableDate: true,
-      }
-    );
-
-    expect(meta).toMatchObject({
-      tone: "done",
-      label: "출석 완료",
-      actionLabel: "출석 취소",
-      actionType: "cancelAttendance",
-    });
-  });
-
-  test("예약 가능한 수업은 출석 예정 동작을 표시한다", () => {
-    const meta = getScheduleUiMeta(
-      {
+        title: "월요일 유단자수련",
+        sessionTimeKey: "MON_YUDANJA",
         canReserve: true,
         recurringMeta: {},
       },
       {
         isReservableDate: true,
-      }
+      },
     );
 
     expect(meta).toMatchObject({
@@ -272,26 +234,32 @@ describe("예약·출석 화면 상태 판독", () => {
       label: "예약 가능",
       actionLabel: "출석 예정",
       actionType: "reserve",
+      isYudanja: true,
     });
   });
 
-  test("예약 차단 사유가 있으면 예약 불가 상태를 표시한다", () => {
+  test("예약 차단 사유가 있는 유단자수련은 예약 불가 상태를 표시한다", () => {
     const meta = getScheduleUiMeta(
       {
+        title: "월요일 유단자수련",
+        sessionTimeKey: "MON_YUDANJA",
         canReserve: false,
-        reserveBlockedReason: "주말반 회원은 토요일만 예약할 수 있습니다.",
+        reserveBlockedReason:
+          "유단자수련 예약 가능 기간이 아닙니다.",
       },
       {
         isReservableDate: true,
-      }
+      },
     );
 
     expect(meta).toMatchObject({
       tone: "disabled",
       label: "예약 불가",
-      helperText: "주말반 회원은 토요일만 예약할 수 있습니다.",
+      helperText:
+        "유단자수련 예약 가능 기간이 아닙니다.",
       actionLabel: null,
       actionType: null,
+      isYudanja: true,
     });
   });
 
@@ -313,6 +281,12 @@ describe("예약·출석 화면 상태 판독", () => {
       scheduleStatusChipDisabled: "disabled-chip",
       scheduleStatusChipTextDisabled: "disabled-text",
     };
+
+    expect(getScheduleCardStyle(styles, "plain")).toEqual({
+      container: null,
+      chip: null,
+      chipText: null,
+    });
 
     expect(getScheduleCardStyle(styles, "done")).toEqual({
       container: "done-card",
@@ -346,7 +320,6 @@ describe("예약·출석 화면 상태 판독", () => {
   });
 });
 
-
 const { readFileSync: readAttendanceConsistencySource } = require("node:fs");
 const { join: joinAttendanceConsistencyPath } = require("node:path");
 
@@ -361,10 +334,12 @@ describe("회원 홈 출석 표시 일관성", () => {
     expect(source).not.toContain("누적 출석 {attendanceCount}일");
   });
 
-  test("출석 목표 달성률은 백엔드 계산값을 표시한다", () => {
+  test("홈은 기존 월간 달성률 대신 주간 목표를 표시한다", () => {
     const source = readAttendanceConsistencyFile("src/features/home/components/HomeHeader.jsx");
-    expect(source).toContain("Number(monthlyGoalRate?.rate || 0)");
-    expect(source).toContain("출석 목표 달성률 {monthlyRate}%");
+    expect(source).toContain("weeklyGoalSummary?.valueText");
+    expect(source).toContain("이번 주 출석 목표");
+    expect(source).not.toContain("monthlyGoalRate");
+    expect(source).not.toContain("출석 목표 달성률");
   });
 
   test("홈 응답과 출석 목표를 무조건 console에 출력하지 않는다", () => {

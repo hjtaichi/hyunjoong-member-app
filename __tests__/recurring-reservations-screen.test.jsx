@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  Alert,
-  Text,
-} from "react-native";
+import { Alert } from "react-native";
 import {
   render,
   screen,
@@ -39,22 +36,16 @@ jest.mock("../src/api/memberHome", () => ({
 
 jest.mock("../src/components/ScreenHeader", () => {
   const ReactModule = require("react");
-  const {
-    Text: NativeText,
-  } = require("react-native");
+  const { Text } = require("react-native");
 
   return {
     __esModule: true,
     default: ({ title }) =>
-      ReactModule.createElement(
-        NativeText,
-        null,
-        title
-      ),
+      ReactModule.createElement(Text, null, title),
   };
 });
 
-describe("정기출석 설정 화면", () => {
+describe("유단자수련 정기예약 설정 화면", () => {
   let alertSpy;
 
   beforeAll(() => {
@@ -91,11 +82,11 @@ describe("정기출석 설정 화면", () => {
 
   async function renderLoadedScreen() {
     await render(
-      <RecurringReservationsScreen />
+      <RecurringReservationsScreen />,
     );
 
     expect(
-      await screen.findByText("저장")
+      await screen.findByText("저장"),
     ).toBeTruthy();
   }
 
@@ -103,17 +94,64 @@ describe("정기출석 설정 화면", () => {
     getRecurringReservations.mockResolvedValue({
       items: [
         {
-          weekday: 2,
-          sessionTimeKey: "AM_10",
-        },
-        {
-          weekday: 2,
-          sessionTimeKey: "PM_4",
+          weekday: 1,
+          sessionTimeKey: "MON_YUDANJA",
         },
         {
           weekday: 2,
           sessionTimeKey: "AM_10",
         },
+      ],
+    });
+
+    getMemberHome.mockResolvedValue({
+      member: {
+        canAccessYudanjaClass: true,
+      },
+    });
+
+    await renderLoadedScreen();
+
+    expect(
+      getRecurringReservations,
+    ).toHaveBeenCalledWith("member-token");
+
+    expect(getMemberHome).toHaveBeenCalledWith(
+      "member-token",
+    );
+
+    expect(
+      screen.getByText("월요일 유단자수련"),
+    ).toBeTruthy();
+
+    expect(
+      screen.getByText(
+        "유단자수련 정기예약 사용 중",
+      ),
+    ).toBeTruthy();
+
+    expect(screen.queryByText("화요일")).toBeNull();
+  });
+
+  test("일반 수업은 정기예약 대상이 아님을 안내한다", async () => {
+    await renderLoadedScreen();
+
+    expect(
+      screen.getByText("일반 수업 예약 안내"),
+    ).toBeTruthy();
+
+    expect(
+      screen.getByText(
+        /일반 수업은 개별 예약과 정기예약을 사용하지 않으며/,
+      ),
+    ).toBeTruthy();
+  });
+
+  test("권한이 있는 회원은 월요일 유단자 정기예약을 저장한다", async () => {
+    const user = userEvent.setup();
+
+    getRecurringReservations.mockResolvedValue({
+      items: [
         {
           weekday: 1,
           sessionTimeKey: "MON_YUDANJA",
@@ -129,152 +167,11 @@ describe("정기출석 설정 화면", () => {
 
     await renderLoadedScreen();
 
-    expect(
-      getRecurringReservations
-    ).toHaveBeenCalledWith("member-token");
-
-    expect(getMemberHome).toHaveBeenCalledWith(
-      "member-token"
-    );
-
-    expect(
-      screen.getByText(
-        "오전 10시부 · 오후 4시부"
-      )
-    ).toBeTruthy();
-  });
-
-  test("정기예약 조회 실패 메시지를 표시한다", async () => {
-    getRecurringReservations.mockRejectedValue(
-      new Error("정기예약 조회 실패")
-    );
-
-    await render(
-      <RecurringReservationsScreen />
-    );
-
-    await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        expect.any(String),
-        "정기예약 조회 실패"
-      );
-    });
-
-    expect(
-      await screen.findByText("저장")
-    ).toBeTruthy();
-  });
-
-  test("한 요일에 여러 시간대를 선택할 수 있다", async () => {
-    const user = userEvent.setup();
-
-    await renderLoadedScreen();
-
-    await user.press(
-      screen.getByText("화요일")
-    );
-
-    await user.press(
-      screen.getByText("오전 10시부")
-    );
-
-    await user.press(
-      screen.getByText("오후 7시부")
-    );
-
-    await user.press(
-      screen.getByText("닫기")
-    );
-
-    expect(
-      screen.getByText(
-        "오전 10시부 · 오후 7시부"
-      )
-    ).toBeTruthy();
-  });
-
-  test("선택한 일반 정기예약을 PUT 저장한다", async () => {
-    const user = userEvent.setup();
-
-    getRecurringReservations.mockResolvedValue({
-      items: [
-        {
-          weekday: 2,
-          sessionTimeKey: "AM_10",
-        },
-      ],
-    });
-
-    await renderLoadedScreen();
-
-    await user.press(
-      screen.getByText("저장")
-    );
+    await user.press(screen.getByText("저장"));
 
     await waitFor(() => {
       expect(
-        saveRecurringReservations
-      ).toHaveBeenCalledWith(
-        "member-token",
-        {
-          isEnabled: true,
-          items: [
-            {
-              weekday: 2,
-              sessionTimeKey: "AM_10",
-            },
-          ],
-        }
-      );
-    });
-  });
-
-  test("선택 항목이 없으면 비활성 상태로 저장한다", async () => {
-    const user = userEvent.setup();
-
-    await renderLoadedScreen();
-
-    await user.press(
-      screen.getByText("저장")
-    );
-
-    await waitFor(() => {
-      expect(
-        saveRecurringReservations
-      ).toHaveBeenCalledWith(
-        "member-token",
-        {
-          isEnabled: false,
-          items: [],
-        }
-      );
-    });
-  });
-
-  test("권한이 있는 회원은 유단자 자동예약을 추가한다", async () => {
-    const user = userEvent.setup();
-
-    getMemberHome.mockResolvedValue({
-      member: {
-        canAccessYudanjaClass: true,
-      },
-    });
-
-    await renderLoadedScreen();
-
-    await user.press(
-      screen.getByText(
-        /유단자.*자동 예약/
-      )
-    );
-
-    await user.press(
-      screen.getByText("저장")
-    );
-
-    await waitFor(() => {
-      expect(
-        saveRecurringReservations
+        saveRecurringReservations,
       ).toHaveBeenCalledWith(
         "member-token",
         {
@@ -285,12 +182,12 @@ describe("정기출석 설정 화면", () => {
               sessionTimeKey: "MON_YUDANJA",
             },
           ],
-        }
+        },
       );
     });
   });
 
-  test("유단자 권한이 없으면 유단자 예약을 저장하지 않는다", async () => {
+  test("권한이 있는 회원은 유단자 정기예약을 끌 수 있다", async () => {
     const user = userEvent.setup();
 
     getRecurringReservations.mockResolvedValue({
@@ -304,25 +201,69 @@ describe("정기출석 설정 화면", () => {
 
     getMemberHome.mockResolvedValue({
       member: {
-        canAccessYudanjaClass: false,
+        canAccessYudanjaClass: true,
       },
     });
 
     await renderLoadedScreen();
 
     await user.press(
-      screen.getByText("저장")
+      screen.getByText(
+        "유단자수련 정기예약 사용 중",
+      ),
     );
+
+    await user.press(screen.getByText("저장"));
 
     await waitFor(() => {
       expect(
-        saveRecurringReservations
+        saveRecurringReservations,
       ).toHaveBeenCalledWith(
         "member-token",
         {
           isEnabled: false,
           items: [],
-        }
+        },
+      );
+    });
+  });
+
+  test("유단자 권한이 없으면 저장 버튼이 비활성화된다", async () => {
+    await renderLoadedScreen();
+
+    expect(
+      screen.getByText(
+        "유단자수련 권한이 있는 회원만 설정할 수 있습니다.",
+      ),
+    ).toBeTruthy();
+
+    const saveText = screen.getByText("저장");
+    const saveButton = saveText.parent;
+
+    expect(
+      saveButton?.props?.accessibilityState,
+    ).toMatchObject({
+      disabled: true,
+    });
+
+    expect(
+      saveRecurringReservations,
+    ).not.toHaveBeenCalled();
+  });
+
+  test("조회 실패 메시지를 표시한다", async () => {
+    getRecurringReservations.mockRejectedValue(
+      new Error("정기예약 조회 실패"),
+    );
+
+    await render(
+      <RecurringReservationsScreen />,
+    );
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        expect.any(String),
+        "정기예약 조회 실패",
       );
     });
   });
@@ -330,25 +271,36 @@ describe("정기출석 설정 화면", () => {
   test("저장 실패 메시지를 표시하고 다시 저장할 수 있다", async () => {
     const user = userEvent.setup();
 
+    getRecurringReservations.mockResolvedValue({
+      items: [
+        {
+          weekday: 1,
+          sessionTimeKey: "MON_YUDANJA",
+        },
+      ],
+    });
+
+    getMemberHome.mockResolvedValue({
+      member: {
+        canAccessYudanjaClass: true,
+      },
+    });
+
     saveRecurringReservations.mockRejectedValue(
-      new Error("정기예약 저장 실패")
+      new Error("정기예약 저장 실패"),
     );
 
     await renderLoadedScreen();
 
-    await user.press(
-      screen.getByText("저장")
-    );
+    await user.press(screen.getByText("저장"));
 
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         expect.any(String),
-        "정기예약 저장 실패"
+        "정기예약 저장 실패",
       );
     });
 
-    expect(
-      screen.getByText("저장")
-    ).toBeTruthy();
+    expect(screen.getByText("저장")).toBeTruthy();
   });
 });

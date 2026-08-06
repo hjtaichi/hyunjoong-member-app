@@ -357,6 +357,7 @@ describe("회원 인증 상태 관리", () => {
 
     expect(result).toEqual({
       ok: true,
+      passwordResetRequired: false,
     });
 
     expect(loginApi).toHaveBeenCalledWith({

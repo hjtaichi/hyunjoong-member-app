@@ -277,15 +277,17 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
       /getMinimumSelectableWeeklyGoal\(\r?\n\s*attendanceCount,\r?\n\s*\)/
     );
     expect(modal).toContain("이번 주 일반수련 출석");
-    expect(modal).toContain(
-      "이미 출석한 횟수보다 낮게 설정할 수"
-    );
+    expect(
+  modal.replace(/\s+/g, " ")
+).toContain(
+  "이미 출석한 횟수보다 낮게 설정할 수"
+);
     expect(modal).toContain(
       "다음 주부터 적용할 목표를"
     );
     expect(modal).toContain("저장하기");
     expect(modal).not.toContain("GOAL_OPTIONS");
-    expect(modal).not.toContain("이번 주 목표 쉬기");
+    expect(modal).toContain("이번 주 목표 쉬기");
     expect(modal).not.toContain("변경사항 저장");
   });
 

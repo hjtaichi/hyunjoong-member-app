@@ -33,3 +33,15 @@ export async function refreshAccessTokenApi(refreshToken) {
 
   return res.data;
 }
+export async function completeRequiredPasswordChangeApi({
+  accessToken,
+  newPassword,
+  newPasswordConfirm,
+}) {
+  const res = await client.post(
+    "/api/auth/required-password-change",
+    { newPassword, newPasswordConfirm },
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  return res.data;
+}

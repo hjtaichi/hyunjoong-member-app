@@ -74,6 +74,11 @@ useEffect(() => {
   if (isBootLoading) return;
 
   if (isAuthenticated) {
+    if (user?.passwordResetRequired) {
+      router.replace("/required-password-change");
+      return;
+    }
+
     const memberStatus = user?.memberStatus || user?.status;
 
     if (memberStatus === "paused") {
@@ -130,6 +135,11 @@ useEffect(() => {
 } else {
   await removeSavedLoginId();
 }
+
+    if (result.passwordResetRequired) {
+      router.replace("/required-password-change");
+      return;
+    }
 
     router.replace(getPostLoginDestination(attendanceToken));
   } catch (error) {

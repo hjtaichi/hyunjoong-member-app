@@ -39,6 +39,7 @@ function normalizeAuthUser(rawUser, fallback = {}) {
     status: memberStatus,
     memberStatus,
     rankLevel: Number(source.rankLevel ?? previous.rankLevel ?? 0),
+    passwordResetRequired: Boolean(source.passwordResetRequired ?? previous.passwordResetRequired ?? false),
   };
 }
 
@@ -184,7 +185,7 @@ if (autoLogin) {
 setToken(nextToken);
 setUserState(nextUser);
 
-    return { ok: true };
+    return { ok: true, passwordResetRequired: Boolean(payload?.passwordResetRequired || nextUser?.passwordResetRequired) };
   } catch (error) {
 
     return {
