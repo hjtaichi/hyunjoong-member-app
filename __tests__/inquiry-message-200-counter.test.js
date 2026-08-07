@@ -9,10 +9,10 @@ const source = fs.readFileSync(
   "utf8",
 );
 
-describe("회원 문의 200자 제한", () => {
-  test("입력창이 200자를 제한하고 00/200 형식으로 표시한다", () => {
+describe("회원 문의 300자 제한", () => {
+  test("입력창이 300자를 제한하고 00/300 형식으로 표시한다", () => {
     expect(source).toContain(
-      "const INQUIRY_MESSAGE_MAX_LENGTH = 200;",
+      "const INQUIRY_MESSAGE_MAX_LENGTH = 300;",
     );
     expect(source).toContain(
       "maxLength={INQUIRY_MESSAGE_MAX_LENGTH}",
@@ -24,7 +24,7 @@ describe("회원 문의 200자 제한", () => {
       "trimmed.length > INQUIRY_MESSAGE_MAX_LENGTH",
     );
     expect(source).toContain(
-      'const INQUIRY_MESSAGE_OVER_LIMIT = "200자를 초과했습니다.";',
+      'const INQUIRY_MESSAGE_OVER_LIMIT = "300자를 초과했습니다.";',
     );
   });
 });

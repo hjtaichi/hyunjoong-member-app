@@ -36,8 +36,8 @@ const fonts = {
   titleSemi: "MaruBuriSemiBold",
 };
 
-const INQUIRY_MESSAGE_MAX_LENGTH = 200;
-const INQUIRY_MESSAGE_OVER_LIMIT = "200자를 초과했습니다.";
+const INQUIRY_MESSAGE_MAX_LENGTH = 300;
+const INQUIRY_MESSAGE_OVER_LIMIT = "300자를 초과했습니다.";
 
 function formatDateTime(value) {
   if (!value) return "";

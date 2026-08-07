@@ -509,7 +509,7 @@ function requireGoal(value) {
   const goal = clampGoal(value);
 
   if (!goal) {
-    throw new Error("목표 횟수는 1회부터 15회까지 입력해주세요.");
+    throw new Error("목표 횟수는 1회부터 14회까지 입력해주세요.");
   }
 
   return goal;

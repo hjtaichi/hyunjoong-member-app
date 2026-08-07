@@ -170,12 +170,12 @@ describe("일반수련 주간 목표 계산", () => {
         {
           weekKey: WEEK_KEY,
           attendanceCount: 6,
-          goal: 15,
+          goal: 14,
         },
       );
 
     expect(highFrequencyGoal.record).toMatchObject({
-      goal: 15,
+      goal: 14,
       attendanceCount: 6,
     });
 
@@ -185,11 +185,11 @@ describe("일반수련 주간 목표 계산", () => {
         {
           weekKey: WEEK_KEY,
           attendanceCount: 6,
-          goal: 16,
+          goal: 15,
         },
       ),
     ).toThrow(
-      "목표 횟수는 1회부터 15회까지 입력해주세요.",
+      "목표 횟수는 1회부터 14회까지 입력해주세요.",
     );
   });
 
@@ -200,12 +200,12 @@ describe("일반수련 주간 목표 계산", () => {
         weekKey: WEEK_KEY,
         nextWeekKey: NEXT_WEEK_KEY,
         attendanceCount: 0,
-        goal: 15,
+        goal: 14,
       },
     );
 
     expect(result.state.recurringGoal).toBeNull();
-    expect(result.state.pendingRecurringGoal).toBe(15);
+    expect(result.state.pendingRecurringGoal).toBe(14);
     expect(result.state.pendingRecurringWeekKey).toBe(
       NEXT_WEEK_KEY,
     );
