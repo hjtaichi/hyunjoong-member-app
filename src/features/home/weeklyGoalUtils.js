@@ -1,5 +1,5 @@
 const MIN_GOAL = 1;
-const MAX_GOAL = 15;
+const MAX_GOAL = 14;
 const KOREA_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 function clampGoal(value) {

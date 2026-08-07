@@ -1492,6 +1492,7 @@ weeklyGoalOptionRow: {
 },
 
 weeklyGoalOptionButton: {
+    marginTop: 18,
   flex: 1,
   minWidth: 0,
   minHeight: 42,

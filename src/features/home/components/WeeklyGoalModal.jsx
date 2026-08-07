@@ -5,7 +5,6 @@ import React, {
 } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   Text,
@@ -296,26 +295,7 @@ export default function WeeklyGoalModal({
       return;
     }
 
-    if (!hasChanges) {
-      onClose();
-      return;
-    }
-
-    Alert.alert(
-      "변경사항을 저장하지 않고 닫을까요?",
-      "입력한 내용은 적용되지 않습니다.",
-      [
-        {
-          text: "계속 설정",
-          style: "cancel",
-        },
-        {
-          text: "닫기",
-          style: "destructive",
-          onPress: onClose,
-        },
-      ],
-    );
+    onClose();
   };
 
   const handleSave = async () => {
