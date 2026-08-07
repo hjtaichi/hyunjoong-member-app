@@ -4,6 +4,31 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { completeRequiredPasswordChangeApi } from "../src/api/auth";
 
+function showPasswordChangeSuccess(onConfirm) {
+  if (
+    typeof window !== "undefined" &&
+    typeof window.alert === "function"
+  ) {
+    window.alert("비밀번호가 변경되었습니다.");
+    onConfirm();
+    return;
+  }
+
+  Alert.alert(
+    "비밀번호 변경 완료",
+    "비밀번호가 변경되었습니다.",
+    [
+      {
+        text: "확인",
+        onPress: onConfirm,
+      },
+    ],
+    {
+      cancelable: false,
+    },
+  );
+}
+
 export default function RequiredPasswordChangeScreen() {
   const router = useRouter();
   const { token, logout } = useAuth();
@@ -28,9 +53,9 @@ export default function RequiredPasswordChangeScreen() {
         newPasswordConfirm: confirm,
       });
       await logout();
-      Alert.alert("변경 완료", "새 비밀번호로 다시 로그인해주세요.", [
-        { text: "확인", onPress: () => router.replace("/login") },
-      ]);
+      showPasswordChangeSuccess(() => {
+      router.replace("/login");
+    });
     } catch (error) {
       Alert.alert("변경 실패", error?.response?.data?.message || "비밀번호 변경에 실패했습니다.");
     } finally {
