@@ -28,6 +28,7 @@ import {
   countWeeklyGeneralAttendance,
   getKoreaWeekRange,
   getPreviousKoreaWeekRange,
+  getPreviousWeekAchievementStreak,
   getWeekMonthKeys,
   hasConfiguredWeeklyGoalState,
   resolveCurrentWeeklyGoalState,
@@ -597,6 +598,20 @@ export function useWeeklyGoal({
     ],
   );
 
+  const previousWeekAchievementStreak = useMemo(
+    () =>
+      previousWeekAchievement?.achieved === true
+        ? getPreviousWeekAchievementStreak(
+            state,
+            previousWeekAchievement.weekKey,
+          )
+        : 0,
+    [
+      state,
+      previousWeekAchievement,
+    ],
+  );
+
   const clearPreviousWeekAchievementPopup =
     useCallback(() => {
       setPreviousWeekAchievementPopup(
@@ -622,6 +637,7 @@ export function useWeeklyGoal({
     clearAutoResumeMessage: () =>
       setAutoResumeMessage(null),
     previousWeekAchievement,
+    previousWeekAchievementStreak,
     previousWeekAchievementPopup,
     clearPreviousWeekAchievementPopup,
     saveSettings,

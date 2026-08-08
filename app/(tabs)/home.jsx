@@ -311,10 +311,54 @@ const homeMemberBadges = useMemo(() => {
     });
   }
 
+  const streak = Math.max(
+    0,
+    Math.trunc(
+      Number(
+        weeklyGoal.previousWeekAchievementStreak ||
+          0,
+      ),
+    ),
+  );
+
+  if (
+    achievement?.achieved === true &&
+    streak >= 2
+  ) {
+    const streakBadgeLevel = Math.min(
+      streak,
+      5,
+    );
+    const streakBadgeCode =
+      streakBadgeLevel >= 5
+        ? "WEEKLY_GOAL_STREAK_5_PLUS"
+        : `WEEKLY_GOAL_STREAK_${streakBadgeLevel}`;
+
+    if (
+      !badges.some(
+        (badge) =>
+          badge?.code === streakBadgeCode,
+      )
+    ) {
+      badges.push({
+        code: streakBadgeCode,
+        title:
+          streakBadgeLevel >= 5
+            ? "5주 이상 연속달성"
+            : `${streakBadgeLevel}주 연속달성`,
+        description:
+          streakBadgeLevel >= 5
+            ? `지난주까지 주간 출석 목표를 ${streak}주 연속 달성했습니다. 5주 이상 연속달성 뱃지입니다.`
+            : `지난주까지 주간 출석 목표를 ${streak}주 연속 달성해 표시되는 뱃지입니다.`,
+      });
+    }
+  }
+
   return badges;
 }, [
   homeData?.member?.badges,
   weeklyGoal.previousWeekAchievement,
+  weeklyGoal.previousWeekAchievementStreak,
 ]);
 
 const joinDayCount = getJoinDayCountFromHome(homeData);

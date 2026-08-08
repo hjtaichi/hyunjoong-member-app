@@ -505,6 +505,53 @@ export function resolvePreviousWeekGoalAchievement(
   };
 }
 
+function isWeeklyGoalRecordAchieved(record) {
+  const goal = clampGoal(record?.goal);
+  const attendanceCount = Math.max(
+    0,
+    Number(record?.attendanceCount || 0),
+  );
+
+  return (
+    record?.isRestWeek !== true &&
+    goal != null &&
+    attendanceCount >= goal
+  );
+}
+
+export function getPreviousWeekAchievementStreak(
+  rawState,
+  previousWeekKey,
+) {
+  const state = normalizeWeeklyGoalState(rawState);
+  const initialWeekKey = String(
+    previousWeekKey || "",
+  );
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(initialWeekKey)) {
+    return 0;
+  }
+
+  let streak = 0;
+  let weekKey = initialWeekKey;
+
+  while (weekKey) {
+    const record = state.weeks[weekKey];
+
+    if (
+      !record ||
+      !isWeeklyGoalRecordAchieved(record)
+    ) {
+      break;
+    }
+
+    streak += 1;
+    weekKey = addDateKeyDays(weekKey, -7);
+  }
+
+  return streak;
+}
+
 function requireGoal(value) {
   const goal = clampGoal(value);
 

@@ -6,6 +6,10 @@ export const MEMBER_BADGE_ASSETS = Object.freeze({
   SPORTS_INSTRUCTOR_L2: require("../../../assets/badges/badge_sports_instructor_l2.png"),
   PREVIOUS_MONTH_GOAL_100: require("../../../assets/badges/badge_previous_month_goal_100.png"),
   PREVIOUS_WEEK_GOAL_ACHIEVED: require("../../../assets/badges/badge_previous_week_goal_achieved.png"),
+  WEEKLY_GOAL_STREAK_2: require("../../../assets/badges/badge_weekly_goal_streak_2.png"),
+  WEEKLY_GOAL_STREAK_3: require("../../../assets/badges/badge_weekly_goal_streak_3.png"),
+  WEEKLY_GOAL_STREAK_4: require("../../../assets/badges/badge_weekly_goal_streak_4.png"),
+  WEEKLY_GOAL_STREAK_5_PLUS: require("../../../assets/badges/badge_weekly_goal_streak_5_plus.png"),
 });
 
 export function getMemberBadgeImageSource(code) {
