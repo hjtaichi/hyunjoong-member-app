@@ -17,7 +17,7 @@ import { styles } from "../../src/features/home/homeStyles";
 import { useFocusEffect } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
-import { getRankBadgeColors } from "../../src/theme/rankBadge";
+
 import { getProfileImageSource } from "../../src/features/home/homeImages";
 import NoticeModal from "../../src/features/home/components/NoticeModal";
 import TrainingRecordBanner from "../../src/features/home/components/TrainingRecordBanner";
@@ -326,7 +326,7 @@ const attendanceCount =
 
 const isYudanja = homeData?.member?.canAccessYudanjaClass === true;
 const rankLevel = Number(homeData?.member?.rankLevel || 0);
-const rankBadgeColors = getRankBadgeColors(rankLevel);
+
 const trainingGoals = homeData?.trainingGoals || null;
 
 const promotionGoal = trainingGoals?.promotion || null;
@@ -661,12 +661,7 @@ const handleNoticeDetail = useCallback(() => {
   hasUnreadNotice={hasUnreadNotice}
   hasUnreadMemberNotification={hasUnreadMemberNotification}
   onPressNotification={() => router.push("/member-notifications")}
-  rankBadgeColors={rankBadgeColors}
-  levelLabel={
-    homeData?.member?.levelLabel ||
-    homeData?.member?.level ||
-    "일반회원"
-  }
+  rankLevel={rankLevel}
   isYudanja={isYudanja}
   profileImageSource={profileImageSource}
   yudanjaEmblemFrame={yudanjaEmblemFrame}

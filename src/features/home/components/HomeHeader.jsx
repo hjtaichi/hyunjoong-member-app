@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "../homeStyles";
 import BadgeInfoModal from "./BadgeInfoModal";
 import { getMemberBadgeImageSource } from "../memberBadges";
+import RankPlaque from "../../rank/RankPlaque";
 
 export default function HomeHeader({
   displayName,
@@ -12,8 +13,7 @@ export default function HomeHeader({
   hasUnreadNotice,
   hasUnreadMemberNotification,
   onPressNotification,
-  rankBadgeColors,
-  levelLabel,
+  rankLevel,
   isYudanja,
   profileImageSource,
   yudanjaEmblemFrame,
@@ -68,26 +68,10 @@ export default function HomeHeader({
             {displayName}님
           </Text>
 
-          <View
-            style={[
-              styles.homeBadge,
-              styles.homeRankBadgeInline,
-              {
-                backgroundColor: rankBadgeColors.backgroundColor,
-                borderColor: rankBadgeColors.borderColor,
-                borderWidth: 1,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.homeBadgeText,
-                { color: rankBadgeColors.textColor },
-              ]}
-            >
-              {levelLabel}
-            </Text>
-          </View>
+          <RankPlaque
+            rankLevel={rankLevel}
+            variant="home"
+          />
         </View>
 
         {visibleBadges.length > 0 ? (

@@ -5,6 +5,7 @@ import { mypageImages } from "../mypageImages";
 import { getAvatarSource } from "../mypageUtils";
 import BadgeInfoModal from "../../home/components/BadgeInfoModal";
 import { getMemberBadgeImageSource } from "../../home/memberBadges";
+import RankPlaque from "../../rank/RankPlaque";
 
 function formatRegistrationDate(value) {
   const normalized = String(value || "").trim();
@@ -26,8 +27,7 @@ function MyPageHeroCard({
   isYudanja,
   memberBadges,
   memberName,
-  levelLabel,
-  rankBadgeColors,
+  rankLevel,
   joinedDateLabel,
   joinedPeriodLabel,
   attendanceSessionCount,
@@ -73,24 +73,10 @@ function MyPageHeroCard({
             <View style={styles.heroNameRow}>
         <Text style={styles.heroName}>{memberName}</Text>
       
-        <View
-        style={[
-          styles.heroLevelBadge,
-          {
-            backgroundColor: rankBadgeColors.backgroundColor,
-            borderColor: rankBadgeColors.borderColor,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.heroLevelBadgeText,
-            { color: rankBadgeColors.textColor },
-          ]}
-        >
-          {levelLabel}
-        </Text>
-      </View>
+        <RankPlaque
+          rankLevel={rankLevel}
+          variant="mypage"
+        />
       </View>
 
       {visibleBadges.length > 0 ? (

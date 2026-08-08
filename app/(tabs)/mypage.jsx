@@ -25,7 +25,7 @@ import {
   getJoinDayCountFromHome,
 } from "../../src/utils/joinDay";
 import { MenuRow, MenuDivider } from "../../src/features/mypage/components/MyPageMenu";
-import { getRankBadgeColors } from "../../src/theme/rankBadge";
+
 import { styles } from "../../src/features/mypage/mypageStyles";
 import PaymentModal from "../../src/features/mypage/components/PaymentModal";
 import AvatarActionModal from "../../src/features/mypage/components/AvatarActionModal";
@@ -169,10 +169,6 @@ async function handleOpenSeoulPay() {
   const memberName = homeData?.member?.name || user?.name || "회원";
 
   const rankLevel = Number(homeData?.member?.rankLevel || 0);
-  const rankBadgeColors = getRankBadgeColors(rankLevel);
-
-const levelLabel =
-  rankLevel > 0 ? `${rankLevel}단` : "일반회원";
 
   const academyName = homeData?.academyName || "현중태극권";
 
@@ -344,8 +340,7 @@ const promotionSummary = (() => {
   isYudanja={isYudanja}
   memberBadges={homeData?.member?.badges || []}
   memberName={memberName}
-  levelLabel={levelLabel}
-  rankBadgeColors={rankBadgeColors}
+  rankLevel={rankLevel}
   joinedDateLabel={joinedDateLabel}
   joinedPeriodLabel={joinedPeriodLabel}
   attendanceSessionCount={attendanceSessionCount}
