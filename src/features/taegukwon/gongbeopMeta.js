@@ -6,10 +6,10 @@ export const GONGBEOP_LABELS = {
 };
 
 export const DEFAULT_GONGBEOP_GOALS = {
-  ilsimyangui: "50",
-  yobujeonsa: "30",
-  duyoMinutes: "10",
-  ohaengjeonsa: "20",
+  ilsimyangui: "",
+  yobujeonsa: "",
+  duyoMinutes: "",
+  ohaengjeonsa: "",
 };
 
 export function getGongbeopPercent(value, goal) {

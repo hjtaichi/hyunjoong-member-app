@@ -1,10 +1,12 @@
 import React from "react";
 import {
+  Alert,
   Animated,
-  Image,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    Text,
+    TouchableOpacity,
+    View,
+
 } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -89,6 +91,15 @@ function GongbeopSection({
         style={styles.flowTodayRecord}
         activeOpacity={0.85}
         onPress={() => {
+        const hasAnyGongbeopGoal = Object.values(gongbeopGoals || {}).some(
+          (value) => Number(value) > 0
+        );
+
+        if (!hasAnyGongbeopGoal) {
+          Alert.alert("안내", "목표를 먼저 설정해주세요.");
+          return;
+        }
+
         setTodayGongbeopRecord({
           ilsimyangui: "",
           yobujeonsa: "",
@@ -119,7 +130,7 @@ function GongbeopSection({
         
         <Text style={styles.recordOverlayValue}>
           {gongbeopRecord.ilsimyangui || "0"}
-          <Text style={styles.recordOverlayGoal}> / {gongbeopGoals.ilsimyangui}회</Text>
+          <Text style={styles.recordOverlayGoal}>{Number(gongbeopGoals.ilsimyangui) > 0 ? " / " + gongbeopGoals.ilsimyangui + "회" : " / -"}</Text>
         </Text>
       </View>
       
@@ -134,7 +145,7 @@ function GongbeopSection({
       
         <Text style={styles.recordOverlayValue}>
           {gongbeopRecord.yobujeonsa || "0"}
-          <Text style={styles.recordOverlayGoal}> / {gongbeopGoals.yobujeonsa}회</Text>
+          <Text style={styles.recordOverlayGoal}>{Number(gongbeopGoals.yobujeonsa) > 0 ? " / " + gongbeopGoals.yobujeonsa + "회" : " / -"}</Text>
         </Text>
       </View>
       
@@ -149,7 +160,7 @@ function GongbeopSection({
       
         <Text style={styles.recordOverlayValue}>
           {gongbeopRecord.duyoMinutes || "0"}
-          <Text style={styles.recordOverlayGoal}> / {gongbeopGoals.duyoMinutes}분</Text>
+          <Text style={styles.recordOverlayGoal}>{Number(gongbeopGoals.duyoMinutes) > 0 ? " / " + gongbeopGoals.duyoMinutes + "분" : " / -"}</Text>
         </Text>
       </View>
       
@@ -164,7 +175,7 @@ function GongbeopSection({
       
         <Text style={styles.recordOverlayValue}>
           {gongbeopRecord.ohaengjeonsa || "0"}
-          <Text style={styles.recordOverlayGoal}> / {gongbeopGoals.ohaengjeonsa}회</Text>
+          <Text style={styles.recordOverlayGoal}>{Number(gongbeopGoals.ohaengjeonsa) > 0 ? " / " + gongbeopGoals.ohaengjeonsa + "회" : " / -"}</Text>
         </Text>
        </View>
       </View>
@@ -201,7 +212,7 @@ function GongbeopSection({
         adjustsFontSizeToFit
         minimumFontScale={0.45}
       >
-        {`${gongbeopGoals.ilsimyangui || 0}회`}
+        {Number(gongbeopGoals.ilsimyangui) > 0 ? gongbeopGoals.ilsimyangui + "회" : "-"}
       </Text>
         </View>
       
@@ -212,7 +223,7 @@ function GongbeopSection({
         adjustsFontSizeToFit
         minimumFontScale={0.65}
         >
-        {gongbeopGoals.yobujeonsa}<Text style={styles.goalUnit}>회</Text>
+        {Number(gongbeopGoals.yobujeonsa) > 0 ? gongbeopGoals.yobujeonsa : "-"}{Number(gongbeopGoals.yobujeonsa) > 0 ? <Text style={styles.goalUnit}>회</Text> : null}
       </Text>
         </View>
       
@@ -223,7 +234,7 @@ function GongbeopSection({
         adjustsFontSizeToFit
         minimumFontScale={0.65}
         >
-        {gongbeopGoals.duyoMinutes}<Text style={styles.goalUnit}>분</Text>
+        {Number(gongbeopGoals.duyoMinutes) > 0 ? gongbeopGoals.duyoMinutes : "-"}{Number(gongbeopGoals.duyoMinutes) > 0 ? <Text style={styles.goalUnit}>분</Text> : null}
       </Text>
         </View>
       
@@ -234,7 +245,7 @@ function GongbeopSection({
         adjustsFontSizeToFit
         minimumFontScale={0.65}
         >
-        {gongbeopGoals.ohaengjeonsa}<Text style={styles.goalUnit}>회</Text>
+        {Number(gongbeopGoals.ohaengjeonsa) > 0 ? gongbeopGoals.ohaengjeonsa : "-"}{Number(gongbeopGoals.ohaengjeonsa) > 0 ? <Text style={styles.goalUnit}>회</Text> : null}
       </Text>
         </View>
       </View>

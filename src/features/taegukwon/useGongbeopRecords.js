@@ -74,21 +74,16 @@ export function useGongbeopRecords({
 
     setGongbeopGoalRows(activeGoals);
 
-    setGongbeopGoals((prev) => ({
-      ...prev,
+    setGongbeopGoals({
       ilsimyangui:
-        activeGoals.find((item) => item.type === "ilsimyangui")?.target?.toString() ||
-        prev.ilsimyangui,
+        activeGoals.find((item) => item.type === "ilsimyangui")?.target?.toString() || "",
       yobujeonsa:
-        activeGoals.find((item) => item.type === "yobujeonsa")?.target?.toString() ||
-        prev.yobujeonsa,
+        activeGoals.find((item) => item.type === "yobujeonsa")?.target?.toString() || "",
       duyoMinutes:
-        activeGoals.find((item) => item.type === "duyoMinutes")?.target?.toString() ||
-        prev.duyoMinutes,
+        activeGoals.find((item) => item.type === "duyoMinutes")?.target?.toString() || "",
       ohaengjeonsa:
-        activeGoals.find((item) => item.type === "ohaengjeonsa")?.target?.toString() ||
-        prev.ohaengjeonsa,
-    }));
+        activeGoals.find((item) => item.type === "ohaengjeonsa")?.target?.toString() || "",
+    });
   }, [token]);
 
   const handleChangeGongbeopGoal = useCallback((key, value) => {
