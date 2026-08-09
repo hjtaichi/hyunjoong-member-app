@@ -340,16 +340,33 @@ const homeMemberBadges = useMemo(() => {
           badge?.code === streakBadgeCode,
       )
     ) {
+      const seasonContinues =
+        weeklyGoal
+          .previousWeekAchievementStreakSeasonContinues ===
+        true;
+      const nextLevel =
+        streakBadgeLevel < 5
+          ? streakBadgeLevel + 1
+          : null;
+      const statusMessage =
+        streakBadgeLevel >= 5
+          ? "확정된 연속 기록 · 5주\n이번 달 최고 단계인 5주 연속달성 뱃지를 받았어요."
+          : seasonContinues
+            ? `확정된 연속 기록 · ${streakBadgeLevel}주\n이번 주도 목표를 달성하면 다음 주에 ${nextLevel}주 연속달성 뱃지를 받을 수 있어요.`
+            : `확정된 연속 기록 · ${streakBadgeLevel}주\n새로운 달의 연속 기록은 첫 주부터 다시 시작됩니다.`;
+
       badges.push({
         code: streakBadgeCode,
         title:
           streakBadgeLevel >= 5
-            ? "5주 이상 연속달성"
+            ? "5주 연속달성"
             : `${streakBadgeLevel}주 연속달성`,
         description:
-          streakBadgeLevel >= 5
-            ? `지난주까지 주간 출석 목표를 ${streak}주 연속 달성했습니다. 5주 이상 연속달성 뱃지입니다.`
-            : `지난주까지 주간 출석 목표를 ${streak}주 연속 달성해 표시되는 뱃지입니다.`,
+          "매주 설정한 일반수련 출석 목표를 이어서 달성하면 받을 수 있는 뱃지입니다.\n\n" +
+          "2주 연속부터 시작해 한 달 안에서 최대 5주까지 올라갑니다.\n" +
+          "주간 기준은 월요일~일요일이며, 달이 바뀌는 주는 월요일이 속한 달로 계산합니다.\n" +
+          "새로운 달의 첫 주부터 연속 기록은 다시 시작됩니다.\n\n" +
+          statusMessage,
       });
     }
   }
@@ -359,6 +376,7 @@ const homeMemberBadges = useMemo(() => {
   homeData?.member?.badges,
   weeklyGoal.previousWeekAchievement,
   weeklyGoal.previousWeekAchievementStreak,
+  weeklyGoal.previousWeekAchievementStreakSeasonContinues,
 ]);
 
 const joinDayCount = getJoinDayCountFromHome(homeData);

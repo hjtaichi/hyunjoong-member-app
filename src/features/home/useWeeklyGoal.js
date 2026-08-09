@@ -612,6 +612,25 @@ export function useWeeklyGoal({
     ],
   );
 
+  const previousWeekAchievementStreakSeasonContinues =
+    useMemo(() => {
+      const previousWeekMonthKey =
+        previousWeekAchievement?.weekKey
+          ?.slice(0, 7);
+      const currentWeekMonthKey =
+        weekRange.weekKey?.slice(0, 7);
+
+      return Boolean(
+        previousWeekMonthKey &&
+          currentWeekMonthKey &&
+          previousWeekMonthKey ===
+            currentWeekMonthKey,
+      );
+    }, [
+      previousWeekAchievement,
+      weekRange.weekKey,
+    ]);
+
   const clearPreviousWeekAchievementPopup =
     useCallback(() => {
       setPreviousWeekAchievementPopup(
@@ -638,6 +657,7 @@ export function useWeeklyGoal({
       setAutoResumeMessage(null),
     previousWeekAchievement,
     previousWeekAchievementStreak,
+    previousWeekAchievementStreakSeasonContinues,
     previousWeekAchievementPopup,
     clearPreviousWeekAchievementPopup,
     saveSettings,

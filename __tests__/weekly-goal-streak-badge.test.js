@@ -40,6 +40,68 @@ describe("주간 목표 연속달성 뱃지", () => {
     ).toBe(3);
   });
 
+  test("달이 바뀌면 이전 달의 달성 기록을 이어서 세지 않는다", () => {
+    const state = {
+      recurringGoal: 2,
+      weeks: {
+        "2026-07-20": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+        "2026-07-27": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+        "2026-08-03": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+      },
+    };
+
+    expect(
+      getPreviousWeekAchievementStreak(
+        state,
+        "2026-08-03",
+      ),
+    ).toBe(1);
+  });
+
+  test("월요일이 다섯 번 있는 달은 최대 5주 연속까지 센다", () => {
+    const state = {
+      recurringGoal: 2,
+      weeks: {
+        "2026-08-03": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+        "2026-08-10": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+        "2026-08-17": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+        "2026-08-24": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+        "2026-08-31": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+      },
+    };
+
+    expect(
+      getPreviousWeekAchievementStreak(
+        state,
+        "2026-08-31",
+      ),
+    ).toBe(5);
+  });
+
   test("쉬는 주나 미달성 주가 있으면 그 지점에서 연속 기록이 끊긴다", () => {
     const restWeekState = {
       recurringGoal: 2,
@@ -162,6 +224,46 @@ describe("주간 목표 연속달성 뱃지", () => {
     );
     expect(styles).toContain(
       'flexWrap: "wrap"',
+    );
+  });
+
+  test("연속달성 뱃지는 기존 자격뱃지와 같은 설명 모달을 사용한다", () => {
+    const home = readSource(
+      "app",
+      "(tabs)",
+      "home.jsx",
+    );
+    const header = readSource(
+      "src",
+      "features",
+      "home",
+      "components",
+      "HomeHeader.jsx",
+    );
+
+    expect(header).toContain(
+      "setSelectedBadge(badge)",
+    );
+    expect(header).toContain(
+      "<BadgeInfoModal",
+    );
+    expect(home).toContain(
+      "한 달 안에서 최대 5주까지",
+    );
+    expect(home).toContain(
+      "월요일이 속한 달로 계산합니다",
+    );
+    expect(home).toContain(
+      "새로운 달의 첫 주부터 연속 기록은 다시 시작됩니다",
+    );
+    expect(home).toContain(
+      "previousWeekAchievementStreakSeasonContinues",
+    );
+    expect(home).toContain(
+      '"5주 연속달성"',
+    );
+    expect(home).not.toContain(
+      '"5주 이상 연속달성"',
     );
   });
 });

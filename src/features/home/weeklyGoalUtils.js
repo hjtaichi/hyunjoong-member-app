@@ -532,10 +532,16 @@ export function getPreviousWeekAchievementStreak(
     return 0;
   }
 
+  const streakMonthKey =
+    initialWeekKey.slice(0, 7);
   let streak = 0;
   let weekKey = initialWeekKey;
 
-  while (weekKey) {
+  while (
+    weekKey &&
+    weekKey.slice(0, 7) === streakMonthKey &&
+    streak < 5
+  ) {
     const record = state.weeks[weekKey];
 
     if (
