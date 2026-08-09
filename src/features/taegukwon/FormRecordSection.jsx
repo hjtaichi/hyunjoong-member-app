@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Alert,
+  Platform,
   Image,
   ScrollView,
   Text,
@@ -13,6 +14,37 @@ import {
   FORM_IMAGE_STYLES,
   getFormCategory,
 } from "./taegukwonMeta";
+
+function hasActiveFormGoal(form) {
+  const targetCount = Number(form?.targetCount || 0);
+
+  if (targetCount <= 0) {
+    return false;
+  }
+
+  if (form?.isActive === false) {
+    return false;
+  }
+
+  const status = String(form?.status || "").toLowerCase();
+
+  if (status && status !== "active") {
+    return false;
+  }
+
+  return true;
+}
+
+function showFormGoalRequiredAlert() {
+  if (Platform.OS === "web") {
+    if (typeof window !== "undefined") {
+      window.alert("목표를 먼저 설정하세요.");
+    }
+    return;
+  }
+
+  Alert.alert("안내", "목표를 먼저 설정하세요.");
+}
 
 export default function FormRecordSection({
   styles,
@@ -149,6 +181,11 @@ export default function FormRecordSection({
                     style={styles.featuredRecordButton}
                     activeOpacity={0.88}
                     onPress={() => {
+                      if (!hasActiveFormGoal(featuredForm)) {
+                        showFormGoalRequiredAlert();
+                        return;
+                      }
+
                       setSelectedFormId(featuredForm.id);
                       setFormRecordCount("3");
                       setFormRecordModalVisible(true);
@@ -203,6 +240,11 @@ export default function FormRecordSection({
           return;
         }
       
+        if (!hasActiveFormGoal(item)) {
+          showFormGoalRequiredAlert();
+          return;
+        }
+
         setSelectedFormId(item.id);
         setFormRecordCount("1");
         setFormRecordModalVisible(true);

@@ -1,6 +1,41 @@
-import { useCallback, useState } from "react";
-import { Alert } from "react-native";
+import {
+  Platform,
+  useCallback,
+  useState } from "react";
+import { Alert,
+} from "react-native";
 import { API_BASE_URL } from "../../config/env";
+
+function hasActiveFormGoal(form) {
+  const targetCount = Number(form?.targetCount || 0);
+
+  if (targetCount <= 0) {
+    return false;
+  }
+
+  if (form?.isActive === false) {
+    return false;
+  }
+
+  const status = String(form?.status || "").toLowerCase();
+
+  if (status && status !== "active") {
+    return false;
+  }
+
+  return true;
+}
+
+function showFormGoalRequiredAlert() {
+  if (Platform.OS === "web") {
+    if (typeof window !== "undefined") {
+      window.alert("목표를 먼저 설정하세요.");
+    }
+    return;
+  }
+
+  Alert.alert("안내", "목표를 먼저 설정하세요.");
+}
 
 export function useFormRecords({
   token,
@@ -86,6 +121,11 @@ export function useFormRecords({
   const selectedForm = mergedForms.find((item) => item.id === selectedFormId);
 
     const handleSaveFormRecord = useCallback(async () => {
+    if (!hasActiveFormGoal(selectedForm)) {
+      showFormGoalRequiredAlert();
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/member/me/form-records`, {
         method: "POST",
