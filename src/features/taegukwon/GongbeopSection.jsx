@@ -1,12 +1,12 @@
 import React from "react";
 import {
   Alert,
+  Platform,
   Animated,
-    Image,
-    Text,
-    TouchableOpacity,
-    View,
-
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -41,7 +41,7 @@ function GongbeopSection({
               목표는 달성할 때마다 새롭게 시작됩니다.
             </Text>
           </View>
-      
+
           <TouchableOpacity
             style={styles.formPeriodTextButton}
             activeOpacity={0.85}
@@ -50,21 +50,21 @@ function GongbeopSection({
             <Text style={styles.formPeriodTextButtonLabel}>완료 기록 보기 〉</Text>
           </TouchableOpacity>
         </View>
-      
+
         <View style={styles.flowSection}>
-         
+
           <Image
         source={FLOW_IMAGE}
         style={styles.flowBackground}
         resizeMode="stretch"
       />
-      
+
       <LinearGradient
         colors={["rgba(255,252,250,0)", colors.background]}
         style={styles.flowBottomFade}
         pointerEvents="none"
       />
-      
+
           <Animated.Image
         source={RIVER_IMAGE}
         style={[
@@ -75,7 +75,7 @@ function GongbeopSection({
               inputRange: [0, 0.2, 0.65, 1],
               outputRange: [0, 0.22, 0.12, 0],
       }),
-      
+
             transform: [
         {
           translateY: riverGlowAnim.interpolate({
@@ -96,7 +96,13 @@ function GongbeopSection({
         );
 
         if (!hasAnyGongbeopGoal) {
-          Alert.alert("안내", "목표를 먼저 설정해주세요.");
+          if (Platform.OS === "web") {
+            if (typeof window !== "undefined") {
+              window.alert("목표를 먼저 설정해주세요.");
+            }
+          } else {
+            Alert.alert("안내", "목표를 먼저 설정해주세요.");
+          }
           return;
         }
 
@@ -106,19 +112,19 @@ function GongbeopSection({
           duyoMinutes: "",
           ohaengjeonsa: "",
         });
-      
+
         setRecordModalVisible(true);
       }}
       >
         <Text style={styles.flowTodayRecordText}>기록하기</Text>
       </TouchableOpacity>
-      
+
       {gongbeopUpdatedAt ? (
         <Text style={styles.lastRecordText}>
           updated {new Date(gongbeopUpdatedAt).toLocaleDateString("ko-KR")}
         </Text>
       ) : null}
-      
+
       <View style={[styles.recordOverlay, styles.recordOverlayOne]}>
         <AnimatedPercentCircle
         percent={getGongbeopPercent(
@@ -127,13 +133,13 @@ function GongbeopSection({
         )}
         color="#9b7650"
       />
-        
+
         <Text style={styles.recordOverlayValue}>
           {gongbeopRecord.ilsimyangui || "0"}
           <Text style={styles.recordOverlayGoal}>{Number(gongbeopGoals.ilsimyangui) > 0 ? " / " + gongbeopGoals.ilsimyangui + "회" : " / -"}</Text>
         </Text>
       </View>
-      
+
       <View style={[styles.recordOverlay, styles.recordOverlayTwo]}>
         <AnimatedPercentCircle
         percent={getGongbeopPercent(
@@ -142,13 +148,13 @@ function GongbeopSection({
         )}
         color="#6f805e"
       />
-      
+
         <Text style={styles.recordOverlayValue}>
           {gongbeopRecord.yobujeonsa || "0"}
           <Text style={styles.recordOverlayGoal}>{Number(gongbeopGoals.yobujeonsa) > 0 ? " / " + gongbeopGoals.yobujeonsa + "회" : " / -"}</Text>
         </Text>
       </View>
-      
+
       <View style={[styles.recordOverlay, styles.recordOverlayThree]}>
         <AnimatedPercentCircle
         percent={getGongbeopPercent(
@@ -157,13 +163,13 @@ function GongbeopSection({
         )}
         color="#c48a42"
       />
-      
+
         <Text style={styles.recordOverlayValue}>
           {gongbeopRecord.duyoMinutes || "0"}
           <Text style={styles.recordOverlayGoal}>{Number(gongbeopGoals.duyoMinutes) > 0 ? " / " + gongbeopGoals.duyoMinutes + "분" : " / -"}</Text>
         </Text>
       </View>
-      
+
       <View style={[styles.recordOverlay, styles.recordOverlayFour]}>
         <AnimatedPercentCircle
         percent={getGongbeopPercent(
@@ -172,23 +178,23 @@ function GongbeopSection({
         )}
         color="#5f8490"
       />
-      
+
         <Text style={styles.recordOverlayValue}>
           {gongbeopRecord.ohaengjeonsa || "0"}
           <Text style={styles.recordOverlayGoal}>{Number(gongbeopGoals.ohaengjeonsa) > 0 ? " / " + gongbeopGoals.ohaengjeonsa + "회" : " / -"}</Text>
         </Text>
        </View>
       </View>
-      
+
         <View style={styles.goalCard}>
           <View style={styles.goalHeaderRow}>
             <View style={styles.goalTitleRow}>
         <Text style={styles.goalTitle}>내 목표</Text>
         <Text style={styles.goalSubtitle}>설정한 목표를 향해 꾸준히 나아가세요.</Text>
       </View>
-      
-            <TouchableOpacity 
-            
+
+            <TouchableOpacity
+
             style={styles.goalSettingIconButton}
         activeOpacity={0.85}
         onPress={() => {
@@ -202,7 +208,7 @@ function GongbeopSection({
         />
       </TouchableOpacity>
           </View>
-      
+
           <View style={styles.goalGrid}>
         <View style={styles.goalItem}>
           <Text style={styles.goalItemTitle}>일심양의</Text>
@@ -215,7 +221,7 @@ function GongbeopSection({
         {Number(gongbeopGoals.ilsimyangui) > 0 ? gongbeopGoals.ilsimyangui + "회" : "-"}
       </Text>
         </View>
-      
+
         <View style={styles.goalItem}>
           <Text style={styles.goalItemTitle}>요부전사</Text>
           <Text style={[styles.goalGoalValue, styles.goalValueGreen]}
@@ -226,7 +232,7 @@ function GongbeopSection({
         {Number(gongbeopGoals.yobujeonsa) > 0 ? gongbeopGoals.yobujeonsa : "-"}{Number(gongbeopGoals.yobujeonsa) > 0 ? <Text style={styles.goalUnit}>회</Text> : null}
       </Text>
         </View>
-      
+
         <View style={styles.goalItem}>
           <Text style={styles.goalItemTitle}>두요</Text>
           <Text style={[styles.goalGoalValue, styles.goalValueGold]}
@@ -237,7 +243,7 @@ function GongbeopSection({
         {Number(gongbeopGoals.duyoMinutes) > 0 ? gongbeopGoals.duyoMinutes : "-"}{Number(gongbeopGoals.duyoMinutes) > 0 ? <Text style={styles.goalUnit}>분</Text> : null}
       </Text>
         </View>
-      
+
         <View style={styles.goalItem}>
           <Text style={styles.goalItemTitle}>오행전사</Text>
           <Text style={[styles.goalGoalValue, styles.goalValueBlue]}
@@ -250,22 +256,22 @@ function GongbeopSection({
         </View>
       </View>
       </View>
-      
+
         <View style={styles.memoImageCard}>
           <Image
             source={MEMO_BG}
             style={styles.memoCardBg}
             resizeMode="stretch"
           />
-      
+
           <Text
         style={styles.memoPreviewText}
         numberOfLines={3}
-      
+
       >
         {memberMemo || "아직 작성한 메모가 없습니다."}
       </Text>
-      
+
           <TouchableOpacity
         style={styles.memoEditHotspot}
         onPress={() => {
@@ -273,7 +279,7 @@ function GongbeopSection({
   setMemoEditModalVisible(true);
 }}
       />
-      
+
           <TouchableOpacity
         style={styles.memoDetailButton}
         onPress={() => setMemoHistoryModalVisible(true)}
