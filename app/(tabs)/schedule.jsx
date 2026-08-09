@@ -54,6 +54,7 @@ export default function ScheduleScreen() {
     shouldShowSelectedSummary,
     canOpenSelectedScheduleSheet,
     isYudanjaMember,
+    isActiveYudanjaSeasonMember,
     yudanjaRecurringEnabled,
 
     isScheduleSheetVisible,
@@ -101,7 +102,7 @@ export default function ScheduleScreen() {
     setScheduleViewMode("calendar");
 
     const timer = setTimeout(() => {
-      if (isYudanjaMember) {
+      if (isActiveYudanjaSeasonMember) {
         Alert.alert(
           "유단자회 예약",
           "예약할 유단자회 수련 날짜를 달력에서 선택해주세요."
@@ -112,7 +113,7 @@ export default function ScheduleScreen() {
     }, 180);
 
     return () => clearTimeout(timer);
-  }, [isYudanjaMember, loading, menuAction, setScheduleViewMode]);
+  }, [isActiveYudanjaSeasonMember, loading, menuAction, setScheduleViewMode]);
 
   if (loading) {
     return (
@@ -202,7 +203,7 @@ export default function ScheduleScreen() {
   openScheduleSheet={openScheduleSheet}
 />
 
-{isYudanjaMember ? (
+{isActiveYudanjaSeasonMember ? (
   <Pressable
     style={styles.recurringInfoBox}
     onPress={() => router.push("/recurring-reservations")}

@@ -95,6 +95,10 @@ export function useScheduleScreen({
     combinedScheduleByDate,
   ]);
 
+  // HJTAICHI_YUDANJA_RECURRING_VISIBILITY_V1_3
+  const isActiveYudanjaSeasonMember =
+    calendarData?.isActiveYudanjaSeasonMember === true;
+
   const refreshScreenData = useCallback(async () => {
     if (!token) return;
 
@@ -948,6 +952,7 @@ export function useScheduleScreen({
     shouldShowSelectedSummary,
     canOpenSelectedScheduleSheet,
     isYudanjaMember,
+    isActiveYudanjaSeasonMember,
     yudanjaRecurringEnabled,
 
     isScheduleSheetVisible,
