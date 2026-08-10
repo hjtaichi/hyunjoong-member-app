@@ -3,6 +3,7 @@ import path from "path";
 
 const {
   getPreviousWeekAchievementStreak,
+  getPreviousWeekAchievementCarryoverStreak,
 } = require("../src/features/home/weeklyGoalUtils");
 
 function readSource(...segments) {
@@ -65,6 +66,93 @@ describe("주간 목표 연속달성 뱃지", () => {
         "2026-08-03",
       ),
     ).toBe(1);
+  });
+
+  test("달이 바뀌어 월간 카운트가 1주가 되어도 직전 연속달성 보상은 한 주 유지한다", () => {
+    const state = {
+      recurringGoal: 2,
+      weeks: {
+        "2026-07-27": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+        "2026-08-03": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+      },
+    };
+
+    expect(
+      getPreviousWeekAchievementStreak(
+        state,
+        "2026-08-03",
+      ),
+    ).toBe(1);
+
+    expect(
+      getPreviousWeekAchievementCarryoverStreak(
+        state,
+        "2026-08-03",
+      ),
+    ).toBe(2);
+  });
+
+  test("이번 달 자체 연속이 2주가 되면 지난달 이월 보상 대신 이번 달 연속 기록을 사용한다", () => {
+    const state = {
+      recurringGoal: 2,
+      weeks: {
+        "2026-07-27": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+        "2026-08-03": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+        "2026-08-10": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+      },
+    };
+
+    expect(
+      getPreviousWeekAchievementStreak(
+        state,
+        "2026-08-10",
+      ),
+    ).toBe(2);
+
+    expect(
+      getPreviousWeekAchievementCarryoverStreak(
+        state,
+        "2026-08-10",
+      ),
+    ).toBe(0);
+  });
+
+  test("월경계 직전 주가 미달성이면 이월 연속달성 보상을 만들지 않는다", () => {
+    const state = {
+      recurringGoal: 2,
+      weeks: {
+        "2026-07-27": {
+          goal: 2,
+          attendanceCount: 1,
+        },
+        "2026-08-03": {
+          goal: 2,
+          attendanceCount: 2,
+        },
+      },
+    };
+
+    expect(
+      getPreviousWeekAchievementCarryoverStreak(
+        state,
+        "2026-08-03",
+      ),
+    ).toBe(0);
   });
 
   test("월요일이 다섯 번 있는 달은 최대 5주 연속까지 센다", () => {
@@ -258,6 +346,15 @@ describe("주간 목표 연속달성 뱃지", () => {
     );
     expect(home).toContain(
       "previousWeekAchievementStreakSeasonContinues",
+    );
+    expect(home).toContain(
+      "previousWeekAchievementCarryoverStreak",
+    );
+    expect(home).toContain(
+      "지난달에서 이어진 달성 보상",
+    );
+    expect(home).toContain(
+      "이 뱃지는 이번 주까지 보여드려요",
     );
     expect(home).toContain(
       '"5주 연속달성"',

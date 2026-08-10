@@ -320,13 +320,30 @@ const homeMemberBadges = useMemo(() => {
       ),
     ),
   );
+  const carryoverStreak = Math.max(
+    0,
+    Math.trunc(
+      Number(
+        weeklyGoal
+          .previousWeekAchievementCarryoverStreak ||
+          0,
+      ),
+    ),
+  );
+  const displayedStreak =
+    streak >= 2
+      ? streak
+      : carryoverStreak;
+  const isCarryoverReward =
+    streak < 2 &&
+    carryoverStreak >= 2;
 
   if (
     achievement?.achieved === true &&
-    streak >= 2
+    displayedStreak >= 2
   ) {
     const streakBadgeLevel = Math.min(
-      streak,
+      displayedStreak,
       5,
     );
     const streakBadgeCode =
@@ -349,11 +366,13 @@ const homeMemberBadges = useMemo(() => {
           ? streakBadgeLevel + 1
           : null;
       const statusMessage =
-        streakBadgeLevel >= 5
-          ? "확정된 연속 기록 · 5주\n이번 달 최고 단계인 5주 연속달성 뱃지를 받았어요."
-          : seasonContinues
-            ? `확정된 연속 기록 · ${streakBadgeLevel}주\n이번 주도 목표를 달성하면 다음 주에 ${nextLevel}주 연속달성 뱃지를 받을 수 있어요.`
-            : `확정된 연속 기록 · ${streakBadgeLevel}주\n새로운 달의 연속 기록은 첫 주부터 다시 시작됩니다.`;
+        isCarryoverReward
+          ? `지난달에서 이어진 달성 보상 · ${streakBadgeLevel}주\n이 뱃지는 이번 주까지 보여드려요. 이번 달 연속 기록은 1주부터 새로 시작됐습니다.`
+          : streakBadgeLevel >= 5
+            ? "확정된 연속 기록 · 5주\n이번 달 최고 단계인 5주 연속달성 뱃지를 받았어요."
+            : seasonContinues
+              ? `확정된 연속 기록 · ${streakBadgeLevel}주\n이번 주도 목표를 달성하면 다음 주에 ${nextLevel}주 연속달성 뱃지를 받을 수 있어요.`
+              : `확정된 연속 기록 · ${streakBadgeLevel}주\n새로운 달의 연속 기록은 첫 주부터 다시 시작됩니다.`;
 
       badges.push({
         code: streakBadgeCode,
@@ -376,6 +395,7 @@ const homeMemberBadges = useMemo(() => {
   homeData?.member?.badges,
   weeklyGoal.previousWeekAchievement,
   weeklyGoal.previousWeekAchievementStreak,
+  weeklyGoal.previousWeekAchievementCarryoverStreak,
   weeklyGoal.previousWeekAchievementStreakSeasonContinues,
 ]);
 

@@ -558,6 +558,63 @@ export function getPreviousWeekAchievementStreak(
   return streak;
 }
 
+export function getPreviousWeekAchievementCarryoverStreak(
+  rawState,
+  previousWeekKey,
+) {
+  const state = normalizeWeeklyGoalState(rawState);
+  const initialWeekKey = String(
+    previousWeekKey || "",
+  );
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(initialWeekKey)) {
+    return 0;
+  }
+
+  const monthlyStreak =
+    getPreviousWeekAchievementStreak(
+      state,
+      initialWeekKey,
+    );
+
+  if (monthlyStreak !== 1) {
+    return 0;
+  }
+
+  const priorWeekKey =
+    addDateKeyDays(initialWeekKey, -7);
+
+  if (
+    !priorWeekKey ||
+    priorWeekKey.slice(0, 7) ===
+      initialWeekKey.slice(0, 7) ||
+    !isWeeklyGoalRecordAchieved(
+      state.weeks[priorWeekKey],
+    )
+  ) {
+    return 0;
+  }
+
+  let streak = 1;
+  let weekKey = priorWeekKey;
+
+  while (weekKey && streak < 5) {
+    const record = state.weeks[weekKey];
+
+    if (
+      !record ||
+      !isWeeklyGoalRecordAchieved(record)
+    ) {
+      break;
+    }
+
+    streak += 1;
+    weekKey = addDateKeyDays(weekKey, -7);
+  }
+
+  return streak >= 2 ? streak : 0;
+}
+
 function requireGoal(value) {
   const goal = clampGoal(value);
 

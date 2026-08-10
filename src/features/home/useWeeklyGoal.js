@@ -29,6 +29,7 @@ import {
   getKoreaWeekRange,
   getPreviousKoreaWeekRange,
   getPreviousWeekAchievementStreak,
+  getPreviousWeekAchievementCarryoverStreak,
   getWeekMonthKeys,
   hasConfiguredWeeklyGoalState,
   resolveCurrentWeeklyGoalState,
@@ -612,6 +613,21 @@ export function useWeeklyGoal({
     ],
   );
 
+  const previousWeekAchievementCarryoverStreak =
+    useMemo(
+      () =>
+        previousWeekAchievement?.achieved === true
+          ? getPreviousWeekAchievementCarryoverStreak(
+              state,
+              previousWeekAchievement.weekKey,
+            )
+          : 0,
+      [
+        state,
+        previousWeekAchievement,
+      ],
+    );
+
   const previousWeekAchievementStreakSeasonContinues =
     useMemo(() => {
       const previousWeekMonthKey =
@@ -657,6 +673,7 @@ export function useWeeklyGoal({
       setAutoResumeMessage(null),
     previousWeekAchievement,
     previousWeekAchievementStreak,
+    previousWeekAchievementCarryoverStreak,
     previousWeekAchievementStreakSeasonContinues,
     previousWeekAchievementPopup,
     clearPreviousWeekAchievementPopup,
