@@ -160,9 +160,24 @@ function MyPageHeroCard({
               회비 상태
             </Text>
 
-            <View style={styles.heroPaymentBadge}>
-              <Text style={styles.heroPaymentBadgeText}>
-                {payment?.statusLabel || payment?.status || "확인 필요"}
+            <View
+              style={[
+                styles.heroPaymentBadge,
+                !payment?.isCovered &&
+                  myPagePaymentStyles.registrationReviewBadge,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.heroPaymentBadgeText,
+                  !payment?.isCovered &&
+                    myPagePaymentStyles.registrationReviewBadgeText,
+                ]}
+              >
+                {/* HJTAICHI_MYPAGE_REGISTRATION_REVIEW_BADGE_V1 */}
+                {payment?.isCovered
+                  ? payment?.statusLabel || payment?.status || "확인 필요"
+                  : "재등록 확인 필요"}
               </Text>
             </View>
           </View>
@@ -194,6 +209,14 @@ const myPagePaymentStyles = StyleSheet.create({
   },
   titleLabel: {
     marginBottom: 0,
+  },
+  registrationReviewBadge: {
+    backgroundColor: "#FFF3F0",
+    borderWidth: 1,
+    borderColor: "#E7B8AA",
+  },
+  registrationReviewBadgeText: {
+    color: "#8F4B3E",
   },
 });
 
