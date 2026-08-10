@@ -551,6 +551,32 @@ const todayClassTitle = useMemo(() => {
 
 const todayWeekProgressText = useMemo(() => {
   if (isTodayYudanjaSession) {
+    // HJTAICHI_HOME_YUDANJA_ITEM_SUMMARY_V1
+    const itemNames = Array.isArray(yudanjaProgress?.items)
+      ? yudanjaProgress.items
+          .map(
+            (progressItem) =>
+              progressItem?.item?.name ||
+              progressItem?.name ||
+              null,
+          )
+          .filter(Boolean)
+      : [];
+
+    const uniqueItemNames = [...new Set(itemNames)];
+
+    if (uniqueItemNames.length === 1) {
+      return uniqueItemNames[0];
+    }
+
+    if (uniqueItemNames.length === 2) {
+      return uniqueItemNames.join(" · ");
+    }
+
+    if (uniqueItemNames.length > 2) {
+      return uniqueItemNames.slice(0, 2).join(" · ") + " 외 " + (uniqueItemNames.length - 2) + "개";
+    }
+
     return yudanjaProgress?.memo || "";
   }
 
