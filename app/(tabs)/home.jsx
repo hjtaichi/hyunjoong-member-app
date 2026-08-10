@@ -367,7 +367,7 @@ const homeMemberBadges = useMemo(() => {
           : null;
       const statusMessage =
         isCarryoverReward
-          ? `지난달에서 이어진 달성 뱃지 : ${streakBadgeLevel}주\n이 뱃지는 이번 주까지 보여드립니다.\n이번 달 연속 기록은 1주부터 새로 시작됐습니다.`
+          ? `지난달에서 이어진 달성 뱃지 : ${streakBadgeLevel}주\n이 뱃지는 이번 주까지 보여드립니다.\n이번 달 연속 기록은\n1주부터 새로 시작됐습니다.`
           : streakBadgeLevel >= 5
             ? "확정된 연속 기록 · 5주\n이번 달 최고 단계인 5주 연속달성 뱃지를 받았어요."
             : seasonContinues
@@ -382,8 +382,8 @@ const homeMemberBadges = useMemo(() => {
             : `${streakBadgeLevel}주 연속달성`,
         description:
           "매주 설정한 일반수련 출석 목표를\n 연속으로 달성하면 받을 수 있는 뱃지입니다.\n\n" +
-          "한 달 안에 최대 5주까지 연속 달성할 수 있습니다.\n" +
-          "새로운 달의 첫 주부터 연속 기록은 다시 시작됩니다.\n\n" +
+          "한 달 안에 최대 5주까지\n연속 달성할 수 있습니다.\n" +
+          "새로운 달의 첫 주부터\n연속 기록은 다시 시작됩니다.\n\n" +
           statusMessage,
       });
     }
