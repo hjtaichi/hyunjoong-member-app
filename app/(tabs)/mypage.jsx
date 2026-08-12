@@ -357,6 +357,7 @@ const promotionSummary = (() => {
 <View onLayout={(event) => setYudanjaCardY(event.nativeEvent.layout.y)}>
 <YudanjaCard
   isYudanja={isYudanja}
+  yudanjaMembership={homeData?.yudanjaMembership || null}
   isYudanjaBackVisible={isYudanjaBackVisible}
   handleFlipYudanjaCard={handleFlipYudanjaCard}
   yudanjaFrontRotate={yudanjaFrontRotate}
