@@ -632,7 +632,7 @@ showroomHeroCopy: {
 },
 
 heroDesc: {
-  fontSize: 26,
+  fontSize: 25,
   lineHeight: 20,
   fontFamily: fonts.bold,
   color: "#352B27",
@@ -1041,4 +1041,3 @@ productPriceMuted: {
   color: colors.textSub,
 },
 });
-
