@@ -336,13 +336,14 @@ describe("주간 목표 연속달성 뱃지", () => {
       "<BadgeInfoModal",
     );
     expect(home).toContain(
-      "한 달 안에서 최대 5주까지",
+      "한 달 안에 최대 5주까지",
+    );
+
+    expect(home).toContain(
+      "새로운 달의 첫 주부터",
     );
     expect(home).toContain(
-      "월요일이 속한 달로 계산합니다",
-    );
-    expect(home).toContain(
-      "새로운 달의 첫 주부터 연속 기록은 다시 시작됩니다",
+      "연속 기록은 다시 시작됩니다.",
     );
     expect(home).toContain(
       "previousWeekAchievementStreakSeasonContinues",
@@ -351,10 +352,10 @@ describe("주간 목표 연속달성 뱃지", () => {
       "previousWeekAchievementCarryoverStreak",
     );
     expect(home).toContain(
-      "지난달에서 이어진 달성 보상",
+      "지난달에서 이어진 달성 뱃지",
     );
     expect(home).toContain(
-      "이 뱃지는 이번 주까지 보여드려요",
+      "이 뱃지는 이번 주까지 보여드립니다.",
     );
     expect(home).toContain(
       '"5주 연속달성"',
