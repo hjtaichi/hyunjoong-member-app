@@ -22,7 +22,7 @@ export default function TrainingSection({
           resizeMode="contain"
         />
 
-        <Text style={styles.coachingInlineText} numberOfLines={2}>
+        <Text style={styles.coachingInlineText}>
           {personalProgress?.recentAdminMemos?.[0]?.content ||
             "아직 등록된 수련 Tip이 없습니다."}
         </Text>

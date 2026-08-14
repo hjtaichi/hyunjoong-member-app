@@ -994,10 +994,9 @@ coachingInlineLabel: {
 },
 
 coachingInlineText: {  
-  fontSize: 22,
+  fontSize: 21,
   lineHeight: 24,
   color: colors.ink,
-  marginLeft: 15,
   marginTop: -3,
   marginLeft: 18,
   fontFamily: fonts.handwriting,
