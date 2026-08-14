@@ -131,7 +131,20 @@ client.interceptors.response.use(
 
       return client(originalRequest);
     } catch (refreshError) {
-      await clearAuthStorage();
+      // MEMBER_AUTH_TRANSIENT_REFRESH_PRESERVE_V1
+      // Clear stored auth only when the refresh credential is rejected.
+      // Preserve the session on network, timeout, rate-limit, or 5xx failures.
+      const refreshStatus =
+        refreshError?.response?.status;
+
+      const isTerminalRefreshFailure =
+        refreshStatus === 401 ||
+        refreshStatus === 403;
+
+      if (isTerminalRefreshFailure) {
+        await clearAuthStorage();
+      }
+
       rejectRefreshQueue(refreshError);
       return Promise.reject(refreshError);
     } finally {
