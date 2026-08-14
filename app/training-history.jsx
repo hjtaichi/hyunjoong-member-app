@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -24,6 +24,7 @@ import {
 } from "../src/features/trainingJourney/trainingJourneyUtils";
 import { getJoinDayCountFromHome } from "../src/utils/joinDay";
 import { LinearGradient } from "expo-linear-gradient";
+import DanCertificateModal from "../src/features/trainingJourney/DanCertificateModal";
 const fonts = {
   medium: "PretendardMedium",
   semiBold: "PretendardSemiBold",
@@ -723,6 +724,8 @@ function getPositionByAttendanceCount(targetAttendanceCount) {
 };
 }
 
+const [selectedDanPromotion, setSelectedDanPromotion] = useState(null);
+
 const promotionGoal = homeData?.trainingGoals?.promotion;
 
 const danPromotions = Array.isArray(member?.danPromotions)
@@ -1018,6 +1021,8 @@ const roadmapItems = useMemo(() => {
   danPromotions.forEach((promotion) => {
     items.push({
       key: `dan-${promotion.danRank}`,
+      kind: "promotion",
+      promotion,
       title: `${promotion.danRank}단 승단`,
       desc: promotion.promotedAt
         ? formatShortDate(promotion.promotedAt)
@@ -1170,7 +1175,28 @@ locations={[0, 0.28, 0.66, 1]}
               {!isLast ? <View style={styles.roadmapLine} /> : null}
             </View>
 
-            <View
+            <Pressable
+              disabled={item.kind !== "promotion"}
+              accessibilityRole={
+                item.kind === "promotion"
+                  ? "button"
+                  : undefined
+              }
+              accessibilityLabel={
+                item.kind === "promotion"
+                  ? `${item.title} 단증 보기`
+                  : undefined
+              }
+              onPress={() => {
+                if (
+                  item.kind === "promotion" &&
+                  item.promotion
+                ) {
+                  setSelectedDanPromotion(
+                    item.promotion
+                  );
+                }
+              }}
               style={[
                 styles.roadmapLabel,
                 item.current && styles.roadmapLabelCurrent,
@@ -1194,7 +1220,7 @@ locations={[0, 0.28, 0.66, 1]}
               >
                 {item.desc}
               </Text>
-            </View>
+            </Pressable>
           </View>
         );
       })}
@@ -1316,6 +1342,13 @@ locations={[0, 0.28, 0.66, 1]}
   locations={[0, 0.38, 0.72, 1]}
   style={styles.journeyBottomFade}
 />
+<DanCertificateModal
+  visible={Boolean(selectedDanPromotion)}
+  promotion={selectedDanPromotion}
+  member={member}
+  onClose={() => setSelectedDanPromotion(null)}
+/>
+
 <MemoizedTrainingStatsBottomSheet
   attendanceCount={attendanceCount}
   expectedTrainingHours={expectedTrainingHours}
