@@ -765,7 +765,6 @@ const handleNoticeDetail = useCallback(() => {
   attendanceCount={attendanceCount}
   weeklyGoalSummary={weeklyGoal.summary}
   onPressWeeklyGoal={() => setWeeklyGoalModalVisible(true)}
-  hasUnreadNotice={hasUnreadNotice}
   hasUnreadMemberNotification={hasUnreadMemberNotification}
   onPressNotification={() => router.push("/member-notifications")}
   rankLevel={rankLevel}

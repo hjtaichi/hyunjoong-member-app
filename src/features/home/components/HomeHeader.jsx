@@ -10,7 +10,6 @@ export default function HomeHeader({
   displayName,
   joinDayCount,
   attendanceCount,
-  hasUnreadNotice,
   hasUnreadMemberNotification,
   onPressNotification,
   rankLevel,
@@ -50,7 +49,7 @@ export default function HomeHeader({
           resizeMode="contain"
         />
 
-        {(hasUnreadNotice || hasUnreadMemberNotification) && (
+        {hasUnreadMemberNotification && (
           <View style={styles.homeNoticeDot} />
         )}
       </Pressable>
