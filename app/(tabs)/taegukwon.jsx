@@ -17,6 +17,7 @@ import MemoHistoryModal from "../../src/features/taegukwon/MemoHistoryModal";
 import MemoEditModal from "../../src/features/taegukwon/MemoEditModal";
 import FormRecordModal from "../../src/features/taegukwon/FormRecordModal";
 import FormGoalModal from "../../src/features/taegukwon/FormGoalModal";
+import FormSaveSuccessModal from "../../src/features/taegukwon/FormSaveSuccessModal";
 import GongbeopRecordModal from "../../src/features/taegukwon/GongbeopRecordModal";
 import GongbeopGoalModal from "../../src/features/taegukwon/GongbeopGoalModal";
 
@@ -85,6 +86,8 @@ const {
   handleSaveFormRecord,
   handleSaveFormGoal,
   handleSaveFavoriteForm,
+  formSaveSuccess,
+  closeFormSaveSuccess,
   personalProgress,
   memberMemo,
   personalProgressPercent,
@@ -317,6 +320,14 @@ debugLogs,
   setFormGoalModalVisible={setFormGoalModalVisible}
   handleSaveFavoriteForm={handleSaveFavoriteForm}
   handleSaveFormGoal={handleSaveFormGoal}
+/>
+
+<FormSaveSuccessModal
+  visible={formSaveSuccess?.visible}
+  styles={styles}
+  title={formSaveSuccess?.title}
+  message={formSaveSuccess?.message}
+  onClose={closeFormSaveSuccess}
 />
     </KeyboardAvoidingView>
   );

@@ -36,17 +36,16 @@ function showFormGoalRequiredAlert() {
   Alert.alert("안내", "목표를 먼저 설정하세요.");
 }
 
-function showFormSaveSuccess(message) {
-  if (
-    Platform.OS === "web" &&
-    typeof window !== "undefined" &&
-    typeof window.alert === "function"
-  ) {
-    window.alert(message);
-    return;
-  }
-
-  Alert.alert("완료", message);
+function showFormSaveSuccess(
+  setFormSaveSuccess,
+  title,
+  message
+) {
+  setFormSaveSuccess({
+    visible: true,
+    title,
+    message,
+  });
 }
 
 export function useFormRecords({
@@ -66,6 +65,19 @@ export function useFormRecords({
   setCompletionModalType,
   setCompletionModalVisible,
 }) {
+  const [formSaveSuccess, setFormSaveSuccess] = useState({
+    visible: false,
+    title: "",
+    message: "",
+  });
+
+  const closeFormSaveSuccess = useCallback(() => {
+    setFormSaveSuccess((current) => ({
+      ...current,
+      visible: false,
+    }));
+  }, []);
+
   const [formRecordData, setFormRecordData] = useState(null);
 
   const loadFormRecords = useCallback(async () => {
@@ -148,7 +160,11 @@ export function useFormRecords({
         setCompletionModalType("form");
         setCompletionModalVisible(true);
       } else {
-        showFormSaveSuccess("투로 기록이 저장되었습니다.");
+        showFormSaveSuccess(
+          setFormSaveSuccess,
+          "저장 완료",
+          "투로 기록이 저장되었습니다."
+        );
       }
     } catch (error) {
       Alert.alert(
@@ -200,9 +216,14 @@ const handleSaveFormGoal = useCallback(async () => {
 
     const result = response.data ?? {};
 
-    showFormSaveSuccess(`${selectedFormName} ${targetCountValue}회 목표가 설정되었습니다.`);
     setFormGoalModalVisible(false);
     await loadFormRecords();
+
+    showFormSaveSuccess(
+      setFormSaveSuccess,
+      "목표 설정 완료",
+      `${selectedFormName} ${targetCountValue}회 목표가 설정되었습니다.`
+    );
   } catch (error) {
     Alert.alert(
       "오류",
@@ -247,6 +268,8 @@ const handleSaveFavoriteForm = useCallback(
     featuredForm,
     otherForms,
     selectedForm,
+    formSaveSuccess,
+    closeFormSaveSuccess,
     handleSaveFormRecord,
     handleSaveFormGoal,
     handleSaveFavoriteForm,
