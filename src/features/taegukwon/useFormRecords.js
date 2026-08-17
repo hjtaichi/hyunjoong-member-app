@@ -4,7 +4,7 @@ import {
   useState } from "react";
 import { Alert,
 } from "react-native";
-import { API_BASE_URL } from "../../config/env";
+import client from "../../api/client";
 
 function hasActiveFormGoal(form) {
   const targetCount = Number(form?.targetCount || 0);
@@ -60,23 +60,11 @@ export function useFormRecords({
     if (!token) return;
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/member/me/form-records?t=${Date.now()}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await client.get(
+        "/api/member/me/form-records"
       );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "투로 기록 불러오기 실패");
-      }
-
+      const result = response.data ?? {};
       setFormRecordData(result.data);
     } catch (error) {
     } finally {
@@ -120,6 +108,8 @@ export function useFormRecords({
 
   const selectedForm = mergedForms.find((item) => item.id === selectedFormId);
 
+  const selectedFormName = selectedForm?.name || "투로";
+
     const handleSaveFormRecord = useCallback(async () => {
     if (!hasActiveFormGoal(selectedForm)) {
       showFormGoalRequiredAlert();
@@ -127,24 +117,16 @@ export function useFormRecords({
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/member/me/form-records`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const response = await client.post(
+        "/api/member/me/form-records",
+        {
           formKey: selectedForm?.id,
           count: Number(formRecordCount || 0),
           recordDate: new Date().toISOString().slice(0, 10),
-        }),
-      });
+        }
+      );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "투로 기록 저장 실패");
-      }
+      const result = response.data ?? {};
 
       setFormRecordModalVisible(false);
       await loadFormRecords();
@@ -157,7 +139,12 @@ export function useFormRecords({
         Alert.alert("완료", "투로 기록이 저장되었습니다.");
       }
     } catch (error) {
-      Alert.alert("오류", error.message || "투로 기록 저장 중 오류가 발생했습니다.");
+      Alert.alert(
+      "오류",
+      error?.response?.data?.message ||
+        error?.message ||
+        "투로 기록 저장 중 오류가 발생했습니다."
+    );
     }
   }, [
     token,
@@ -188,32 +175,29 @@ const handleSaveFormGoal = useCallback(async () => {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/member/me/form-goals`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
+    const response = await client.post(
+      "/api/member/me/form-goals",
+      {
         formKey: selectedFormId,
         periodYear: currentPeriodYear,
         periodHalf: currentPeriodHalf,
         targetCount: targetCountValue,
         isActive: true,
-      }),
-    });
+      }
+    );
 
-    const result = await response.json();
+    const result = response.data ?? {};
 
-    if (!response.ok) {
-      throw new Error(result.message || "투로 목표 저장 실패");
-    }
-
-    Alert.alert("완료", "투로 목표가 저장되었습니다.");
+    Alert.alert("완료", `${selectedFormName} ${targetCountValue}회 목표가 설정되었습니다.`);
     setFormGoalModalVisible(false);
     await loadFormRecords();
   } catch (error) {
-    Alert.alert("오류", error.message || "투로 목표 저장 중 오류가 발생했습니다.");
+    Alert.alert(
+      "오류",
+      error?.response?.data?.message ||
+        error?.message ||
+        "투로 목표 저장 중 오류가 발생했습니다."
+    );
   }
 }, [
   token,
@@ -230,16 +214,12 @@ const handleSaveFavoriteForm = useCallback(
     try {
       setFeaturedFormId(formKey);
 
-      await fetch(`${API_BASE_URL}/api/member/me/favorite-form`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      await client.patch(
+          "/api/member/me/favorite-form",
+          {
           formKey,
-        }),
-      });
+        }
+        );
     } catch (error) {
     }
   },
