@@ -198,11 +198,14 @@ export default function TrainingSection({
     { length: Math.min(5, tipHistoryPageCount) },
     (_, index) => tipHistoryPageWindowStart + index
   );
+  const trainingTipExcluded =
+    personalProgress?.trainingTipExcluded === true;
+
   return (
     <View style={styles.trainingSection}>
       <Text style={styles.sectionLabel}>현재 수련</Text>
 
-      <View style={styles.coachingInlineBox}>
+      <View style={[styles.coachingInlineBox, trainingTipExcluded && { display: "none" }]}>
         <Image
           source={require("../../../assets/images/training-tip-title.png")}
           style={styles.coachingTipTitleImage}
@@ -215,7 +218,11 @@ export default function TrainingSection({
         </Text>
         {tipHistory.length > 1 ? (
           <TouchableOpacity
-            style={tipHistoryStyles.historyButton}
+            style={[
+              tipHistoryStyles.historyButton,
+              trainingTipExcluded && { display: "none" },
+            ]}
+            disabled={trainingTipExcluded}
             activeOpacity={0.82}
             onPress={() => {
               setTipHistoryPage(1);
