@@ -1,9 +1,8 @@
 import {
-  Platform,
   useCallback,
-  useState } from "react";
-import { Alert,
-} from "react-native";
+  useState,
+} from "react";
+import { Alert, Platform } from "react-native";
 import client from "../../api/client";
 
 function hasActiveFormGoal(form) {
@@ -35,6 +34,19 @@ function showFormGoalRequiredAlert() {
   }
 
   Alert.alert("안내", "목표를 먼저 설정하세요.");
+}
+
+function showFormSaveSuccess(message) {
+  if (
+    Platform.OS === "web" &&
+    typeof window !== "undefined" &&
+    typeof window.alert === "function"
+  ) {
+    window.alert(message);
+    return;
+  }
+
+  Alert.alert("완료", message);
 }
 
 export function useFormRecords({
@@ -136,7 +148,7 @@ export function useFormRecords({
         setCompletionModalType("form");
         setCompletionModalVisible(true);
       } else {
-        Alert.alert("완료", "투로 기록이 저장되었습니다.");
+        showFormSaveSuccess("투로 기록이 저장되었습니다.");
       }
     } catch (error) {
       Alert.alert(
@@ -188,7 +200,7 @@ const handleSaveFormGoal = useCallback(async () => {
 
     const result = response.data ?? {};
 
-    Alert.alert("완료", `${selectedFormName} ${targetCountValue}회 목표가 설정되었습니다.`);
+    showFormSaveSuccess(`${selectedFormName} ${targetCountValue}회 목표가 설정되었습니다.`);
     setFormGoalModalVisible(false);
     await loadFormRecords();
   } catch (error) {
