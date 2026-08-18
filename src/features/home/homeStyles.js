@@ -1056,6 +1056,33 @@ todayYudanjaBgImage: {
   height: "100%",
   opacity: 0.9,
 },
+// HJTAICHI_MONTHLY_GOAL_CROWN_STYLE_FINAL_V1
+// Visual tuning from actual normal/yudanja local screenshots.
+homeMonthlyGoalCrown: {
+  position: "absolute",
+  width: isWeb ? 70 : 64,
+  height: isWeb ? 56 : 47,
+  top: isWeb ?  -8: 4,
+  right: isWeb ? 3 : 7,
+  zIndex: 30,
+},
+
+homeMonthlyGoalCrownYudanja: {
+  width: isWeb ? 67 : 64,
+  height: isWeb ? 56 : 47,
+  top: isWeb ? -23 : 1,
+  right: isWeb ? 13 : 12,
+},
+
+homeMonthlyGoalCrownImage: {
+  width: "100%",
+  height: "100%",
+},
+
+homeMonthlyGoalCrownPressed: {
+  opacity: 0.82,
+},
+
 homeAttendanceSummary: {
   marginTop: 12,
   marginLeft: 2,

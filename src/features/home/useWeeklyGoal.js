@@ -27,6 +27,7 @@ import {
   buildWeeklyGoalSummary,
   countWeeklyGeneralAttendance,
   getKoreaWeekRange,
+  getMonthlyGoalCrownStatus,
   getPreviousKoreaWeekRange,
   getPreviousWeekAchievementStreak,
   getPreviousWeekAchievementCarryoverStreak,
@@ -647,6 +648,15 @@ export function useWeeklyGoal({
       weekRange.weekKey,
     ]);
 
+  // HJTAICHI_MONTHLY_GOAL_CROWN_MEMO_V1
+  const monthlyGoalCrown = useMemo(
+    () =>
+      getMonthlyGoalCrownStatus(
+        state,
+        new Date(),
+      ),
+    [state, weekRange.weekKey],
+  );
   const clearPreviousWeekAchievementPopup =
     useCallback(() => {
       setPreviousWeekAchievementPopup(
@@ -677,6 +687,7 @@ export function useWeeklyGoal({
     previousWeekAchievementStreakSeasonContinues,
     previousWeekAchievementPopup,
     clearPreviousWeekAchievementPopup,
+    monthlyGoalCrown,
     saveSettings,
     refresh: load,
   };

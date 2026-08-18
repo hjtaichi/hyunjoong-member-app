@@ -6,6 +6,7 @@ import BadgeInfoModal from "./BadgeInfoModal";
 import { getMemberBadgeImageSource } from "../memberBadges";
 import RankPlaque from "../../rank/RankPlaque";
 
+import MonthlyGoalCrownModal from "./MonthlyGoalCrownModal";
 export default function HomeHeader({
   displayName,
   joinDayCount,
@@ -20,8 +21,13 @@ export default function HomeHeader({
   weeklyGoalSummary,
   onPressWeeklyGoal,
   memberBadges = [],
+  monthlyGoalCrown = null,
 }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
+  const [
+    monthlyGoalCrownModalVisible,
+    setMonthlyGoalCrownModalVisible,
+  ] = useState(false);
   const visibleBadges = useMemo(
     () =>
       (Array.isArray(memberBadges) ? memberBadges : []).filter((badge) =>
@@ -150,11 +156,45 @@ export default function HomeHeader({
             resizeMode="contain"
           />
         )}
+        {/* HJTAICHI_MONTHLY_GOAL_CROWN_FINAL_V1 */}
+        {monthlyGoalCrown?.visible === true ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="출석 목표 달성왕 안내 보기"
+            hitSlop={8}
+            style={({ pressed }) => [
+              styles.homeMonthlyGoalCrown,
+              isYudanja && styles.homeMonthlyGoalCrownYudanja,
+              pressed && styles.homeMonthlyGoalCrownPressed,
+            ]}
+            onPress={() =>
+              setMonthlyGoalCrownModalVisible(true)
+            }
+          >
+            <Image
+              source={require("../../../../assets/images/monthly-goal-crown.png")}
+              style={styles.homeMonthlyGoalCrownImage}
+              resizeMode="contain"
+            />
+          </Pressable>
+        ) : null}
       </View>
 
       <BadgeInfoModal
         badge={selectedBadge}
         onClose={() => setSelectedBadge(null)}
+      />
+      <MonthlyGoalCrownModal
+        visible={
+          monthlyGoalCrownModalVisible &&
+          monthlyGoalCrown?.visible === true
+        }
+        streakWeekCount={
+          monthlyGoalCrown?.streakWeekCount || 0
+        }
+        onClose={() =>
+          setMonthlyGoalCrownModalVisible(false)
+        }
       />
     </View>
   );

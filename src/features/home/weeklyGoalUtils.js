@@ -615,6 +615,95 @@ export function getPreviousWeekAchievementCarryoverStreak(
   return streak >= 2 ? streak : 0;
 }
 
+// HJTAICHI_MONTHLY_GOAL_CROWN_POLICY_V1
+function getPreviousCalendarMonthKey(dateKey) {
+  const normalizedDateKey = String(dateKey || "");
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedDateKey)) {
+    return null;
+  }
+
+  const monthStart = toUtcDate(
+    `${normalizedDateKey.slice(0, 7)}-01`,
+  );
+
+  if (!monthStart) {
+    return null;
+  }
+
+  monthStart.setUTCMonth(monthStart.getUTCMonth() - 1);
+  return monthStart.toISOString().slice(0, 7);
+}
+
+export function getMonthlyGoalCrownStatus(
+  rawState,
+  date = new Date(),
+) {
+  const state = normalizeWeeklyGoalState(rawState);
+  const currentDateKey =
+    typeof date === "string"
+      ? String(date).slice(0, 10)
+      : getKoreaDateKey(date);
+  const targetMonthKey =
+    getPreviousCalendarMonthKey(currentDateKey);
+
+  if (!targetMonthKey) {
+    return {
+      visible: false,
+      targetMonthKey: null,
+      goalWeekCount: 0,
+      achievedWeekCount: 0,
+      restWeekCount: 0,
+      streakWeekCount: 0,
+    };
+  }
+
+  const targetWeeks = Object.entries(state.weeks)
+    .filter(
+      ([weekKey]) =>
+        weekKey.slice(0, 7) === targetMonthKey,
+    )
+    .sort(([left], [right]) =>
+      left.localeCompare(right),
+    );
+
+  let goalWeekCount = 0;
+  let achievedWeekCount = 0;
+  let restWeekCount = 0;
+
+  targetWeeks.forEach(([, record]) => {
+    if (record?.isRestWeek === true) {
+      restWeekCount += 1;
+      return;
+    }
+
+    const goal = clampGoal(record?.goal);
+
+    if (!goal) {
+      return;
+    }
+
+    goalWeekCount += 1;
+
+    if (isWeeklyGoalRecordAchieved(record)) {
+      achievedWeekCount += 1;
+    }
+  });
+
+  return {
+    visible:
+      goalWeekCount >= 1 &&
+      achievedWeekCount === goalWeekCount,
+    targetMonthKey,
+    goalWeekCount,
+    achievedWeekCount,
+    restWeekCount,
+    // 쉬는 주는 본인이 계획한 주이므로 실패에서는 제외하되
+    // 모달의 "N주 연속" 기간에는 포함한다.
+    streakWeekCount:
+      goalWeekCount + restWeekCount,
+  };
+}
 function requireGoal(value) {
   const goal = clampGoal(value);
 

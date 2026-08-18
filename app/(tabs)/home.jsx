@@ -773,6 +773,8 @@ const handleNoticeDetail = useCallback(() => {
   yudanjaEmblemFrame={yudanjaEmblemFrame}
   promotionBadgeText={promotionBadgeText}
   memberBadges={homeMemberBadges} // HJTAICHI_HOME_BADGES_PROP_V1
+
+  monthlyGoalCrown={weeklyGoal.monthlyGoalCrown}
 />
 
 <View
