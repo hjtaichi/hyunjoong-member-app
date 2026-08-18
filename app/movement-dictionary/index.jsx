@@ -154,7 +154,7 @@ router.push({
         >
           <View style={styles.movementNumberBadge}>
             <Text style={styles.movementNumberText}>
-  {movement.number || movement.order || movement.step}
+  {movement.stepLabel || movement.number || movement.order || movement.step}
 </Text>
           </View>
 

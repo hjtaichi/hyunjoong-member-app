@@ -14,6 +14,59 @@ const fonts = {
   hanja: "ZhaoKai",
 };
 
+const HYUNJOONG_TAEGUKWON_29_STEP_META = [
+  { displayNo: "1", baseNo: 1, isTransition: false },
+  { displayNo: "2", baseNo: 2, isTransition: false },
+  { displayNo: "3", baseNo: 3, isTransition: false },
+  { displayNo: "4", baseNo: 4, isTransition: false },
+  { displayNo: "5", baseNo: 5, isTransition: false },
+  { displayNo: "6", baseNo: 6, isTransition: false },
+  { displayNo: "6-1", baseNo: 6, isTransition: true },
+  { displayNo: "7", baseNo: 7, isTransition: false },
+  { displayNo: "8", baseNo: 8, isTransition: false },
+  { displayNo: "9", baseNo: 9, isTransition: false },
+  { displayNo: "10", baseNo: 10, isTransition: false },
+  { displayNo: "11", baseNo: 11, isTransition: false },
+  { displayNo: "12", baseNo: 12, isTransition: false },
+  { displayNo: "13", baseNo: 13, isTransition: false },
+  { displayNo: "14", baseNo: 14, isTransition: false },
+  { displayNo: "15", baseNo: 15, isTransition: false },
+  { displayNo: "16", baseNo: 16, isTransition: false },
+  { displayNo: "17", baseNo: 17, isTransition: false },
+  { displayNo: "18", baseNo: 18, isTransition: false },
+  { displayNo: "19", baseNo: 19, isTransition: false },
+  { displayNo: "20", baseNo: 20, isTransition: false },
+  { displayNo: "21", baseNo: 21, isTransition: false },
+  { displayNo: "22", baseNo: 22, isTransition: false },
+  { displayNo: "23", baseNo: 23, isTransition: false },
+  { displayNo: "24", baseNo: 24, isTransition: false },
+  { displayNo: "25", baseNo: 25, isTransition: false },
+  { displayNo: "25-1", baseNo: 25, isTransition: true },
+  { displayNo: "25-2", baseNo: 25, isTransition: true },
+  { displayNo: "26", baseNo: 26, isTransition: false },
+  { displayNo: "26-1", baseNo: 26, isTransition: true },
+  { displayNo: "27", baseNo: 27, isTransition: false },
+  { displayNo: "28", baseNo: 28, isTransition: false },
+  { displayNo: "29", baseNo: 29, isTransition: false },
+];
+
+function getCurriculumStepMeta(name, index, totalItems) {
+  const internalNo = index + 1;
+  const normalizedName = String(name || "").replace(/\s+/g, "");
+
+  if (
+    normalizedName === "현중태극권29식" &&
+    totalItems === HYUNJOONG_TAEGUKWON_29_STEP_META.length
+  ) {
+    return HYUNJOONG_TAEGUKWON_29_STEP_META[index];
+  }
+
+  return {
+    displayNo: String(internalNo),
+    baseNo: internalNo,
+    isTransition: false,
+  };
+}
 const CURRICULUM_STEP_MAP = {
   "현중태극권 29식": [
     { ko: "태극기세", hanja: "太極起勢" },
@@ -232,13 +285,19 @@ function getCurriculumSteps(name) {
   );
 
   if (movementForm?.movements?.length) {
-    return movementForm.movements.map((item) => ({
+    return movementForm.movements.map((item, index) => ({
       ko: item.name,
       hanja: item.hanja,
+      ...getCurriculumStepMeta(name, index, movementForm.movements.length),
     }));
   }
 
-  return CURRICULUM_STEP_MAP[name] || [];
+  const fallbackSteps = CURRICULUM_STEP_MAP[name] || [];
+
+  return fallbackSteps.map((item, index) => ({
+    ...item,
+    ...getCurriculumStepMeta(name, index, fallbackSteps.length),
+  }));
 }
 export default function TaegukwonCurriculumDetailScreen() {
   const params = useLocalSearchParams();
@@ -253,8 +312,24 @@ const endStep = Number(params.endStep || 0);
 const isGroupSource = source === "group";
 
 const steps = useMemo(() => {
-  return getCurriculumSteps(name);
-}, [name]);
+    return getCurriculumSteps(name);
+  }, [name]);
+
+  const currentCanonicalStepItem = useMemo(() => {
+    if (currentStep <= 0) return null;
+
+    return (
+      steps.find(
+        (stepItem) =>
+          Number(stepItem.baseNo || 0) === currentStep &&
+          stepItem.isTransition !== true
+      ) ||
+      steps.find(
+        (stepItem) => Number(stepItem.baseNo || 0) === currentStep
+      ) ||
+      null
+    );
+  }, [steps, currentStep]);
 
   const effectiveTotalSteps = totalSteps || steps.length || 0;
 
@@ -286,14 +361,14 @@ const steps = useMemo(() => {
       {startStep}식 ~ {endStep}식
     </Text>
   </View>
-) : currentStep > 0 && steps[currentStep - 1] ? (
+) : currentStep > 0 && currentCanonicalStepItem ? (
   <View style={styles.currentStepBox}>
     <Text style={styles.currentStepLabel}>학습 중인 동작</Text>
     <Text style={styles.currentStepName}>
-      {currentStep}식 · {steps[currentStep - 1].ko}
-      {!!steps[currentStep - 1].hanja ? (
+      {currentStep}식 · {currentCanonicalStepItem.ko}
+      {!!currentCanonicalStepItem.hanja ? (
         <Text style={styles.currentStepHanjaInline}>
-          {" "}{steps[currentStep - 1].hanja}
+          {" "}{currentCanonicalStepItem.hanja}
         </Text>
       ) : null}
     </Text>
@@ -307,15 +382,17 @@ const steps = useMemo(() => {
         {steps.length > 0 ? (
           steps.map((stepItem, index) => {
   const stepNo = index + 1;
-const isCurrent = !isGroupSource && currentStep === stepNo;
-const isDone = !isGroupSource && currentStep > stepNo;
-const isUpcoming = !isGroupSource && currentStep < stepNo;
+  const canonicalStepNo = Number(stepItem.baseNo || stepNo);
+  const displayStepNo = String(stepItem.displayNo || stepNo);
+const isCurrent = !isGroupSource && currentStep === canonicalStepNo;
+const isDone = !isGroupSource && currentStep > canonicalStepNo;
+const isUpcoming = !isGroupSource && currentStep < canonicalStepNo;
   const isGroupCurrent =
   isGroupSource &&
   startStep > 0 &&
   endStep > 0 &&
-  stepNo >= startStep &&
-  stepNo <= endStep;
+  canonicalStepNo >= startStep &&
+  canonicalStepNo <= endStep;
 
   return (
     <View
@@ -343,7 +420,7 @@ const isUpcoming = !isGroupSource && currentStep < stepNo;
             isDone && styles.stepNoTextDone,
           ]}
         >
-          {stepNo}
+          {displayStepNo}
         </Text>
       </View>
 
@@ -479,7 +556,7 @@ currentStepName: {
     opacity: 0.95,
   },
   stepNoBadge: {
-    width: 34,
+    width: 46,
     height: 34,
     borderRadius: 999,
     alignItems: "center",
@@ -508,6 +585,9 @@ currentStepName: {
   },
   stepTextWrap: {
     flex: 1,
+    minHeight: 34,
+    justifyContent: "center",
+    transform: [{ translateY: 3 }],
   },
   stepName: {
   fontSize: 17,

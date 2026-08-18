@@ -74,7 +74,7 @@ export default function MovementFormDetailScreen() {
     >
       <View style={styles.numberCircle}>
         <Text style={styles.numberText}>
-          {String(targetMovement.order).padStart(2, "0")}
+          {String(targetMovement.stepLabel || targetMovement.order).padStart(2, "0")}
         </Text>
       </View>
 
@@ -108,7 +108,7 @@ export default function MovementFormDetailScreen() {
       >
         <View style={styles.numberCircle}>
           <Text style={styles.numberText}>
-            {String(movement.order).padStart(2, "0")}
+            {String(movement.stepLabel || movement.order).padStart(2, "0")}
           </Text>
         </View>
 
