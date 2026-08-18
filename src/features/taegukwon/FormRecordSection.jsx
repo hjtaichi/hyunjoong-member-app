@@ -61,6 +61,7 @@ export default function FormRecordSection({
   setFormRecordCount,
   setFormRecordModalVisible,
 }) {
+
   return (
     <>
         <View style={styles.formRecordSection}>
@@ -71,11 +72,10 @@ export default function FormRecordSection({
               </Text>
               <Text style={styles.formPeriodSub}>{currentPeriodSub}</Text>
             </View>
-      
             <TouchableOpacity
               style={styles.formPeriodTextButton}
               activeOpacity={0.85}
-              onPress={() => router.push("/form-record-history")}
+              onPress={() => router.push("/form-activity-by-date")}
             >
               <Text style={styles.formPeriodTextButtonLabel}>지난 기록 보기 〉</Text>
             </TouchableOpacity>

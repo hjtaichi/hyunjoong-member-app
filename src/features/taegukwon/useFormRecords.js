@@ -4,6 +4,7 @@ import {
 } from "react";
 import { Alert, Platform } from "react-native";
 import client from "../../api/client";
+import { getKoreaDateKey } from "./formPeriodPolicy";
 
 function hasActiveFormGoal(form) {
   const targetCount = Number(form?.targetCount || 0);
@@ -146,7 +147,7 @@ export function useFormRecords({
         {
           formKey: selectedForm?.id,
           count: Number(formRecordCount || 0),
-          recordDate: new Date().toISOString().slice(0, 10),
+          recordDate: getKoreaDateKey(new Date()),
         }
       );
 

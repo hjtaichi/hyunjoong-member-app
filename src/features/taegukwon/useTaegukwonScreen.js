@@ -10,6 +10,7 @@ import { FORM_DEFINITIONS } from "./taegukwonMeta";
 import { useGongbeopRecords } from "./useGongbeopRecords";
 import { useFormRecords } from "./useFormRecords";
 import { sendClientLog } from "../../utils/clientLogger";
+import { getKoreaFormPeriod } from "./formPeriodPolicy";
 
 export function useTaegukwonScreen() {
   const { token } = useAuth();
@@ -72,12 +73,17 @@ const addDebugLog = useCallback((message, data) => {
   const member = taegukwonData?.member || null;
   const memberRank = Number(member?.rankLevel || 0);
 
-  const now = new Date();
-  const currentPeriodYear = now.getFullYear();
-  const currentPeriodHalf = now.getMonth() + 1 <= 6 ? 1 : 2;
-  const currentPeriodLabel = currentPeriodHalf === 1 ? "상반기" : "하반기";
+  const currentFormPeriod =
+    getKoreaFormPeriod(new Date());
+
+  const currentPeriodYear =
+    currentFormPeriod.periodYear;
+  const currentPeriodHalf =
+    currentFormPeriod.periodHalf;
+  const currentPeriodLabel =
+    currentFormPeriod.periodLabel;
   const currentPeriodSub =
-    currentPeriodHalf === 1 ? "1월 ~ 6월" : "7월 ~ 12월";
+    currentFormPeriod.periodSub;
 
   const [memoHistoryModalVisible, setMemoHistoryModalVisible] =
     useState(false);

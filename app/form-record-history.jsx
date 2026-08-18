@@ -17,6 +17,7 @@ import { colors, radius, shadow, spacing } from "../src/theme";
 import { useAuth } from "../src/contexts/AuthContext";
 import { API_BASE_URL } from "../src/config/env";
 import ScreenHeader from "../src/components/ScreenHeader";
+import FormHistoryTabs from "../src/features/records/FormHistoryTabs";
 import {
   formatRecordCount,
   formatRecordDate,
@@ -86,10 +87,12 @@ export default function FormRecordHistoryScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
     >
-      <ScreenHeader title="지난 투로 기록" />
+      <ScreenHeader title="지난 기록" />
+
+          <FormHistoryTabs activeTab="completed" />
 
       <Text style={styles.subtitle}>
-        반기별로 쌓아온 투로 수련 기록을 확인합니다.
+        목표를 달성한 투로 완료 기록을 확인합니다.
       </Text>
 
       {loading ? (
