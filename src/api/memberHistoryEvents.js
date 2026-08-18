@@ -1,21 +1,33 @@
-import { apiFetch } from "./api";
+import client from "./client";
+
+function getAuthConfig(token) {
+  if (!token) return undefined;
+
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+}
 
 export async function getMyHistoryEvents(token) {
-  const data = await apiFetch(
-    "/member/me/history-events",
-    { method: "GET" },
-    token
+  const response = await client.get(
+    "/api/member/me/history-events",
+    getAuthConfig(token)
   );
 
-  return data.data || [];
+  const data = response.data?.data ?? response.data ?? [];
+
+  return Array.isArray(data) ? data : [];
 }
 
 export async function getCommonHistoryMilestones(token) {
-  const data = await apiFetch(
-    "/member/history-milestones",
-    { method: "GET" },
-    token
+  const response = await client.get(
+    "/api/member/history-milestones",
+    getAuthConfig(token)
   );
 
-  return data.data || [];
+  const data = response.data?.data ?? response.data ?? [];
+
+  return Array.isArray(data) ? data : [];
 }

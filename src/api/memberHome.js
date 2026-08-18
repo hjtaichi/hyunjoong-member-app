@@ -1,15 +1,13 @@
-// member-app/src/api/memberHome.js
-
-import { apiFetch } from "./api";
+import client from "./client";
 
 export async function getMemberHome(token) {
-  const result = await apiFetch(
-    `/member/me/home?t=${Date.now()}`,
-    {
-      method: "GET",
-    },
-    token
-  );
+  const response = await client.get("/api/member/me/home", {
+    headers: token
+      ? {
+          Authorization: `Bearer ${token}`,
+        }
+      : undefined,
+  });
 
-  return result.data;
+  return response.data?.data ?? response.data ?? {};
 }

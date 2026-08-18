@@ -523,29 +523,32 @@ export default function TrainingHistoryScreen() {
 });
 
   useEffect(() => {
-  async function load() {
-    if (!token) {
-      setLoading(false);
-      return;
+    async function load() {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const home = await getMemberHome(token);
+        setHomeData(home);
+      } catch (error) {
+        console.log("수련의 길 홈 정보 로딩 실패:", error);
+      }
+
+      try {
+        const history = await getMyHistoryEvents(token);
+        setHistoryEvents(Array.isArray(history) ? history : []);
+      } catch (error) {
+        console.log("수련의 길 이력 로딩 실패:", error);
+        setHistoryEvents([]);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    try {
-      const [home, history] = await Promise.all([
-        getMemberHome(token),
-        getMyHistoryEvents(token),
-      ]);
-
-      setHomeData(home);
-      setHistoryEvents(Array.isArray(history) ? history : []);
-    } catch (error) {
-      console.log("수련의 길 로딩 실패:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  load();
-}, [token]);
+    load();
+  }, [token]);
 
   const member = homeData?.member || {};
   const attendanceCount = getJourneyAttendanceCount(homeData);
@@ -1085,7 +1088,16 @@ return items.slice(-6);
     );
   }
 
-  return (
+    if (!homeData) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.loadingText}>
+          수련 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+        </Text>
+      </View>
+    );
+  }
+return (
    <View style={styles.bg}>
   
   <ScrollView style={styles.screen} contentContainerStyle={styles.content}>   
