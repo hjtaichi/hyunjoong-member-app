@@ -589,6 +589,7 @@ export default function TrainingSection({
             ) : null}
           </View>
         </View>
-      </Modal>    </View>
+      </Modal>
+    </View>
   );
 }
