@@ -51,7 +51,7 @@ export default function MonthlyGoalCrownModal({
           <View style={modalStyles.divider} />
 
           <Text style={modalStyles.description}>
-            지난 {weekCount}주 연속 출석 목표를 달성했어요.
+            지난달 목표를 세운 {weekCount}주 모두 출석 목표를 달성했어요.
           </Text>
           <Text style={modalStyles.description}>
             이대로라면 금방 고수가 되시겠어요!

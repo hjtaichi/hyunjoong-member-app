@@ -616,6 +616,13 @@ export function getPreviousWeekAchievementCarryoverStreak(
 }
 
 // HJTAICHI_MONTHLY_GOAL_CROWN_POLICY_V1
+// 정식 출석 운영 시작 주 이전의 목표 기록은
+// 테스트/이관 구간으로 보고 월간 왕관 판정에서 제외한다.
+const MONTHLY_GOAL_CROWN_OPERATION_START_WEEK_KEY =
+  "2026-08-17";
+
+const MONTHLY_GOAL_CROWN_MIN_GOAL_WEEKS = 3;
+
 function getPreviousCalendarMonthKey(dateKey) {
   const normalizedDateKey = String(dateKey || "");
 
@@ -661,6 +668,8 @@ export function getMonthlyGoalCrownStatus(
   const targetWeeks = Object.entries(state.weeks)
     .filter(
       ([weekKey]) =>
+        weekKey >=
+          MONTHLY_GOAL_CROWN_OPERATION_START_WEEK_KEY &&
         weekKey.slice(0, 7) === targetMonthKey,
     )
     .sort(([left], [right]) =>
@@ -692,16 +701,16 @@ export function getMonthlyGoalCrownStatus(
 
   return {
     visible:
-      goalWeekCount >= 1 &&
+      goalWeekCount >=
+        MONTHLY_GOAL_CROWN_MIN_GOAL_WEEKS &&
       achievedWeekCount === goalWeekCount,
     targetMonthKey,
     goalWeekCount,
     achievedWeekCount,
     restWeekCount,
-    // 쉬는 주는 본인이 계획한 주이므로 실패에서는 제외하되
-    // 모달의 "N주 연속" 기간에는 포함한다.
-    streakWeekCount:
-      goalWeekCount + restWeekCount,
+    // legacy 필드명은 UI 호환성을 위해 유지한다.
+    // 표시되는 N은 쉬는 주를 제외한 실제 목표 주 수다.
+    streakWeekCount: goalWeekCount,
   };
 }
 function requireGoal(value) {
