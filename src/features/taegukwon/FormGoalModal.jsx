@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Modal,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -36,6 +37,12 @@ export default function FormGoalModal({
             <Text style={styles.formModalCloseText}>×</Text>
           </TouchableOpacity>
 
+          <ScrollView
+            style={styles.formGoalModalScroll}
+            contentContainerStyle={styles.formGoalModalScrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator
+          >
           <Text style={styles.formModalDesc}>
             대표로 보여줄 투로에 별표를 선택해주세요.{"\n"}
             별표가 없는 투로도 목표 설정과 기록이 가능합니다.
@@ -116,7 +123,7 @@ export default function FormGoalModal({
               <Text style={styles.goalInputUnit}>회</Text>
             </View>
           </View>
-
+          </ScrollView>
           <View style={styles.formModalButtonRow}>
             <TouchableOpacity
               style={styles.formModalCancelButton}

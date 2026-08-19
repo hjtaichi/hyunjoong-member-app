@@ -2099,6 +2099,14 @@ quickCountText: {
   color: colors.warmBrown,
 },
 
+formGoalModalScroll: {
+  flexShrink: 1,
+  minHeight: 0,
+},
+
+formGoalModalScrollContent: {
+  paddingBottom: 2,
+},
 formModalButtonRow: {
   flexDirection: "row",
   gap: 10,
