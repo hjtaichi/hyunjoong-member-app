@@ -37,7 +37,7 @@ const addDebugLog = useCallback((message, data) => {
   const [deletingMemoId, setDeletingMemoId] = useState(null);
   const [memoEditModalVisible, setMemoEditModalVisible] = useState(false);
   const [editMemberMemo, setEditMemberMemo] = useState("");
-  const MEMBER_MEMO_MAX_LENGTH = 60;
+  const MEMBER_MEMO_MAX_LENGTH = 100;
 
   const [formGoalCount, setFormGoalCount] = useState("");
   const [recordModalVisible, setRecordModalVisible] = useState(false);
