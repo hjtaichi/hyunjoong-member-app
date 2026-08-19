@@ -9,7 +9,7 @@ export default function Root({ children }) {
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
         />
-        <link rel="manifest" href="/manifest.json?v=112" />
+        <link rel="manifest" href="/manifest.json?v=114" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=113" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180-v113.png" />
         <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167-v113.png" />
