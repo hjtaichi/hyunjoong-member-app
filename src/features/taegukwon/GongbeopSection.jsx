@@ -32,6 +32,101 @@ function GongbeopSection({
   setMemoEditModalVisible,
   setMemoHistoryModalVisible,
 }) {
+  const memoPreviewText =
+    memberMemo || "아직 작성한 메모가 없습니다.";
+
+  const [memoPreviewLayoutState, setMemoPreviewLayoutState] =
+    React.useState({
+      text: "",
+      density: "large",
+    });
+
+  const memoPreviewDensity =
+    memoPreviewLayoutState.text === memoPreviewText
+      ? memoPreviewLayoutState.density
+      : "large";
+
+  const memoPreviewTypography =
+    memoPreviewDensity === "dense"
+      ? styles.memoPreviewTextDense
+      : memoPreviewDensity === "medium"
+        ? styles.memoPreviewTextMedium
+        : styles.memoPreviewTextLarge;
+
+  const memoPreviewLineHeight =
+    memoPreviewDensity === "dense"
+      ? 19
+      : memoPreviewDensity === "medium"
+        ? 21
+        : 23;
+
+  const handleMemoPreviewLayout =
+    React.useCallback(
+      (event) => {
+        const height = Number(
+          event?.nativeEvent?.layout?.height || 0
+        );
+
+        if (
+          !Number.isFinite(height) ||
+          height <= 0
+        ) {
+          return;
+        }
+
+        const estimatedLines = Math.max(
+          1,
+          Math.round(
+            height / memoPreviewLineHeight
+          )
+        );
+
+        setMemoPreviewLayoutState(
+          (currentState) => {
+            const currentDensity =
+              currentState.text === memoPreviewText
+                ? currentState.density
+                : "large";
+
+            let nextDensity = currentDensity;
+
+            if (
+              currentDensity === "large" &&
+              estimatedLines >= 6
+            ) {
+              nextDensity = "dense";
+            } else if (
+              currentDensity === "large" &&
+              estimatedLines >= 4
+            ) {
+              nextDensity = "medium";
+            } else if (
+              currentDensity === "medium" &&
+              estimatedLines >= 6
+            ) {
+              nextDensity = "dense";
+            }
+
+            if (
+              currentState.text === memoPreviewText &&
+              currentState.density === nextDensity
+            ) {
+              return currentState;
+            }
+
+            return {
+              text: memoPreviewText,
+              density: nextDensity,
+            };
+          }
+        );
+      },
+      [
+        memoPreviewLineHeight,
+        memoPreviewText,
+      ]
+    );
+
   return (
     <>
         <View style={styles.formPeriodRow}>
@@ -265,12 +360,14 @@ function GongbeopSection({
           />
 
           <Text
-        style={styles.memoPreviewText}
-        numberOfLines={3}
-
-      >
-        {memberMemo || "아직 작성한 메모가 없습니다."}
-      </Text>
+            onLayout={handleMemoPreviewLayout}
+            style={[
+              styles.memoPreviewText,
+              memoPreviewTypography,
+            ]}
+          >
+            {memoPreviewText}
+          </Text>
 
           <TouchableOpacity
         style={styles.memoEditHotspot}
@@ -281,7 +378,14 @@ function GongbeopSection({
       />
 
           <TouchableOpacity
-        style={styles.memoDetailButton}
+        style={[
+          styles.memoDetailButton,
+          memoPreviewDensity === "dense"
+            ? styles.memoDetailButtonDense
+            : memoPreviewDensity === "medium"
+              ? styles.memoDetailButtonMedium
+              : null,
+        ]}
         onPress={() => setMemoHistoryModalVisible(true)}
         activeOpacity={0.85}
       >

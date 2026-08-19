@@ -1574,7 +1574,7 @@ modalSaveHotspot: {
 },
 memoImageCard: {
   position: "relative",
-  height: 130,
+  minHeight: 130,
   marginBottom: 12,
 },
 
@@ -1585,13 +1585,28 @@ memoCardBg: {
 },
 
 memoPreviewText: {
-  position: "absolute",
-  left: 28,
-  right: 78,
-  top: 58,
+  marginRight: 78,
+  marginBottom: 24,
+  marginLeft: 28,
+  color: "#4c3a31",
+},
+
+memoPreviewTextLarge: {
+  marginTop: 68,
+  fontSize: 17,
+  lineHeight: 23,
+},
+
+memoPreviewTextMedium: {
+  marginTop: 74,
+  fontSize: 15.75,
+  lineHeight: 21,
+},
+
+memoPreviewTextDense: {
+  marginTop: 80,
   fontSize: 14.5,
   lineHeight: 19,
-  color: "#4c3a31",
 },
 
 memoEditHotspot: {
@@ -1606,6 +1621,14 @@ memoDetailButton: {
   position: "absolute",
   left: 130,
   top: 25,
+},
+
+memoDetailButtonMedium: {
+  top: 27,
+},
+
+memoDetailButtonDense: {
+  top: 30,
 },
 
 memoDetailButtonText: {
