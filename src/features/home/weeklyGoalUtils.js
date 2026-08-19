@@ -739,14 +739,24 @@ export function applyCurrentWeekGoal(
   const goal = requireGoal(goalValue);
   const state = normalizeWeeklyGoalState(rawState);
   const current = getCurrentRecord(state, weekKey);
-  const minimumSelectableGoal =
+  const attendanceMinimumGoal =
     getMinimumSelectableWeeklyGoal(
       attendanceCount,
     );
+  const savedCurrentGoal =
+    clampGoal(current.goal);
+  const minimumSelectableGoal =
+    Number(attendanceCount || 0) > 0 &&
+    savedCurrentGoal
+      ? Math.max(
+          attendanceMinimumGoal,
+          savedCurrentGoal,
+        )
+      : attendanceMinimumGoal;
 
   if (goal < minimumSelectableGoal) {
     throw new Error(
-      "이번 주 실제 일반수련 출석 횟수보다 낮게 설정할 수 없습니다.",
+      "일반수련 출석을 시작한 뒤에는 이번 주 목표를 낮출 수 없습니다.",
     );
   }
 

@@ -224,13 +224,24 @@ export default function WeeklyGoalModal({
     recurringGoal ||
     null;
 
-  const minimumSelectableGoal = useMemo(
-    () =>
+  const minimumSelectableGoal = useMemo(() => {
+    const attendanceMinimumGoal =
       getMinimumSelectableWeeklyGoal(
         attendanceCount,
-      ),
-    [attendanceCount],
-  );
+      );
+
+    if (
+      Number(attendanceCount || 0) <= 0 ||
+      !savedCurrentGoal
+    ) {
+      return attendanceMinimumGoal;
+    }
+
+    return Math.max(
+      attendanceMinimumGoal,
+      savedCurrentGoal,
+    );
+  }, [attendanceCount, savedCurrentGoal]);
 
   useEffect(() => {
     if (!visible) {
@@ -441,8 +452,8 @@ export default function WeeklyGoalModal({
                     styles.weeklyGoalSectionHelper
                   }
                 >
-                  이미 출석한 횟수보다 낮게
-                  설정할 수 없습니다.
+                  일반수련 출석 후에는 이번 주
+                  목표를 낮출 수 없습니다.
                 </Text>
 
                 <GoalNumberControl

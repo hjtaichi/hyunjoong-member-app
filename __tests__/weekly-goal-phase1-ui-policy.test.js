@@ -280,7 +280,7 @@ describe("주간 목표 전환 1단계 UI 정책", () => {
     expect(
   modal.replace(/\s+/g, " ")
 ).toContain(
-  "이미 출석한 횟수보다 낮게 설정할 수"
+  "일반수련 출석 후에는 이번 주 목표를 낮출 수 없습니다."
 );
     expect(modal).toContain(
       "다음 주부터 적용할 목표를"

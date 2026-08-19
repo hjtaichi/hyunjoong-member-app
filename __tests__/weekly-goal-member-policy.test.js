@@ -229,7 +229,7 @@ describe("일반수련 주간 목표 계산", () => {
     expect(result.record.goal).toBeNull();
   });
 
-  test("반복 목표로 시작한 이번 주 목표도 실제 출석 횟수까지 낮출 수 있다", () => {
+  test("일반수련 출석 후 이번 주 목표는 낮출 수 없고 상향만 가능하다", () => {
     const initial = normalizeWeeklyGoalState({
       recurringGoal: 5,
       weeks: {
@@ -251,26 +251,37 @@ describe("일반수련 주간 목표 계산", () => {
       beforeAttendance.record.goal,
     ).toBe(1);
 
-    const afterAttendance =
-      applyCurrentWeekGoal(initial, {
-        weekKey: WEEK_KEY,
-        attendanceCount: 2,
-        goal: 2,
-      });
-
-    expect(
-      afterAttendance.record.goal,
-    ).toBe(2);
-
     expect(() =>
       applyCurrentWeekGoal(initial, {
         weekKey: WEEK_KEY,
-        attendanceCount: 2,
-        goal: 1,
+        attendanceCount: 1,
+        goal: 4,
       }),
     ).toThrow(
-      "실제 일반수련 출석 횟수보다 낮게",
+      "일반수련 출석을 시작한 뒤에는 이번 주 목표를 낮출 수 없습니다.",
     );
+
+    const unchanged =
+      applyCurrentWeekGoal(initial, {
+        weekKey: WEEK_KEY,
+        attendanceCount: 1,
+        goal: 5,
+      });
+
+    expect(
+      unchanged.record.goal,
+    ).toBe(5);
+
+    const raised =
+      applyCurrentWeekGoal(initial, {
+        weekKey: WEEK_KEY,
+        attendanceCount: 1,
+        goal: 6,
+      });
+
+    expect(
+      raised.record.goal,
+    ).toBe(6);
   });
 
   test("반복 목표 변경은 현재 주와 관계없이 다음 주부터 적용한다", () => {
