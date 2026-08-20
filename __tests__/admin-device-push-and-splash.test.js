@@ -118,23 +118,23 @@ describe("admin-device push isolation and separated launcher/splash icons", () =
         src: "/icon-maskable-192-v112.png",
         sizes: "192x192",
         type: "image/png",
-        purpose: "maskable",
+        purpose: "any maskable",
       },
       {
         src: "/icon-maskable-512-v112.png",
         sizes: "512x512",
         type: "image/png",
-        purpose: "maskable",
+        purpose: "any maskable",
       },
     ]
   );
 });
 
-test("HTML forces the v112 manifest to be fetched instead of a cached manifest", () => {
+test("HTML forces the v114 manifest to be fetched instead of a cached manifest", () => {
     const source = read("app/+html.jsx");
 
     expect(source).toContain(
-      '<link rel="manifest" href="/manifest.json?v=112" />'
+      '<link rel="manifest" href="/manifest.json?v=114" />'
     );
     expect(source).toContain(
       '<meta name="theme-color" content="#071A39" />'

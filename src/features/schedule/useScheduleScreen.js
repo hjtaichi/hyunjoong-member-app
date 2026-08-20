@@ -182,9 +182,8 @@ export function useScheduleScreen({
         if (
           errorMessage.includes("유효하지 않은 토큰") ||
           errorMessage.includes("인증 토큰") ||
-          errorMessage.includes("퇴관") ||
-          error?.response?.status === 401 ||
-          error?.response?.status === 403
+          // MEMBER_SCHEDULE_GENERIC_STATUS_NO_GLOBAL_LOGOUT_V1
+          errorMessage.includes("퇴관")
         ) {
           Alert.alert("로그인이 필요합니다", "다시 로그인해주세요.");
           await logout();

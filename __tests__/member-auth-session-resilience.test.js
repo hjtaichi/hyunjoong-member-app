@@ -63,10 +63,10 @@ describe("member auth session resilience", () => {
     );
   });
 
-  test("home does not globally logout for generic 403", () => {
+  test("home does not globally logout for generic 401 or 403", () => {
     const marker =
       home.indexOf(
-        "MEMBER_HOME_403_NO_GLOBAL_LOGOUT_V1",
+        "MEMBER_HOME_GENERIC_STATUS_NO_GLOBAL_LOGOUT_V2",
       );
 
     expect(marker).toBeGreaterThanOrEqual(0);
@@ -76,12 +76,16 @@ describe("member auth session resilience", () => {
       marker + 450,
     );
 
-    expect(block).toContain(
+    expect(block).not.toContain(
       "error?.response?.status === 401",
     );
 
     expect(block).not.toContain(
       "error?.response?.status === 403",
+    );
+
+    expect(block).toContain(
+      'errorMessage.includes("퇴관")',
     );
   });
 

@@ -126,9 +126,8 @@ const [homeRes, calendarRes, nextCalendarRes, noticeRes] = await Promise.all([
         if (
           errorMessage.includes("유효하지 않은 토큰") ||
           errorMessage.includes("인증 토큰") ||
-          errorMessage.includes("퇴관") ||
-          // MEMBER_HOME_403_NO_GLOBAL_LOGOUT_V1
-          error?.response?.status === 401
+          // MEMBER_HOME_GENERIC_STATUS_NO_GLOBAL_LOGOUT_V2
+          errorMessage.includes("퇴관")
         ) {
           Alert.alert("로그인이 필요합니다", "다시 로그인해주세요.");
           await logout();

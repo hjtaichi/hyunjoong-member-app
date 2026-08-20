@@ -338,8 +338,8 @@ describe("회원 일정 화면 현재 정책", () => {
     );
   });
 
-  test("401 일정 조회 실패 시 로그아웃하고 로그인으로 이동한다", async () => {
-    const error = new Error("expired token");
+  test("일시적인 최종 401 일정 조회 실패만으로 전역 로그아웃하지 않는다", async () => {
+    const error = new Error("temporary unauthorized");
     error.response = {
       status: 401,
     };
@@ -350,10 +350,11 @@ describe("회원 일정 화면 현재 정책", () => {
     await renderScheduleHook(props);
 
     await waitFor(() => {
-      expect(props.logout).toHaveBeenCalled();
+      expect(getMemberCalendar).toHaveBeenCalled();
     });
 
-    expect(router.replace).toHaveBeenCalledWith(
+    expect(props.logout).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalledWith(
       "/login",
     );
   });
