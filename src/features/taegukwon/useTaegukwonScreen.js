@@ -101,6 +101,9 @@ const addDebugLog = useCallback((message, data) => {
     handleSaveFormRecord,
     handleSaveFormGoal,
     handleSaveFavoriteForm,
+    formGoalPrompt,
+    closeFormGoalPrompt,
+    confirmFormGoalPrompt,
   } = useFormRecords({
     token,
     formDefinitions: FORM_DEFINITIONS,
@@ -552,6 +555,9 @@ setTaegukwonData((prev) => ({
     handleSaveFormRecord,
     handleSaveFormGoal,
     handleSaveFavoriteForm,
+    formGoalPrompt,
+    closeFormGoalPrompt,
+    confirmFormGoalPrompt,
 
     personalProgress,
     memberMemo,

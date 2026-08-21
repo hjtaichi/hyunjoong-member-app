@@ -18,6 +18,7 @@ import MemoEditModal from "../../src/features/taegukwon/MemoEditModal";
 import FormRecordModal from "../../src/features/taegukwon/FormRecordModal";
 import FormGoalModal from "../../src/features/taegukwon/FormGoalModal";
 import FormSaveSuccessModal from "../../src/features/taegukwon/FormSaveSuccessModal";
+import FormGoalPromptModal from "../../src/features/taegukwon/FormGoalPromptModal";
 import GongbeopRecordModal from "../../src/features/taegukwon/GongbeopRecordModal";
 import GongbeopGoalModal from "../../src/features/taegukwon/GongbeopGoalModal";
 
@@ -89,6 +90,9 @@ const {
   formSaveSuccess,
   closeFormSaveSuccess,
   personalProgress,
+  formGoalPrompt,
+  closeFormGoalPrompt,
+  confirmFormGoalPrompt,
   memberMemo,
   personalProgressPercent,
   memberMemoHistory,
@@ -328,6 +332,17 @@ debugLogs,
   title={formSaveSuccess?.title}
   message={formSaveSuccess?.message}
   onClose={closeFormSaveSuccess}
+/>
+
+<FormGoalPromptModal
+  visible={formGoalPrompt?.visible}
+  mode={formGoalPrompt?.mode}
+  title={formGoalPrompt?.title}
+  message={formGoalPrompt?.message}
+  confirmLabel={formGoalPrompt?.confirmLabel}
+  cancelLabel={formGoalPrompt?.cancelLabel}
+  onConfirm={confirmFormGoalPrompt}
+  onClose={closeFormGoalPrompt}
 />
     </KeyboardAvoidingView>
   );

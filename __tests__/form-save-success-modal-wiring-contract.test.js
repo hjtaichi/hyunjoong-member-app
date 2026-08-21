@@ -47,28 +47,92 @@ describe("투로 저장 성공 모달 전체 배선 계약", () => {
   });
 
   test("useTaegukwonScreen이 useFormRecords에서 성공 상태를 받는다", () => {
-    expect(screenHook).toContain(
-      `    selectedForm,
-    formSaveSuccess,
-    closeFormSaveSuccess,
-    handleSaveFormRecord,
-    handleSaveFormGoal,
-    handleSaveFavoriteForm,
-  } = useFormRecords({`
-    );
+    const wiringEnd =
+      screenHook.indexOf("} = useFormRecords({");
+
+    expect(wiringEnd).toBeGreaterThan(0);
+
+    const wiringStart =
+      screenHook.lastIndexOf(
+        "const {",
+        wiringEnd
+      );
+
+    expect(wiringStart).toBeGreaterThanOrEqual(0);
+
+    const wiringBlock =
+      screenHook.slice(
+        wiringStart,
+        wiringEnd
+      );
+
+    const expectedInOrder = [
+      "selectedForm,",
+      "formSaveSuccess,",
+      "closeFormSaveSuccess,",
+      "handleSaveFormRecord,",
+      "handleSaveFormGoal,",
+      "handleSaveFavoriteForm,",
+    ];
+
+    let previousIndex = -1;
+
+    for (const token of expectedInOrder) {
+      const tokenIndex =
+        wiringBlock.indexOf(token);
+
+      expect(tokenIndex).toBeGreaterThan(
+        previousIndex
+      );
+
+      previousIndex = tokenIndex;
+    }
   });
 
   test("useTaegukwonScreen이 성공 상태를 화면으로 반환한다", () => {
-    expect(screenHook).toContain(
-      `    selectedForm,
-    formSaveSuccess,
-    closeFormSaveSuccess,
-    handleSaveFormRecord,
-    handleSaveFormGoal,
-    handleSaveFavoriteForm,
+    const returnStart =
+      screenHook.lastIndexOf("return {");
 
-    personalProgress,`
+    expect(returnStart).toBeGreaterThanOrEqual(0);
+
+    const returnEnd =
+      screenHook.indexOf(
+        "};",
+        returnStart
+      );
+
+    expect(returnEnd).toBeGreaterThan(
+      returnStart
     );
+
+    const returnBlock =
+      screenHook.slice(
+        returnStart,
+        returnEnd
+      );
+
+    const expectedInOrder = [
+      "selectedForm,",
+      "formSaveSuccess,",
+      "closeFormSaveSuccess,",
+      "handleSaveFormRecord,",
+      "handleSaveFormGoal,",
+      "handleSaveFavoriteForm,",
+      "personalProgress,",
+    ];
+
+    let previousIndex = -1;
+
+    for (const token of expectedInOrder) {
+      const tokenIndex =
+        returnBlock.indexOf(token);
+
+      expect(tokenIndex).toBeGreaterThan(
+        previousIndex
+      );
+
+      previousIndex = tokenIndex;
+    }
   });
 
   test("중간 screen hook에 두 상태가 각각 두 번 이상 존재한다", () => {

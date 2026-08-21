@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useRef,
   useState,
 } from "react";
 import { Alert, Platform } from "react-native";
@@ -36,6 +37,7 @@ function showFormGoalRequiredAlert() {
 
   Alert.alert("안내", "목표를 먼저 설정하세요.");
 }
+
 
 function showFormSaveSuccess(
   setFormSaveSuccess,
@@ -78,6 +80,85 @@ export function useFormRecords({
       visible: false,
     }));
   }, []);
+
+  // HJTAICHI_FORM_GOAL_CUSTOM_MODAL_V18
+  const formGoalPromptResolverRef = useRef(null);
+
+  const [formGoalPrompt, setFormGoalPrompt] = useState({
+    visible: false,
+    mode: "notice",
+    title: "",
+    message: "",
+    confirmLabel: "확인",
+    cancelLabel: "취소",
+  });
+
+  const closeFormGoalPrompt = useCallback(() => {
+    const resolver = formGoalPromptResolverRef.current;
+    formGoalPromptResolverRef.current = null;
+
+    setFormGoalPrompt((current) => ({
+      ...current,
+      visible: false,
+    }));
+
+    if (typeof resolver === "function") {
+      resolver(false);
+    }
+  }, []);
+
+  const confirmFormGoalPrompt = useCallback(() => {
+    const resolver = formGoalPromptResolverRef.current;
+    formGoalPromptResolverRef.current = null;
+
+    setFormGoalPrompt((current) => ({
+      ...current,
+      visible: false,
+    }));
+
+    if (typeof resolver === "function") {
+      resolver(true);
+    }
+  }, []);
+
+  const showFormGoalNotice = useCallback(
+    ({ title, message }) =>
+      new Promise((resolve) => {
+        formGoalPromptResolverRef.current = resolve;
+
+        setFormGoalPrompt({
+          visible: true,
+          mode: "notice",
+          title,
+          message,
+          confirmLabel: "확인",
+          cancelLabel: "",
+        });
+      }),
+    []
+  );
+
+  const requestFormGoalConfirmation = useCallback(
+    ({
+      title,
+      message,
+      confirmLabel = "목표 저장",
+      cancelLabel = "취소",
+    }) =>
+      new Promise((resolve) => {
+        formGoalPromptResolverRef.current = resolve;
+
+        setFormGoalPrompt({
+          visible: true,
+          mode: "confirm",
+          title,
+          message,
+          confirmLabel,
+          cancelLabel,
+        });
+      }),
+    []
+  );
 
   const [formRecordData, setFormRecordData] = useState(null);
 
@@ -204,6 +285,58 @@ const handleSaveFormGoal = useCallback(async () => {
       return;
     }
 
+    // HJTAICHI_FORM_GOAL_CLIENT_NO_DECREASE
+    const existingTargetCount = Number(
+      selectedForm?.targetCount || 0
+    );
+    const existingCurrentCount = Number(
+      selectedForm?.currentCount || 0
+    );
+
+    if (
+      existingCurrentCount > 0 &&
+      existingTargetCount > 0 &&
+      targetCountValue < existingTargetCount
+    ) {
+      // HJTAICHI_FORM_GOAL_MODAL_STACK_V185
+      setFormGoalModalVisible(false);
+
+      await showFormGoalNotice({
+        title:
+          "🔥처음 세운 목표 끝까지 가봐요!",
+        message:
+          "이미 시작한 수련 목표는 낮출 수 없어요.\n" +
+          `처음 세운 ${existingTargetCount}회 까지 꾸준히 해봅시다.\n\n` +
+          "한 번 한 번 쌓다 보면\n어느새 목표에 가까워질 거예요!",
+      });
+
+      setFormGoalModalVisible(true);
+      return;
+    }
+    const isInitialGoal =
+      existingTargetCount <= 0;
+
+    const confirmationTitle = isInitialGoal
+      ? "🎯 이 목표로 시작할까요?"
+      : "🎯 이 목표로 저장할까요?";
+
+    const confirmationMessage = isInitialGoal
+      ? `${selectedFormName}\n${targetCountValue}회 목표를 설정합니다.\n\n수련을 한 번이라도 시작하면 목표 횟수는 낮출 수 없어요.\n이 목표로 저장하시겠습니까?`
+      : `${selectedFormName}\n현재 목표 ${existingTargetCount}회 → 변경 목표 ${targetCountValue}회\n\n수련을 한 번이라도 시작하면\n목표 횟수는 낮출 수 없어요.\n\n이 목표로 저장하시겠습니까?`;
+
+    setFormGoalModalVisible(false);
+
+    const confirmed =
+      await requestFormGoalConfirmation({
+        title: confirmationTitle,
+        message: confirmationMessage,
+      });
+
+    if (!confirmed) {
+      setFormGoalModalVisible(true);
+      return;
+    }
+
     const response = await client.post(
       "/api/member/me/form-goals",
       {
@@ -236,6 +369,10 @@ const handleSaveFormGoal = useCallback(async () => {
 }, [
   token,
   selectedFormId,
+  selectedForm,
+  selectedFormName,
+  requestFormGoalConfirmation,
+  showFormGoalNotice,
   formGoalCount,
   currentPeriodYear,
   currentPeriodHalf,
@@ -274,5 +411,8 @@ const handleSaveFavoriteForm = useCallback(
     handleSaveFormRecord,
     handleSaveFormGoal,
     handleSaveFavoriteForm,
+    formGoalPrompt,
+    closeFormGoalPrompt,
+    confirmFormGoalPrompt,
   };
 }
