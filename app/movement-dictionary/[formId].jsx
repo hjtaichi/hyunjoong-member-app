@@ -1,16 +1,26 @@
-import React, { useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import {
+  useFocusEffect,
+  router,
+  useLocalSearchParams,
+} from "expo-router";
 import { colors } from "../../src/theme/colors";
 import { movementForms } from "../../src/data/movementDictionary";
 import ScreenHeader from "../../src/components/ScreenHeader";
 
+
+
+import { speakChinese, speakChineseSequence, stopChineseSpeech } from "../../src/utils/chineseSpeech";
+// HJTAICHI_CHINESE_TTS_IMPORT
+// HJTAICHI_CHINESE_TTS_INLINE_LIST_SPEAKER_V24
 export default function MovementFormDetailScreen() {
   const { formId, movementNumber } = useLocalSearchParams();
 
@@ -18,7 +28,41 @@ export default function MovementFormDetailScreen() {
     return movementForms.find((item) => item.id === formId);
   }, [formId]);
 
-  if (!form) {
+
+  const [isPlayingAll, setIsPlayingAll] = useState(false);
+  // HJTAICHI_CHINESE_TTS_AUTO_STOP_ON_LEAVE
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        stopChineseSpeech();
+      };
+    }, [])
+  );
+
+  React.useEffect(() => {
+    if (typeof document === "undefined") {
+      return undefined;
+    }
+
+    const stopWhenHidden = () => {
+      if (document.hidden) {
+        stopChineseSpeech();
+      }
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      stopWhenHidden
+    );
+
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        stopWhenHidden
+      );
+    };
+  }, []);
+if (!form) {
     return (
       <View style={styles.center}>
         <Text style={styles.emptyTitle}>투로 정보를 찾을 수 없어요.</Text>
@@ -34,19 +78,74 @@ export default function MovementFormDetailScreen() {
   (movement) => String(movement.order) === String(movementNumber)
 );
 
-  return (
+
+  const handleWholeListen = () => {
+    if (isPlayingAll) {
+      stopChineseSpeech();
+      setIsPlayingAll(false);
+      return;
+    }
+
+    const phrases = movements
+      .map((movement) => String(movement?.hanja || "").trim())
+      .filter(Boolean);
+
+    if (phrases.length === 0) {
+      return;
+    }
+
+    setIsPlayingAll(true);
+
+    const started = speakChineseSequence(phrases, {
+      rate: 0.78,
+      gapMs: 750,
+      onComplete: () => setIsPlayingAll(false),
+      onStop: () => setIsPlayingAll(false),
+    });
+
+    if (!started) {
+      setIsPlayingAll(false);
+    }
+  };
+return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <ScreenHeader title={form.title} />
-
-      <View style={styles.introCard}>
+<View style={styles.introCard}>
         <Text style={styles.introDesc}>{form.description}</Text>
 
         <View style={styles.countRow}>
           <Text style={styles.countText}>
             수록 동작 {movements.length} / {form.totalCount}
           </Text>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{form.badge}</Text>
+          {/* HJTAICHI_CHINESE_TTS_FULL_LISTEN_COMPACT */}
+          <View style={styles.metaActions}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{form.badge}</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.listenAllCompactButton,
+                isPlayingAll && styles.listenAllCompactButtonActive,
+              ]}
+              activeOpacity={0.78}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isPlayingAll
+                  ? "투로 전체 듣기 중지"
+                  : "투로 전체 중국어 발음 듣기"
+              }
+              onPress={handleWholeListen}
+            >
+              <Image
+                source={require("../../assets/icons/chinese-tts-speaker.png")}
+                style={styles.listenAllCompactIcon}
+                resizeMode="contain"
+              />
+              <Text style={[styles.badgeText, styles.listenAllCompactText]}>
+                {isPlayingAll ? "중지" : "전체듣기"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -79,9 +178,28 @@ export default function MovementFormDetailScreen() {
       </View>
 
       <View style={styles.movementTextWrap}>
-        <Text style={styles.movementName}>{targetMovement.name}</Text>
+        <View style={styles.movementTitleRow}>
+            <Text style={styles.movementName}>{targetMovement.name}</Text>
+            {targetMovement.hanja ? (
+        <TouchableOpacity
+          style={styles.inlineSpeakerButton}
+          activeOpacity={0.72}
+          accessibilityRole="button"
+          accessibilityLabel={`${targetMovement.name} 중국어 발음 듣기`}
+          onPress={(event) => {
+            event?.stopPropagation?.();
+            void speakChinese(targetMovement.hanja);
+          }}
+        >
+          <Image source={require("../../assets/icons/chinese-tts-speaker.png")} style={styles.inlineSpeakerIcon} resizeMode="contain" />
+        </TouchableOpacity>
+      ) : null}
+          </View>
         <Text style={styles.movementDesc}>{targetMovement.shortDesc}</Text>
       </View>
+
+
+
 
       <Text style={styles.arrow}>〉</Text>
     </TouchableOpacity>
@@ -113,9 +231,28 @@ export default function MovementFormDetailScreen() {
         </View>
 
         <View style={styles.movementTextWrap}>
-          <Text style={styles.movementName}>{movement.name}</Text>
+          <View style={styles.movementTitleRow}>
+            <Text style={styles.movementName}>{movement.name}</Text>
+            {movement.hanja ? (
+          <TouchableOpacity
+            style={styles.inlineSpeakerButton}
+            activeOpacity={0.72}
+            accessibilityRole="button"
+            accessibilityLabel={`${movement.name} 중국어 발음 듣기`}
+            onPress={(event) => {
+              event?.stopPropagation?.();
+              void speakChinese(movement.hanja);
+            }}
+          >
+            <Image source={require("../../assets/icons/chinese-tts-speaker.png")} style={styles.inlineSpeakerIcon} resizeMode="contain" />
+          </TouchableOpacity>
+        ) : null}
+          </View>
           <Text style={styles.movementDesc}>{movement.shortDesc}</Text>
         </View>
+
+
+
 
         <Text style={styles.arrow}>〉</Text>
       </TouchableOpacity>
@@ -150,7 +287,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
-  
+
   introCard: {
     marginTop: 8,
     padding: 20,
@@ -159,7 +296,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  
+
   introDesc: {
     fontSize: 15,
     lineHeight: 23,
@@ -251,7 +388,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFFFFF",
   },
-  
+
   movementTextWrap: {
     flex: 1,
   },
@@ -324,5 +461,118 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "900",
     color: "#FFFFFF",
+  },
+
+  // HJTAICHI_CHINESE_TTS_STYLES
+  speakerButton: {
+    minWidth: 38,
+    minHeight: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8EFE3",
+    marginLeft: 6,
+  },
+
+  speakerText: {
+    fontSize: 18,
+  },
+
+  // HJTAICHI_CHINESE_TTS_ICON_STYLES
+  speakerIcon: {
+    width: 24,
+    height: 24,
+  },
+
+  // HJTAICHI_CHINESE_TTS_FULL_LISTEN_STYLES
+  listenAllRow: {
+    width: "100%",
+    alignItems: "flex-end",
+    marginTop: 2,
+    marginBottom: 12,
+  },
+
+  listenAllButton: {
+    minHeight: 38,
+    paddingHorizontal: 13,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: "#E6D4C0",
+    backgroundColor: "#F8EFE4",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+  },
+
+  listenAllButtonActive: {
+    backgroundColor: "#EEDFCF",
+  },
+
+  listenAllIcon: {
+    width: 22,
+    height: 22,
+  },
+
+  listenAllText: {
+    color: "#7B5B49",
+    fontSize: 13,
+    fontFamily: "PretendardSemiBold",
+  },
+
+  // HJTAICHI_CHINESE_TTS_COMPACT_LISTEN_STYLES
+  metaActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 6,
+    flexShrink: 0,
+  },
+
+  listenAllCompactButton: {
+    minHeight: 26,
+    paddingHorizontal: 8,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "#E6D4C0",
+    backgroundColor: "#F8EFE4",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+
+  listenAllCompactButtonActive: {
+    backgroundColor: "#EEDFCF",
+  },
+
+  listenAllCompactIcon: {
+    width: 14,
+    height: 14,
+  },
+
+  listenAllCompactText: {
+    color: "#8E6E45",
+  },
+
+  // HJTAICHI_CHINESE_TTS_INLINE_LIST_STYLES_V24
+  movementTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+  },
+
+  inlineSpeakerButton: {
+    minWidth: 24,
+    minHeight: 24,
+    marginLeft: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  },
+
+  inlineSpeakerIcon: {
+    width: 19,
+    height: 19,
   },
 });

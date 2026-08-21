@@ -15,6 +15,10 @@ import { movementForms } from "../../src/data/movementDictionary";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { getMemberTaegukwon } from "../../src/api/memberTaegukwon";
 import ScreenHeader from "../../src/components/ScreenHeader";
+
+
+import { speakChinese } from "../../src/utils/chineseSpeech";
+// HJTAICHI_CHINESE_TTS_IMPORT
 const fonts = {
   title: "MaruBuriBold",
   semiBold: "PretendardSemiBold",
@@ -165,7 +169,23 @@ router.push({
 </Text>
 
             {movement.hanja ? (
-              <Text style={styles.movementResultHanja}>{movement.hanja}</Text>
+              <View style={styles.movementHanjaRow}>
+  <Text style={styles.movementResultHanja}>{movement.hanja}</Text>
+  {!isLocked ? (
+    <TouchableOpacity
+      style={styles.speakerButton}
+      activeOpacity={0.72}
+      accessibilityRole="button"
+      accessibilityLabel={`${movement.displayName || movement.name || "동작"} 중국어 발음 듣기`}
+      onPress={(event) => {
+        event?.stopPropagation?.();
+        void speakChinese(movement.hanja);
+      }}
+    >
+      <Image source={require("../../assets/icons/chinese-tts-speaker.png")} style={styles.speakerIcon} resizeMode="contain" />
+    </TouchableOpacity>
+  ) : null}
+</View>
             ) : null}
           </View>
 
@@ -554,4 +574,31 @@ emptySearchText: {
   fontFamily: fonts.medium,
   color: colors.textSub,
 },
+
+  // HJTAICHI_CHINESE_TTS_STYLES
+  movementHanjaRow: {
+    marginTop: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  speakerButton: {
+    minWidth: 34,
+    minHeight: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8EFE3",
+  },
+
+  speakerText: {
+    fontSize: 17,
+  },
+
+  // HJTAICHI_CHINESE_TTS_ICON_STYLES
+  speakerIcon: {
+    width: 24,
+    height: 24,
+  },
 });

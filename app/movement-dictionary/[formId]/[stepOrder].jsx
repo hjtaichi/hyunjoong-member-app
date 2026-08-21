@@ -13,6 +13,9 @@ import { router, useLocalSearchParams } from "expo-router";
 import { colors } from "../../../src/theme/colors";
 import { movementForms } from "../../../src/data/movementDictionary";
 
+
+// HJTAICHI_CHINESE_TTS_IMPORT
+import { speakChinese } from "../../../src/utils/chineseSpeech";
   const fonts = {
   regular: "PretendardRegular",
   medium: "PretendardMedium",
@@ -132,7 +135,20 @@ const movementBg = require("../../../assets/images/movement-bg-circle.png");
     <Text style={styles.heroName}>{movement.name}</Text>
 
     {movement.hanja ? (
-      <Text style={styles.heroHanja}>[{movement.hanja}]</Text>
+      <View style={styles.heroHanjaRow}>
+  <Text style={styles.heroHanja}>[{movement.hanja}]</Text>
+  <TouchableOpacity
+    style={styles.heroSpeakerButton}
+    activeOpacity={0.72}
+    accessibilityRole="button"
+    accessibilityLabel={`${movement.name} 중국어 발음 듣기`}
+    onPress={() => {
+      void speakChinese(movement.hanja);
+    }}
+  >
+    <Image source={require("../../../assets/icons/chinese-tts-speaker.png")} style={styles.heroSpeakerIcon} resizeMode="contain" />
+  </TouchableOpacity>
+</View>
     ) : null}
 
   </View>
@@ -220,7 +236,7 @@ const movementBg = require("../../../assets/images/movement-bg-circle.png");
   >
     <Text style={styles.navPillText}>다음 동작</Text>
   </Pressable>
-</View>     
+</View>
     </ScrollView>
     {movement.image ? (
   <Modal visible={imageModalVisible} transparent animationType="fade">
@@ -464,7 +480,7 @@ coreItemDesc: {
     lineHeight: 22,
     color: colors.textMain,
   },
-  
+
   navRow: {
   marginTop: 18,
   flexDirection: "row",
@@ -931,4 +947,33 @@ descriptionBottomBrush: {
   height: 155,
   opacity: 0.7,
 },
+
+  // HJTAICHI_CHINESE_TTS_STYLES
+  heroHanjaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+
+  heroSpeakerButton: {
+    minWidth: 40,
+    minHeight: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+    transform: [{ translateY: 3 }],
+  },
+
+  heroSpeakerText: {
+    fontSize: 19,
+  },
+
+  // HJTAICHI_CHINESE_TTS_ICON_STYLES
+  heroSpeakerIcon: {
+    width: 26,
+    height: 26,
+  },
 });
