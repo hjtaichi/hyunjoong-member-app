@@ -4,6 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 
 import { getMemberHome } from "../../api/memberHome";
+import { getMemberTrainingMedals } from "../../api/memberTrainingMedals";
 import { getMemberCalendar } from "../../api/memberCalendar";
 import { getMemberNoticeList } from "../../api/memberNotice";
 import { subscribeAttendanceDataChanged } from "../../events/attendanceRefreshEvents";
@@ -24,6 +25,11 @@ export function useHomeScreen({
   const [calendarData, setCalendarData] = useState(null);
   const [noticeList, setNoticeList] = useState([]);
   const [memberNotifications, setMemberNotifications] = useState([]);
+  const [trainingMedals, setTrainingMedals] = useState({
+    collection: [],
+    home: [],
+    annual: [],
+  });
   const didInitialLoadRef = useRef(false);
   const lastFocusRefreshRef = useRef(0);
 
@@ -64,11 +70,22 @@ const nextCalendarDate = new Date(currentYear, currentMonth, 1);
 const nextCalendarYear = nextCalendarDate.getFullYear();
 const nextCalendarMonth = nextCalendarDate.getMonth() + 1;
 
-const [homeRes, calendarRes, nextCalendarRes, noticeRes] = await Promise.all([
+const [
+  homeRes,
+  calendarRes,
+  nextCalendarRes,
+  noticeRes,
+  medalRes,
+] = await Promise.all([
   getMemberHome(token),
   getMemberCalendar(token, currentYear, currentMonth),
   getMemberCalendar(token, nextCalendarYear, nextCalendarMonth),
   getMemberNoticeList(token),
+  getMemberTrainingMedals().catch(() => ({
+    collection: [],
+    home: [],
+    annual: [],
+  })),
 ]);
     if (DEBUG_HOME) {
       console.log("🔥 HOME homeRes =", homeRes);
@@ -87,6 +104,11 @@ const [homeRes, calendarRes, nextCalendarRes, noticeRes] = await Promise.all([
       },
     });
     setNoticeList(noticeRes || []);
+    setTrainingMedals(
+      medalRes && typeof medalRes === "object"
+        ? medalRes
+        : { collection: [], home: [], annual: [] }
+    );
 
     if (DEBUG_HOME) {
       console.log("✅ HOME refreshScreenData 완료");
@@ -203,6 +225,7 @@ useFocusEffect(
     calendarData,
     noticeList,
     memberNotifications,
+    trainingMedals,
     setCalendarData,
     refreshScreenData,
     onRefresh,

@@ -5,6 +5,7 @@ import { styles } from "../homeStyles";
 import BadgeInfoModal from "./BadgeInfoModal";
 import { getMemberBadgeImageSource } from "../memberBadges";
 import RankPlaque from "../../rank/RankPlaque";
+import HomeTrainingMedals from "./HomeTrainingMedals";
 
 import MonthlyGoalCrownModal from "./MonthlyGoalCrownModal";
 export default function HomeHeader({
@@ -22,6 +23,8 @@ export default function HomeHeader({
   onPressWeeklyGoal,
   memberBadges = [],
   monthlyGoalCrown = null,
+  trainingMedals = [],
+  onPressTrainingMedals,
 }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [
@@ -66,7 +69,13 @@ export default function HomeHeader({
       />
 
       <View style={styles.homeHeaderTextBlock}>
-        <Text style={styles.homeGreeting}>안녕하세요!</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Text style={styles.homeGreeting}>안녕하세요!</Text>
+          <HomeTrainingMedals
+            medals={trainingMedals}
+            onPress={onPressTrainingMedals}
+          />
+        </View>
 
         <View style={styles.homeNameRow}>
           <Text style={styles.homeName}>
@@ -102,8 +111,7 @@ export default function HomeHeader({
             ))}
           </View>
         ) : null}
-
-        {joinDayCount != null ? (
+{joinDayCount != null ? (
           <Text style={styles.homeAttendanceSummary}>
             입관 {joinDayCount}일째 · 누적 출석 {attendanceCount}회
           </Text>

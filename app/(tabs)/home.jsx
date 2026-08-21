@@ -115,6 +115,7 @@ const {
   calendarData,
   noticeList,
   memberNotifications,
+  trainingMedals,
   onRefresh,
 } = useHomeScreen({
   token,
@@ -773,6 +774,8 @@ const handleNoticeDetail = useCallback(() => {
   yudanjaEmblemFrame={yudanjaEmblemFrame}
   promotionBadgeText={promotionBadgeText}
   memberBadges={homeMemberBadges} // HJTAICHI_HOME_BADGES_PROP_V1
+  trainingMedals={trainingMedals?.home || []}
+  onPressTrainingMedals={() => router.push("/training-medals")}
 
   monthlyGoalCrown={weeklyGoal.monthlyGoalCrown}
 />
