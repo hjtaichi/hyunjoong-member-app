@@ -314,7 +314,14 @@ router.push({
                 setConsultDateValue(day.dateString);
                 setCalendarVisible(false);
               }}
-              minDate={new Date().toISOString().slice(0, 10)}
+              minDate={
+                new Intl.DateTimeFormat("en-CA", {
+                  timeZone: "Asia/Seoul",
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                }).format(new Date())
+              }
               enableSwipeMonths
               theme={{
                 backgroundColor: "#fffdf9",
