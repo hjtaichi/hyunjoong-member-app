@@ -1,3 +1,7 @@
+import {
+  decodeGroupRangeStep,
+  groupStepSortKey,
+} from "../../src/utils/groupProgressExactStep";
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -358,7 +362,7 @@ const steps = useMemo(() => {
   <View style={styles.currentStepBox}>
     <Text style={styles.currentStepLabel}>이번 주 수련</Text>
     <Text style={styles.currentStepName}>
-      {startStep}식 ~ {endStep}식
+      {decodeGroupRangeStep(startStep)}식 ~ {decodeGroupRangeStep(endStep)}식
     </Text>
   </View>
 ) : currentStep > 0 && currentCanonicalStepItem ? (
@@ -391,8 +395,8 @@ const isUpcoming = !isGroupSource && currentStep < canonicalStepNo;
   isGroupSource &&
   startStep > 0 &&
   endStep > 0 &&
-  canonicalStepNo >= startStep &&
-  canonicalStepNo <= endStep;
+  groupStepSortKey(displayStepNo) >= groupStepSortKey(startStep) &&
+  groupStepSortKey(displayStepNo) <= groupStepSortKey(endStep);
 
   return (
     <View

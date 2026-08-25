@@ -1,3 +1,7 @@
+import {
+  baseGroupStep,
+  decodeGroupRangeStep,
+} from "../../src/utils/groupProgressExactStep";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -598,7 +602,7 @@ const endStep =
   null;
 
 if (startStep && endStep) {
-  return `이번 주 ${startStep}식 ~ ${endStep}식`;
+  return `이번 주 ${decodeGroupRangeStep(startStep)}식 ~ ${decodeGroupRangeStep(endStep)}식`;
 }
 
 if (homeGroupProgress?.currentStep) {
@@ -642,7 +646,7 @@ const handleTodayTrainingDetail = useCallback(() => {
         homeGroupProgress?.curriculum?.name ||
         homeGroupProgress?.curriculumTitle ||
         "현중태극권 29식",
-      currentStep: String(endStep || 0),
+      currentStep: String(homeGroupProgress?.currentStep ?? baseGroupStep(endStep) ?? 0),
       totalSteps: String(homeGroupProgress?.totalSteps || 29),
       startStep: String(startStep || ""),
       endStep: String(endStep || ""),

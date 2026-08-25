@@ -30,12 +30,12 @@ describe("현중태극권 29식 과도식 표시 번호 정책", () => {
     );
   });
 
-  test("단체 진도 범위는 내부 33번이 아니라 29식 기준 번호로 판정한다", () => {
+  test("단체 진도 범위는 표시번호와 세부번호를 정확히 구분한다", () => {
     expect(source).toContain(
       "const canonicalStepNo = Number(stepItem.baseNo || stepNo);"
     );
-    expect(source).toContain("canonicalStepNo >= startStep");
-    expect(source).toContain("canonicalStepNo <= endStep");
+    expect(source).toContain("groupStepSortKey(displayStepNo) >= groupStepSortKey(startStep)");
+    expect(source).toContain("groupStepSortKey(displayStepNo) <= groupStepSortKey(endStep)");
   });
 
   test("개인 현재 진도도 29식 기준 번호로 본식과 과도식을 함께 판정한다", () => {
