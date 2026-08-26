@@ -6,6 +6,7 @@ import {
   getAccessToken,
   getRefreshToken,
   setAccessToken,
+  setRefreshToken,
   clearAuthStorage,
 } from "../utils/storage";
 
@@ -115,15 +116,23 @@ client.interceptors.response.use(
 
       const payload = refreshRes.data?.data ?? refreshRes.data ?? {};
       const newAccessToken = payload?.accessToken || payload?.token;
-
+      const newRefreshToken = payload?.refreshToken || null;
       if (!newAccessToken) {
         await clearAuthStorage();
         rejectRefreshQueue(error);
         return Promise.reject(error);
       }
 
-      await setAccessToken(newAccessToken);
+      // MEMBER_REFRESH_ROTATION_V1
 
+      if (newRefreshToken) {
+
+        await setRefreshToken(newRefreshToken);
+
+      }
+
+
+      await setAccessToken(newAccessToken);
       resolveRefreshQueue(newAccessToken);
 
       originalRequest.headers = originalRequest.headers || {};

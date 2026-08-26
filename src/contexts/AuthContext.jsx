@@ -91,6 +91,8 @@ function AuthProvider({ children }) {
         const refreshPayload = refreshResult?.data ?? refreshResult ?? {};
         const refreshedToken =
           refreshPayload?.accessToken || refreshPayload?.token || null;
+        const refreshedRefreshToken =
+          refreshPayload?.refreshToken || null;
 
         if (!refreshedToken) {
           throw new Error("갱신 응답에 access token이 없습니다.");
@@ -98,6 +100,12 @@ function AuthProvider({ children }) {
 
         savedToken = refreshedToken;
         savedUser = normalizeAuthUser(refreshPayload?.user, savedUser);
+
+        // MEMBER_REFRESH_ROTATION_V1
+        if (refreshedRefreshToken) {
+          savedRefreshToken = refreshedRefreshToken;
+          await setRefreshToken(refreshedRefreshToken);
+        }
 
         await setAccessToken(refreshedToken);
 
