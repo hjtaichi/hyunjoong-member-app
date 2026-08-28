@@ -372,7 +372,7 @@ function GongbeopSection({
           <TouchableOpacity
         style={styles.memoEditHotspot}
         onPress={() => {
-  setEditMemberMemo(memberMemo || "");
+  setEditMemberMemo("");
   setMemoEditModalVisible(true);
 }}
       />
