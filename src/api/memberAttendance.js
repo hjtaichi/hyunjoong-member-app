@@ -93,6 +93,79 @@ export async function markAttendance(token, payload) {
   }
 }
 
+// HJTAICHI_NFC_ATTENDANCE_PHASE1
+export async function markNfcAttendance(
+  token,
+  nfcToken
+) {
+  const url =
+    `${API_BASE_URL}/api/member/me/attendance/nfc`;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        nfcToken,
+      }),
+    });
+
+    const data = await parseJsonSafe(res);
+
+    if (!res.ok) {
+      throw new Error(
+        data?.message ||
+          "NFC 출석 처리에 실패했습니다."
+      );
+    }
+
+    return data.data || data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// HJTAICHI_NFC_ATTENDANCE_PHASE2_SECURE
+export async function markSecureNfcAttendance(
+  token,
+  proofToken
+) {
+  const url =
+    `${API_BASE_URL}/api/member/me/attendance/nfc-secure`;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        proofToken,
+      }),
+    });
+
+    const data = await parseJsonSafe(res);
+
+    if (!res.ok) {
+      const error = new Error(
+        data?.message ||
+          "NFC 출석 처리에 실패했습니다."
+      );
+
+      error.status = res.status;
+      error.code = data?.code;
+      throw error;
+    }
+
+    return data.data || data;
+  } catch (error) {
+    throw error;
+  }
+}
 export async function cancelReservation(token, sessionId) {
   const url = `${API_BASE_URL}/api/member/me/reservations/${sessionId}`;
 

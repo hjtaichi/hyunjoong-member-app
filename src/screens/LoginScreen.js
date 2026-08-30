@@ -35,19 +35,56 @@ export function normalizeAttendanceToken(value) {
   return /^[A-Za-z0-9._-]+$/.test(cleanToken) ? cleanToken : "";
 }
 
-function getPostLoginDestination(attendanceToken) {
-  if (!attendanceToken) return "/(tabs)/home";
+function getPostLoginDestination(
+  attendanceToken,
+  nfcAttendanceToken,
+  nfcAttendanceProof
+) {
+  if (nfcAttendanceProof) {
+    return {
+      pathname: "/nfc-secure-attendance",
+      params: {
+        proof: nfcAttendanceProof,
+      },
+    };
+  }
+
+  if (nfcAttendanceToken) {
+    return {
+      pathname: "/nfc-attendance",
+      params: {
+        token: nfcAttendanceToken,
+      },
+    };
+  }
+
+  if (!attendanceToken) {
+    return "/(tabs)/home";
+  }
 
   return {
     pathname: "/attendance-check",
-    params: { token: attendanceToken },
+    params: {
+      token: attendanceToken,
+    },
   };
 }
 
 export default function LoginScreen() {
   const { login, isLoginLoading, isAuthenticated, isBootLoading, user } = useAuth();
-  const { attendanceToken: attendanceTokenParam } = useLocalSearchParams();
-  const attendanceToken = normalizeAttendanceToken(attendanceTokenParam);
+  const {
+    attendanceToken: attendanceTokenParam,
+    nfcAttendanceToken: nfcAttendanceTokenParam,
+    nfcAttendanceProof: nfcAttendanceProofParam,
+  } = useLocalSearchParams();
+  const attendanceToken =
+    normalizeAttendanceToken(attendanceTokenParam);
+  // HJTAICHI_NFC_ATTENDANCE_PHASE1
+  const nfcAttendanceToken =
+    normalizeAttendanceToken(nfcAttendanceTokenParam);
+  // HJTAICHI_NFC_ATTENDANCE_PHASE2_SECURE
+  const nfcAttendanceProof =
+    normalizeAttendanceToken(nfcAttendanceProofParam);
 
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
@@ -86,9 +123,9 @@ useEffect(() => {
       return;
     }
 
-    router.replace(getPostLoginDestination(attendanceToken));
+    router.replace(getPostLoginDestination(attendanceToken, nfcAttendanceToken, nfcAttendanceProof));
   }
-}, [isBootLoading, isAuthenticated, user, attendanceToken]);
+}, [isBootLoading, isAuthenticated, user, attendanceToken, nfcAttendanceToken, nfcAttendanceProof]);
 
   function showLoginAlert(title, message) {
   setLoginAlertTitle(title);
@@ -141,7 +178,7 @@ useEffect(() => {
       return;
     }
 
-    router.replace(getPostLoginDestination(attendanceToken));
+    router.replace(getPostLoginDestination(attendanceToken, nfcAttendanceToken, nfcAttendanceProof));
   } catch (error) {
     console.log("로그인 실패:", error);
 
