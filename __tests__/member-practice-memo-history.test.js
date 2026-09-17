@@ -41,9 +41,7 @@ describe("회원 지난 수련 메모", () => {
         new Date("2026-08-03T01:00:00.000Z")
       )
     );
-    expect(list[2].dateLabel).toBe(
-      list[1].dateLabel
-    );
+    expect(list[2].dateLabel).toBe("");
     expect(
       list.some(
         (memo) =>

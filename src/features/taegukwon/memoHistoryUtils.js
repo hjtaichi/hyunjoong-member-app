@@ -64,19 +64,8 @@ export function buildMemoHistoryList({
     ];
   }
 
-  const firstValidDate =
-    rows
-      .map(getMemoDateValue)
-      .find(Boolean) || now;
-
-  let previousValidDate = firstValidDate;
-
   return rows.map((memo, index) => {
     const validDate = getMemoDateValue(memo);
-
-    if (validDate) {
-      previousValidDate = validDate;
-    }
 
     const rawId = memo?.id;
     const hasStoredId =
@@ -90,9 +79,9 @@ export function buildMemoHistoryList({
         ? String(rawId)
         : `memo-fallback-${index}`,
       content: String(memo?.content || "").trim(),
-      dateLabel: formatMemoDate(
-        validDate || previousValidDate
-      ),
+      dateLabel: validDate
+        ? formatMemoDate(validDate)
+        : "",
       canDelete: hasStoredId,
     };
   });
